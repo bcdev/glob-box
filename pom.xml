@@ -20,12 +20,10 @@
         </license>
     </licenses>
 
-<!--     Include and correct
     <scm>
-        <connection>scm:svn:https://www.brockmann-consult.de/svn/os/beam-4.x/trunk</connection>
-        <url>https://www.brockmann-consult.de/svn/os/beam-4.x/trunk</url>
+        <connection>scm:svn:https://www.brockmann-consult.de/svn/os/globtoolbox/trunk</connection>
+        <url>https://www.brockmann-consult.de/svn/os/globtoolbox/trunk</url>
     </scm>
--->
 
     <issueManagement>
         <system>JIRA</system>
