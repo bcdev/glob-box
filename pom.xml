@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.esa.glob</groupId>
+    <artifactId>globtoolbox</artifactId>
+    <version>0.1-SNAPSHOT</version>
+    <name>GlobToolbox</name>
+
+    <organization>        <!-- Correct this-->
+        <name>Brockmann Consult GmbH</name>
+        <url>http://www.brockmann-consult.de</url>
+    </organization>
+    <inceptionYear>2009</inceptionYear>
+    <licenses>
+        <license>
+            <name>GNU General Public License (GPL)</name>
+            <url>http://www.gnu.org/licenses/gpl.html</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+<!--     Include and correct
+    <scm>
+        <connection>scm:svn:https://www.brockmann-consult.de/svn/os/beam-4.x/trunk</connection>
+        <url>https://www.brockmann-consult.de/svn/os/beam-4.x/trunk</url>
+    </scm>
+-->
+
+    <issueManagement>
+        <system>JIRA</system>
+        <url>http://www.brockmann-consult.de/beam-issues</url>
+    </issueManagement>
+
+
+
+
+    <repositories>
+        <repository>
+            <id>bc-mvn-repo</id>
+            <name>Public Maven Repository at Brockmann-Consult</name>
+            <url>http://www.brockmann-consult.de/mvn/os</url>
+            <releases>
+                <enabled>true</enabled>
+                <checksumPolicy>warn</checksumPolicy>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+                <checksumPolicy>warn</checksumPolicy>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>gt-primary</id>
+            <name>Primary GeoTools Maven Repository</name>
+            <url>http://maven.geotools.fr/repository</url>
+        </repository>
+    </repositories>
+
+    <pluginRepositories>
+        <pluginRepository>
+            <id>bc-mvn-repo</id>
+            <name>Public Maven Repository at Brockmann-Consult</name>
+            <url>http://www.brockmann-consult.de/mvn/os</url>
+            <releases>
+                <enabled>true</enabled>
+                <checksumPolicy>warn</checksumPolicy>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+                <checksumPolicy>warn</checksumPolicy>
+            </snapshots>
+        </pluginRepository>
+        <pluginRepository>
+            <id>apache.org</id>
+            <name>Maven Plugin Snapshots</name>
+            <url>http://people.apache.org/repo/m2-snapshot-repository</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </pluginRepository>
+    </pluginRepositories>
+
+    <distributionManagement>
+        <repository>
+            <id>bc-mvn-repo</id>
+            <name>Public Maven Repository at Brockmann Consult</name>
+            <url>scp://apache.bc.local/bc-mvn-repo/os</url>
+        </repository>
+        <snapshotRepository>
+            <id>bc-mvn-repo</id>
+            <name>Public Maven Repository at Brockmann Consult</name>
+            <url>scp://apache.bc.local/bc-mvn-repo/os</url>
+        </snapshotRepository>
+    </distributionManagement>
+
+</project>
