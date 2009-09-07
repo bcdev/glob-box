@@ -4,6 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.esa.glob</groupId>
     <artifactId>globtoolbox</artifactId>
+    <packaging>pom</packaging>
     <version>0.1-SNAPSHOT</version>
     <name>GlobToolbox</name>
 
@@ -12,6 +13,7 @@
         <url>http://www.brockmann-consult.de</url>
     </organization>
     <inceptionYear>2009</inceptionYear>
+
     <licenses>
         <license>
             <name>GNU General Public License (GPL)</name>
@@ -19,6 +21,28 @@
             <distribution>repo</distribution>
         </license>
     </licenses>
+
+    <modules>
+        <module>glob-reader</module>
+        <module>geotools-proj</module>
+    </modules>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.esa.beam</groupId>
+            <artifactId>beam-core</artifactId>
+        </dependency>
+    </dependencies>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.esa.beam</groupId>
+                <artifactId>beam-core</artifactId>
+                <version>4.7-SNAPSHOT</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <scm>
         <connection>scm:svn:https://www.brockmann-consult.de/svn/os/globtoolbox/trunk</connection>
@@ -29,9 +53,6 @@
         <system>JIRA</system>
         <url>http://www.brockmann-consult.de/beam-issues</url>
     </issueManagement>
-
-
-
 
     <repositories>
         <repository>
@@ -94,4 +115,28 @@
         </snapshotRepository>
     </distributionManagement>
 
+    <!--
+       In version 3.0 of Maven the sourceEncoding property will be embedded in the
+       build tag. For now the convention is to that it as property.
+       TODO: Move the sourceEncoding property to the build tag if version 3.0 is released
+       -->
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <configuration>
+                        <source>1.6</source>
+                        <target>1.6</target>
+                        <debug>true</debug>
+                        <encoding>UTF-8</encoding>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
 </project>
