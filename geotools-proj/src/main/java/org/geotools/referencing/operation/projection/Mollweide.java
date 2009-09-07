@@ -34,8 +34,8 @@ public class Mollweide extends MapProjection {
          */
         static final ParameterDescriptorGroup PARAMETERS = createDescriptorGroup(new NamedIdentifier[]{
                 new NamedIdentifier(Citations.OGC, "Mollweide"),
-                new NamedIdentifier(Citations.GEOTIFF, "Mollweide"),
-                new NamedIdentifier(Citations.GEOTOOLS, "Mollweide")
+                new NamedIdentifier(Citations.GEOTOOLS, "Mollweide"),
+                new NamedIdentifier(Citations.ESRI, "World_Mollweide")
         }, new ParameterDescriptor[]{
                 SEMI_MAJOR, SEMI_MINOR,
                 CENTRAL_MERIDIAN, SCALE_FACTOR,
@@ -107,8 +107,8 @@ public class Mollweide extends MapProjection {
 
         k = cp * Math.sin(y);
         for (i = MAX_ITER; i != 0; i--) {
-            double v;
-            y -= v = (y + Math.sin(y) - k) / (1. + Math.cos(y));
+            double v = (y + Math.sin(y) - k) / (1.0 + Math.cos(y));
+            y -= v;
             if (Math.abs(v) < TOLERANCE) {
                 break;
             }
@@ -135,10 +135,8 @@ public class Mollweide extends MapProjection {
     @Override
     protected Point2D inverseTransformNormalized(double x, double y, final Point2D ptDst)
             throws ProjectionException {
-        double lat, lon;
-
-        lat = Math.asin(y / cy);
-        lon = x / (cx * Math.cos(lat));
+        double lat = Math.asin(y / cy);
+        double lon = x / (cx * Math.cos(lat));
         lat += lat;
         lat = Math.asin((lat + Math.sin(lat)) / cp);
         if (ptDst != null) {
@@ -148,65 +146,5 @@ public class Mollweide extends MapProjection {
         return new Point2D.Double(lon, lat);
     }
 
-
-    /**
-     * Provides the transform equations for the spherical case
-     */
-    private static final class Spherical extends Mollweide {
-
-        /**
-         * Constructs a new map projection from the suplied parameters.
-         *
-         * @param parameters The parameter values in standard units.
-         *
-         * @throws ParameterNotFoundException if a mandatory parameter is missing.
-         */
-        protected Spherical(final ParameterValueGroup parameters)
-                throws ParameterNotFoundException {
-            super(parameters);
-            assert isSpherical;
-        }
-
-        /**
-         * Transforms the specified (<var>&lambda;</var>,<var>&phi;</var>) coordinates
-         * (units in radians) and stores the result in {@code ptDst} (linear distance
-         * on a unit sphere) using equations for a sphere.
-         */
-        @Override
-        protected Point2D transformNormalized(double x, double y, Point2D ptDst)
-                throws ProjectionException {
-            // Compute using ellipsoidal formulas, for comparaison later.
-            assert (ptDst = super.transformNormalized(x, y, ptDst)) != null;
-
-            // Calculate forward spherical here
-
-            assert checkTransform(x, y, ptDst);
-            if (ptDst != null) {
-                ptDst.setLocation(x, y);
-                return ptDst;
-            }
-            return new Point2D.Double(x, y);
-        }
-
-        /**
-         * Transforms the specified (<var>x</var>,<var>y</var>) coordinate
-         * and stores the result in <code>ptDst</code> using equations for a sphere.
-         */
-        @Override
-        protected Point2D inverseTransformNormalized(double x, double y, Point2D ptDst)
-                throws ProjectionException {
-            // Compute using ellipsoidal formulas, for comparaison later.
-            assert (ptDst = super.inverseTransformNormalized(x, y, ptDst)) != null;
-
-            // Calculate inverse spherical here
-
-            assert checkInverseTransform(x, y, ptDst);
-            if (ptDst != null) {
-                ptDst.setLocation(x, y);
-                return ptDst;
-            }
-            return new Point2D.Double(x, y);
-        }
-    }
 
 }

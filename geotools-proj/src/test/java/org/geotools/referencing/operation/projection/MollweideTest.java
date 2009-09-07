@@ -1,77 +1,53 @@
 package org.geotools.referencing.operation.projection;
 
-import org.opengis.parameter.ParameterDescriptorGroup;
-import org.opengis.parameter.ParameterValueGroup;
-import org.opengis.referencing.FactoryException;
-import org.opengis.referencing.NoSuchIdentifierException;
-import org.opengis.referencing.operation.MathTransform;
-import org.opengis.referencing.operation.MathTransformFactory;
-import org.opengis.referencing.operation.TransformException;
-import org.opengis.geometry.DirectPosition;
-
 import org.geotools.geometry.DirectPosition2D;
-import org.geotools.parameter.ParameterWriter;
-import org.geotools.referencing.ReferencingFactoryFinder;
-import org.geotools.referencing.AbstractIdentifiedObject;
-
-import org.junit.*;
+import org.geotools.parameter.ParameterGroup;
+import org.junit.After;
 import static org.junit.Assert.*;
+import org.junit.Before;
+import org.junit.Test;
+import org.opengis.geometry.DirectPosition;
+import org.opengis.parameter.ParameterValueGroup;
+import org.opengis.referencing.operation.MathTransform;
+import org.opengis.referencing.operation.TransformException;
 
 
 public final class MollweideTest {
-    /**
-     * Set to {@code true} for printing some informations to standard output while
-     * performing tests. Consider this field as constants after the application launch.
-     */
-    private static boolean VERBOSE = false;
+    // Tolerance for test when units are degrees.
+    private static final double[] TOL_DEG = {1.0E-6, 1.0E-6};
 
-    /** Tolerance for test when units are degrees. */
-    private final static double[] TOL_DEG = {1E-6, 1E-6};
+    // Tolerance for test when units are metres.
+    private static final double[] TOL_M = {1.0E-2, 1.0E-2};
 
-    /** Tolerance for test when units are metres. */
-    private final static double[] TOL_M = {1E-2, 1E-2};
+    private Mollweide.Provider provider;
 
-    /** factory to use to create projection transforms*/
-    private MathTransformFactory mtFactory;
-
-    /**
-     * Set up common objects used by all tests.
-     */
     @Before
     public void setUp() {
-        mtFactory = ReferencingFactoryFinder.getMathTransformFactory(null);
+        provider = new Mollweide.Provider();
     }
 
-    /**
-     * Release common objects used by all tests.
-     */
     @After
     public void tearDown() {
-        mtFactory = null;
+        provider = null;
     }
 
     @Test
-    public void testMollweide() throws FactoryException, TransformException {
+    public void testMollweide() throws TransformException {
 
         MathTransform transform;
-        ParameterValueGroup params;
 
-//        params = mtFactory.getDefaultParameters("Mollweide");
-//        params.parameter("semi_major")         .setValue(6378137);
-//        params.parameter("semi_minor")         .setValue(6378137);
-//        params.parameter("central_meridian")   .setValue(  0.000);
-//        params.parameter("standard_parallel_1").setValue(  0.000);
-//        params.parameter("false_easting")      .setValue(  0.0  );
-//        params.parameter("false_northing")     .setValue(  0.0  );
-//        transform = mtFactory.createParameterizedTransform(params);
-//        if (VERBOSE) {
-//            System.out.println(transform);
-//        }
-//        doTransform(new DirectPosition2D(-2.5, 51.37),
-//                    new DirectPosition2D(-278298.73, 5718482.24), transform);
+        ParameterValueGroup params = new ParameterGroup(provider.getParameters());
+        params.parameter("semi_major")         .setValue(6378137);
+        params.parameter("semi_minor")         .setValue(6356752.3142);
+        params.parameter("central_meridian")   .setValue(  0.000);
+        params.parameter("false_easting")      .setValue(  0.0  );
+        params.parameter("false_northing")     .setValue(  0.0  );
+        transform = provider.createMathTransform(params);
+        doTransform(new DirectPosition2D(-2.5, 51.37),
+                    new DirectPosition2D(-186684.19563521043, 6016176.656912819), transform);
     }
 
-    /**
+    /*
      * Check if two coordinate points are equals, in the limits of the specified
      * tolerance vector.
      *
@@ -90,7 +66,8 @@ public final class MollweideTest {
         assertEquals("The coordinate point doesn't have the expected dimension",
                      expected.getDimension(), dimension);
         for (int i=0; i<dimension; i++) {
-            assertEquals("Mismatch for ordinate "+i+" (zero-based):",
+            final String message = String.format("Mismatch for ordinate %d (zero-based):", i);
+            assertEquals(message,
                          expected.getOrdinate(i), actual.getOrdinate(i),
                          tolerance[Math.min(i, lastToleranceIndex)]);
         }
