@@ -13,18 +13,18 @@ import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.TransformException;
 
 
-public final class MollweideTest {
+public final class SinusoidalTest {
     // Tolerance for test when units are degrees.
     private static final double[] TOL_DEG = {1.0E-6, 1.0E-6};
 
     // Tolerance for test when units are metres.
     private static final double[] TOL_M = {1.0E-2, 1.0E-2};
 
-    private Mollweide.Provider provider;
+    private Sinusoidal.Provider provider;
 
     @Before
     public void setUp() {
-        provider = new Mollweide.Provider();
+        provider = new Sinusoidal.Provider();
     }
 
     @After
@@ -33,7 +33,7 @@ public final class MollweideTest {
     }
 
     @Test
-    public void testMollweide() throws TransformException {
+    public void testSinusoidal() throws TransformException {
 
         MathTransform transform;
 
@@ -43,9 +43,10 @@ public final class MollweideTest {
         params.parameter("central_meridian")   .setValue(  0.000);
         params.parameter("false_easting")      .setValue(  0.0  );
         params.parameter("false_northing")     .setValue(  0.0  );
+
         transform = provider.createMathTransform(params);
         doTransform(new DirectPosition2D(-2.5, 51.37),
-                    new DirectPosition2D(-186684.19563521043, 6016176.656912819), transform);
+                    new DirectPosition2D(-173738.75446886677, 5718482.242050462), transform);
     }
 
     /*
@@ -60,8 +61,7 @@ public final class MollweideTest {
      */
     private static void assertPositionEquals(final DirectPosition expected,
                                              final DirectPosition actual,
-                                             final double[]       tolerance)
-    {
+                                             final double[]       tolerance) {
         final int dimension = actual.getDimension();
         final int lastToleranceIndex = tolerance.length-1;
         assertEquals("The coordinate point doesn't have the expected dimension",
