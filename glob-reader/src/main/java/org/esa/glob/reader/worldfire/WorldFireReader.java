@@ -39,7 +39,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 
-// TODO - TBD: really use the optional gif-file
+// TODO - TBD: use the optional gif-file?
 // TODO - read from zip files
 // TODO - consider reading zips in zip files (e.g. annual time series)
 
@@ -84,6 +84,7 @@ class WorldFireReader extends AbstractProductReader {
             Debug.trace("Could not create GeoCoding");
             e.printStackTrace();
         }
+        // todo - pin layer needs speed improvements; with more than 6000 pins it is slow 
         final ProductNodeGroup<Pin> pinGroup = product.getPinGroup();
         List<FireSpot> fireList = getFireSpotList(inputFile);
         for (FireSpot fireSpot : fireList) {
@@ -92,6 +93,7 @@ class WorldFireReader extends AbstractProductReader {
         Band fireBand = product.addBand("fire_" + productName, ProductData.TYPE_UINT8);
         fireBand.setNoDataValue(0);
         fireBand.setNoDataValueUsed(true);
+        // todo - define final IndexCoding
         final IndexCoding indexCoding = new IndexCoding("Fire");
         indexCoding.addIndex("no-data", 0, "No data");
         indexCoding.addIndex("fire", 255, "Fire detected");
@@ -180,12 +182,6 @@ class WorldFireReader extends AbstractProductReader {
         productFile.setContent(inputFile);
         result.addChild(productFile);
 
-        final File gifMapFile = FileUtils.exchangeExtension(inputFile, ".gif");
-        if (gifMapFile.exists()) {
-            final TreeNode<File> mapFile = new TreeNode<File>(gifMapFile.getName());
-            mapFile.setContent(gifMapFile);
-            result.addChild(mapFile);
-        }
         return result;
     }
 
@@ -220,6 +216,7 @@ class WorldFireReader extends AbstractProductReader {
             final float lon = Float.parseFloat(columns[4]);
             return new FireSpot("Fire_" + index, calendar, new GeoPos(lat, lon));
         } else if (columns.length == 6) { // ATSR2
+            // todo - implement
             return null;//new FireSpot();
         }
         return null;
@@ -234,7 +231,7 @@ class WorldFireReader extends AbstractProductReader {
                   String.format("%1$tF", date),       // same as "%tY-%tm-%td"
                   "Fire",
                   null, geoPos,
-                  new PlacemarkSymbol("FireIcon", new Rectangle(0, 0, 4, 4)));
+                  new PlacemarkSymbol("FireIcon", new Rectangle(0, 0, 4, 4)));  // todo - define symbol
             this.date = (Calendar) date.clone();
         }
 

@@ -1,20 +1,17 @@
 package org.esa.glob.reader.worldfire;
 
+import org.esa.beam.framework.datamodel.GeoCoding;
+import org.esa.beam.framework.datamodel.GeoPos;
+import org.esa.beam.framework.datamodel.PixelPos;
+import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.util.TreeNode;
 import org.esa.beam.util.io.FileUtils;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.GeoCoding;
-import org.esa.beam.framework.datamodel.PixelPos;
-import org.esa.beam.framework.datamodel.GeoPos;
-import org.esa.beam.jai.ImageManager;
 import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
-import java.awt.image.Raster;
-import java.awt.image.RenderedImage;
 
 public class WorldFireReaderTest {
 
@@ -35,7 +32,7 @@ public class WorldFireReaderTest {
         assertSame(file, reader.getInput());
         final TreeNode<File> productComponents = reader.getProductComponents();
         assertNotNull(productComponents);
-        assertEquals(2, productComponents.getChildren().length);
+        assertEquals(1, productComponents.getChildren().length);
     }
 
     @Test
@@ -62,8 +59,6 @@ public class WorldFireReaderTest {
         assertEquals(new PixelPos(3600, 1800), geoCoding.getPixelPos(new GeoPos(-90, 180), null));
         assertEquals(new PixelPos(0, 1800), geoCoding.getPixelPos(new GeoPos(-90, -180), null));
 
-        final RenderedImage image = product.getBandAt(0).getSourceImage().getImage(3);
-        final Raster data = image.getData();
     }
 
     @Test
