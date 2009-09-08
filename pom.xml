@@ -8,7 +8,7 @@
     <version>0.1-SNAPSHOT</version>
     <name>GlobToolbox</name>
 
-    <organization>        <!-- Correct this-->
+    <organization>        <!-- TODO  Correct this-->
         <name>Brockmann Consult GmbH</name>
         <url>http://www.brockmann-consult.de</url>
     </organization>
@@ -22,9 +22,20 @@
         </license>
     </licenses>
 
+        <properties>
+        <!--
+           In version 3.0 of Maven the sourceEncoding property will be embedded in the
+           build tag. For now the convention is to that it as property.
+           TODO: Move the sourceEncoding property to the build tag if version 3.0 is released
+           -->
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <beam.version>4.7-SNAPSHOT</beam.version>
+    </properties>
+
     <modules>
         <module>glob-reader</module>
         <module>geotools-proj</module>
+        <module>glob-bootstrap</module>
     </modules>
 
     <dependencies>
@@ -39,7 +50,12 @@
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-core</artifactId>
-                <version>4.7-SNAPSHOT</version>
+                <version>${beam.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.esa.beam</groupId>
+                <artifactId>beam-bootstrap</artifactId>
+                <version>${beam.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -114,15 +130,6 @@
             <url>scp://apache.bc.local/bc-mvn-repo/os</url>
         </snapshotRepository>
     </distributionManagement>
-
-    <!--
-       In version 3.0 of Maven the sourceEncoding property will be embedded in the
-       build tag. For now the convention is to that it as property.
-       TODO: Move the sourceEncoding property to the build tag if version 3.0 is released
-       -->
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
 
     <build>
         <pluginManagement>
