@@ -83,14 +83,14 @@ public class Sinusoidal extends MapProjection {
      */
     @Override
     protected Point2D transformNormalized(double x, double y, final Point2D ptDst) throws ProjectionException {
-        double pixX = x * Math.cos(y);
-        double pixY = y;
+        double mapX = x * Math.cos(y);
+        double mapY = y;
 
         if (ptDst != null) {
-            ptDst.setLocation(pixX, pixY);
+            ptDst.setLocation(mapX, mapY);
             return ptDst;
         }
-        return new Point2D.Double(pixX, pixY);
+        return new Point2D.Double(mapX, mapY);
     }
 
     /**

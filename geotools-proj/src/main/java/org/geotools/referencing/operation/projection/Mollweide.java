@@ -117,14 +117,14 @@ public class Mollweide extends MapProjection {
         } else {
             y *= 0.5;
         }
-        double pixX = cx * x * Math.cos(y);
-        double pixY = cy * Math.sin(y);
+        double mapX = cx * x * Math.cos(y);
+        double mapY = cy * Math.sin(y);
 
         if (ptDst != null) {
-            ptDst.setLocation(pixX, pixY);
+            ptDst.setLocation(mapX, mapY);
             return ptDst;
         }
-        return new Point2D.Double(pixX, pixY);
+        return new Point2D.Double(mapX, mapY);
     }
 
     /**
