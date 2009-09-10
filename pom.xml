@@ -34,6 +34,7 @@
 
     <modules>
         <module>glob-fire-reader</module>
+        <module>glob-cover-reader</module>
         <module>geotools-proj</module>
         <module>glob-bootstrap</module>
     </modules>
@@ -57,6 +58,12 @@
                 <artifactId>beam-bootstrap</artifactId>
                 <version>${beam.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.esa.beam</groupId>
+                <artifactId>beam-netcdf-reader</artifactId>
+                <version>1.0.3</version>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 
