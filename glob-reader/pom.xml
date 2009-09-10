@@ -7,8 +7,8 @@
         <groupId>org.esa.glob</groupId>
         <version>0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>glob-reader</artifactId>
-    <name>GlobToolbox Reader</name>
+    <artifactId>glob-fire-reader</artifactId>
+    <name>GlobToolbox ATSR World Fire Reader</name>
     <dependencies>
         <dependency>
             <groupId>org.esa.beam</groupId>

@@ -33,7 +33,7 @@
     </properties>
 
     <modules>
-        <module>glob-reader</module>
+        <module>glob-fire-reader</module>
         <module>geotools-proj</module>
         <module>glob-bootstrap</module>
     </modules>
