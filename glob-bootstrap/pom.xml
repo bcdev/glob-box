@@ -20,7 +20,7 @@
         </dependency>
         <dependency>
             <groupId>org.esa.glob</groupId>
-            <artifactId>glob-reader</artifactId>
+            <artifactId>glob-fire-reader</artifactId>
             <version>${pom.version}</version>
         </dependency>
         <dependency>
