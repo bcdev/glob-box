@@ -12,10 +12,12 @@ import org.jdom.output.Format;
 import org.jdom.output.XMLOutputter;
 import ucar.ma2.Array;
 import ucar.ma2.DataType;
+import ucar.ma2.InvalidRangeException;
+import ucar.ma2.Section;
+import ucar.nc2.Attribute;
+import ucar.nc2.Group;
 import ucar.nc2.NetcdfFile;
 import ucar.nc2.Variable;
-import ucar.nc2.Group;
-import ucar.nc2.Attribute;
 import ucar.nc2.iosp.hdf4.ODLparser;
 
 import java.io.File;
@@ -26,16 +28,10 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
-// CODE SNIPPET: Reading data
-//                try {
-//                    final Array array = ncfile.getIosp().readData(variable, shapeAsSection);
-//                    final long l = array.getSize();
-//                } catch (InvalidRangeException e) {
-//                    throw new IOException(e);
-//                }
-
 public class GlobCoverMosaicReader extends AbstractProductReader {
+
     private static final boolean DEBUG = true;
+    private static final Object LOCK = new Object();
 
     private static final String XDIM = "XDim";
     private static final String YDIM = "YDim";
@@ -51,6 +47,7 @@ public class GlobCoverMosaicReader extends AbstractProductReader {
     private static final String ATTRIB_FILL_VALUE = "_FillValue";
 
     private static final Map<DataType, Integer> dataTypeMap = new EnumMap<DataType, Integer>(DataType.class);
+
     static {
         dataTypeMap.put(DataType.BYTE, ProductData.TYPE_INT8);
         dataTypeMap.put(DataType.INT, ProductData.TYPE_INT32);
@@ -70,12 +67,8 @@ public class GlobCoverMosaicReader extends AbstractProductReader {
 
     @Override
     protected Product readProductNodesImpl() throws IOException {
-        try {
-            ncfile = getInputNetcdfFile();
-            return createProduct();
-        } finally {
-            close();
-        }
+        ncfile = getInputNetcdfFile();
+        return createProduct();
     }
 
     @Override
@@ -83,7 +76,39 @@ public class GlobCoverMosaicReader extends AbstractProductReader {
                                           int sourceStepX, int sourceStepY, Band destBand, int destOffsetX,
                                           int destOffsetY, int destWidth, int destHeight, ProductData destBuffer,
                                           ProgressMonitor pm) throws IOException {
-        // todo - read data
+
+        final Group group = ncfile.getRootGroup().findGroup(GROUP_POSTEL).findGroup(GROUP_DATA_FIELDS);
+        final Variable variable = group.findVariable(destBand.getName());
+        if (variable == null) {
+            throw new IOException("Unknown band name: " + destBand.getName());
+        }
+        pm.beginTask("Reading band '" + destBand.getName() + "'...", 1);
+        try {
+            final int indexDimX = variable.findDimensionIndex(XDIM);
+            final int indexDimY = variable.findDimensionIndex(YDIM);
+            int[] origin = new int[2];
+            int[] size = new int[2];
+            int[] stride = new int[2];
+            origin[indexDimX] = sourceOffsetX;
+            origin[indexDimY] = sourceOffsetY;
+            size[indexDimX] = sourceWidth;
+            size[indexDimY] = sourceHeight;
+            stride[indexDimX] = sourceStepX;
+            stride[indexDimY] = sourceStepY;
+            final Section section = new Section(origin, size, stride);
+            final Array array;
+            synchronized (LOCK) {
+                array = ncfile.getIosp().readData(variable, section);
+            }
+            final Object storage = array.getStorage();
+            System.arraycopy(storage, 0, destBuffer.getElems(),
+                             0, destWidth * destHeight);
+            pm.worked(1);
+        } catch (InvalidRangeException e) {
+            throw new IOException(e);
+        } finally {
+            pm.done();
+        }
     }
 
     @Override
@@ -102,9 +127,9 @@ public class GlobCoverMosaicReader extends AbstractProductReader {
         final String fileName = FileUtils.getFileNameFromPath(ncfile.getLocation());
         final String prodName = FileUtils.getFilenameWithoutExtension(fileName);
         final String prodType;
-        if(fileName.toUpperCase().contains("ANNUAL")) {
+        if (fileName.toUpperCase().contains("ANNUAL")) {
             prodType = PRODUCT_TYPE_ANUUAL;
-        }else {
+        } else {
             prodType = PRODUCT_TYPE_BIMON;
         }
         final Product product = new Product(prodName, prodType, width, height);
@@ -126,33 +151,35 @@ public class GlobCoverMosaicReader extends AbstractProductReader {
             final Integer dataType = getMappedDataType(variable);
             final int width = variable.getDimension(variable.findDimensionIndex(XDIM)).getLength();
             final int height = variable.getDimension(variable.findDimensionIndex(YDIM)).getLength();
-            final Band band = new Band(name, dataType,  width, height);
+            final Band band = new Band(name, dataType, width, height);
 
             Attribute fillAttrib = variable.findAttribute(ATTRIB_FILL_VALUE);
-            if(fillAttrib != null) {
+            if (fillAttrib != null) {
                 band.setNoDataValueUsed(true);
                 band.setNoDataValue(fillAttrib.getNumericValue().doubleValue());
             }
             // Product Description Manual - GlobCover: p. 17
             // The physical value FDphys is given by the following formula:
             // FDphys = (FD - OffsetFD) / ScaleFD  TODO - this is different to the normal BEAM scale
-            final String offsetName = String.format("%s%s%s", gridAttribPrefix, "Offset ",name);
+            final String offsetName = String.format("%s%s%s", gridAttribPrefix, "Offset ", name);
             final Number offset = ncfile.findGlobalAttributeIgnoreCase(offsetName).getNumericValue();
             band.setScalingOffset(offset.doubleValue());
-            final String scaleName = String.format("%s%s%s", gridAttribPrefix, "Scale ",name);
+            final String scaleName = String.format("%s%s%s", gridAttribPrefix, "Scale ", name);
             final Number scale = ncfile.findGlobalAttributeIgnoreCase(scaleName).getNumericValue();
             band.setScalingOffset(scale.doubleValue());
+            band.setDescription(variable.getDescription());
+            band.setUnit(variable.getUnitsString());
             product.addBand(band);
         }
     }
 
     private Integer getMappedDataType(Variable variable) throws IOException {
         Integer type = dataTypeMap.get(variable.getDataType());
-        if(type == null) {
-            throw new IOException("Can not determine data type of variable '"+variable.getShortName() + "'");
+        if (type == null) {
+            throw new IOException("Can not determine data type of variable '" + variable.getShortName() + "'");
         }
         Attribute unsignedAttrib = variable.findAttribute(ATTRIB_UNSIGNED);
-        if(unsignedAttrib != null && Boolean.parseBoolean(unsignedAttrib.getStringValue())) {
+        if (unsignedAttrib != null && Boolean.parseBoolean(unsignedAttrib.getStringValue())) {
             type += 10;            // differece between signed and unsigned data type is 10
         }
         return type;
@@ -163,7 +190,7 @@ public class GlobCoverMosaicReader extends AbstractProductReader {
         try {
             return ProductData.UTC.parse(dateString, "yyyy/dd/MM HH:mm:ss");
         } catch (ParseException e) {
-               Debug.trace(String.format("Can not parse date of attriubte '%s': %s", attribName, e.getMessage()));
+            Debug.trace(String.format("Can not parse date of attriubte '%s': %s", attribName, e.getMessage()));
         }
         return ProductData.UTC.create(new Date(), 0);
     }
