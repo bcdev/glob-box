@@ -4,15 +4,34 @@ import com.bc.ceres.core.ProgressMonitor;
 
 import org.esa.beam.dataio.merisl3.ISINGrid;
 import org.esa.beam.dataio.netcdf.NcAttributeMap;
+import org.esa.beam.dataio.netcdf.NetcdfReaderUtils;
 import org.esa.beam.framework.dataio.AbstractProductReader;
 import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.CrsGeoCoding;
+import org.esa.beam.framework.datamodel.GeoCoding;
+import org.esa.beam.framework.datamodel.GeoPos;
+import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.util.Debug;
 import org.esa.beam.util.io.FileUtils;
+import org.geotools.referencing.ReferencingFactoryFinder;
+import org.geotools.referencing.crs.DefaultGeocentricCRS;
+import org.geotools.referencing.crs.DefaultGeographicCRS;
+import org.geotools.referencing.crs.DefaultProjectedCRS;
+import org.geotools.referencing.cs.DefaultCartesianCS;
 import org.jdom.Element;
 import org.jdom.output.Format;
 import org.jdom.output.XMLOutputter;
+import org.opengis.parameter.ParameterValueGroup;
+import org.opengis.referencing.FactoryException;
+import org.opengis.referencing.NoSuchIdentifierException;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.opengis.referencing.datum.Ellipsoid;
+import org.opengis.referencing.operation.MathTransform;
+import org.opengis.referencing.operation.MathTransformFactory;
+import org.opengis.referencing.operation.TransformException;
+
 import ucar.ma2.Array;
 import ucar.ma2.DataType;
 import ucar.ma2.InvalidRangeException;
@@ -25,11 +44,17 @@ import ucar.nc2.Group;
 import ucar.nc2.Attribute;
 import ucar.nc2.iosp.hdf4.ODLparser;
 
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Rectangle2D;
 import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -57,21 +82,15 @@ public class GlobAerosolReader extends AbstractProductReader {
     private static final String ATTRIB_UNSIGNED = "_Unsigned";
     private static final String ATTRIB_FILL_VALUE = "_FillValue";
 
-    private static final Map<DataType, Integer> dataTypeMap = new EnumMap<DataType, Integer>(DataType.class);
-    static {
-        dataTypeMap.put(DataType.BYTE, ProductData.TYPE_INT8);
-        dataTypeMap.put(DataType.INT, ProductData.TYPE_INT32);
-        dataTypeMap.put(DataType.SHORT, ProductData.TYPE_INT16);
-        dataTypeMap.put(DataType.FLOAT, ProductData.TYPE_FLOAT32);
-        dataTypeMap.put(DataType.DOUBLE, ProductData.TYPE_FLOAT64);
-    }
-
-    private static final String PRODUCT_TYPE_ANUUAL = "GC_L3_AN";
-    private static final String PRODUCT_TYPE_BIMON = "GC_L3_BI";
-
     private NetcdfFile ncfile;
-
     private ISINGrid isinGrid;
+    private Map<Band, VariableAccessor1D> accessorMap;
+    private RowInfo[] rowInfos;
+    private Band lonBand;
+
+    private int width;
+
+    private int height;
 
     protected GlobAerosolReader(GlobAerosolReaderPlugIn readerPlugIn) {
         super(readerPlugIn);
@@ -79,12 +98,9 @@ public class GlobAerosolReader extends AbstractProductReader {
 
     @Override
     protected Product readProductNodesImpl() throws IOException {
-        try {
-            ncfile = getInputNetcdfFile();
-            return createProduct();
-        } finally {
-            close();
-        }
+        ncfile = getInputNetcdfFile();
+        accessorMap = new HashMap<Band, VariableAccessor1D>();
+        return createProduct();
     }
 
     @Override
@@ -92,11 +108,75 @@ public class GlobAerosolReader extends AbstractProductReader {
                                           int sourceStepX, int sourceStepY, Band destBand, int destOffsetX,
                                           int destOffsetY, int destWidth, int destHeight, ProductData destBuffer,
                                           ProgressMonitor pm) throws IOException {
-        // todo - read data
+        if (sourceStepX != 1 || sourceStepY != 1) {
+            throw new IOException("Sub-sampling is not supported by this product reader.");
+        }
+
+        if (sourceWidth != destWidth || sourceHeight != destHeight) {
+            throw new IllegalStateException("sourceWidth != destWidth || sourceHeight != destHeight");
+        }
+        
+        synchronized (this) {
+            if (rowInfos == null) {
+                rowInfos = createRowInfos();
+            }
+        }
+        
+        pm.beginTask("Reading band '" + destBand.getName() + "'...", sourceHeight);
+        try {
+            for (int y = sourceOffsetY; y < sourceOffsetY + sourceHeight; y++) {
+                if (pm.isCanceled()) {
+                    break;
+                }
+                if (destBand.isNoDataValueUsed()) {
+                    double noDataValue = destBand.getNoDataValue();
+                    for (int x = sourceOffsetX; x < sourceOffsetX + sourceWidth; x++) {
+                        final int rasterIndex = sourceWidth * (y - sourceOffsetY) + (x - sourceOffsetX);
+                        destBuffer.setElemDoubleAt(rasterIndex, noDataValue);
+                    }
+                }
+                final int rowIndex = (height - 1) - y;
+                RowInfo rowInfo = rowInfos[rowIndex];
+                if (rowInfo != null ) {
+                    Array lonData = read(lonBand, rowInfo);
+                    Array bandData = read(destBand, rowInfo);
+                    int dataSize = (int) bandData.getSize();
+                    for (int dataIndex = 0; dataIndex < dataSize; dataIndex++) {
+                        double lon = lonData.getDouble(dataIndex) + 180;
+                        int colIndex = isinGrid.getColIndex(rowIndex, lon);
+                        
+                        int rowLength = isinGrid.getRowLength(rowIndex);
+                        int x = isinGrid.getRowCount() - (rowLength / 2) + colIndex;
+                        
+                        if (x >= sourceOffsetX && x < sourceOffsetX + sourceWidth) {
+                            final int rasterIndex = sourceWidth * (y - sourceOffsetY) + (x - sourceOffsetX);
+                            destBuffer.setElemDoubleAt(rasterIndex,  bandData.getDouble(dataIndex));
+                        }
+                    }
+                } else {
+                    // ???
+                }
+                pm.worked(1);
+            }
+        } finally {
+            pm.done();
+        }
+    }
+    
+    private Array read(Band band, RowInfo rowInfo) throws IOException {
+        VariableAccessor1D accessor = accessorMap.get(band);
+        try {
+            synchronized (ncfile) {
+                return accessor.read(rowInfo.offset, rowInfo.length).reduce();
+            }
+        } catch (InvalidRangeException e) {
+            throw new IOException(e);
+        }
     }
 
     @Override
     public void close() throws IOException {
+        accessorMap.clear();
         if (ncfile != null) {
             ncfile.close();
             ncfile = null;
@@ -106,14 +186,13 @@ public class GlobAerosolReader extends AbstractProductReader {
 
     private Product createProduct() throws IOException {
         isinGrid = new ISINGrid(2004);
-        int width = isinGrid.getRowCount() * 2;
-        int height = isinGrid.getRowCount();
+        width = isinGrid.getRowCount() * 2;
+        height = isinGrid.getRowCount();
         NcAttributeMap globalAttributes = NcAttributeMap.create(ncfile);
         String prodName = globalAttributes.getStringValue("ProductID");
         if (prodName == null) {
             prodName = FileUtils.getFilenameWithoutExtension(ncfile.getLocation());
         }
-        final String fileName = FileUtils.getFileNameFromPath(ncfile.getLocation());
         final String prodType = "FOOOOOOOOOOOOOOO";
         final Product product = new Product(prodName, prodType, width, height);
         //TODO
@@ -122,98 +201,66 @@ public class GlobAerosolReader extends AbstractProductReader {
 
         addBands(product);
         // todo - geocoding
-        // todo - meta data
+        addGeoCoding(product);
+        
+        NetcdfReaderUtils.transferMetadata(ncfile, product.getMetadataRoot());
         return product;
+    }
+    
+    private void addGeoCoding(Product product) throws IOException {
+        DefaultGeographicCRS base = DefaultGeographicCRS.WGS84;
+        
+        final MathTransformFactory transformFactory = ReferencingFactoryFinder.getMathTransformFactory(null);
+        ParameterValueGroup parameters;
+        try {
+            parameters = transformFactory.getDefaultParameters("OGC:Sinusoidal");
+        } catch (NoSuchIdentifierException e) {
+            throw new IOException(e);
+        }
+
+        Ellipsoid ellipsoid = base.getDatum().getEllipsoid();
+        parameters.parameter("semi_major").setValue(ellipsoid.getSemiMajorAxis());
+        parameters.parameter("semi_minor").setValue(ellipsoid.getSemiMinorAxis());
+
+        MathTransform mathTransform;
+        try {
+            mathTransform = transformFactory.createParameterizedTransform(parameters);
+        } catch (Exception e) {
+            throw new IOException(e);
+        }
+        
+        CoordinateReferenceSystem modelCrs = new DefaultProjectedCRS("", base, mathTransform, DefaultCartesianCS.PROJECTED);
+//        CoordinateReferenceSystem modelCrs = base;
+        Rectangle rectangle = new Rectangle(0, 0, width, height);
+        AffineTransform i2m = new AffineTransform();
+        i2m.translate(-product.getSceneRasterWidth() / 2, -product.getSceneRasterHeight() / 2);
+        try {
+            CrsGeoCoding geoCoding = new CrsGeoCoding(modelCrs, rectangle, i2m);
+            product.setGeoCoding(geoCoding);
+        } catch (Exception e) {
+            throw new IOException(e);
+        }
     }
 
     private void addBands(Product product) throws IOException {
-//        final String gridAttribPrefix = String.format("%s/%s/", GROUP_POSTEL, GROUP_GRID_ATTRIBUTES);
         List<Variable> variableList = ncfile.getRootGroup().getVariables();
         for (Variable variable : variableList) {
-            System.out.println(variable);
             int cellDimemsionIndex = variable.findDimensionIndex("cell");
-            System.out.println("cellIndex = "+ cellDimemsionIndex);
-            Dimension dimension = variable.getDimension(cellDimemsionIndex);
-            List<Range> ranges = variable.getRanges();
-            for (Range range : ranges) {
-                System.out.println(range.getName()+" - "+range.toString());
+            if (cellDimemsionIndex != -1) {
+                Band band = NetcdfReaderUtils.createBand(variable, width, height);
+                accessorMap.put(band, new VariableAccessor1D(variable, "cell"));
+                product.addBand(band);
+                if (band.getName().equals("lon")) {
+                    lonBand = band;
+                }
             }
-            
-//            Section section = new Section();
-//            section.
-//            try {
-//                Array array = variable.read(section);
-//                array.get1DJavaArray(getClass())
-//            } catch (InvalidRangeException e) {
-//                // TODO Auto-generated catch block
-//                e.printStackTrace();
+//            Dimension dimension = variable.getDimension(cellDimemsionIndex);
+//            List<Range> ranges = variable.getRanges();
+//            for (Range range : ranges) {
+//                System.out.println(range.getName()+" - "+range.toString());
 //            }
         }
-//        final Group group = ncfile.getRootGroup().findGroup(GROUP_POSTEL).findGroup(GROUP_DATA_FIELDS);
-//        final List<Variable> variableList = group.getVariables();
-//        for (Variable variable : variableList) {
-//            final String name = variable.getShortName();
-//            final Integer dataType = getMappedDataType(variable);
-//            final int width = variable.getDimension(variable.findDimensionIndex(XDIM)).getLength();
-//            final int height = variable.getDimension(variable.findDimensionIndex(YDIM)).getLength();
-//            final Band band = new Band(name, dataType,  width, height);
-//
-//            Attribute fillAttrib = variable.findAttribute(ATTRIB_FILL_VALUE);
-//            if(fillAttrib != null) {
-//                band.setNoDataValueUsed(true);
-//                band.setNoDataValue(fillAttrib.getNumericValue().doubleValue());
-//            }
-//            // Product Description Manual - GlobCover: p. 17
-//            // The physical value FDphys is given by the following formula:
-//            // FDphys = (FD - OffsetFD) / ScaleFD  TODO - this is different to the normal BEAM scale
-//            final String offsetName = String.format("%s%s%s", gridAttribPrefix, "Offset ",name);
-//            final Number offset = ncfile.findGlobalAttributeIgnoreCase(offsetName).getNumericValue();
-//            band.setScalingOffset(offset.doubleValue());
-//            final String scaleName = String.format("%s%s%s", gridAttribPrefix, "Scale ",name);
-//            final Number scale = ncfile.findGlobalAttributeIgnoreCase(scaleName).getNumericValue();
-//            band.setScalingOffset(scale.doubleValue());
-//            product.addBand(band);
-//        }
     }
-
-    private Integer getMappedDataType(Variable variable) throws IOException {
-        Integer type = dataTypeMap.get(variable.getDataType());
-        if(type == null) {
-            throw new IOException("Can not determine data type of variable '"+variable.getShortName() + "'");
-        }
-        Attribute unsignedAttrib = variable.findAttribute(ATTRIB_UNSIGNED);
-        if(unsignedAttrib != null && Boolean.parseBoolean(unsignedAttrib.getStringValue())) {
-            type += 10;            // differece between signed and unsigned data type is 10
-        }
-        return type;
-    }
-
-    private ProductData.UTC getDate(String attribName) {
-        final String dateString = ncfile.findGlobalAttributeIgnoreCase(attribName).getStringValue();
-        try {
-            return ProductData.UTC.parse(dateString, "yyyy/dd/MM HH:mm:ss");
-        } catch (ParseException e) {
-               Debug.trace(String.format("Can not parse date of attriubte '%s': %s", attribName, e.getMessage()));
-        }
-        return ProductData.UTC.create(new Date(), 0);
-    }
-
-//    private void printDebugInfo(boolean debug) {
-//        if (debug) {
-//            System.out.println(ncfile);
-//            // geocoding information is contained in variable StructMetadata.0, which is a string
-//            final Variable structMetadata0 = ncfile.findVariable(STRUCT_METADATA_0);
-//            try {
-//                final Array array = structMetadata0.read();
-//                final String structMetadata0Text = new String(array.getDataAsByteBuffer().array());
-//                final Element structMetadata0Elem = new ODLparser().parseFromString(structMetadata0Text);
-//                structMetadata0Elem.setName("StructMetadata.0");
-//                new XMLOutputter(Format.getPrettyFormat()).output(structMetadata0Elem, System.out);
-//            } catch (IOException e) {
-//                System.err.printf("Unable to print '%s': %s%n", STRUCT_METADATA_0, e.getMessage());
-//            }
-//        }
-//    }
 
     private NetcdfFile getInputNetcdfFile() throws IOException {
         final Object input = getInput();
@@ -229,6 +276,59 @@ public class GlobAerosolReader extends AbstractProductReader {
         }
 
         return NetcdfFile.open(path);
+    }
+    
+    private RowInfo[] createRowInfos() throws IOException {
+        final RowInfo[] binLines = new RowInfo[height];
+        final Variable latVariable = ncfile.getRootGroup().findVariable("lat");
+        final float[] latValues = (float[]) latVariable.read().getStorage();
+        double deltaLat = isinGrid.getDeltaLat();
+        double lastLatValue = -91;
+        int lastRowIndex = -1;
+        int lineOffset = 0;
+        int lineLength = 0;
+        for (int i = 0; i < latValues.length; i++) {
+
+            final double lat = latValues[i];
+            if (lat < lastLatValue) {
+                throw new IOException("Unrecognized level-3 format. Bins numbers expected to appear in ascending order.");
+            }
+            if (lastLatValue == lat) {
+                lineLength++;
+            } else {
+                lastLatValue = lat;
+                int rowIndex = (int) Math.round(((lat + 90.0) / deltaLat)+0.5);
+
+                if (rowIndex == lastRowIndex) {
+                    throw new IOException("boooo");
+                }
+                if (lineLength > 0) {
+                    lastRowIndex = rowIndex;
+                    binLines[lastRowIndex] = new RowInfo(lineOffset, lineLength);
+                }
+                lineOffset = i;
+                lineLength = 1;
+            }
+        }
+
+        if (lineLength > 0) {
+            binLines[lastRowIndex] = new RowInfo(lineOffset, lineLength);
+        }
+
+        return binLines;
+    }
+    
+    private static final class RowInfo {
+
+        // offset of row within file
+        final int offset;
+        // number of bins per row
+        final int length;
+
+        public RowInfo(int offset, int length) {
+            this.offset = offset;
+            this.length = length;
+        }
     }
 
 }
