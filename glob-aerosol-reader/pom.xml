@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <artifactId>globtoolbox</artifactId>
+        <groupId>org.esa.glob</groupId>
+        <version>0.1-SNAPSHOT</version>
+    </parent>
+    <artifactId>glob-aerosol-reader</artifactId>
+    <name>GlobAerosol Reader</name>
+    <dependencies>
+        <dependency>
+            <groupId>org.esa.beam</groupId>
+            <artifactId>beam-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.beam</groupId>
+            <artifactId>beam-merisl3-reader</artifactId>
+            <version>1.0.100</version>
+        </dependency>
+    </dependencies>
+</project>
