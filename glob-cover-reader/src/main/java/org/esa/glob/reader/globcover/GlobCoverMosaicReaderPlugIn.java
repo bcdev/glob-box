@@ -4,14 +4,13 @@ import org.esa.beam.framework.dataio.DecodeQualification;
 import org.esa.beam.framework.dataio.ProductReader;
 import org.esa.beam.framework.dataio.ProductReaderPlugIn;
 import org.esa.beam.util.io.BeamFileFilter;
-import org.esa.beam.dataio.netcdf.NetcdfReaderPlugIn;
 
 import java.io.File;
 import java.util.Locale;
 
 public class GlobCoverMosaicReaderPlugIn implements ProductReaderPlugIn {
 
-    private static final String DESCRIPTION = "GlobCover Bimonthly or Annual MERIS FR Mosaic";
+    private static final String DESCRIPTION = "GlobCover Bimonthly or Annual MERIS FR Mosaic Tile";
     private static final String[] FILE_EXTENSIONS = new String[]{".hdf"};
     private static final String FORMAT_NAME = "GLOBCOVER-L3-MOSAIC";
     private static final String[] FORMAT_NAMES = new String[]{FORMAT_NAME};

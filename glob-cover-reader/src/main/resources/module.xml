@@ -38,10 +38,10 @@
             <helpId>importGlobCoverMosaicProduct</helpId>
             <formatName>GLOBCOVER-L3-MOSAIC</formatName>
             <useAllFileFilter>false</useAllFileFilter>
-            <text>Import GlobCover Bimonthly or Annual MERIS FR Mosaic Product...</text>
+            <text>Import GlobCover Bimonthly or Annual MERIS FR Mosaic Tile Product...</text>
             <mnemonic/>
-            <shortDescr>Import a GlobCover Bimonthly or Annual MERIS FR Mosaic data product or product subset.</shortDescr>
-            <description>Import a GlobCover Bimonthly or Annual MERIS FR Mosaic data product or product subset.</description>
+            <shortDescr>Import a GlobCover Bimonthly or Annual MERIS FR Mosaic Tile data product or product subset.</shortDescr>
+            <description>Import a GlobCover Bimonthly or Annual MERIS FR Mosaic Tile data product or product subset.</description>
         </action>
     </extension>
 
