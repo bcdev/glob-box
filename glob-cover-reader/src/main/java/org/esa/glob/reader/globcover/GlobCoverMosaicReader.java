@@ -3,10 +3,19 @@ package org.esa.glob.reader.globcover;
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.framework.dataio.AbstractProductReader;
 import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.BitmaskDef;
+import org.esa.beam.framework.datamodel.ColorPaletteDef;
+import org.esa.beam.framework.datamodel.CrsGeoCoding;
+import org.esa.beam.framework.datamodel.GeoPos;
+import org.esa.beam.framework.datamodel.ImageInfo;
+import org.esa.beam.framework.datamodel.IndexCoding;
+import org.esa.beam.framework.datamodel.MetadataAttribute;
+import org.esa.beam.framework.datamodel.MetadataElement;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.util.Debug;
 import org.esa.beam.util.io.FileUtils;
+import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.jdom.Element;
 import org.jdom.output.Format;
 import org.jdom.output.XMLOutputter;
@@ -20,9 +29,13 @@ import ucar.nc2.NetcdfFile;
 import ucar.nc2.Variable;
 import ucar.nc2.iosp.hdf4.ODLparser;
 
+import java.awt.Color;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Rectangle2D;
 import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.EnumMap;
 import java.util.List;
@@ -30,7 +43,6 @@ import java.util.Map;
 
 public class GlobCoverMosaicReader extends AbstractProductReader {
 
-    private static final boolean DEBUG = true;
     private static final Object LOCK = new Object();
 
     private static final String XDIM = "XDim";
@@ -58,6 +70,8 @@ public class GlobCoverMosaicReader extends AbstractProductReader {
 
     private static final String PRODUCT_TYPE_ANUUAL = "GC_L3_AN";
     private static final String PRODUCT_TYPE_BIMON = "GC_L3_BI";
+    private static final double PIXEL_SIZE_DEG = 1/360.0;
+    private static final double PIXEL_CENTER = 0.5;
 
     private NetcdfFile ncfile;
 
@@ -68,6 +82,7 @@ public class GlobCoverMosaicReader extends AbstractProductReader {
     @Override
     protected Product readProductNodesImpl() throws IOException {
         ncfile = getInputNetcdfFile();
+        printDebugInfo(false);
         return createProduct();
     }
 
@@ -76,7 +91,6 @@ public class GlobCoverMosaicReader extends AbstractProductReader {
                                           int sourceStepX, int sourceStepY, Band destBand, int destOffsetX,
                                           int destOffsetY, int destWidth, int destHeight, ProductData destBuffer,
                                           ProgressMonitor pm) throws IOException {
-
         final Group group = ncfile.getRootGroup().findGroup(GROUP_POSTEL).findGroup(GROUP_DATA_FIELDS);
         final Variable variable = group.findVariable(destBand.getName());
         if (variable == null) {
@@ -121,7 +135,6 @@ public class GlobCoverMosaicReader extends AbstractProductReader {
     }
 
     private Product createProduct() throws IOException {
-        printDebugInfo(DEBUG);
         int width = ncfile.findDimension(DF_DIMENSION_X).getLength();
         int height = ncfile.findDimension(DF_DIMENSION_Y).getLength();
         final String fileName = FileUtils.getFileNameFromPath(ncfile.getLocation());
@@ -133,12 +146,14 @@ public class GlobCoverMosaicReader extends AbstractProductReader {
             prodType = PRODUCT_TYPE_BIMON;
         }
         final Product product = new Product(prodName, prodType, width, height);
-        product.setStartTime(getDate(GA_START_DATE));
-        product.setEndTime(getDate(GA_END_DATE));
+        product.setStartTime(getDate(GA_START_DATE, prodType));
+        product.setEndTime(getDate(GA_END_DATE, prodType));
 
         addBands(product);
-        // todo - geocoding
-        // todo - meta data
+        addIndexCoding(product.getBand("SM"));
+        addMetadata(product.getMetadataRoot(), ncfile.findGroup(GROUP_POSTEL).getGroups());
+        addGeoCoding(product);
+
         return product;
     }
 
@@ -153,30 +168,151 @@ public class GlobCoverMosaicReader extends AbstractProductReader {
             final int height = variable.getDimension(variable.findDimensionIndex(YDIM)).getLength();
             final Band band = new Band(name, dataType, width, height);
 
+            final String offsetName = String.format("%s%s%s", gridAttribPrefix, "Offset ", name);
+            final Number offset = ncfile.findGlobalAttributeIgnoreCase(offsetName).getNumericValue();
+            final String scaleName = String.format("%s%s%s", gridAttribPrefix, "Scale ", name);
+            final Number scale = ncfile.findGlobalAttributeIgnoreCase(scaleName).getNumericValue();
+            // Product Description Manual - GlobCover: p. 17
+            // The physical value FDphys is given by the following formula:
+            // FDphys = (FD - OffsetFD) / ScaleFD
+            // that's why we have to convert the values
+            final double scaleFactor = 1 / scale.doubleValue();
+            double offsetValue = 0.0;
+            if (offset.doubleValue() != 0.0) {
+                offsetValue = -offset.doubleValue() / scale.doubleValue();
+            }
+            band.setScalingFactor(scaleFactor);
+            band.setScalingOffset(offsetValue);
+            band.setDescription(variable.getDescription());
+            band.setUnit(variable.getUnitsString());
             Attribute fillAttrib = variable.findAttribute(ATTRIB_FILL_VALUE);
             if (fillAttrib != null) {
                 band.setNoDataValueUsed(true);
                 band.setNoDataValue(fillAttrib.getNumericValue().doubleValue());
             }
-            // Product Description Manual - GlobCover: p. 17
-            // The physical value FDphys is given by the following formula:
-            // FDphys = (FD - OffsetFD) / ScaleFD  TODO - this is different to the normal BEAM scale
-            final String offsetName = String.format("%s%s%s", gridAttribPrefix, "Offset ", name);
-            final Number offset = ncfile.findGlobalAttributeIgnoreCase(offsetName).getNumericValue();
-            band.setScalingOffset(offset.doubleValue());
-            final String scaleName = String.format("%s%s%s", gridAttribPrefix, "Scale ", name);
-            final Number scale = ncfile.findGlobalAttributeIgnoreCase(scaleName).getNumericValue();
-            band.setScalingOffset(scale.doubleValue());
-            band.setDescription(variable.getDescription());
-            band.setUnit(variable.getUnitsString());
             product.addBand(band);
+        }
+    }
+
+    private void addIndexCoding(Band band) {
+        final IndexCoding coding = new IndexCoding("SM_coding");
+        final MetadataAttribute land = coding.addSample("LAND", 0, "Not cloud, shadow or edge AND land");
+        final MetadataAttribute flooded = coding.addSample("FLOODED", 1,"Not land and not cloud, shadow or edge");
+        final MetadataAttribute suspect = coding.addSample("SUSPECT", 2, "Cloud shadow or cloud edge");
+        final MetadataAttribute cloud = coding.addSample("CLOUD", 3, "Cloud");
+        final MetadataAttribute water = coding.addSample("WATER", 4, "Not land");
+        final MetadataAttribute snow = coding.addSample("SNOW", 5, "Snow");
+        final MetadataAttribute invalid = coding.addSample("INVALID", 6, "Invalid");
+        final Product product = band.getProduct();
+        product.getIndexCodingGroup().add(coding);
+        band.setSampleCoding(coding);
+        final ColorPaletteDef.Point[] points = new ColorPaletteDef.Point[]{
+                new ColorPaletteDef.Point(0, Color.GREEN.darker(), "land"),
+                new ColorPaletteDef.Point(1, Color.BLUE, "flooded"),
+                new ColorPaletteDef.Point(2, Color.ORANGE, "suspect"),
+                new ColorPaletteDef.Point(3, Color.GRAY, "cloud"),
+                new ColorPaletteDef.Point(4, Color.BLUE.darker(), "water"),
+                new ColorPaletteDef.Point(5, Color.LIGHT_GRAY, "snow"),
+                new ColorPaletteDef.Point(6, Color.RED, "invalid")
+        };
+        band.setImageInfo(new ImageInfo(new ColorPaletteDef(points)));
+        product.addBitmaskDef(new BitmaskDef("land", land.getDescription(), "SM == 0", Color.GREEN.darker(), 0.5f));
+        product.addBitmaskDef(
+                new BitmaskDef("flooded", flooded.getDescription(), "SM == 1", Color.BLUE, 0.5f));
+        product.addBitmaskDef(new BitmaskDef("suspect", suspect.getDescription(), "SM == 2", Color.ORANGE, 0.5f));
+        product.addBitmaskDef(new BitmaskDef("cloud", cloud.getDescription(), "SM == 3", Color.GRAY, 0.5f));
+        product.addBitmaskDef(new BitmaskDef("water", water.getDescription(), "SM == 4", Color.BLUE.darker(), 0.5f));
+        product.addBitmaskDef(new BitmaskDef("snow", snow.getDescription(), "SM == 5", Color.LIGHT_GRAY, 0.5f));
+        product.addBitmaskDef(new BitmaskDef("invalid", invalid.getDescription(), "SM == 6", Color.RED, 0.5f));
+    }
+    
+    private void addGeoCoding(Product product) throws IOException {
+        GeoPos ulPos = getUpperLeftCornerFromStructMetadata();
+        final Rectangle2D.Double rect = new Rectangle2D.Double(0, 0,
+                                                               product.getSceneRasterWidth(),
+                                                               product.getSceneRasterHeight());
+        AffineTransform transform = new AffineTransform();
+        transform.translate(ulPos.getLon(), ulPos.getLat());
+        transform.scale(PIXEL_SIZE_DEG, -PIXEL_SIZE_DEG);
+        transform.translate(-PIXEL_CENTER, -PIXEL_CENTER);
+
+        try {
+            final CrsGeoCoding geoCoding = new CrsGeoCoding(DefaultGeographicCRS.WGS84, rect, transform);
+            product.setGeoCoding(geoCoding);
+        } catch (Exception e) {
+            throw new IOException("Can not create GeoCoding: ", e);
+        }
+
+    }
+
+    private GeoPos getUpperLeftCornerFromStructMetadata() throws IOException {
+        final Variable structMetadata0 = ncfile.findVariable(STRUCT_METADATA_0);
+        final Array array = structMetadata0.read();
+        final String structMetadata0Text = new String(array.getDataAsByteBuffer().array());
+        final Element element = new ODLparser().parseFromString(structMetadata0Text);
+        final Element grid = element.getChild("GridStructure").getChild("GRID_1");
+        final Element ulPointDegElem = grid.getChild("UpperLeftPointMtrs");
+        List ulValueElements = ulPointDegElem.getChildren("value");
+        String ulPointLon = ((Element) ulValueElements.get(0)).getText();
+        String ulPointLat = ((Element) ulValueElements.get(1)).getText();
+        return createGeoPos(ulPointLon, ulPointLat);
+    }
+
+    static GeoPos createGeoPos(String lonString, String latString) {
+        float lon = dgmToDec(lonString);
+        float lat = dgmToDec(latString);
+        return new GeoPos(lat, lon);
+    }
+
+    private static float dgmToDec(String dgmString) {
+        final int dotIndex = dgmString.indexOf('.');
+        final int secondsIndex = Math.max(0, dotIndex - 3);
+        final float seconds = Float.parseFloat(dgmString.substring(secondsIndex));
+        final int minutes;
+        final int minutesIndex = Math.max(0, secondsIndex - 3);
+        if(secondsIndex > 0) {
+            minutes = Integer.parseInt(dgmString.substring(minutesIndex, secondsIndex));
+        }else {
+            minutes = 0;
+        }
+        final int degrees;
+        if(minutesIndex > 0) {
+            degrees = Integer.parseInt(dgmString.substring(0, minutesIndex));
+        }else {
+            degrees = 0;
+        }
+        return degrees + minutes / 60.0f + seconds / 3600.0f;
+    }
+
+    private void addMetadata(MetadataElement root, final List<Group> groups) {
+        for (Group group : groups) {
+            final MetadataElement subElement = new MetadataElement(group.getShortName());
+            final List<Attribute> attributeList = group.getAttributes();
+            if(attributeList.isEmpty()) {
+                continue;
+            }
+            for (Attribute attribute : attributeList) {
+                final ProductData data;
+                if(attribute.isArray()) {
+                    final Array array = attribute.getValues();
+                    data = ProductData.createInstance(Arrays.toString((Object[])array.getStorage()));
+                }else {
+                    data = ProductData.createInstance(String.valueOf(attribute.getValue(0)));
+                }
+                final MetadataAttribute metaAttrib = new MetadataAttribute(attribute.getName(), data, true);
+                
+                subElement.addAttribute(metaAttrib);
+            }
+            addMetadata(subElement, group.getGroups());
+            root.addElement(subElement);
+
         }
     }
 
     private Integer getMappedDataType(Variable variable) throws IOException {
         Integer type = dataTypeMap.get(variable.getDataType());
         if (type == null) {
-            throw new IOException("Can not determine data type of variable '" + variable.getShortName() + "'");
+            throw new IOException(String.format("Can not determine data type of variable '%s'", variable.getShortName()));
         }
         Attribute unsignedAttrib = variable.findAttribute(ATTRIB_UNSIGNED);
         if (unsignedAttrib != null && Boolean.parseBoolean(unsignedAttrib.getStringValue())) {
@@ -185,10 +321,16 @@ public class GlobCoverMosaicReader extends AbstractProductReader {
         return type;
     }
 
-    private ProductData.UTC getDate(String attribName) {
+    private ProductData.UTC getDate(String attribName, String productType) {
         final String dateString = ncfile.findGlobalAttributeIgnoreCase(attribName).getStringValue();
         try {
-            return ProductData.UTC.parse(dateString, "yyyy/dd/MM HH:mm:ss");
+            // This is the date pattern as it is defined in the documentation
+            String datePattern = "yyyy/MM/dd HH:mm:ss";
+            if (PRODUCT_TYPE_ANUUAL.equals(productType)) {
+                // for the annual mosaic the date pattern differs from the documentation
+                datePattern = "yyyy/dd/MM HH:mm:ss";
+            }
+            return ProductData.UTC.parse(dateString, datePattern);
         } catch (ParseException e) {
             Debug.trace(String.format("Can not parse date of attriubte '%s': %s", attribName, e.getMessage()));
         }
