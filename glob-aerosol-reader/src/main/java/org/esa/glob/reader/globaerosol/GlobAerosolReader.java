@@ -8,6 +8,8 @@ import org.esa.beam.dataio.netcdf.NetcdfReaderUtils;
 import org.esa.beam.framework.dataio.AbstractProductReader;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.CrsGeoCoding;
+import org.esa.beam.framework.datamodel.IndexCoding;
+import org.esa.beam.framework.datamodel.MetadataAttribute;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.util.io.FileUtils;
@@ -25,6 +27,7 @@ import org.opengis.referencing.operation.MathTransformFactory;
 import ucar.ma2.Array;
 import ucar.ma2.InvalidRangeException;
 import ucar.ma2.Section;
+import ucar.nc2.Attribute;
 import ucar.nc2.NetcdfFile;
 import ucar.nc2.Variable;
 
@@ -124,6 +127,7 @@ public class GlobAerosolReader extends AbstractProductReader {
     @Override
     public void close() throws IOException {
         accessorMap.clear();
+        isinGrid = null;
         if (ncfile != null) {
             ncfile.close();
             ncfile = null;
@@ -194,6 +198,17 @@ public class GlobAerosolReader extends AbstractProductReader {
             int cellDimemsionIndex = variable.findDimensionIndex("cell");
             if (cellDimemsionIndex != -1) {
                 Band band = NetcdfReaderUtils.createBand(variable, width, height);
+                NcAttributeMap attMap = NcAttributeMap.create(variable);
+                Attribute flagValues = attMap.get("flag_values");
+                String flagMeanings = attMap.getStringValue("flag_meanings");
+                if (flagValues != null && flagMeanings != null) {
+                    IndexCoding indexCoding = createIndexCoding(band.getName()+"_coding", flagValues, flagMeanings);
+                    if (indexCoding != null) {
+                        product.getIndexCodingGroup().add(indexCoding);
+                        band.setSampleCoding(indexCoding);
+                    }
+                }
+
                 accessorMap.put(band, new VariableAccessor1D(variable, "cell"));
                 product.addBand(band);
                 if (band.getName().equals("lon")) {
@@ -201,6 +216,17 @@ public class GlobAerosolReader extends AbstractProductReader {
                 }
             }
         }
+    }
+
+    private IndexCoding createIndexCoding(String codingName, Attribute flagValues, String flagMeanings) {
+        String[] meanings = flagMeanings.split(" ");
+        final IndexCoding coding = new IndexCoding(codingName);
+        int numElems = flagValues.getLength();
+        numElems = Math.min(numElems, meanings.length);
+        for (int i = 0; i < numElems; i++) {
+            coding.addSample(meanings[i], flagValues.getNumericValue(i).intValue(), "");
+        }
+        return coding;
     }
 
     private NetcdfFile getInputNetcdfFile() throws IOException {
