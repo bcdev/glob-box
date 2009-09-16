@@ -8,80 +8,38 @@ import org.esa.beam.dataio.netcdf.NetcdfReaderUtils;
 import org.esa.beam.framework.dataio.AbstractProductReader;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.CrsGeoCoding;
-import org.esa.beam.framework.datamodel.GeoCoding;
-import org.esa.beam.framework.datamodel.GeoPos;
-import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.util.Debug;
 import org.esa.beam.util.io.FileUtils;
 import org.geotools.referencing.ReferencingFactoryFinder;
-import org.geotools.referencing.crs.DefaultGeocentricCRS;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.geotools.referencing.crs.DefaultProjectedCRS;
 import org.geotools.referencing.cs.DefaultCartesianCS;
-import org.jdom.Element;
-import org.jdom.output.Format;
-import org.jdom.output.XMLOutputter;
 import org.opengis.parameter.ParameterValueGroup;
-import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.NoSuchIdentifierException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.datum.Ellipsoid;
 import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.MathTransformFactory;
-import org.opengis.referencing.operation.TransformException;
 
 import ucar.ma2.Array;
-import ucar.ma2.DataType;
 import ucar.ma2.InvalidRangeException;
-import ucar.ma2.Range;
 import ucar.ma2.Section;
-import ucar.nc2.Dimension;
 import ucar.nc2.NetcdfFile;
 import ucar.nc2.Variable;
-import ucar.nc2.Group;
-import ucar.nc2.Attribute;
-import ucar.nc2.iosp.hdf4.ODLparser;
 
-import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
-import java.awt.geom.Rectangle2D;
 import java.io.File;
 import java.io.IOException;
-import java.text.ParseException;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-// CODE SNIPPET: Reading data
-//                try {
-//                    final Array array = ncfile.getIosp().readData(variable, shapeAsSection);
-//                    final long l = array.getSize();
-//                } catch (InvalidRangeException e) {
-//                    throw new IOException(e);
-//                }
 
 public class GlobAerosolReader extends AbstractProductReader {
-    private static final boolean DEBUG = true;
-
-    private static final String XDIM = "XDim";
-    private static final String YDIM = "YDim";
-    private static final String GROUP_POSTEL = "POSTEL";
-    private static final String GROUP_DATA_FIELDS = "Data Fields";
-    private static final String GROUP_GRID_ATTRIBUTES = "Grid Attributes";
-    private static final String STRUCT_METADATA_0 = "StructMetadata%2e0";   // StructMetadata.0
-    private static final String DF_DIMENSION_X = GROUP_POSTEL + "/" + GROUP_DATA_FIELDS + "/" + XDIM;
-    private static final String DF_DIMENSION_Y = GROUP_POSTEL + "/" + GROUP_DATA_FIELDS + "/" + YDIM;
-    private static final String GA_START_DATE = GROUP_POSTEL + "/" + GROUP_GRID_ATTRIBUTES + "/Product start date";
-    private static final String GA_END_DATE = GROUP_POSTEL + "/" + GROUP_GRID_ATTRIBUTES + "/Product end date";
-    private static final String ATTRIB_UNSIGNED = "_Unsigned";
-    private static final String ATTRIB_FILL_VALUE = "_FillValue";
-
+    private static final int ROW_COUNT = 2004;
+    
     private NetcdfFile ncfile;
     private ISINGrid isinGrid;
     private Map<Band, VariableAccessor1D> accessorMap;
@@ -108,14 +66,7 @@ public class GlobAerosolReader extends AbstractProductReader {
                                           int sourceStepX, int sourceStepY, Band destBand, int destOffsetX,
                                           int destOffsetY, int destWidth, int destHeight, ProductData destBuffer,
                                           ProgressMonitor pm) throws IOException {
-        if (sourceStepX != 1 || sourceStepY != 1) {
-            throw new IOException("Sub-sampling is not supported by this product reader.");
-        }
 
-        if (sourceWidth != destWidth || sourceHeight != destHeight) {
-            throw new IllegalStateException("sourceWidth != destWidth || sourceHeight != destHeight");
-        }
-        
         synchronized (this) {
             if (rowInfos == null) {
                 rowInfos = createRowInfos();
@@ -165,12 +116,8 @@ public class GlobAerosolReader extends AbstractProductReader {
     
     private Array read(Band band, RowInfo rowInfo) throws IOException {
         VariableAccessor1D accessor = accessorMap.get(band);
-        try {
-            synchronized (ncfile) {
-                return accessor.read(rowInfo.offset, rowInfo.length).reduce();
-            }
-        } catch (InvalidRangeException e) {
-            throw new IOException(e);
+        synchronized (ncfile) {
+            return accessor.read(rowInfo).reduce();
         }
     }
 
@@ -185,7 +132,7 @@ public class GlobAerosolReader extends AbstractProductReader {
     }
 
     private Product createProduct() throws IOException {
-        isinGrid = new ISINGrid(2004);
+        isinGrid = new ISINGrid(ROW_COUNT);
         width = isinGrid.getRowCount() * 2;
         height = isinGrid.getRowCount();
         NcAttributeMap globalAttributes = NcAttributeMap.create(ncfile);
@@ -200,7 +147,6 @@ public class GlobAerosolReader extends AbstractProductReader {
 //        product.setEndTime(getDate(GA_END_DATE));
 
         addBands(product);
-        // todo - geocoding
         addGeoCoding(product);
         
         NetcdfReaderUtils.transferMetadata(ncfile, product.getMetadataRoot());
@@ -229,11 +175,11 @@ public class GlobAerosolReader extends AbstractProductReader {
             throw new IOException(e);
         }
         
-        CoordinateReferenceSystem modelCrs = new DefaultProjectedCRS("", base, mathTransform, DefaultCartesianCS.PROJECTED);
-//        CoordinateReferenceSystem modelCrs = base;
+        CoordinateReferenceSystem modelCrs = new DefaultProjectedCRS("Sinusoidal", base, mathTransform, DefaultCartesianCS.PROJECTED);
         Rectangle rectangle = new Rectangle(0, 0, width, height);
         AffineTransform i2m = new AffineTransform();
-        i2m.translate(-product.getSceneRasterWidth() / 2, -product.getSceneRasterHeight() / 2);
+        i2m.scale(10000, -10000);
+        i2m.translate(-width, -height);
         try {
             CrsGeoCoding geoCoding = new CrsGeoCoding(modelCrs, rectangle, i2m);
             product.setGeoCoding(geoCoding);
@@ -241,8 +187,8 @@ public class GlobAerosolReader extends AbstractProductReader {
             throw new IOException(e);
         }
     }
-
-    private void addBands(Product product) throws IOException {
+    
+    private void addBands(Product product) {
         List<Variable> variableList = ncfile.getRootGroup().getVariables();
         for (Variable variable : variableList) {
             int cellDimemsionIndex = variable.findDimensionIndex("cell");
@@ -254,11 +200,6 @@ public class GlobAerosolReader extends AbstractProductReader {
                     lonBand = band;
                 }
             }
-//            Dimension dimension = variable.getDimension(cellDimemsionIndex);
-//            List<Range> ranges = variable.getRanges();
-//            for (Range range : ranges) {
-//                System.out.println(range.getName()+" - "+range.toString());
-//            }
         }
     }
 
@@ -330,5 +271,41 @@ public class GlobAerosolReader extends AbstractProductReader {
             this.length = length;
         }
     }
+    
+    private static class VariableAccessor1D {
 
+        private final Variable variable;
+        private final int indexDim;
+        private final int rank;
+
+        public VariableAccessor1D(Variable variable, String dimemsionName) {
+            this.variable = variable;
+            this.indexDim = variable.findDimensionIndex(dimemsionName);
+            this.rank = variable.getRank();
+        }
+        
+        public Array read(RowInfo rowInfo) throws IOException {
+            try {
+                Section section = getSection(rowInfo.offset, rowInfo.length);
+                return variable.read(section).reduce();
+            } catch (InvalidRangeException e) {
+                throw new IOException(e);
+            }
+        }
+        
+        private Section getSection(int offset, int length) throws InvalidRangeException {
+            int[] origin = new int[rank];
+            int[] size = new int[rank];
+            for (int i = 0; i < rank; i++) {
+                if (i == indexDim) {
+                    origin[i] = offset;
+                    size[i] = length;
+                } else {
+                    origin[i] = 0;
+                    size[i] = 1;
+                }
+            }
+            return new Section(origin, size);
+        }
+    }
 }
