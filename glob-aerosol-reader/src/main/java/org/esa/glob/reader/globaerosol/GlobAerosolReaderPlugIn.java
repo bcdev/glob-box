@@ -27,7 +27,8 @@ public class GlobAerosolReaderPlugIn implements ProductReaderPlugIn {
             return DecodeQualification.UNABLE;
         }
 
-        if (file.getName().startsWith("GLOBAER_")) {
+        if (file.getName().matches("GLOBAER_.*_.*_DAILY.*") ||
+                file.getName().matches("GLOBAER_.*_.*_.*_ORBIT.*")) {
             return DecodeQualification.INTENDED;
         }
 
