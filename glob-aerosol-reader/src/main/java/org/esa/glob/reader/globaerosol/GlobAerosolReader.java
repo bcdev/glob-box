@@ -197,18 +197,13 @@ public class GlobAerosolReader extends AbstractProductReader {
         for (Variable variable : variableList) {
             int cellDimemsionIndex = variable.findDimensionIndex("cell");
             if (cellDimemsionIndex != -1) {
-                Band band = NetcdfReaderUtils.createBand(variable, width, height);
-                NcAttributeMap attMap = NcAttributeMap.create(variable);
-                Attribute flagValues = attMap.get("flag_values");
-                String flagMeanings = attMap.getStringValue("flag_meanings");
-                if (flagValues != null && flagMeanings != null) {
-                    IndexCoding indexCoding = createIndexCoding(band.getName()+"_coding", flagValues, flagMeanings);
-                    if (indexCoding != null) {
-                        product.getIndexCodingGroup().add(indexCoding);
-                        band.setSampleCoding(indexCoding);
-                    }
+                final NcAttributeMap attMap = NcAttributeMap.create(variable);
+                final Band band = NetcdfReaderUtils.createBand(variable, attMap, width, height);
+                final IndexCoding indexCoding = NetcdfReaderUtils.createIndexCoding(band.getName() + "_coding", attMap);
+                if (indexCoding != null) {
+                    product.getIndexCodingGroup().add(indexCoding);
+                    band.setSampleCoding(indexCoding);
                 }
-
                 accessorMap.put(band, new VariableAccessor1D(variable, "cell"));
                 product.addBand(band);
                 if (band.getName().equals("lon")) {
