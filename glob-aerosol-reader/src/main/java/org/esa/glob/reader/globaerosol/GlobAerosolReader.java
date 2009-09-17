@@ -4,12 +4,12 @@ import com.bc.ceres.core.ProgressMonitor;
 
 import org.esa.beam.dataio.merisl3.ISINGrid;
 import org.esa.beam.dataio.netcdf.NcAttributeMap;
+import org.esa.beam.dataio.netcdf.NcVariableMap;
 import org.esa.beam.dataio.netcdf.NetcdfReaderUtils;
 import org.esa.beam.framework.dataio.AbstractProductReader;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.CrsGeoCoding;
 import org.esa.beam.framework.datamodel.IndexCoding;
-import org.esa.beam.framework.datamodel.MetadataAttribute;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.util.io.FileUtils;
@@ -27,7 +27,6 @@ import org.opengis.referencing.operation.MathTransformFactory;
 import ucar.ma2.Array;
 import ucar.ma2.InvalidRangeException;
 import ucar.ma2.Section;
-import ucar.nc2.Attribute;
 import ucar.nc2.NetcdfFile;
 import ucar.nc2.Variable;
 
@@ -35,6 +34,7 @@ import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -151,6 +151,7 @@ public class GlobAerosolReader extends AbstractProductReader {
 //        product.setEndTime(getDate(GA_END_DATE));
 
         addBands(product);
+        lonBand = product.getBand("lon");
         addGeoCoding(product);
         
         NetcdfReaderUtils.transferMetadata(ncfile, product.getMetadataRoot());
@@ -193,24 +194,48 @@ public class GlobAerosolReader extends AbstractProductReader {
     }
     
     private void addBands(Product product) {
+        Variable modelVar = ncfile.getRootGroup().findVariable("model");
+        String[] modeNames = null;
+        if (modelVar != null && modelVar.getDimension(0).getLength() > 1) {
+            NcAttributeMap modelAttMap = NcAttributeMap.create(modelVar);
+            modeNames = modelAttMap.getStringValue("flag_meanings").split(" ");
+        }
         List<Variable> variableList = ncfile.getRootGroup().getVariables();
         for (Variable variable : variableList) {
             int cellDimemsionIndex = variable.findDimensionIndex("cell");
             if (cellDimemsionIndex != -1) {
                 final NcAttributeMap attMap = NcAttributeMap.create(variable);
-                final Band band = NetcdfReaderUtils.createBand(variable, attMap, width, height);
-                final IndexCoding indexCoding = NetcdfReaderUtils.createIndexCoding(band.getName() + "_coding", attMap);
+                int modelDimemsionIndex = variable.findDimensionIndex("model");
+                String bandName = NcVariableMap.getAbsoluteName(variable);
+                IndexCoding indexCoding = NetcdfReaderUtils.createIndexCoding(bandName + "_coding", attMap);
                 if (indexCoding != null) {
                     product.getIndexCodingGroup().add(indexCoding);
-                    band.setSampleCoding(indexCoding);
                 }
-                accessorMap.put(band, new VariableAccessor1D(variable, "cell"));
-                product.addBand(band);
-                if (band.getName().equals("lon")) {
-                    lonBand = band;
+                if (modeNames != null && modelDimemsionIndex != -1) {
+                    for (int i = 0; i < modeNames.length; i++) {
+                        Band band = NetcdfReaderUtils.createBand(variable, attMap, width, height);
+                        band.setName(band.getName() + "_" + modeNames[i]);
+                        Map<Integer, Integer> dimSelection = new HashMap<Integer, Integer>();
+                        dimSelection.put(modelDimemsionIndex, i);
+                        handleBand(band, product, variable, cellDimemsionIndex, indexCoding, dimSelection);
+                    }
+                } else {
+                    Band band = NetcdfReaderUtils.createBand(variable, attMap, width, height);
+                    Map<Integer, Integer> dimSelection = Collections.EMPTY_MAP;
+                    handleBand(band, product, variable, cellDimemsionIndex, indexCoding, dimSelection);
                 }
             }
         }
+    }
+
+    private void handleBand(Band band, Product product, Variable variable, int cellDimemsionIndex,
+                            IndexCoding indexCoding, Map<Integer, Integer> dimSelection) {
+        VariableAccessor1D accessor = new VariableAccessor1D(variable, cellDimemsionIndex, dimSelection);
+        if (indexCoding != null) {
+            band.setSampleCoding(indexCoding);
+        }
+        accessorMap.put(band, accessor);
+        product.addBand(band);
     }
 
     private NetcdfFile getInputNetcdfFile() throws IOException {
@@ -284,10 +309,12 @@ public class GlobAerosolReader extends AbstractProductReader {
         private final Variable variable;
         private final int indexDim;
         private final int rank;
+        private final Map<Integer, Integer> dimSelection;
 
-        public VariableAccessor1D(Variable variable, String dimemsionName) {
+        public VariableAccessor1D(Variable variable, int indexDim, Map<Integer, Integer> dimSelection) {
             this.variable = variable;
-            this.indexDim = variable.findDimensionIndex(dimemsionName);
+            this.indexDim = indexDim;
+            this.dimSelection = dimSelection;
             this.rank = variable.getRank();
         }
         
@@ -307,6 +334,9 @@ public class GlobAerosolReader extends AbstractProductReader {
                 if (i == indexDim) {
                     origin[i] = offset;
                     size[i] = length;
+                } else if (dimSelection.containsKey(i)){
+                    origin[i] = dimSelection.get(i);
+                    size[i] = 1;
                 } else {
                     origin[i] = 0;
                     size[i] = 1;
