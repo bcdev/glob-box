@@ -213,17 +213,6 @@ public class GlobAerosolReader extends AbstractProductReader {
         }
     }
 
-    private IndexCoding createIndexCoding(String codingName, Attribute flagValues, String flagMeanings) {
-        String[] meanings = flagMeanings.split(" ");
-        final IndexCoding coding = new IndexCoding(codingName);
-        int numElems = flagValues.getLength();
-        numElems = Math.min(numElems, meanings.length);
-        for (int i = 0; i < numElems; i++) {
-            coding.addSample(meanings[i], flagValues.getNumericValue(i).intValue(), "");
-        }
-        return coding;
-    }
-
     private NetcdfFile getInputNetcdfFile() throws IOException {
         final Object input = getInput();
 
@@ -281,15 +270,12 @@ public class GlobAerosolReader extends AbstractProductReader {
     }
     
     private static final class RowInfo {
+        final int rowOffset;
+        final int numBins;
 
-        // offset of row within file
-        final int offset;
-        // number of bins per row
-        final int length;
-
-        public RowInfo(int offset, int length) {
-            this.offset = offset;
-            this.length = length;
+        public RowInfo(int rowOffset, int numBins) {
+            this.rowOffset = rowOffset;
+            this.numBins = numBins;
         }
     }
     
@@ -307,7 +293,7 @@ public class GlobAerosolReader extends AbstractProductReader {
         
         public Array read(RowInfo rowInfo) throws IOException {
             try {
-                Section section = getSection(rowInfo.offset, rowInfo.length);
+                Section section = getSection(rowInfo.rowOffset, rowInfo.numBins);
                 return variable.read(section).reduce();
             } catch (InvalidRangeException e) {
                 throw new IOException(e);
