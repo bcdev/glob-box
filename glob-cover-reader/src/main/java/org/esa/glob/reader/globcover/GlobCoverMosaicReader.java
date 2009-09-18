@@ -137,15 +137,16 @@ public class GlobCoverMosaicReader extends AbstractProductReader {
     private Product createProduct() throws IOException {
         int width = ncfile.findDimension(DF_DIMENSION_X).getLength();
         int height = ncfile.findDimension(DF_DIMENSION_Y).getLength();
-        final String fileName = FileUtils.getFileNameFromPath(ncfile.getLocation());
-        final String prodName = FileUtils.getFilenameWithoutExtension(fileName);
+        final File fileLocation = new File(ncfile.getLocation());
+        final String prodName = FileUtils.getFilenameWithoutExtension(fileLocation);
         final String prodType;
-        if (fileName.toUpperCase().contains("ANNUAL")) {
+        if (prodName.toUpperCase().contains("ANNUAL")) {
             prodType = PRODUCT_TYPE_ANUUAL;
         } else {
             prodType = PRODUCT_TYPE_BIMON;
         }
         final Product product = new Product(prodName, prodType, width, height);
+        product.setFileLocation(fileLocation);
         product.setStartTime(getDate(GA_START_DATE, prodType));
         product.setEndTime(getDate(GA_END_DATE, prodType));
 
