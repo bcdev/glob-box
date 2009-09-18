@@ -32,9 +32,14 @@ public class WorldFireReaderPlugIn implements ProductReaderPlugIn {
     private static final String[] DEFAULT_FILE_EXTENSIONS = new String[]{FIRE_FILE_EXTENSION};
 
     public DecodeQualification getDecodeQualification(Object input) {
+        File inputFile = new File(input.toString());
+        if(!inputFile.getName().toUpperCase().endsWith(FIRE_FILE_EXTENSION)) {
+            return DecodeQualification.UNABLE;
+        }
+
         InputStream inputStream = null;
         try {
-            inputStream = createInputStream(input);
+            inputStream = new FileInputStream(inputFile);
             return getDecodeQualification(inputStream);
         } catch (IOException ignored) {
             return DecodeQualification.UNABLE;
@@ -79,7 +84,7 @@ public class WorldFireReaderPlugIn implements ProductReaderPlugIn {
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
         try {
             final String line = bufferedReader.readLine();
-            if (line != null && !line.isEmpty()) {
+            if (line != null && !line.isEmpty() && line.length() < 100) {
                 final int columnsCount = line.split("[\\s]++").length;
                 if (columnsCount == 5 || columnsCount == 6) {
                     return DecodeQualification.INTENDED;
@@ -90,32 +95,5 @@ public class WorldFireReaderPlugIn implements ProductReaderPlugIn {
             return DecodeQualification.UNABLE;
         }
     }
-
-    private InputStream createInputStream(final Object input) throws IOException {
-        File inputFile = getInputFile(input);
-        if (inputFile != null) {
-            return new FileInputStream(inputFile);
-        }
-        return null;
-    }
-
-    /**
-     * Converts the fiven input into a {@link File}.
-     *
-     * @param input The input. For allowd input types see: {@link #getInputTypes()}.
-     * @return The {@link File}, or {@code null} if it could not be converted.
-     */
-    File getInputFile(Object input) {
-        File inputFile = null;
-        if (input instanceof String) {
-            inputFile = new File((String) input);
-        }
-
-        if (input instanceof File) {
-            inputFile = (File) input;
-        }
-        return inputFile;
-    }
-
 
 }

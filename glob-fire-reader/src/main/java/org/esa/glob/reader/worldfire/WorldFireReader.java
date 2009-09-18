@@ -67,10 +67,11 @@ class WorldFireReader extends AbstractProductReader {
 
     @Override
     protected Product readProductNodesImpl() throws IOException {
-        final File inputFile = getReaderPlugIn().getInputFile(getInput());
+        final File inputFile = new File(getInput().toString());
         final String productName = FileUtils.getFilenameWithoutExtension(inputFile);
         final String productType = getProductType(inputFile);
         final Product product = new Product(productName, productType, 3600, 1800);
+        product.setFileLocation(inputFile);
         final AffineTransform i2m = new AffineTransform();
         i2m.translate(0, 0);
         i2m.scale(0.1, -0.1);
@@ -173,7 +174,7 @@ class WorldFireReader extends AbstractProductReader {
 
     @Override
     public TreeNode<File> getProductComponents() {
-        final File inputFile = getReaderPlugIn().getInputFile(getInput());
+        final File inputFile = new File(getInput().toString());
         final File parent = inputFile.getParentFile();
         final TreeNode<File> result = new TreeNode<File>(parent.getName());
         result.setContent(parent);
