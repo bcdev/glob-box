@@ -1,0 +1,48 @@
+<module>
+    <manifestVersion>1.0.0</manifestVersion>
+    <symbolicName>glob-aerosol-reader</symbolicName>
+    <version>1.0</version>
+    <name>Medspiration Reader</name>
+
+    <description>Enables BEAM to read Medspiration data products.</description>
+
+    <vendor>Brockmann Consult GmbH</vendor>
+    <contactAddress>Max Planck Str.2, 21502 Geesthacht (Germany)</contactAddress>
+    <copyright>(C) 2009 by Brockmann Consult GmbH</copyright>
+    <url>http://envisat.esa.int/beam</url>
+    <licenseUrl>http://www.gnu.org/licenses/gpl.html</licenseUrl>
+
+    <changelog>
+        <![CDATA[
+        ]]>
+    </changelog>
+
+    <dependency>
+        <module>beam-core</module>
+    </dependency>
+    
+    <dependency>
+        <module>beam-netcdf-reader</module>
+    </dependency>
+
+    <dependency>
+        <module>beam-visat</module>
+    </dependency>
+
+    <categories>Reader</categories>
+
+    <extension point="beam-ui:actions">
+        <action>
+            <class>org.esa.beam.visat.actions.ProductImportAction</class>
+            <id>importMedspirationProduct</id>
+            <helpId>importMedspirationProduct</helpId>
+            <formatName>MEDSPIRATION</formatName>
+            <useAllFileFilter>false</useAllFileFilter>
+            <text>Import Medspiration Product...</text>
+            <mnemonic/>
+            <shortDescr>Import a Medspiration data product or product subset.</shortDescr>
+            <description>Import a Medspiration data product or product subset.</description>
+        </action>
+    </extension>
+
+</module>
