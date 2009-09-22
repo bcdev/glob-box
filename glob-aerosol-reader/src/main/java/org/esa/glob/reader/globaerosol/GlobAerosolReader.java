@@ -213,14 +213,14 @@ public class GlobAerosolReader extends AbstractProductReader {
                 }
                 if (modeNames != null && modelDimemsionIndex != -1) {
                     for (int i = 0; i < modeNames.length; i++) {
-                        Band band = NetcdfReaderUtils.createBand(variable, attMap, width, height);
+                        Band band = NetcdfReaderUtils.createBand(variable, attMap, null, width, height);
                         band.setName(band.getName() + "_" + modeNames[i]);
                         Map<Integer, Integer> dimSelection = new HashMap<Integer, Integer>();
                         dimSelection.put(modelDimemsionIndex, i);
                         handleBand(band, product, variable, cellDimemsionIndex, indexCoding, dimSelection);
                     }
                 } else {
-                    Band band = NetcdfReaderUtils.createBand(variable, attMap, width, height);
+                    Band band = NetcdfReaderUtils.createBand(variable, attMap, null, width, height);
                     Map<Integer, Integer> dimSelection = Collections.EMPTY_MAP;
                     handleBand(band, product, variable, cellDimemsionIndex, indexCoding, dimSelection);
                 }
