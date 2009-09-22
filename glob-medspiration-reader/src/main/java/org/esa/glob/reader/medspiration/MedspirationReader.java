@@ -38,114 +38,13 @@ public class MedspirationReader extends NetcdfReader {
             }
             return false;
         }
-
     }
 
     private static final DataTypeWorkarounds typeWorkarounds = new MedspirationWorkarounds();
     
-//    static {
-//        typeWorkarounds = new NetcdfDataTypeWorkarounds();
-//        typeWorkarounds.addWorkaround("mask", DataType.BYTE, ProductData.TYPE_UINT8);
-//        typeWorkarounds.addWorkaround("sea_ice_fraction", DataType.BYTE, ProductData.TYPE_UINT8);
-//        typeWorkarounds.addWorkaround("wind_speed", DataType.BYTE, ProductData.TYPE_UINT8);
-//    }
-    
     protected MedspirationReader(MedspirationReaderPlugIn readerPlugIn) {
         super(readerPlugIn);
     }
-
-//    @Override
-//    protected Product readProductNodesImpl() throws IOException {
-//        Product product = super.readProductNodesImpl();
-//        
-//        if (product.containsBand("mask")) {
-//            FlagCoding maskFlagCoding = new FlagCoding("mask_coding");
-//            maskFlagCoding.addFlag("sea", 1, "grid cell is open sea water");
-//            maskFlagCoding.addFlag("land", 2, "land is present in this grid cell");
-//            maskFlagCoding.addFlag("lake", 4, "lake surface is present in this grid cell");
-//            maskFlagCoding.addFlag("ice", 8, "sea ice is present in this grid cell");
-//            ProductNodeGroup<IndexCoding> indexCodingGroup = product.getIndexCodingGroup();
-//            if (indexCodingGroup.contains("mask_coding")) {
-//                IndexCoding indexCoding = indexCodingGroup.get("mask_coding");
-//                indexCodingGroup.remove(indexCoding);
-//            }
-//            product.getFlagCodingGroup().add(maskFlagCoding);
-//            product.getBand("mask").setSampleCoding(maskFlagCoding);
-//        }
-//        
-//        if (product.containsBand("sources_of_wind_speed")) {
-//            IndexCoding windSpeed = new IndexCoding("sources_of_wind_speed_coding");
-//            windSpeed.addIndex("No-Data", 0, "No wind speed data available");
-//            windSpeed.addIndex("AMSR-E", 1, "AMSR-E data");
-//            windSpeed.addIndex("TMI", 2, "TMI data");
-//            windSpeed.addIndex("NWP:ECMWF", 3, "NWP:ECMWF");
-//            windSpeed.addIndex("NWP:Met Office", 4, "NWP:Met Office");
-//            windSpeed.addIndex("NWP:NCEP", 5, "NWP:NCEP");
-//            windSpeed.addIndex("Climatology", 6, "Reference climatology");
-//            product.getIndexCodingGroup().add(windSpeed);
-//            product.getBand("sources_of_wind_speed").setSampleCoding(windSpeed);
-//        }
-//        if (product.containsBand("sources_of_ssi")) {
-//            IndexCoding ssi = new IndexCoding("sources_of_ssi_coding");
-//            ssi.addIndex("No-Data", 0, "No SSI data available");
-//            ssi.addIndex("MSG_SEVIRI", 1, "Data from MSG_SEVIRI");
-//            ssi.addIndex("GOES_E", 2, "Data from GOES_E");
-//            ssi.addIndex("GOES_W", 3, "Data from GOES_W");
-//            ssi.addIndex("ECMWF", 4, "Data from ECMWF");
-//            ssi.addIndex("NCEP", 5, "Data from NCEP");
-//            ssi.addIndex("METOFFICE", 6, "Data from Met Office");
-//            product.getIndexCodingGroup().add(ssi);
-//            product.getBand("sources_of_ssi").setSampleCoding(ssi);
-//        }
-//        if (product.containsBand("sources_of_aod")) {
-//            IndexCoding aod = new IndexCoding("sources_of_aod_coding");
-//            aod.addIndex("No-Data", 0, "No AOD data available");
-//            aod.addIndex("NESDIS", 1, "Data from NESDIS");
-//            aod.addIndex("NAVOCEANO", 2, "Data from NAVOCEANO");
-//            aod.addIndex("NAAPS", 3, "Data from NAAPS");
-//            product.getIndexCodingGroup().add(aod);
-//            product.getBand("sources_of_aod").setSampleCoding(aod);
-//        }
-//        if (product.containsBand("sources_of_sea_ice_fraction")) {
-//            IndexCoding seaIce = new IndexCoding("sources_of_sea_ice_fraction_coding");
-//            seaIce.addIndex("No-Data", 0, "No sea ice set");
-//            seaIce.addIndex("NSIDC", 1, "Data from NSIDC SSM/I Cavialeri et al (1992)");
-//            seaIce.addIndex("NAVOCEANO", 2, "Data from AMSR-E");
-//            seaIce.addIndex("ECMWF", 3, "Data from ECMWF");
-//            seaIce.addIndex("CMS", 4, "Data from CMS (France) cloud mask used by Medspiration");
-//            product.getIndexCodingGroup().add(seaIce);
-//            product.getBand("sources_of_sea_ice_fraction").setSampleCoding(seaIce);
-//        } 
-//        if (product.containsBand("rejection_flag")) {
-//            FlagCoding rejection = new FlagCoding("rejection_flag_coding");
-//            rejection.addFlag("out_of_range", 1, "SST out of range");
-//            rejection.addFlag("cosmetic", 2, "Cosmetic value");
-//            rejection.addFlag("ir_cloudy", 4, "IR cloudy");
-//            rejection.addFlag("mw_rain", 8, "MW rain");
-//            rejection.addFlag("ice", 16, "Ice");
-//            rejection.addFlag("spare", 32, "Spare");
-//            rejection.addFlag("land", 64, "Land");
-//            rejection.addFlag("unprocessed", 128, "Unprocessed");
-//            product.getFlagCodingGroup().add(rejection);
-//            product.getBand("rejection_flag").setSampleCoding(rejection);
-//        }
-//        if (product.containsBand("confidence_flag")) {
-//            FlagCoding confidence = new FlagCoding("confidence_flag_coding");
-//            confidence.addFlag("side_lobe", 1, "potential side lobe contamination");
-//            confidence.addFlag("rain_contamination", 2, "relaxed rain contamination suspected");
-//            confidence.addFlag("small_sst", 4, "TMI SST retrieved in SST < 285K");
-//            confidence.addFlag("high_wind_speed", 8, "high wind speed retrieval");
-//            confidence.addFlag("sea_ice", 16, "sea ice retrieval for MW data");
-//            confidence.addFlag("sun_glint", 32, "sun glint suspected");
-//            confidence.addFlag("l2_native_bias", 64, "L2 native bias and standard deviation");
-//            confidence.addFlag("l2_native_confidence", 128, "L2 native confidence value");
-//            product.getFlagCodingGroup().add(confidence);
-//            product.getBand("confidence_flag").setSampleCoding(confidence);
-//        }
-//        
-//        product.setModified(false);
-//        return product;
-//    }
 
     @Override
     protected void handleVariable(Variable variable, Product product) {
@@ -170,10 +69,20 @@ public class MedspirationReader extends NetcdfReader {
 
     private FlagCoding createFlagCoding(String codingName, NcAttributeMap attMap) {
         String comment = attMap.getStringValue("comment");
-        if (!StringUtils.isNotNullAndNotEmpty(comment)) {
-            return null;
+        List<MetadataAttribute> attributes;
+        if (StringUtils.isNotNullAndNotEmpty(comment)) {
+            attributes = getFlagAttributes(comment.trim(), ";");
+        } else {
+            String flagValues = attMap.getStringValue("flag_values");
+            if (StringUtils.isNotNullAndNotEmpty(flagValues) && flagValues.startsWith("b0")) {
+                if (flagValues.startsWith("b0,")) {
+                    flagValues = flagValues.replace("b0,", "b0:");
+                }
+                attributes = getFlagAttributes(flagValues.trim(), ",");
+            } else {
+                return null;
+            }
         }
-        List<MetadataAttribute> attributes = getFlagAttributes(comment.trim());
         if (attributes.size() == 0) {
             return null;
         }
@@ -208,10 +117,10 @@ public class MedspirationReader extends NetcdfReader {
         return coding;
     }
     
-    static List<MetadataAttribute> getFlagAttributes(String comment) {
+    static List<MetadataAttribute> getFlagAttributes(String comment, String separator) {
         String[] split;
-        if (comment.contains(";")) {
-            split = comment.split(";");
+        if (comment.contains(separator)) {
+            split = comment.split(separator);
         } else {
             split = comment.split("(?=b\\d\\d?)");
         }
