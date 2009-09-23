@@ -35,6 +35,7 @@
     <modules>
         <module>glob-fire-reader</module>
         <module>glob-cover-reader</module>
+        <module>glob-colour-readers</module>
         <module>glob-aerosol-reader</module>
         <module>glob-medspiration-reader</module>
         <module>geotools-proj</module>
