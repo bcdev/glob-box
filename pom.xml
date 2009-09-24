@@ -39,6 +39,7 @@
         <module>glob-aerosol-reader</module>
         <module>glob-medspiration-reader</module>
         <module>geotools-proj</module>
+        <module>beam-arcbingrid-reader</module>
         <module>glob-bootstrap</module>
     </modules>
 

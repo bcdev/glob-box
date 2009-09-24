@@ -9,7 +9,13 @@
     </parent>
     <artifactId>beam-arcbingrid-reader</artifactId>
     <name>Arc/Info Binary Grid Reader</name>
+    
     <dependencies>
+        <dependency>
+            <groupId>com.bc.ceres</groupId>
+            <artifactId>ceres-binio</artifactId>
+            <version>0.10-SNAPSHOT</version>
+        </dependency>
         <dependency>
             <groupId>org.esa.beam</groupId>
             <artifactId>beam-core</artifactId>
