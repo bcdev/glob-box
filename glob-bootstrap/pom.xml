@@ -48,6 +48,11 @@
             <artifactId>geotools-proj</artifactId>
             <version>${pom.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.esa.glob</groupId>
+            <artifactId>beam-arcbingrid-reader</artifactId>
+            <version>${pom.version}</version>
+        </dependency>
     </dependencies>
 
 </project>

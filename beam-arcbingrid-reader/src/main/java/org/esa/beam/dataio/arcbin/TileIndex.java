@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.nio.ByteOrder;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Contains the Tile Index
@@ -41,6 +42,10 @@ class TileIndex {
     
     private TileIndex(Map<Integer, IndexEntry> index) {
         this.tileIndex = index;
+    }
+    
+    Set<Integer> getKeySet() {
+        return tileIndex.keySet();
     }
     
     boolean hasIndexEntry(int index) {
@@ -61,11 +66,9 @@ class TileIndex {
         for (int i = 0; i < numtiles; i++) {
             CompoundData indexData = indexSeq.getCompound(i);
             int size = indexData.getInt(1);
-            if (size != 2) {
-                int offset = indexData.getInt(0);
-                IndexEntry indexEntry = new IndexEntry(offset, size);
-                index.put(i, indexEntry);
-            }
+            int offset = indexData.getInt(0);
+            IndexEntry indexEntry = new IndexEntry(offset*2, size*2);
+            index.put(i, indexEntry);
         }
         context.dispose();
         return new TileIndex(index);

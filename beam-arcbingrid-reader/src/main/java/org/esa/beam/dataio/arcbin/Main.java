@@ -16,10 +16,15 @@
  */
 package org.esa.beam.dataio.arcbin;
 
+import org.esa.beam.dataio.arcbin.TileIndex.IndexEntry;
 import org.esa.beam.util.math.MathUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * todo - add API doc
@@ -46,7 +51,27 @@ public class Main {
         int numTiles = hdrAdf.tilesPerColumn * hdrAdf.tilesPerRow;
         System.out.println("numTiles  " + numTiles);
         TileIndex tileIndex = TileIndex.create(new File(dir, TileIndex.FILE_NAME), numTiles);
-        
+        RasterData reasterData = RasterData.create(new File(dir, RasterData.FILE_NAME));
         System.out.println("sucess !!!!");
+        
+        Set<Integer> keySet = tileIndex.getKeySet();
+        Map<Integer, Integer> useTypes = new HashMap<Integer, Integer>();
+        for (Integer index : keySet) {
+            IndexEntry indexEntry = tileIndex.getIndexEntry(index);
+            int offset = indexEntry.offset;
+            int size = indexEntry.size;
+            int tileType = reasterData.getTileType(offset);
+//            System.out.println("index " + index + "  tile raster type " + tileType);
+            int count = 0;
+            if (useTypes.containsKey(tileType)) {
+                count = useTypes.get(tileType);
+            }
+            count ++;
+            useTypes.put(tileType, count);
+        }
+        System.out.println();
+        for (Integer integer : useTypes.keySet()) {
+            System.out.println(Integer.toHexString((integer&0xff))+"  "+useTypes.get(integer));
+        }
     }
 }

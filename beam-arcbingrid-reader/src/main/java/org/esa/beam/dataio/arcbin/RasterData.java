@@ -37,7 +37,7 @@ import java.nio.ByteOrder;
 /**
  * Contains the Raster Data
  */
-class ReasterData {
+class RasterData {
     
     static final String FILE_NAME = "w001001.adf";
     
@@ -50,10 +50,21 @@ class ReasterData {
 
     private DataContext context;
     
-    ReasterData(DataContext context) {
+    RasterData(DataContext context) {
         this.context = context;
     }
 
+    int getTileType(int tileOffset) {
+        CompoundData tileData = getTileData(tileOffset);
+        try {
+            return tileData.getByte(1);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return -1;
+    }
+    
     private CompoundData getTileData(int tileOffset) {
         CompoundData data = context.createData(RASTER_TYPE, tileOffset);
         return data;
@@ -65,10 +76,10 @@ class ReasterData {
         }
     }
     
-    static ReasterData create(File file, int numtiles) throws IOException {
+    static RasterData create(File file) throws IOException {
         DataFormat dataFormat = new DataFormat(RASTER_TYPE, ByteOrder.BIG_ENDIAN);
         DataContext context = dataFormat.createContext(file, "r");
-        return new ReasterData(context);
+        return new RasterData(context);
     }
     
     final static class RTileDataVarSequenceType extends VarElementCountSequenceType {
