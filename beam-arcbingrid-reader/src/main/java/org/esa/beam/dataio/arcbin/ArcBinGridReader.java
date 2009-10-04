@@ -11,8 +11,11 @@ import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.util.math.MathUtils;
 
+import java.awt.Dimension;
 import java.io.File;
 import java.io.IOException;
+
+import javax.media.jai.PlanarImage;
 
 
 public class ArcBinGridReader extends AbstractProductReader {
@@ -77,7 +80,7 @@ public class ArcBinGridReader extends AbstractProductReader {
 //        int startTileY = sourceOffsetY / hdrAdf.tileYSize;
 //        int endTileX = (sourceOffsetX + sourceWidth - 1) / hdrAdf.tileXSize;
 //        int endTileY = (sourceOffsetY + sourceHeight - 1) / hdrAdf.tileYSize;
-        
+        System.out.println("READIN OLD");
         pm.beginTask("Reading band '" + destBand.getName() + "'...", sourceHeight);
         try {
             int tileIndex = -1;
@@ -95,7 +98,7 @@ public class ArcBinGridReader extends AbstractProductReader {
                         destBuffer.setElemDoubleAt(rasterIndex, -9999);
                     } else {
                         if (tileIndex != currentTileIndex) {
-                            tileType = rasterData.getTileType(indexEntry.offset);
+                            tileType = rasterData.getTile(indexEntry.offset).getTileType();
                             tileIndex = currentTileIndex;
                         }
                         destBuffer.setElemDoubleAt(rasterIndex, tileType);
@@ -121,6 +124,10 @@ public class ArcBinGridReader extends AbstractProductReader {
         Band band = product.addBand("grid", dataType);
         band.setNoDataValue(-9999);
         band.setNoDataValueUsed(true);
+        Dimension tileSize = new Dimension(hdrAdf.tileXSize, hdrAdf.tileYSize);
+        PlanarImage image = new IntegerCoverOpImage(width, height, tileSize, hdrAdf, tileIndex, rasterData);
+        band.setSourceImage(image);
+        product.setPreferredTileSize(tileSize);
         return product;
         
     }

@@ -60,7 +60,7 @@ public class Main {
             IndexEntry indexEntry = tileIndex.getIndexEntry(index);
             int offset = indexEntry.offset;
             int size = indexEntry.size;
-            int tileType = reasterData.getTileType(offset);
+            int tileType = reasterData.getTile(offset).getTileType();
 //            System.out.println("index " + index + "  tile raster type " + tileType);
             int count = 0;
             if (useTypes.containsKey(tileType)) {
@@ -73,5 +73,11 @@ public class Main {
         for (Integer integer : useTypes.keySet()) {
             System.out.println(Integer.toHexString((integer&0xff))+"  "+useTypes.get(integer));
         }
+//        
+//        RasterData rasterData = RasterData.create(new File(dir, RasterData.FILE_NAME));
+//        byte[] bytes = rasterData.loadRawData(tileIndex.getIndexEntry(8200));
+//        for (int i = 0; i < bytes.length; i++) {
+//            System.out.println("i "+i+"  "+bytes[i]);
+//        }
     }
 }
