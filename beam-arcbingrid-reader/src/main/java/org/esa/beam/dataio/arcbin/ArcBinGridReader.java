@@ -7,6 +7,7 @@ import org.esa.beam.framework.dataio.AbstractProductReader;
 import org.esa.beam.framework.dataio.DecodeQualification;
 import org.esa.beam.framework.dataio.ProductIOException;
 import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.IndexCoding;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.util.math.MathUtils;
@@ -28,6 +29,7 @@ public class ArcBinGridReader extends AbstractProductReader {
     private int dataType;
     private HdrAdf hdrAdf;
     private RasterData rasterData;
+    private RasterDataFile rasterDataFile;
 
     protected ArcBinGridReader(ArcBinGridReaderPlugIn readerPlugIn) {
         super(readerPlugIn);
@@ -67,6 +69,7 @@ public class ArcBinGridReader extends AbstractProductReader {
         
         tileIndex = TileIndex.create(new File(dir, TileIndex.FILE_NAME), numTiles);
         rasterData = RasterData.create(new File(dir, RasterData.FILE_NAME));
+        rasterDataFile = RasterDataFile.create(new File(dir, RasterData.FILE_NAME));
         return createProduct();
     }
 
@@ -121,13 +124,38 @@ public class ArcBinGridReader extends AbstractProductReader {
     private Product createProduct() throws IOException {
         
         Product product = new Product("foo", "bar", width, height);
+        Dimension tileSize = new Dimension(hdrAdf.tileXSize, hdrAdf.tileYSize);
+        product.setPreferredTileSize(tileSize);
+
         Band band = product.addBand("grid", dataType);
         band.setNoDataValue(-9999);
         band.setNoDataValueUsed(true);
-        Dimension tileSize = new Dimension(hdrAdf.tileXSize, hdrAdf.tileYSize);
-        PlanarImage image = new IntegerCoverOpImage(width, height, tileSize, hdrAdf, tileIndex, rasterData);
+        PlanarImage image = new IntegerCoverOpImage(width, height, tileSize, hdrAdf, tileIndex, rasterDataFile);
         band.setSourceImage(image);
-        product.setPreferredTileSize(tileSize);
+        
+        band = product.addBand("type", ProductData.TYPE_INT8);
+        band.setNoDataValue(42);
+        band.setNoDataValueUsed(true);
+        image = new IntegerTypeOpImage(width, height, tileSize, hdrAdf, tileIndex, rasterDataFile);
+        band.setSourceImage(image);
+        IndexCoding indexCoding = new IndexCoding("type_coding");
+        indexCoding.addIndex("const_block", 0x00, "");
+        indexCoding.addIndex("raw_1bit", 0x01, "");
+        indexCoding.addIndex("raw_4bit", 0x04, "");
+        indexCoding.addIndex("raw_8bit", 0x08, "");
+        indexCoding.addIndex("raw_16bit", 0x10, "");
+        indexCoding.addIndex("raw_32bit", 0x20, "");
+        indexCoding.addIndex("runs_16bit", 0xcf, "");
+        indexCoding.addIndex("runs_8bit", 0xd7, "");
+        indexCoding.addIndex("runs_nodata", 0xdf, "");
+        indexCoding.addIndex("rle_32bit", 0xe0, "");
+        indexCoding.addIndex("rle_16bit", 0xf0, "");
+        indexCoding.addIndex("rle_8bit", 0xf8, "");
+        indexCoding.addIndex("rle_4bit", 0xfc, "");
+        indexCoding.addIndex("ccitt", 0xff, "");
+        product.getIndexCodingGroup().add(indexCoding);
+        band.setSampleCoding(indexCoding);
+
         return product;
         
     }
