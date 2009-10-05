@@ -32,7 +32,7 @@ public class WorldFireReaderPlugIn implements ProductReaderPlugIn {
     private static final String[] DEFAULT_FILE_EXTENSIONS = new String[]{FIRE_FILE_EXTENSION};
 
     public DecodeQualification getDecodeQualification(Object input) {
-        File inputFile = new File(input.toString());
+        File inputFile = new File(String.valueOf(input));
         if(!inputFile.getName().toUpperCase().endsWith(FIRE_FILE_EXTENSION)) {
             return DecodeQualification.UNABLE;
         }
