@@ -8,11 +8,12 @@ import org.esa.beam.util.io.BeamFileFilter;
 import java.io.File;
 import java.util.Locale;
 
-public class GlobCoverMosaicReaderPlugIn implements ProductReaderPlugIn {
+public class GlobCoverTileReaderPlugIn implements ProductReaderPlugIn {
 
     private static final String DESCRIPTION = "GlobCover Bimonthly or Annual MERIS FR Mosaic Tile";
     private static final String[] FILE_EXTENSIONS = new String[]{".hdf"};
-    private static final String FORMAT_NAME = "GLOBCOVER-L3-MOSAIC";
+    private static final String FILE_PREFIX = "GLOBCOVER-L3_MOSAIC";
+    private static final String FORMAT_NAME = "GLOBCOVER-L3-MOSAIC-TILE";
     private static final String[] FORMAT_NAMES = new String[]{FORMAT_NAME};
     private static final Class[] INPUT_TYPES = new Class[]{String.class, File.class};
     private static final BeamFileFilter FILE_FILTER = new BeamFileFilter(FORMAT_NAME, FILE_EXTENSIONS, DESCRIPTION);
@@ -27,7 +28,7 @@ public class GlobCoverMosaicReaderPlugIn implements ProductReaderPlugIn {
             return DecodeQualification.UNABLE;
         }
 
-        if (file.getName().startsWith("GLOBCOVER-L3_MOSAIC")) {
+        if (file.getName().startsWith(FILE_PREFIX)) {
             return DecodeQualification.INTENDED;
         }
 
@@ -39,7 +40,7 @@ public class GlobCoverMosaicReaderPlugIn implements ProductReaderPlugIn {
     }
 
     public ProductReader createReaderInstance() {
-        return new GlobCoverMosaicReader(this);
+        return new GlobCoverTileReader(this);
     }
 
     public String[] getFormatNames() {

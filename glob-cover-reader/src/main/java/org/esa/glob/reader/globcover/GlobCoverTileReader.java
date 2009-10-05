@@ -41,7 +41,7 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
-public class GlobCoverMosaicReader extends AbstractProductReader {
+public class GlobCoverTileReader extends AbstractProductReader {
 
     private static final Object LOCK = new Object();
 
@@ -75,7 +75,7 @@ public class GlobCoverMosaicReader extends AbstractProductReader {
 
     private NetcdfFile ncfile;
 
-    protected GlobCoverMosaicReader(GlobCoverMosaicReaderPlugIn readerPlugIn) {
+    protected GlobCoverTileReader(GlobCoverTileReaderPlugIn readerPlugIn) {
         super(readerPlugIn);
     }
 

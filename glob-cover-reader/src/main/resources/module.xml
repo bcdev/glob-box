@@ -34,9 +34,9 @@
     <extension point="beam-ui:actions">
         <action>
             <class>org.esa.beam.visat.actions.ProductImportAction</class>
-            <id>importGlobCoverMosaicProduct</id>
-            <helpId>importGlobCoverMosaicProduct</helpId>
-            <formatName>GLOBCOVER-L3-MOSAIC</formatName>
+            <id>importGlobCoverTileProduct</id>
+            <helpId>importGlobCoverTileProduct</helpId>
+            <formatName>GLOBCOVER-L3-MOSAIC-TILE</formatName>
             <useAllFileFilter>false</useAllFileFilter>
             <text>Import GlobCover Bimonthly or Annual MERIS FR Mosaic Tile Product...</text>
             <mnemonic/>
