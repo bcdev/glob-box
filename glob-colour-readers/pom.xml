@@ -32,24 +32,11 @@
     <build>
         <plugins>
             <plugin>
-                <artifactId>maven-antrun-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <phase>compile</phase>
-                        <configuration>
-                            <tasks>
-                                <property name="helpdir" value="${project.build.outputDirectory}/doc/help"/>
-                                <ant antfile="build.xml" target="create-jh-search-db"/>
-                            </tasks>
-                        </configuration>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                    </execution>
-                </executions>
+                <groupId>com.bc.maven.plugins</groupId>
+                <artifactId>maven-javahelp-plugin</artifactId>
             </plugin>
         </plugins>
     </build>
-
+    
 </project>
 

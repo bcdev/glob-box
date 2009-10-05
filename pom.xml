@@ -22,7 +22,7 @@
         </license>
     </licenses>
 
-        <properties>
+    <properties>
         <!--
            In version 3.0 of Maven the sourceEncoding property will be embedded in the
            build tag. For now the convention is to that it as property.
@@ -153,6 +153,18 @@
                         <debug>true</debug>
                         <encoding>UTF-8</encoding>
                     </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>com.bc.maven.plugins</groupId>
+                    <artifactId>maven-javahelp-plugin</artifactId>
+                    <version>1.0</version>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>javahelp-indexer</goal>
+                            </goals>
+                        </execution>
+                    </executions>
                 </plugin>
             </plugins>
         </pluginManagement>
