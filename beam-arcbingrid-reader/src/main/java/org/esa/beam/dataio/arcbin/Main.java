@@ -16,7 +16,6 @@
  */
 package org.esa.beam.dataio.arcbin;
 
-import com.sun.media.imageioimpl.plugins.tiff.TIFFFaxDecompressor;
 import com.sun.media.jai.codec.ByteArraySeekableStream;
 import com.sun.media.jai.codec.SeekableStream;
 
@@ -41,6 +40,24 @@ import javax.imageio.stream.MemoryCacheImageInputStream;
  * @since BEAM 4.2
  */
 public class Main {
+
+    /**
+     * todo - add API doc
+     *
+     * @author Marco Zuehlke
+     * @version $Revision$ $Date$
+     * @since BEAM 4.2
+     */
+    private static final class TIFFFaxDecompressorExtension extends TIFFFaxDecompressor {
+        TIFFFaxDecompressorExtension() {
+           this.compression = 2;
+           this.srcWidth = 256;
+           this.srcHeight = 4;
+           this.fillOrder = 1;
+           this.byteCount = 28;
+           this.offset = 6;
+        }
+    }
 
     public static void main(String[] args) throws IOException {
         File dir = new File(args[0]);
@@ -101,12 +118,22 @@ public class Main {
         System.out.println("tileOffset "+tileOffset);
         System.out.println("tileDataSize "+tileDataSize);
         
+        for (int i = 0; i < rawTileData.length; i++) {
+            System.out.println(i+"   "+rawTileData[i]);
+        }
+        System.out.println("-------------");
+        
         SeekableStream stream = new ByteArraySeekableStream(rawTileData, tileOffset, tileDataSize);
-        TIFFFaxDecompressor decompressor = new TIFFFaxDecompressor();
+        TIFFFaxDecompressor decompressor = new TIFFFaxDecompressorExtension();
         ImageInputStream imageInputStream = new MemoryCacheImageInputStream(stream);
         decompressor.setStream(imageInputStream);
-
+        byte[] buffer = new byte[256*4];
+        decompressor.setCompression(2);
+        decompressor.decodeRaw(buffer, 0, 1, 256);
         
+        for (int i = 0; i < buffer.length; i++) {
+            System.out.println(buffer[i]);
+        }
 //        decompressor.setSrcMinX(0);
 //        decompressor.setSrcMinY(0);
 //        decompressor.setSrcWidth(256);
