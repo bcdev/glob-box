@@ -40,7 +40,7 @@ public class GlobCoverTileReaderPlugIn implements ProductReaderPlugIn {
     }
 
     public ProductReader createReaderInstance() {
-        return new GlobCoverTileReader(this);
+        return new GlobCoverTileProductReader(this);
     }
 
     public String[] getFormatNames() {

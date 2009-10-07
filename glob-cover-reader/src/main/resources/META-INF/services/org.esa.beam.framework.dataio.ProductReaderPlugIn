@@ -1,1 +1,2 @@
 org.esa.glob.reader.globcover.GlobCoverTileReaderPlugIn
+org.esa.glob.reader.globcover.GlobCoverMosaicReaderPlugIn
