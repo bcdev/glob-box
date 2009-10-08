@@ -18,43 +18,41 @@ public class GlobCoverTileReaderPlugIn implements ProductReaderPlugIn {
     private static final Class[] INPUT_TYPES = new Class[]{String.class, File.class};
     private static final BeamFileFilter FILE_FILTER = new BeamFileFilter(FORMAT_NAME, FILE_EXTENSIONS, DESCRIPTION);
 
+    @Override
     public DecodeQualification getDecodeQualification(Object input) {
-        final File file;
-        if (input instanceof String) {
-            file = new File((String) input);
-        } else if (input instanceof File) {
-            file = (File) input;
-        } else {
-            return DecodeQualification.UNABLE;
-        }
-
+        final File file = new File(String.valueOf(input));
         if (file.getName().startsWith(FILE_PREFIX)) {
             return DecodeQualification.INTENDED;
         }
-
         return DecodeQualification.UNABLE;
     }
 
+    @Override
     public Class[] getInputTypes() {
         return INPUT_TYPES;
     }
 
+    @Override
     public ProductReader createReaderInstance() {
         return new GlobCoverTileProductReader(this);
     }
 
+    @Override
     public String[] getFormatNames() {
         return FORMAT_NAMES;
     }
 
+    @Override
     public String[] getDefaultFileExtensions() {
         return FILE_EXTENSIONS;
     }
 
+    @Override
     public String getDescription(Locale locale) {
         return DESCRIPTION;
     }
 
+    @Override
     public BeamFileFilter getProductFileFilter() {
         return FILE_FILTER;
     }

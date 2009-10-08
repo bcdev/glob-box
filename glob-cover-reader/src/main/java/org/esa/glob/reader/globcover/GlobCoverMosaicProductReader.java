@@ -137,17 +137,27 @@ class GlobCoverMosaicProductReader extends AbstractProductReader {
             }
         });
 
+        String filePrefix = getProductFilePrefix(files[0]);
+
         Map<TileIndex, GCTileFile> fileMap = new TreeMap<TileIndex, GCTileFile>();
         for (File file : files) {
-            final String filename = FileUtils.getFilenameWithoutExtension(file);
-            final String tilePos = filename.substring(filename.lastIndexOf('_') + 1, filename.length());
-            final String[] tileIndices = tilePos.split("V");
-            int horizIndex = Integer.parseInt(tileIndices[0].substring(1));   // has H as prefix
-            int vertIndex = Integer.parseInt(tileIndices[1]);    // has no V as prefix
-            final TileIndex tileIndex = new TileIndex(horizIndex, vertIndex);
-            fileMap.put(tileIndex, new GCTileFile(file));
+            if(file.getName().startsWith(filePrefix)) {
+                final String filename = FileUtils.getFilenameWithoutExtension(file);
+                final String tilePos = filename.substring(filename.lastIndexOf('_') + 1, filename.length());
+                final String[] tileIndices = tilePos.split("V");
+                int horizIndex = Integer.parseInt(tileIndices[0].substring(1));   // has H as prefix
+                int vertIndex = Integer.parseInt(tileIndices[1]);    // has no V as prefix
+                final TileIndex tileIndex = new TileIndex(horizIndex, vertIndex);
+                fileMap.put(tileIndex, new GCTileFile(file));
+            }
         }
         return Collections.unmodifiableMap(fileMap);
+    }
+
+
+    public static String getProductFilePrefix(File file) {
+        final String fileName = FileUtils.getFilenameWithoutExtension(file);
+        return fileName.substring(0, fileName.lastIndexOf('_'));
     }
 
     private File getProductDir() throws IOException {
