@@ -16,21 +16,11 @@
  */
 package org.esa.beam.dataio.arcbin;
 
-import com.sun.media.jai.codec.ByteArraySeekableStream;
-import com.sun.media.jai.codec.SeekableStream;
-
 import org.esa.beam.dataio.arcbin.TileIndex.IndexEntry;
 import org.esa.beam.util.math.MathUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
-import javax.imageio.stream.ImageInputStream;
-import javax.imageio.stream.MemoryCacheImageInputStream;
 
 /**
  * todo - add API doc
@@ -47,6 +37,10 @@ public class Main {
         if (!dir.exists()) {
             System.out.println("dir does not exist!!");
         }
+        ProjectionReader projectionReader = new ProjectionReader(new File(dir, "prj.adf"));
+        System.exit(0);
+        
+        
         GeorefBounds georefBounds = GeorefBounds.create(new File(dir, GeorefBounds.FILE_NAME));
         Header header = Header.create(new File(dir, Header.FILE_NAME));
         

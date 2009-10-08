@@ -43,6 +43,8 @@ public class ArcBinGridReader extends AbstractProductReader {
         GeorefBounds georefBounds = GeorefBounds.create(new File(dir, GeorefBounds.FILE_NAME));
         RasterStatistics rasterStatistics = RasterStatistics.create(new File(dir, RasterStatistics.FILE_NAME));
         Header header = Header.create(new File(dir, Header.FILE_NAME));
+//        CoordinateReferenceSystem crs = ProjectionReader.parsePrjFile(new File(dir, "prj.adf"));
+
         
         int width = MathUtils.floorInt((georefBounds.urx - georefBounds.llx) / header.pixelSizeX);
         int height = MathUtils.floorInt((georefBounds.ury - georefBounds.lly) / header.pixelSizeY);
