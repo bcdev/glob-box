@@ -26,6 +26,7 @@ import java.util.Map;
  * @version $ Revision $ Date $
  * @since BEAM 4.6
  */
+@SuppressWarnings({"AssignmentToCollectionOrArrayFieldFromParameter"}) // the tileFileMap is unmodifiable
 class GCMosaicMultiLevelSource extends AbstractMultiLevelSource {
 
     private final Band band;
