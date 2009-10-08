@@ -26,7 +26,8 @@ import java.util.Map;
  * @version $ Revision $ Date $
  * @since BEAM 4.6
  */
-@SuppressWarnings({"AssignmentToCollectionOrArrayFieldFromParameter"}) // the tileFileMap is unmodifiable
+// the tileFileMap is unmodifiable
+@SuppressWarnings({"AssignmentToCollectionOrArrayFieldFromParameter"})
 class GCMosaicMultiLevelSource extends AbstractMultiLevelSource {
 
     private final Band band;
@@ -62,7 +63,7 @@ class GCMosaicMultiLevelSource extends AbstractMultiLevelSource {
                                                         tileHeight,
                                                         sampleModel,
                                                         colorModel);
-        return new GCMosaicOpImage(imageLayout, tileFileMap, (int)scale);
+        return new GCMosaicOpImage(imageLayout, tileFileMap, (int) scale);
     }
 
     private class GCMosaicOpImage extends SourcelessOpImage {
@@ -80,10 +81,10 @@ class GCMosaicMultiLevelSource extends AbstractMultiLevelSource {
                   imageLayout.getHeight(null));
             this.tileMap = tileMap;
             this.subsampling = subsampling;
-            noDataRaster = createWritableRaster(sampleModel, new Point(0,0));
+            noDataRaster = createWritableRaster(sampleModel, new Point(0, 0));
             final DataBuffer dataBuffer = noDataRaster.getDataBuffer();
             final double noDataValue = band.getNoDataValue();
-            for ( int i = 0; i < dataBuffer.getSize(); i++) {
+            for (int i = 0; i < dataBuffer.getSize(); i++) {
                 dataBuffer.setElemDouble(i, noDataValue);
             }
         }
@@ -93,13 +94,13 @@ class GCMosaicMultiLevelSource extends AbstractMultiLevelSource {
             final Point location = new Point(tileXToX(tileX), tileYToY(tileY));
             final TileIndex tileIndex = new TileIndex(tileX, tileY);
             final GCTileFile file = tileMap.get(tileIndex);
-            if(file == null) {
+            if (file == null) {
                 return noDataRaster.createTranslatedChild(location.x, location.y);
             }
             try {
                 final WritableRaster targetRaster = createWritableRaster(sampleModel, location);
                 final DataBuffer dataBuffer = targetRaster.getDataBuffer();
-                int subsampledSize = (int)Math.sqrt(dataBuffer.getSize());
+                int subsampledSize = (int) Math.sqrt(dataBuffer.getSize());
                 int sourceSize = subsampledSize * subsampling;
                 final Array array = file.readData(band.getName(), 0, 0,
                                                   sourceSize, sourceSize,
