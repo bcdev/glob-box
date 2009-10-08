@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.Collections;
 
 class GlobCoverMosaicProductReader extends AbstractProductReader {
 
@@ -65,9 +66,9 @@ class GlobCoverMosaicProductReader extends AbstractProductReader {
         final Product product;
         int width = (TileIndex.MAX_HORIZ_INDEX + 1) * TileIndex.TILE_SIZE;
         int height = (TileIndex.MAX_VERT_INDEX + 1) * TileIndex.TILE_SIZE;
-        final File file = new File(firstFile.getFilePath());
-        final String fileName = FileUtils.getFilenameWithoutExtension(file);
-        // product name == file name with tile indeces
+        final String fileNameWithExt = FileUtils.getFileNameFromPath(firstFile.getFilePath());
+        final String fileName = FileUtils.getFilenameWithoutExtension(fileNameWithExt);
+        // product name == file name without tile indeces
         final String prodName = fileName.substring(0, fileName.lastIndexOf('_'));
         final String prodType;
         if (firstFile.isAnnualFile()) {
@@ -76,7 +77,7 @@ class GlobCoverMosaicProductReader extends AbstractProductReader {
             prodType = PRODUCT_TYPE_BIMON;
         }
         product = new Product(prodName, prodType, width, height);
-        product.setFileLocation(file.getParentFile());
+        product.setFileLocation(getProductDir());
         product.setStartTime(firstFile.getStartDate());
         product.setEndTime(firstFile.getEndDate());
 
@@ -127,8 +128,8 @@ class GlobCoverMosaicProductReader extends AbstractProductReader {
         } catch (Exception e) {
             throw new IOException("Not able to create GeoCoding: ", e);
         }
-
     }
+
     private Map<TileIndex, GCTileFile> getInputFileMap() throws IOException {
         File dir = getProductDir();
         final File[] files = dir.listFiles(new FileFilter() {
@@ -149,7 +150,7 @@ class GlobCoverMosaicProductReader extends AbstractProductReader {
             final TileIndex tileIndex = new TileIndex(horizIndex, vertIndex);
             fileMap.put(tileIndex, new GCTileFile(NetcdfFile.open(file.getCanonicalPath())));
         }
-        return fileMap;
+        return Collections.unmodifiableMap(fileMap);
     }
 
     private File getProductDir() throws IOException {
