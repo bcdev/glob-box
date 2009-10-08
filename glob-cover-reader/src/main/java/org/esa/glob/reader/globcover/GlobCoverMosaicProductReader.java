@@ -23,7 +23,7 @@ import java.util.TreeMap;
 
 class GlobCoverMosaicProductReader extends AbstractProductReader {
 
-    private static final String PRODUCT_TYPE_ANUUAL = "GC_MOSAIC_AN";
+    private static final String PRODUCT_TYPE_ANNUAL = "GC_MOSAIC_AN";
     private static final String PRODUCT_TYPE_BIMON = "GC_MOSAIC_BI";
     private static final double PIXEL_SIZE_DEG = 1 / 360.0;
     private static final double PIXEL_CENTER = 0.5;
@@ -67,7 +67,7 @@ class GlobCoverMosaicProductReader extends AbstractProductReader {
         final String prodName = fileName.substring(0, fileName.lastIndexOf('_'));
         final String prodType;
         if (firstFile.isAnnualFile()) {
-            prodType = PRODUCT_TYPE_ANUUAL;
+            prodType = PRODUCT_TYPE_ANNUAL;
         } else {
             prodType = PRODUCT_TYPE_BIMON;
         }
