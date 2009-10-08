@@ -153,7 +153,7 @@ class GlobCoverMosaicProductReader extends AbstractProductReader {
     }
 
 
-    public static String getProductFilePrefix(File file) {
+    private static String getProductFilePrefix(File file) {
         final String fileName = FileUtils.getFilenameWithoutExtension(file);
         return fileName.substring(0, fileName.lastIndexOf('_'));
     }
