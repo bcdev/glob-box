@@ -27,43 +27,27 @@ import java.awt.image.WritableRaster;
 
 import javax.media.jai.PlanarImage;
 
-class IntegerTypeOpImage extends SingleBandedOpImage {
+
+public class TileIndexOpImage extends SingleBandedOpImage {
     
     private final Header header;
-    private final TileIndex tileIndex;
-    private final RasterDataFile rasterDataFile;    
 
-    IntegerTypeOpImage(int sourceWidth, int sourceHeight, Dimension tileSize, Header header, TileIndex tileIndex, RasterDataFile rasterDataFile) {
-        super(DataBuffer.TYPE_BYTE, 
+    TileIndexOpImage(int sourceWidth, int sourceHeight, Dimension tileSize, Header header) {
+        super(DataBuffer.TYPE_INT, 
               sourceWidth, 
               sourceHeight, 
               tileSize, 
               null, // no configuration
               ResolutionLevel.MAXRES);
         this.header = header;
-        this.tileIndex = tileIndex;
-        this.rasterDataFile = rasterDataFile;
     }
     
     @Override
     protected final void computeRect(PlanarImage[] planarImages, WritableRaster targetRaster, Rectangle rectangle) {
         int tileIndexY = (targetRaster.getMinY() / header.tileYSize) * header.tilesPerRow;
         int currentTileIndex = (targetRaster.getMinX() / header.tileXSize) + tileIndexY;
-        int rectSize = targetRaster.getHeight()*targetRaster.getWidth();
-        IndexEntry indexEntry = tileIndex.getIndexEntry(currentTileIndex);
         DataBuffer dataBuffer = targetRaster.getDataBuffer();
-        if (indexEntry == null ) {
-            fillBuffer(dataBuffer, 42);
-        } else {
-            try {
-                int tileType;
-                byte[] rawBytes = rasterDataFile.loadRawTileData(indexEntry);
-                tileType = rawBytes[2];
-                fillBuffer(dataBuffer, tileType);
-            } catch (Exception e) {
-                fillBuffer(dataBuffer, 42);
-            }
-        }
+        fillBuffer(dataBuffer, currentTileIndex);
     }
     
     private void fillBuffer(DataBuffer dataBuffer, int value) {
@@ -71,4 +55,5 @@ class IntegerTypeOpImage extends SingleBandedOpImage {
             dataBuffer.setElem(i, value);
         }
     }
+
 }

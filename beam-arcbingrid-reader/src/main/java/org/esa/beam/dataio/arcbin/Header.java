@@ -33,7 +33,7 @@ import java.nio.ByteOrder;
 /**
  * Contains the Header
  */
-class HdrAdf {
+class Header {
     
     public static final String FILE_NAME = "hdr.adf";
     
@@ -66,7 +66,7 @@ class HdrAdf {
     final int tileXSize;
     final int tileYSize;
     
-    private HdrAdf(int cellType, 
+    private Header(int cellType, 
                    double pixelSizeX, double pixelSizeY, 
                    double xRef, double yRef, 
                    int tilesPerRow, int tilesPerColumn,
@@ -82,18 +82,18 @@ class HdrAdf {
         this.tileYSize = tileYSize;
     }
 
-    public static HdrAdf create(File file) throws IOException {
+    public static Header create(File file) throws IOException {
         DataFormat dataFormat = new DataFormat(TYPE, ByteOrder.BIG_ENDIAN);
         DataContext context = dataFormat.createContext(file, "r");
         CompoundData data = context.createData();
         
         SequenceData magic = data.getSequence("HMagic");
         if (checkMagicString(magic)) {
-            HdrAdf hdrAdf = new HdrAdf(data.getInt("HCellType"), data.getDouble("HPixelSizeX"), data.getDouble("HPixelSizeX"),
+            Header header = new Header(data.getInt("HCellType"), data.getDouble("HPixelSizeX"), data.getDouble("HPixelSizeX"),
                               data.getDouble("XRef"), data.getDouble("YRef"), data.getInt("HTilesPerRow"),
                               data.getInt("HTilesPerColumn"), data.getInt("HTileXSize"), data.getInt("HTileYSize"));
             context.dispose();
-            return hdrAdf;
+            return header;
         } else {
             context.dispose();
             throw new ProductIOException("Wrong magic string in 'hdr.adf' file.");

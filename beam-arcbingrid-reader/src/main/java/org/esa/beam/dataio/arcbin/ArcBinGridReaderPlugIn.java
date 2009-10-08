@@ -27,7 +27,7 @@ public class ArcBinGridReaderPlugIn implements ProductReaderPlugIn {
             return DecodeQualification.UNABLE;
         }
 
-        if (file.getName().equals(HdrAdf.FILE_NAME)) {
+        if (file.getName().equals(Header.FILE_NAME)) {
             return DecodeQualification.INTENDED;
         }
 
@@ -77,7 +77,7 @@ public class ArcBinGridReaderPlugIn implements ProductReaderPlugIn {
         @Override
         public boolean accept(final File file) {
             if (super.accept(file)) {
-                if (file.isDirectory() || file.getName().equals(HdrAdf.FILE_NAME)) {
+                if (file.isDirectory() || file.getName().equals(Header.FILE_NAME)) {
                     return true;
                 }
             }

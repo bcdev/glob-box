@@ -26,6 +26,8 @@ import javax.imageio.stream.FileImageInputStream;
 import javax.imageio.stream.ImageInputStream;
 
 class RasterDataFile {
+    static final String FILE_NAME = "w001001.adf";
+    
     private final ImageInputStream imageInputStream;
 
     RasterDataFile(ImageInputStream imageInputStream) {

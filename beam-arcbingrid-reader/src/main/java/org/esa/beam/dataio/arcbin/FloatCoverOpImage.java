@@ -16,6 +16,8 @@
  */
 package org.esa.beam.dataio.arcbin;
 
+import com.bc.ceres.binio.util.ByteArrayCodec;
+
 import org.esa.beam.dataio.arcbin.TileIndex.IndexEntry;
 import org.esa.beam.jai.ResolutionLevel;
 import org.esa.beam.jai.SingleBandedOpImage;
@@ -24,17 +26,19 @@ import java.awt.Dimension;
 import java.awt.Rectangle;
 import java.awt.image.DataBuffer;
 import java.awt.image.WritableRaster;
+import java.nio.ByteOrder;
 
 import javax.media.jai.PlanarImage;
 
-class IntegerTypeOpImage extends SingleBandedOpImage {
-    
+
+class FloatCoverOpImage extends SingleBandedOpImage {
+    private static final ByteArrayCodec byteArrayCodec = ByteArrayCodec.getInstance(ByteOrder.BIG_ENDIAN);
     private final Header header;
     private final TileIndex tileIndex;
     private final RasterDataFile rasterDataFile;    
 
-    IntegerTypeOpImage(int sourceWidth, int sourceHeight, Dimension tileSize, Header header, TileIndex tileIndex, RasterDataFile rasterDataFile) {
-        super(DataBuffer.TYPE_BYTE, 
+    FloatCoverOpImage(int sourceWidth, int sourceHeight, Dimension tileSize, Header header, TileIndex tileIndex, RasterDataFile rasterDataFile) {
+        super(DataBuffer.TYPE_FLOAT, 
               sourceWidth, 
               sourceHeight, 
               tileSize, 
@@ -53,22 +57,26 @@ class IntegerTypeOpImage extends SingleBandedOpImage {
         IndexEntry indexEntry = tileIndex.getIndexEntry(currentTileIndex);
         DataBuffer dataBuffer = targetRaster.getDataBuffer();
         if (indexEntry == null ) {
-            fillBuffer(dataBuffer, 42);
+            fillBuffer(dataBuffer, Float.NaN);
         } else {
             try {
-                int tileType;
-                byte[] rawBytes = rasterDataFile.loadRawTileData(indexEntry);
-                tileType = rawBytes[2];
-                fillBuffer(dataBuffer, tileType);
+                byte[] rawTileData = rasterDataFile.loadRawTileData(indexEntry);
+                int tileOffset = 2;
+                for (int i = 0; i < rectSize; i++) {
+                    float value = byteArrayCodec.getFloat(rawTileData, tileOffset);
+                    tileOffset += 4;
+                    dataBuffer.setElemFloat(i, value);
+                }
             } catch (Exception e) {
                 fillBuffer(dataBuffer, 42);
             }
         }
     }
     
-    private void fillBuffer(DataBuffer dataBuffer, int value) {
+    private void fillBuffer(DataBuffer dataBuffer, float value) {
         for (int i = 0; i < dataBuffer.getSize(); i++) {
-            dataBuffer.setElem(i, value);
+            dataBuffer.setElemFloat(i, value);
         }
     }
+
 }

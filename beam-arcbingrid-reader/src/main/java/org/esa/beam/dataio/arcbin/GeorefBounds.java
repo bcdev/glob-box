@@ -31,7 +31,7 @@ import java.nio.ByteOrder;
 /**
  * Contains the Georef Bounds
  */
-class DblbndAdf {
+class GeorefBounds {
     
     public static final String FILE_NAME = "dblbnd.adf";
     
@@ -48,21 +48,21 @@ class DblbndAdf {
     final double urx;
     final double ury;
     
-    private DblbndAdf(double llx, double lly, double urx, double ury) {
+    private GeorefBounds(double llx, double lly, double urx, double ury) {
         this.llx = llx;
         this.lly = lly;
         this.urx = urx;
         this.ury = ury;
     }
 
-    public static DblbndAdf create(File file) throws IOException {
+    public static GeorefBounds create(File file) throws IOException {
         DataFormat dataFormat = new DataFormat(TYPE, ByteOrder.BIG_ENDIAN);
         DataContext context = dataFormat.createContext(file, "r");
         CompoundData data = context.createData();
         
-        DblbndAdf dblbndAdf = new DblbndAdf(data.getDouble(0), data.getDouble(1), 
+        GeorefBounds georefBounds = new GeorefBounds(data.getDouble(0), data.getDouble(1), 
                              data.getDouble(2), data.getDouble(3));
         context.dispose();
-        return dblbndAdf;
+        return georefBounds;
     }
 }
