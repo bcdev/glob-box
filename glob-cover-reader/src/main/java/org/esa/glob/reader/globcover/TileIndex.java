@@ -1,8 +1,5 @@
 package org.esa.glob.reader.globcover;
 
-import java.awt.Rectangle;
-import java.util.Comparator;
-
 /**
  * @author Marco Peters
  * @version $ Revision $ Date $
@@ -17,13 +14,11 @@ class TileIndex implements Comparable{
     private final int horizIndex;
     private final int vertIndex;
     private final int index;
-    private Rectangle bounds;
 
     TileIndex(int horizIndex, int vertIndex) {
         this.horizIndex = horizIndex;
         this.vertIndex = vertIndex;
         index = horizIndex + MAX_HORIZ_INDEX * vertIndex;
-        bounds = new Rectangle(horizIndex * TILE_SIZE, vertIndex * TILE_SIZE, TILE_SIZE, TILE_SIZE);
     }
 
     @Override
@@ -55,10 +50,6 @@ class TileIndex implements Comparable{
         result = 31 * result + vertIndex;
         result = 31 * result + index;
         return result;
-    }
-
-    public Rectangle getBounds() {
-        return bounds;
     }
 
     public int compareTo(Object o) {
