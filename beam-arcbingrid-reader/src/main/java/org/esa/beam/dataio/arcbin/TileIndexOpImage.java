@@ -16,7 +16,6 @@
  */
 package org.esa.beam.dataio.arcbin;
 
-import org.esa.beam.dataio.arcbin.TileIndex.IndexEntry;
 import org.esa.beam.jai.ResolutionLevel;
 import org.esa.beam.jai.SingleBandedOpImage;
 
