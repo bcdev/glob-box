@@ -54,7 +54,6 @@ class GlobCoverMosaicProductReader extends AbstractProductReader {
         for (GCTileFile tileFile : inputFileMap.values()) {
             tileFile.close();
         }
-        inputFileMap.clear();
         super.close();
     }
 
@@ -63,8 +62,7 @@ class GlobCoverMosaicProductReader extends AbstractProductReader {
         final Product product;
         int width = (TileIndex.MAX_HORIZ_INDEX + 1) * TileIndex.TILE_SIZE;
         int height = (TileIndex.MAX_VERT_INDEX + 1) * TileIndex.TILE_SIZE;
-        final String fileNameWithExt = FileUtils.getFileNameFromPath(firstFile.getFilePath());
-        final String fileName = FileUtils.getFilenameWithoutExtension(fileNameWithExt);
+        final String fileName = FileUtils.getFilenameWithoutExtension(new File(firstFile.getFilePath()));
         // product name == file name without tile indeces
         final String prodName = fileName.substring(0, fileName.lastIndexOf('_'));
         final String prodType;
