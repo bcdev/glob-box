@@ -81,12 +81,6 @@ class GCMosaicMultiLevelSource extends AbstractMultiLevelSource {
                   imageLayout.getHeight(null));
             this.tileMap = tileMap;
             this.subsampling = subsampling;
-            noDataRaster = createWritableRaster(sampleModel, new Point(0, 0));
-            final DataBuffer dataBuffer = noDataRaster.getDataBuffer();
-            final double noDataValue = band.getNoDataValue();
-            for (int i = 0; i < dataBuffer.getSize(); i++) {
-                dataBuffer.setElemDouble(i, noDataValue);
-            }
         }
 
         @Override
@@ -95,6 +89,9 @@ class GCMosaicMultiLevelSource extends AbstractMultiLevelSource {
             final TileIndex tileIndex = new TileIndex(tileX, tileY);
             final GCTileFile file = tileMap.get(tileIndex);
             if (file == null) {
+                if(noDataRaster == null) {
+                    noDataRaster = createNoDataRaster();
+                }
                 return noDataRaster.createTranslatedChild(location.x, location.y);
             }
             try {
@@ -116,6 +113,16 @@ class GCMosaicMultiLevelSource extends AbstractMultiLevelSource {
             } catch (InvalidRangeException e) {
                 throw new RuntimeException("Failed to read mosaic tile.", e);
             }
+        }
+
+        private WritableRaster createNoDataRaster() {
+            final WritableRaster raster = createWritableRaster(sampleModel, new Point(0, 0));
+            final DataBuffer dataBuffer = raster.getDataBuffer();
+            final double noDataValue = band.getNoDataValue();
+            for (int i = 0; i < dataBuffer.getSize(); i++) {
+                dataBuffer.setElemDouble(i, noDataValue);
+            }
+            return raster;
         }
     }
 }
