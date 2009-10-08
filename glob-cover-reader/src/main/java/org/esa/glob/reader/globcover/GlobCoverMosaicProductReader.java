@@ -125,7 +125,7 @@ class GlobCoverMosaicProductReader extends AbstractProductReader {
             final CrsGeoCoding geoCoding = new CrsGeoCoding(DefaultGeographicCRS.WGS84, rect, transform);
             product.setGeoCoding(geoCoding);
         } catch (Exception e) {
-            throw new IOException("Can not create GeoCoding: ", e);
+            throw new IOException("Not able to create GeoCoding: ", e);
         }
 
     }
