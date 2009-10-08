@@ -24,7 +24,7 @@ import java.util.Map;
 /**
  * @author Marco Peters
  * @version $ Revision $ Date $
- * @since BEAM 4.6
+ * @since BEAM 4.7
  */
 // the tileFileMap is unmodifiable
 @SuppressWarnings({"AssignmentToCollectionOrArrayFieldFromParameter"})
@@ -42,22 +42,22 @@ class GCMosaicMultiLevelSource extends AbstractMultiLevelSource {
 
     @Override
     protected RenderedImage createImage(int level) {
-        final MultiLevelModel levelModel = getModel();
-        final double scale = levelModel.getScale(level);
+        final MultiLevelModel model = getModel();
+        final double scale = model.getScale(level);
         final int sourceWidth = band.getSceneRasterWidth();
         final int sourceHeight = band.getSceneRasterHeight();
-        int destWidth = (int) Math.floor(sourceWidth / scale);
-        int destHeight = (int) Math.floor(sourceHeight / scale);
+        int levelWidth = (int) Math.floor(sourceWidth / scale);
+        int levelHeight = (int) Math.floor(sourceHeight / scale);
         final int dataType = ImageManager.getDataBufferType(band.getDataType());
 
-        int tileWidth = destWidth / (TileIndex.MAX_HORIZ_INDEX + 1);
-        int tileHeight = destHeight / (TileIndex.MAX_VERT_INDEX + 1);
+        int tileWidth = levelWidth / (TileIndex.MAX_HORIZ_INDEX + 1);
+        int tileHeight = levelHeight / (TileIndex.MAX_VERT_INDEX + 1);
         SampleModel sampleModel = ImageUtils.createSingleBandedSampleModel(dataType, tileWidth, tileHeight);
         ColorModel colorModel = PlanarImage.createColorModel(sampleModel);
 
         final ImageLayout imageLayout = new ImageLayout(0, 0,
-                                                        destWidth,
-                                                        destHeight,
+                                                        levelWidth,
+                                                        levelHeight,
                                                         0, 0,
                                                         tileWidth,
                                                         tileHeight,

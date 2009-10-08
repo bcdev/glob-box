@@ -13,7 +13,6 @@ import org.esa.beam.util.io.FileUtils;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import ucar.ma2.Array;
 import ucar.ma2.InvalidRangeException;
-import ucar.nc2.NetcdfFile;
 
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
@@ -36,7 +35,7 @@ class GlobCoverTileProductReader extends AbstractProductReader {
 
     @Override
     protected Product readProductNodesImpl() throws IOException {
-        gcTileFile = new GCTileFile(getInputNetcdfFile());
+        gcTileFile = new GCTileFile(getInputFile());
         return createProduct();
     }
 
@@ -49,6 +48,7 @@ class GlobCoverTileProductReader extends AbstractProductReader {
         super.close();
     }
 
+    @SuppressWarnings({"SuspiciousSystemArraycopy"})
     @Override
     protected void readBandRasterDataImpl(int sourceOffsetX, int sourceOffsetY, int sourceWidth, int sourceHeight,
                                           int sourceStepX, int sourceStepY, Band destBand, int destOffsetX,
@@ -131,20 +131,13 @@ class GlobCoverTileProductReader extends AbstractProductReader {
 
     }
 
-    private NetcdfFile getInputNetcdfFile() throws IOException {
+    private File getInputFile() throws IOException {
         final Object input = getInput();
 
         if (!(input instanceof String || input instanceof File)) {
             throw new IOException("Input object must either be a string or a file.");
         }
-        final String path;
-        if (input instanceof String) {
-            path = (String) input;
-        } else {
-            path = ((File) input).getPath();
-        }
-
-        return NetcdfFile.open(path);
+        return new File(String.valueOf(input));
     }
 
 }

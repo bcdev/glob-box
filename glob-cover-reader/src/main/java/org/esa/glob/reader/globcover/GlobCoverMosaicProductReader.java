@@ -3,26 +3,23 @@ package org.esa.glob.reader.globcover;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.glevel.support.DefaultMultiLevelImage;
 import com.bc.ceres.glevel.support.DefaultMultiLevelModel;
-import org.esa.beam.dataio.netcdf.NetcdfReaderUtils;
 import org.esa.beam.framework.dataio.AbstractProductReader;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.CrsGeoCoding;
-import org.esa.beam.framework.datamodel.MetadataElement;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.util.io.FileUtils;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
-import ucar.nc2.NetcdfFile;
 
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.Collections;
 
 class GlobCoverMosaicProductReader extends AbstractProductReader {
 
@@ -84,8 +81,7 @@ class GlobCoverMosaicProductReader extends AbstractProductReader {
         addGeoCoding(product);
         addBands(product, firstFile);
         GCTileFile.addIndexCodingAndBitmasks(product.getBand("SM"));
-        final MetadataElement metadataElement = NetcdfReaderUtils.createMetadataElement(firstFile.getNetcdfFile());
-        product.getMetadataRoot().addElement(metadataElement);
+        product.getMetadataRoot().addElement(firstFile.getMetadata());
         product.setPreferredTileSize(TileIndex.TILE_SIZE, TileIndex.TILE_SIZE);
         return product;
     }
@@ -133,6 +129,7 @@ class GlobCoverMosaicProductReader extends AbstractProductReader {
     private Map<TileIndex, GCTileFile> getInputFileMap() throws IOException {
         File dir = getProductDir();
         final File[] files = dir.listFiles(new FileFilter() {
+            @Override
             public boolean accept(File file) {
                 final String fileName = file.getName();
                 return fileName.startsWith(GlobCoverMosaicReaderPlugIn.FILE_PREFIX) &&
@@ -148,7 +145,7 @@ class GlobCoverMosaicProductReader extends AbstractProductReader {
             int horizIndex = Integer.parseInt(tileIndices[0].substring(1));   // has H as prefix
             int vertIndex = Integer.parseInt(tileIndices[1]);    // has no V as prefix
             final TileIndex tileIndex = new TileIndex(horizIndex, vertIndex);
-            fileMap.put(tileIndex, new GCTileFile(NetcdfFile.open(file.getCanonicalPath())));
+            fileMap.put(tileIndex, new GCTileFile(file));
         }
         return Collections.unmodifiableMap(fileMap);
     }

@@ -10,6 +10,7 @@ import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ColorPaletteDef;
 import org.esa.beam.framework.datamodel.ImageInfo;
 import org.esa.beam.framework.datamodel.BitmaskDef;
+import org.esa.beam.framework.datamodel.MetadataElement;
 import org.esa.beam.util.Debug;
 import org.esa.beam.util.io.FileUtils;
 import org.jdom.Element;
@@ -33,7 +34,7 @@ import java.awt.Color;
 /**
  * @author Marco Peters
  * @version $ Revision $ Date $
- * @since BEAM 4.6
+ * @since BEAM 4.7
  */
 class GCTileFile {
     static final String XDIM = "XDim";
@@ -51,8 +52,8 @@ class GCTileFile {
 
     private final NetcdfFile ncFile;
 
-    GCTileFile(NetcdfFile ncfile) {
-        ncFile = ncfile;
+    GCTileFile(File ncfile) throws IOException {
+        ncFile = NetcdfFile.open(ncfile.getCanonicalPath());
     }
 
     public NetcdfFile getNetcdfFile() {
@@ -139,6 +140,10 @@ class GCTileFile {
         final String prodName = FileUtils.getFilenameWithoutExtension(fileLocation);
         annual = prodName.toUpperCase().contains("ANNUAL");
         return annual;
+    }
+    
+    public MetadataElement getMetadata() {
+        return NetcdfReaderUtils.createMetadataElement(ncFile);
     }
 
     @Override

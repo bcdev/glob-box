@@ -9,7 +9,7 @@ import java.io.File;
 /**
  * @author Marco Peters
 * @version $ Revision $ Date $
-* @since BEAM 4.6
+* @since BEAM 4.7
 */
 class GlobCoverMosaicFileFilter extends BeamFileFilter {
 
