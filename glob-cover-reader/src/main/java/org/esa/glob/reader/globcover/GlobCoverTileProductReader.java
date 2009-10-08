@@ -1,12 +1,10 @@
 package org.esa.glob.reader.globcover;
 
 import com.bc.ceres.core.ProgressMonitor;
-import org.esa.beam.dataio.netcdf.NetcdfReaderUtils;
 import org.esa.beam.framework.dataio.AbstractProductReader;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.CrsGeoCoding;
 import org.esa.beam.framework.datamodel.GeoPos;
-import org.esa.beam.framework.datamodel.MetadataElement;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.util.io.FileUtils;
@@ -89,8 +87,7 @@ class GlobCoverTileProductReader extends AbstractProductReader {
 
         addBands(product, gcTileFile);
         GCTileFile.addIndexCodingAndBitmasks(product.getBand("SM"));
-        final MetadataElement metadataElement = NetcdfReaderUtils.createMetadataElement(gcTileFile.getNetcdfFile());
-        product.getMetadataRoot().addElement(metadataElement);
+        product.getMetadataRoot().addElement(gcTileFile.getMetadata());
         addGeoCoding(product, gcTileFile);
 
         return product;
