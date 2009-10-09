@@ -58,28 +58,29 @@ class GlobCoverMosaicProductReader extends AbstractProductReader {
     }
 
     private Product createProduct() throws IOException {
-        final GCTileFile firstFile = inputFileMap.values().toArray(new GCTileFile[inputFileMap.size()])[0];
+        final File inputfile = getInputFile();
+        final GCTileFile refGcFile = new GCTileFile(inputfile);
         final Product product;
         int width = (TileIndex.MAX_HORIZ_INDEX + 1) * TileIndex.TILE_SIZE;
         int height = (TileIndex.MAX_VERT_INDEX + 1) * TileIndex.TILE_SIZE;
-        final String fileName = FileUtils.getFilenameWithoutExtension(new File(firstFile.getFilePath()));
+        final String fileName = FileUtils.getFilenameWithoutExtension(new File(refGcFile.getFilePath()));
         // product name == file name without tile indeces
         final String prodName = fileName.substring(0, fileName.lastIndexOf('_'));
         final String prodType;
-        if (firstFile.isAnnualFile()) {
+        if (refGcFile.isAnnualFile()) {
             prodType = PRODUCT_TYPE_ANNUAL;
         } else {
             prodType = PRODUCT_TYPE_BIMON;
         }
         product = new Product(prodName, prodType, width, height);
-        product.setFileLocation(getProductDir());
-        product.setStartTime(firstFile.getStartDate());
-        product.setEndTime(firstFile.getEndDate());
+        product.setFileLocation(inputfile);
+        product.setStartTime(refGcFile.getStartDate());
+        product.setEndTime(refGcFile.getEndDate());
 
         addGeoCoding(product);
-        addBands(product, firstFile);
+        addBands(product, refGcFile);
         GCTileFile.addIndexCodingAndBitmasks(product.getBand("SM"));
-        product.getMetadataRoot().addElement(firstFile.getMetadata());
+        product.getMetadataRoot().addElement(refGcFile.getMetadata());
         product.setPreferredTileSize(TileIndex.TILE_SIZE, TileIndex.TILE_SIZE);
         return product;
     }
@@ -125,29 +126,20 @@ class GlobCoverMosaicProductReader extends AbstractProductReader {
     }
 
     private Map<TileIndex, GCTileFile> getInputFileMap() throws IOException {
-        File dir = getProductDir();
-        final File[] files = dir.listFiles(new FileFilter() {
-            @Override
-            public boolean accept(File file) {
-                final String fileName = file.getName();
-                return fileName.startsWith(GlobCoverMosaicReaderPlugIn.FILE_PREFIX) &&
-                       fileName.endsWith(HDF_EXTENSION);
-            }
-        });
-
-        String filePrefix = getProductFilePrefix(files[0]);
+        final File refFile = getInputFile();
+        File dir = refFile.getParentFile();
+        final String filePrefix = getProductFilePrefix(refFile);
+        final File[] files = dir.listFiles(new MosaicFileFilter(filePrefix));
 
         Map<TileIndex, GCTileFile> fileMap = new TreeMap<TileIndex, GCTileFile>();
         for (File file : files) {
-            if(file.getName().startsWith(filePrefix)) {
-                final String filename = FileUtils.getFilenameWithoutExtension(file);
-                final String tilePos = filename.substring(filename.lastIndexOf('_') + 1, filename.length());
-                final String[] tileIndices = tilePos.split("V");
-                int horizIndex = Integer.parseInt(tileIndices[0].substring(1));   // has H as prefix
-                int vertIndex = Integer.parseInt(tileIndices[1]);    // has no V as prefix
-                final TileIndex tileIndex = new TileIndex(horizIndex, vertIndex);
-                fileMap.put(tileIndex, new GCTileFile(file));
-            }
+            final String filename = FileUtils.getFilenameWithoutExtension(file);
+            final String tilePos = filename.substring(filename.lastIndexOf('_') + 1, filename.length());
+            final String[] tileIndices = tilePos.split("V");
+            int horizIndex = Integer.parseInt(tileIndices[0].substring(1));   // has H as prefix
+            int vertIndex = Integer.parseInt(tileIndices[1]);    // has no V as prefix
+            final TileIndex tileIndex = new TileIndex(horizIndex, vertIndex);
+            fileMap.put(tileIndex, new GCTileFile(file));
         }
         return Collections.unmodifiableMap(fileMap);
     }
@@ -158,20 +150,27 @@ class GlobCoverMosaicProductReader extends AbstractProductReader {
         return fileName.substring(0, fileName.lastIndexOf('_'));
     }
 
-    private File getProductDir() throws IOException {
+    private File getInputFile() throws IOException {
         final Object input = getInput();
 
         if (!(input instanceof String || input instanceof File)) {
             throw new IOException("Input object must either be a string or a file.");
         }
-        final File inputFile = new File(String.valueOf(input));
-        File dir;
-        if (inputFile.isDirectory()) {
-            dir = inputFile;
-        } else {
-            dir = inputFile.getParentFile();
-        }
-        return dir;
+        return new File(String.valueOf(input));
     }
 
+    private static class MosaicFileFilter implements FileFilter {
+
+        private final String filePrefix;
+
+        MosaicFileFilter(String filePrefix) {
+            this.filePrefix = filePrefix;
+        }
+
+        @Override
+        public boolean accept(File file) {
+            final String fileName = file.getName();
+            return fileName.startsWith(filePrefix) && fileName.endsWith(HDF_EXTENSION);
+        }
+    }
 }
