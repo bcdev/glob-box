@@ -29,29 +29,21 @@ public class ArcBinGridReader extends AbstractProductReader {
 
     @Override
     protected Product readProductNodesImpl() throws IOException {
-        final File file;
-        Object input = getInput();
-        if (input instanceof String) {
-            file = new File((String) input);
-        } else if (input instanceof File) {
-            file = (File) input;
-        } else {
-            throw new IllegalArgumentException("unsupported input type");
-        }
+        File file = new File(String.valueOf(getInput()));
         File dir = file.getParentFile();
         
-        GeorefBounds georefBounds = GeorefBounds.create(new File(dir, GeorefBounds.FILE_NAME));
-        RasterStatistics rasterStatistics = RasterStatistics.create(new File(dir, RasterStatistics.FILE_NAME));
-        Header header = Header.create(new File(dir, Header.FILE_NAME));
-//        CoordinateReferenceSystem crs = ProjectionReader.parsePrjFile(new File(dir, "prj.adf"));
+        GeorefBounds georefBounds = GeorefBounds.create(getCaseInsensitiveFile(dir, GeorefBounds.FILE_NAME));
+        RasterStatistics rasterStatistics = RasterStatistics.create(getCaseInsensitiveFile(dir, RasterStatistics.FILE_NAME));
+        Header header = Header.create(getCaseInsensitiveFile(dir, Header.FILE_NAME));
+//        CoordinateReferenceSystem crs = ProjectionReader.parsePrjFile(getCaseInsensitiveFile(dir, "prj.adf"));
 
         
         int width = MathUtils.floorInt((georefBounds.urx - georefBounds.llx) / header.pixelSizeX);
         int height = MathUtils.floorInt((georefBounds.ury - georefBounds.lly) / header.pixelSizeY);
         int numTiles = header.tilesPerColumn * header.tilesPerRow;
 
-        TileIndex tileIndex = TileIndex.create(new File(dir, TileIndex.FILE_NAME), numTiles);
-        rasterDataFile = RasterDataFile.create(new File(dir, RasterDataFile.FILE_NAME));
+        TileIndex tileIndex = TileIndex.create(getCaseInsensitiveFile(dir, TileIndex.FILE_NAME), numTiles);
+        rasterDataFile = RasterDataFile.create(getCaseInsensitiveFile(dir, RasterDataFile.FILE_NAME));
         
         Product product = new Product("foo", "bar", width, height);
         Dimension tileSize = new Dimension(header.tileXSize, header.tileYSize);
@@ -205,5 +197,17 @@ public class ArcBinGridReader extends AbstractProductReader {
             attribute.setDescription(desc);
         }
         return attribute;
+    }
+
+    static File getCaseInsensitiveFile(File dir, String lowerCaseName) {
+        File lowerCaseFile = new File(dir, lowerCaseName);
+        if (lowerCaseFile.exists()) {
+            return lowerCaseFile;
+        }
+        File upperCaseFile = new File(dir, lowerCaseName.toUpperCase());
+        if (upperCaseFile.exists()) {
+            return upperCaseFile;
+        }
+        return null;
     }
 }

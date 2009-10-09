@@ -18,19 +18,10 @@ public class ArcBinGridReaderPlugIn implements ProductReaderPlugIn {
     private static final BeamFileFilter FILE_FILTER = new ArcBinGridFileFilter();
 
     public DecodeQualification getDecodeQualification(Object input) {
-        final File file;
-        if (input instanceof String) {
-            file = new File((String) input);
-        } else if (input instanceof File) {
-            file = (File) input;
-        } else {
-            return DecodeQualification.UNABLE;
-        }
-
-        if (file.getName().equals(Header.FILE_NAME)) {
+        File file = new File(String.valueOf(input));
+        if (isGridDirectory(file.getParentFile())) {
             return DecodeQualification.INTENDED;
         }
-
         return DecodeQualification.UNABLE;
     }
 
@@ -65,24 +56,31 @@ public class ArcBinGridReaderPlugIn implements ProductReaderPlugIn {
             setDescription(DESCRIPTION);
         }
 
-        /**
-         * Tests whether or not the given file is accepted by this filter. The default implementation returns
-         * <code>true</code> if the given file is a directory or the path string ends with one of the registered extensions.
-         * if no extension are defined, the method always returns <code>true</code>
-         *
-         * @param file the file to be or not be accepted.
-         *
-         * @return <code>true</code> if given file is accepted by this filter
-         */
         @Override
         public boolean accept(final File file) {
-            if (super.accept(file)) {
-                if (file.isDirectory() || file.getName().equals(Header.FILE_NAME)) {
-                    return true;
-                }
-            }
+            return file.isDirectory() || isGridDirectory(file.getParentFile());
+        }
+    }
+    
+    static boolean isGridDirectory(File dir) {
+        if (dir == null) {
             return false;
         }
-
+        if (!dir.isDirectory()) {
+            return false;
+        }
+        if (ArcBinGridReader.getCaseInsensitiveFile(dir, Header.FILE_NAME) == null) {
+            return false;
+        }
+        if (ArcBinGridReader.getCaseInsensitiveFile(dir, GeorefBounds.FILE_NAME) == null) {
+            return false;
+        }
+        if (ArcBinGridReader.getCaseInsensitiveFile(dir, TileIndex.FILE_NAME) == null) {
+            return false;
+        }
+        if (ArcBinGridReader.getCaseInsensitiveFile(dir, RasterDataFile.FILE_NAME) == null) {
+            return false;
+        }
+        return true;
     }
 }
