@@ -23,50 +23,39 @@ import com.sun.media.jai.codec.SeekableStream;
 
 import org.esa.beam.dataio.arcbin.TileIndex.IndexEntry;
 import org.esa.beam.framework.dataio.ProductIOException;
-import org.esa.beam.jai.ResolutionLevel;
-import org.esa.beam.jai.SingleBandedOpImage;
+import org.esa.beam.framework.datamodel.ProductData;
 
-import java.awt.Dimension;
-import java.awt.Rectangle;
 import java.awt.image.DataBuffer;
-import java.awt.image.WritableRaster;
 import java.io.IOException;
 import java.nio.ByteOrder;
 import java.text.MessageFormat;
 
 import javax.imageio.stream.ImageInputStream;
 import javax.imageio.stream.MemoryCacheImageInputStream;
-import javax.media.jai.PlanarImage;
 
-
-class IntegerCoverOpImage extends SingleBandedOpImage {
+class IntegerGridTileProvider implements GridTileProvider {
 
     private static final ByteArrayCodec byteArrayCodec = ByteArrayCodec.getInstance(ByteOrder.BIG_ENDIAN);
-    private final Header header;
-    private final TileIndex tileIndex;
+    
     private final RasterDataFile rasterDataFile;
+    private final TileIndex tileIndex;
     private final int nodataValue;
+    private final int size;
+    private final int productDataType;
+    
 
-    IntegerCoverOpImage(int sourceWidth, int sourceHeight, Dimension tileSize, Header header, TileIndex tileIndex, RasterDataFile rasterDataFile, int databufferType, int nodataValue) {
-        super(databufferType, 
-              sourceWidth, 
-              sourceHeight, 
-              tileSize, 
-              null, // no configuration
-              ResolutionLevel.MAXRES);
-        this.header = header;
-        this.tileIndex = tileIndex;
+    IntegerGridTileProvider(RasterDataFile rasterDataFile, TileIndex tileIndex, int nodataValue, int size, int productDataType) {
         this.rasterDataFile = rasterDataFile;
+        this.tileIndex = tileIndex;
         this.nodataValue = nodataValue;
+        this.size = size;
+        this.productDataType = productDataType;
     }
 
     @Override
-    protected final void computeRect(PlanarImage[] planarImages, WritableRaster targetRaster, Rectangle rectangle) {
-        int tileIndexY = (targetRaster.getMinY() / header.tileYSize) * header.tilesPerRow;
-        int currentTileIndex = (targetRaster.getMinX() / header.tileXSize) + tileIndexY;
-        int rectSize = targetRaster.getHeight()*targetRaster.getWidth();
+    public ProductData getData(int currentTileIndex) {
+        ProductData dataBuffer = ProductData.createInstance(productDataType, size);
         IndexEntry indexEntry = tileIndex.getIndexEntry(currentTileIndex);
-        DataBuffer dataBuffer = targetRaster.getDataBuffer();
         if (indexEntry == null ) {
             fillBuffer(dataBuffer, nodataValue);
         } else {
@@ -91,7 +80,7 @@ class IntegerCoverOpImage extends SingleBandedOpImage {
                         break;
                     case ArcBinGridConstants.RAW_4BIT:{
                         int rawValue = 0;
-                        for (int i = 0; i < rectSize; i++) {
+                        for (int i = 0; i < size; i++) {
                             int value;
                             if (i%2 == 0) {
                                 rawValue = rawTileData[tileOffset++] & 0xff;
@@ -99,29 +88,29 @@ class IntegerCoverOpImage extends SingleBandedOpImage {
                             } else {
                                 value = (rawValue & 0xf);    
                             }
-                            dataBuffer.setElem(i, value + min);
+                            dataBuffer.setElemIntAt(i, value + min);
                         }
                     }
                     break;
                     case ArcBinGridConstants.RAW_8BIT:{
-                      for (int i = 0; i < rectSize; i++) {
-                          dataBuffer.setElem(i, rawTileData[tileOffset++] + min);
+                      for (int i = 0; i < size; i++) {
+                          dataBuffer.setElemIntAt(i, rawTileData[tileOffset++] + min);
                       }
                     }
                     break;
                     case ArcBinGridConstants.RAW_16BIT:{
-                        for (int i = 0; i < rectSize; i++) {
+                        for (int i = 0; i < size; i++) {
                             short value = byteArrayCodec.getShort(rawTileData, tileOffset);
                             tileOffset += 2;
-                            dataBuffer.setElem(i, value + min);
+                            dataBuffer.setElemIntAt(i, value + min);
                         }
                       }
                     break;
                     case ArcBinGridConstants.RAW_32BIT:{
-                        for (int i = 0; i < rectSize; i++) {
+                        for (int i = 0; i < size; i++) {
                             int value = byteArrayCodec.getInt(rawTileData, tileOffset);
                             tileOffset += 4;
-                            dataBuffer.setElem(i, value + min);
+                            dataBuffer.setElemIntAt(i, value + min);
                         }
                         break;
                     }
@@ -129,12 +118,12 @@ class IntegerCoverOpImage extends SingleBandedOpImage {
                     case ArcBinGridConstants.RLE_8BIT:{
                         int count = 0;
                         int value = 0;
-                        for (int i = 0; i < rectSize; i++) {
+                        for (int i = 0; i < size; i++) {
                             if (count == 0) {
                                 count = rawTileData[tileOffset++] & 0xff;
                                 value = (rawTileData[tileOffset++] & 0xff) + min;
                             }
-                            dataBuffer.setElem(i, value);
+                            dataBuffer.setElemIntAt(i, value);
                             count--;
                         }
                         break;
@@ -142,13 +131,13 @@ class IntegerCoverOpImage extends SingleBandedOpImage {
                     case ArcBinGridConstants.RLE_16BIT: {
                         int count = 0;
                         int value = 0;
-                        for (int i = 0; i < rectSize; i++) {
+                        for (int i = 0; i < size; i++) {
                             if (count == 0) {
                                 count = rawTileData[tileOffset++] & 0xff;
                                 value = byteArrayCodec.getShort(rawTileData, tileOffset) + min;
                                 tileOffset +=2;
                             }
-                            dataBuffer.setElem(i, value);
+                            dataBuffer.setElemIntAt(i, value);
                             count--;
                         }
                         break;
@@ -156,13 +145,13 @@ class IntegerCoverOpImage extends SingleBandedOpImage {
                     case ArcBinGridConstants.RLE_32BIT:{
                         int count = 0;
                         int value = 0;
-                        for (int i = 0; i < rectSize; i++) {
+                        for (int i = 0; i < size; i++) {
                             if (count == 0) {
                                 count = rawTileData[tileOffset++] & 0xff;
                                 value = byteArrayCodec.getInt(rawTileData, tileOffset) + min;
                                 tileOffset +=4;
                             }
-                            dataBuffer.setElem(i, value);
+                            dataBuffer.setElemIntAt(i, value);
                             count--;
                         }
                         break;
@@ -170,7 +159,7 @@ class IntegerCoverOpImage extends SingleBandedOpImage {
                     case ArcBinGridConstants.RUN_MIN:{
                         int count = 0;
                         int value = 0;
-                        for (int i = 0; i < rectSize; i++) {
+                        for (int i = 0; i < size; i++) {
                             if (count == 0) {
                                 count = rawTileData[tileOffset++] & 0xff;
                                 if (count < 128) {
@@ -180,7 +169,7 @@ class IntegerCoverOpImage extends SingleBandedOpImage {
                                     value = nodataValue;
                                 }
                             }
-                            dataBuffer.setElem(i, value);
+                            dataBuffer.setElemIntAt(i, value);
                             count--;
                         }
                         break;
@@ -188,11 +177,11 @@ class IntegerCoverOpImage extends SingleBandedOpImage {
                     case ArcBinGridConstants.CCITT: {
                         byte[] buffer = doFoo(rawTileData, tileOffset, tileDataSize);
                         //  Convert the bit buffer into 32bit integers and account for nMin
-                        for (int i = 0; i < rectSize; i++) {
+                        for (int i = 0; i < size; i++) {
                             if((buffer[i>>3] & (0x80 >> (i&0x7))) != 0) {
-                                dataBuffer.setElem(i, min+1);
+                                dataBuffer.setElemIntAt(i, min+1);
                             } else {
-                                dataBuffer.setElem(i, min);
+                                dataBuffer.setElemIntAt(i, min);
                             }
                         }
                         break;
@@ -205,6 +194,13 @@ class IntegerCoverOpImage extends SingleBandedOpImage {
                 fillBuffer(dataBuffer, nodataValue);
             }
         }
+        return dataBuffer;
+    }
+    
+    @Override
+    public void transferData(ProductData data, int sourceIndex, DataBuffer dataBuffer, int targetIndex) {
+        int value = data.getElemIntAt(sourceIndex);
+        dataBuffer.setElem(targetIndex, value);
     }
     
     int getMinSize(byte[] bytes) {
@@ -235,9 +231,9 @@ class IntegerCoverOpImage extends SingleBandedOpImage {
         return min;
     }
 
-    private void fillBuffer(DataBuffer dataBuffer, int value) {
-        for (int i = 0; i < dataBuffer.getSize(); i++) {
-            dataBuffer.setElem(i, value);
+    private void fillBuffer(ProductData data, int value) {
+        for (int i = 0; i < size; i++) {
+            data.setElemIntAt(i, value);
         }
     }
     

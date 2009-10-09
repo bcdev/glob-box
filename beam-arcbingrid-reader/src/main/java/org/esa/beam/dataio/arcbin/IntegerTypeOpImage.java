@@ -49,7 +49,6 @@ class IntegerTypeOpImage extends SingleBandedOpImage {
     protected final void computeRect(PlanarImage[] planarImages, WritableRaster targetRaster, Rectangle rectangle) {
         int tileIndexY = (targetRaster.getMinY() / header.tileYSize) * header.tilesPerRow;
         int currentTileIndex = (targetRaster.getMinX() / header.tileXSize) + tileIndexY;
-        int rectSize = targetRaster.getHeight()*targetRaster.getWidth();
         IndexEntry indexEntry = tileIndex.getIndexEntry(currentTileIndex);
         DataBuffer dataBuffer = targetRaster.getDataBuffer();
         if (indexEntry == null ) {

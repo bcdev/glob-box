@@ -27,7 +27,7 @@ import java.awt.image.WritableRaster;
 import javax.media.jai.PlanarImage;
 
 
-public class TileIndexOpImage extends SingleBandedOpImage {
+class TileIndexOpImage extends SingleBandedOpImage {
     
     private final Header header;
 

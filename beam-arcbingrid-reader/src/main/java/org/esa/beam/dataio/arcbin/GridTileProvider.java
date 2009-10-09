@@ -16,22 +16,14 @@
  */
 package org.esa.beam.dataio.arcbin;
 
-import java.io.File;
-import java.io.IOException;
+import org.esa.beam.framework.datamodel.ProductData;
 
+import java.awt.image.DataBuffer;
 
-public class Main {
+interface GridTileProvider {
 
+    ProductData getData(int tileIndex);
 
-    public static void main(String[] args) throws IOException {
-        File dir = new File(args[0]);
-        if (!dir.exists()) {
-            System.out.println("dir does not exist!!");
-        }
-        ProjectionReader projectionReader = new ProjectionReader(new File(dir, "prj.adf"));
-        System.exit(0);
-    }
-    
-
+    void transferData(ProductData data, int sourceIndex, DataBuffer dataBuffer, int targetIndex);
 
 }

@@ -19,64 +19,62 @@ package org.esa.beam.dataio.arcbin;
 import com.bc.ceres.binio.util.ByteArrayCodec;
 
 import org.esa.beam.dataio.arcbin.TileIndex.IndexEntry;
-import org.esa.beam.jai.ResolutionLevel;
-import org.esa.beam.jai.SingleBandedOpImage;
+import org.esa.beam.framework.datamodel.ProductData;
 
-import java.awt.Dimension;
-import java.awt.Rectangle;
 import java.awt.image.DataBuffer;
-import java.awt.image.WritableRaster;
 import java.nio.ByteOrder;
 
-import javax.media.jai.PlanarImage;
 
-
-class FloatCoverOpImage extends SingleBandedOpImage {
-    private static final ByteArrayCodec byteArrayCodec = ByteArrayCodec.getInstance(ByteOrder.BIG_ENDIAN);
-    private final Header header;
-    private final TileIndex tileIndex;
-    private final RasterDataFile rasterDataFile;    
-
-    FloatCoverOpImage(int sourceWidth, int sourceHeight, Dimension tileSize, Header header, TileIndex tileIndex, RasterDataFile rasterDataFile) {
-        super(DataBuffer.TYPE_FLOAT, 
-              sourceWidth, 
-              sourceHeight, 
-              tileSize, 
-              null, // no configuration
-              ResolutionLevel.MAXRES);
-        this.header = header;
-        this.tileIndex = tileIndex;
-        this.rasterDataFile = rasterDataFile;
-    }
+class FloatGridTileProvider implements GridTileProvider {
     
+    private static final ByteArrayCodec byteArrayCodec = ByteArrayCodec.getInstance(ByteOrder.BIG_ENDIAN);
+    
+    private final RasterDataFile rasterDataFile;
+    private final TileIndex tileIndex;
+    private final float nodataValue;
+    private final int size;
+    private final int productDataType;
+    
+
+    FloatGridTileProvider(RasterDataFile rasterDataFile, TileIndex tileIndex, float nodataValue, int size, int productDataType) {
+        this.rasterDataFile = rasterDataFile;
+        this.tileIndex = tileIndex;
+        this.nodataValue = nodataValue;
+        this.size = size;
+        this.productDataType = productDataType;
+    }
+
     @Override
-    protected final void computeRect(PlanarImage[] planarImages, WritableRaster targetRaster, Rectangle rectangle) {
-        int tileIndexY = (targetRaster.getMinY() / header.tileYSize) * header.tilesPerRow;
-        int currentTileIndex = (targetRaster.getMinX() / header.tileXSize) + tileIndexY;
-        int rectSize = targetRaster.getHeight()*targetRaster.getWidth();
+    public ProductData getData(int currentTileIndex) {
+        ProductData data = ProductData.createInstance(productDataType, size);
         IndexEntry indexEntry = tileIndex.getIndexEntry(currentTileIndex);
-        DataBuffer dataBuffer = targetRaster.getDataBuffer();
         if (indexEntry == null ) {
-            fillBuffer(dataBuffer, Float.NaN);
+            fillBuffer(data, nodataValue);
         } else {
             try {
                 byte[] rawTileData = rasterDataFile.loadRawTileData(indexEntry);
                 int tileOffset = 2;
-                for (int i = 0; i < rectSize; i++) {
+                for (int i = 0; i < size; i++) {
                     float value = byteArrayCodec.getFloat(rawTileData, tileOffset);
                     tileOffset += 4;
-                    dataBuffer.setElemFloat(i, value);
+                    data.setElemFloatAt(i, value);
                 }
             } catch (Exception e) {
-                fillBuffer(dataBuffer, 42);
+                fillBuffer(data, nodataValue);
             }
         }
-    }
-    
-    private void fillBuffer(DataBuffer dataBuffer, float value) {
-        for (int i = 0; i < dataBuffer.getSize(); i++) {
-            dataBuffer.setElemFloat(i, value);
-        }
+        return data;
     }
 
+    @Override
+    public void transferData(ProductData data, int sourceIndex, DataBuffer dataBuffer, int targetIndex) {
+        float value = data.getElemFloatAt(sourceIndex);
+        dataBuffer.setElemFloat(targetIndex, value);
+    }
+    
+    private void fillBuffer(ProductData data, float value) {
+        for (int i = 0; i < size; i++) {
+            data.setElemFloatAt(i, value);
+        }
+    }
 }
