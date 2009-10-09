@@ -29,7 +29,7 @@ class GlobCoverMosaicFileFilter extends BeamFileFilter {
 
     @Override
     public FileSelectionMode getFileSelectionMode() {
-        return FileSelectionMode.DIRECTORIES_ONLY;
+        return FileSelectionMode.FILES_AND_DIRECTORIES;
     }
 
 }
