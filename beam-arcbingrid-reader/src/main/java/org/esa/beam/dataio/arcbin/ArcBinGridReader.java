@@ -30,22 +30,23 @@ public class ArcBinGridReader extends AbstractProductReader {
     @Override
     protected Product readProductNodesImpl() throws IOException {
         File file = new File(String.valueOf(getInput()));
-        File dir = file.getParentFile();
+        File gridDir = file.getParentFile();
         
-        GeorefBounds georefBounds = GeorefBounds.create(getCaseInsensitiveFile(dir, GeorefBounds.FILE_NAME));
-        RasterStatistics rasterStatistics = RasterStatistics.create(getCaseInsensitiveFile(dir, RasterStatistics.FILE_NAME));
-        Header header = Header.create(getCaseInsensitiveFile(dir, Header.FILE_NAME));
+        GeorefBounds georefBounds = GeorefBounds.create(getCaseInsensitiveFile(gridDir, GeorefBounds.FILE_NAME));
+        RasterStatistics rasterStatistics = RasterStatistics.create(getCaseInsensitiveFile(gridDir, RasterStatistics.FILE_NAME));
+        File headerFile = getCaseInsensitiveFile(gridDir, Header.FILE_NAME);
+        Header header = Header.create(headerFile);
 //        CoordinateReferenceSystem crs = ProjectionReader.parsePrjFile(getCaseInsensitiveFile(dir, "prj.adf"));
 
-        
         int width = MathUtils.floorInt((georefBounds.urx - georefBounds.llx) / header.pixelSizeX);
         int height = MathUtils.floorInt((georefBounds.ury - georefBounds.lly) / header.pixelSizeY);
         int numTiles = header.tilesPerColumn * header.tilesPerRow;
 
-        TileIndex tileIndex = TileIndex.create(getCaseInsensitiveFile(dir, TileIndex.FILE_NAME), numTiles);
-        rasterDataFile = RasterDataFile.create(getCaseInsensitiveFile(dir, RasterDataFile.FILE_NAME));
+        TileIndex tileIndex = TileIndex.create(getCaseInsensitiveFile(gridDir, TileIndex.FILE_NAME), numTiles);
+        rasterDataFile = RasterDataFile.create(getCaseInsensitiveFile(gridDir, RasterDataFile.FILE_NAME));
         
-        Product product = new Product("foo", "bar", width, height);
+        Product product = new Product(gridDir.getName(), "ARC_INFO_BIN_GRID", width, height);
+        product.setFileLocation(headerFile);
         Dimension tileSize = new Dimension(header.tileXSize, header.tileYSize);
         product.setPreferredTileSize(tileSize);
 
@@ -101,7 +102,6 @@ public class ArcBinGridReader extends AbstractProductReader {
         return product;
     }
 
-
     @Override
     protected void readBandRasterDataImpl(int sourceOffsetX, int sourceOffsetY, int sourceWidth, int sourceHeight,
                                           int sourceStepX, int sourceStepY, Band destBand, int destOffsetX,
@@ -109,8 +109,6 @@ public class ArcBinGridReader extends AbstractProductReader {
                                           ProgressMonitor pm) throws IOException {
         throw new IOException("ArcBinGridReader.readBandRasterDataImpl itentionally not implemented");
     }
-    
-
 
     @Override
     public void close() throws IOException {
