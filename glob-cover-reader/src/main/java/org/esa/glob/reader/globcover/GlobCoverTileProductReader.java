@@ -1,29 +1,21 @@
 package org.esa.glob.reader.globcover;
 
 import com.bc.ceres.core.ProgressMonitor;
-import org.esa.beam.framework.dataio.AbstractProductReader;
 import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.CrsGeoCoding;
 import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.util.io.FileUtils;
-import org.geotools.referencing.crs.DefaultGeographicCRS;
 import ucar.ma2.Array;
 import ucar.ma2.InvalidRangeException;
 
-import java.awt.geom.AffineTransform;
-import java.awt.geom.Rectangle2D;
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 
-class GlobCoverTileProductReader extends AbstractProductReader {
+class GlobCoverTileProductReader extends AbstractGcProductReader {
 
-    private static final String PRODUCT_TYPE_ANUUAL = "GC_L3_AN";
-    private static final String PRODUCT_TYPE_BIMON = "GC_L3_BI";
-    private static final double PIXEL_SIZE_DEG = 1 / 360.0;
-    private static final double PIXEL_CENTER = 0.5;
+    private static final String PRODUCT_TYPE_ANNUAL = "GC_TILE_AN";
+    private static final String PRODUCT_TYPE_BIMON = "GC_TILE_BI";
 
     private GCTileFile gcTileFile;
 
@@ -33,17 +25,20 @@ class GlobCoverTileProductReader extends AbstractProductReader {
 
     @Override
     protected Product readProductNodesImpl() throws IOException {
-        gcTileFile = new GCTileFile(getInputFile());
         return createProduct();
     }
 
-    @Override
-    public void close() throws IOException {
-        if (gcTileFile != null) {
-            gcTileFile.close();
-            gcTileFile = null;
-        }
-        super.close();
+    private Product createProduct() throws IOException {
+        gcTileFile = new GCTileFile(getInputFile());
+        int width = gcTileFile.getWidth();
+        final File fileLocation = new File(gcTileFile.getFilePath());
+        int height = gcTileFile.getHeight();
+        final String prodName = FileUtils.getFilenameWithoutExtension(fileLocation);
+        final String prodType = getProductType(gcTileFile);
+
+        final GCTileFile refGcFile = gcTileFile;
+
+        return createProduct(refGcFile, prodName, prodType, width, height);
     }
 
     @SuppressWarnings({"SuspiciousSystemArraycopy"})
@@ -69,64 +64,31 @@ class GlobCoverTileProductReader extends AbstractProductReader {
         }
     }
 
-    private Product createProduct() throws IOException {
-        int width = gcTileFile.getWidth();
-        int height = gcTileFile.getHeight();
-        final File fileLocation = new File(gcTileFile.getFilePath());
-        final String prodName = FileUtils.getFilenameWithoutExtension(fileLocation);
-        final String prodType;
-        if (gcTileFile.isAnnualFile()) {
-            prodType = PRODUCT_TYPE_ANUUAL;
-        } else {
-            prodType = PRODUCT_TYPE_BIMON;
-        }
-        final Product product = new Product(prodName, prodType, width, height);
-        product.setFileLocation(fileLocation);
-        product.setStartTime(gcTileFile.getStartDate());
-        product.setEndTime(gcTileFile.getEndDate());
-
-        addBands(product, gcTileFile);
-        GCTileFile.addIndexCodingAndBitmasks(product.getBand("SM"));
-        product.getMetadataRoot().addElement(gcTileFile.getMetadata());
-        addGeoCoding(product, gcTileFile);
-
-        return product;
+    @Override
+    protected GeoPos getUpperLeftPosition() throws IOException {
+        return gcTileFile.getUpperLeftCorner();
     }
 
-    private void addBands(Product product, final GCTileFile gcTileFile) throws IOException {
-        final List<BandDescriptor> bandDescriptorList = gcTileFile.getBandDescriptorList();
-        for (BandDescriptor descriptor : bandDescriptorList) {
-            final Band band = new Band(descriptor.getName(), descriptor.getDataType(),
-                                       descriptor.getWidth(),
-                                       descriptor.getHeight());
-            band.setScalingFactor(descriptor.getScaleFactor());
-            band.setScalingOffset(descriptor.getOffsetValue());
-            band.setDescription(descriptor.getDescription());
-            band.setUnit(descriptor.getUnit());
-            band.setNoDataValueUsed(descriptor.isFillValueUsed());
-            band.setNoDataValue(descriptor.getFillValue());
-            product.addBand(band);
-        }
+    @Override
+    protected String getBimonthlyProductType() {
+        return PRODUCT_TYPE_BIMON;
     }
 
-    private void addGeoCoding(Product product, final GCTileFile gcTileFile) throws IOException {
-        GeoPos ulPos = gcTileFile.getUpperLeftCorner();
-        final Rectangle2D.Double rect = new Rectangle2D.Double(0, 0,
-                                                               product.getSceneRasterWidth(),
-                                                               product.getSceneRasterHeight());
-        AffineTransform transform = new AffineTransform();
-        transform.translate(ulPos.getLon(), ulPos.getLat());
-        transform.scale(PIXEL_SIZE_DEG, -PIXEL_SIZE_DEG);
-        transform.translate(-PIXEL_CENTER, -PIXEL_CENTER);
-
-        try {
-            final CrsGeoCoding geoCoding = new CrsGeoCoding(DefaultGeographicCRS.WGS84, rect, transform);
-            product.setGeoCoding(geoCoding);
-        } catch (Exception e) {
-            throw new IOException("Can not create GeoCoding: ", e);
-        }
-
+    @Override
+    protected String getAnnualProductType() {
+        return PRODUCT_TYPE_ANNUAL;
     }
+
+
+    @Override
+    public void close() throws IOException {
+        if (gcTileFile != null) {
+            gcTileFile.close();
+            gcTileFile = null;
+        }
+        super.close();
+    }
+
 
     private File getInputFile() throws IOException {
         final Object input = getInput();

@@ -2,15 +2,8 @@ package org.esa.glob.reader.globcover;
 
 import org.esa.beam.dataio.netcdf.NetcdfReaderUtils;
 import org.esa.beam.framework.datamodel.GeoPos;
-import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.IndexCoding;
-import org.esa.beam.framework.datamodel.MetadataAttribute;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ColorPaletteDef;
-import org.esa.beam.framework.datamodel.ImageInfo;
-import org.esa.beam.framework.datamodel.BitmaskDef;
 import org.esa.beam.framework.datamodel.MetadataElement;
+import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.util.Debug;
 import org.esa.beam.util.io.FileUtils;
 import org.jdom.Element;
@@ -29,7 +22,6 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.awt.Color;
 
 /**
  * @author Marco Peters
@@ -37,6 +29,7 @@ import java.awt.Color;
  * @since BEAM 4.7
  */
 class GCTileFile {
+
     static final String XDIM = "XDim";
     static final String YDIM = "YDim";
     static final String GROUP_POSTEL = "POSTEL";
@@ -141,7 +134,7 @@ class GCTileFile {
         annual = prodName.toUpperCase().contains("ANNUAL");
         return annual;
     }
-    
+
     public MetadataElement getMetadata() {
         return NetcdfReaderUtils.createMetadataElement(ncFile);
     }
@@ -213,7 +206,7 @@ class GCTileFile {
         if (unsignedAttrib != null) {
             isUnsigned = Boolean.parseBoolean(unsignedAttrib.getStringValue());
         }
-        return NetcdfReaderUtils.getProductDataType(variable.getDataType(),isUnsigned, true);
+        return NetcdfReaderUtils.getProductDataType(variable.getDataType(), isUnsigned, true);
     }
 
     static GeoPos createGeoPos(String lonString, String latString) {
@@ -228,50 +221,18 @@ class GCTileFile {
         final float seconds = Float.parseFloat(dgmString.substring(secondsIndex));
         final int minutes;
         final int minutesIndex = Math.max(0, secondsIndex - 3);
-        if(secondsIndex > 0) {
+        if (secondsIndex > 0) {
             minutes = Integer.parseInt(dgmString.substring(minutesIndex, secondsIndex));
-        }else {
+        } else {
             minutes = 0;
         }
         final int degrees;
-        if(minutesIndex > 0) {
+        if (minutesIndex > 0) {
             degrees = Integer.parseInt(dgmString.substring(0, minutesIndex));
-        }else {
+        } else {
             degrees = 0;
         }
         return degrees + minutes / 60.0f + seconds / 3600.0f;
     }
 
-
-    public static void addIndexCodingAndBitmasks(Band smBand) {
-        final IndexCoding coding = new IndexCoding("SM_coding");
-        final MetadataAttribute land = coding.addSample("LAND", 0, "Not cloud, shadow or edge AND land");
-        final MetadataAttribute flooded = coding.addSample("FLOODED", 1, "Not land and not cloud, shadow or edge");
-        final MetadataAttribute suspect = coding.addSample("SUSPECT", 2, "Cloud shadow or cloud edge");
-        final MetadataAttribute cloud = coding.addSample("CLOUD", 3, "Cloud");
-        final MetadataAttribute water = coding.addSample("WATER", 4, "Not land");
-        final MetadataAttribute snow = coding.addSample("SNOW", 5, "Snow");
-        final MetadataAttribute invalid = coding.addSample("INVALID", 6, "Invalid");
-        final Product product = smBand.getProduct();
-        product.getIndexCodingGroup().add(coding);
-        smBand.setSampleCoding(coding);
-        final ColorPaletteDef.Point[] points = new ColorPaletteDef.Point[]{
-                new ColorPaletteDef.Point(0, Color.GREEN.darker(), "land"),
-                new ColorPaletteDef.Point(1, Color.BLUE, "flooded"),
-                new ColorPaletteDef.Point(2, Color.ORANGE, "suspect"),
-                new ColorPaletteDef.Point(3, Color.GRAY, "cloud"),
-                new ColorPaletteDef.Point(4, Color.BLUE.darker(), "water"),
-                new ColorPaletteDef.Point(5, Color.LIGHT_GRAY, "snow"),
-                new ColorPaletteDef.Point(6, Color.RED, "invalid")
-        };
-        smBand.setImageInfo(new ImageInfo(new ColorPaletteDef(points)));
-        product.addBitmaskDef(new BitmaskDef("land", land.getDescription(), "SM == 0", Color.GREEN.darker(), 0.5f));
-        product.addBitmaskDef(
-                new BitmaskDef("flooded", flooded.getDescription(), "SM == 1", Color.BLUE, 0.5f));
-        product.addBitmaskDef(new BitmaskDef("suspect", suspect.getDescription(), "SM == 2", Color.ORANGE, 0.5f));
-        product.addBitmaskDef(new BitmaskDef("cloud", cloud.getDescription(), "SM == 3", Color.GRAY, 0.5f));
-        product.addBitmaskDef(new BitmaskDef("water", water.getDescription(), "SM == 4", Color.BLUE.darker(), 0.5f));
-        product.addBitmaskDef(new BitmaskDef("snow", snow.getDescription(), "SM == 5", Color.LIGHT_GRAY, 0.5f));
-        product.addBitmaskDef(new BitmaskDef("invalid", invalid.getDescription(), "SM == 6", Color.RED, 0.5f));
-    }
 }

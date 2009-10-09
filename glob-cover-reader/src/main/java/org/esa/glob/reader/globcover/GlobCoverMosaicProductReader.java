@@ -3,33 +3,26 @@ package org.esa.glob.reader.globcover;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.glevel.support.DefaultMultiLevelImage;
 import com.bc.ceres.glevel.support.DefaultMultiLevelModel;
-import org.esa.beam.framework.dataio.AbstractProductReader;
 import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.CrsGeoCoding;
+import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.util.io.FileUtils;
-import org.geotools.referencing.crs.DefaultGeographicCRS;
 
 import java.awt.geom.AffineTransform;
-import java.awt.geom.Rectangle2D;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-class GlobCoverMosaicProductReader extends AbstractProductReader {
+class GlobCoverMosaicProductReader extends AbstractGcProductReader {
 
     private static final String PRODUCT_TYPE_ANNUAL = "GC_MOSAIC_AN";
     private static final String PRODUCT_TYPE_BIMON = "GC_MOSAIC_BI";
-    private static final double PIXEL_SIZE_DEG = 1 / 360.0;
-    private static final double PIXEL_CENTER = 0.5;
 
     private Map<TileIndex, GCTileFile> inputFileMap;
-    private static final String HDF_EXTENSION = ".hdf";
 
     protected GlobCoverMosaicProductReader(GlobCoverMosaicReaderPlugIn readerPlugIn) {
         super(readerPlugIn);
@@ -37,8 +30,24 @@ class GlobCoverMosaicProductReader extends AbstractProductReader {
 
     @Override
     protected Product readProductNodesImpl() throws IOException {
-        inputFileMap = getInputFileMap();
         return createProduct();
+    }
+
+    private Product createProduct() throws IOException {
+        inputFileMap = getInputFileMap();
+        final File inputfile = getInputFile();
+        final GCTileFile refGcFile = new GCTileFile(inputfile);
+        int width = (TileIndex.MAX_HORIZ_INDEX + 1) * TileIndex.TILE_SIZE;
+        int height = (TileIndex.MAX_VERT_INDEX + 1) * TileIndex.TILE_SIZE;
+        final String fileName = FileUtils.getFilenameWithoutExtension(new File(refGcFile.getFilePath()));
+        // product name == file name without tile indeces
+        final String prodName = fileName.substring(0, fileName.lastIndexOf('_'));
+        final String prodType = getProductType(refGcFile);
+
+        final Product product = createProduct(refGcFile, prodName, prodType, width, height);
+
+        product.setPreferredTileSize(TileIndex.TILE_SIZE, TileIndex.TILE_SIZE);
+        return product;
     }
 
     @Override
@@ -50,79 +59,41 @@ class GlobCoverMosaicProductReader extends AbstractProductReader {
     }
 
     @Override
-    public void close() throws IOException {
-        for (GCTileFile tileFile : inputFileMap.values()) {
-            tileFile.close();
-        }
-        super.close();
-    }
+    protected void addBands(Product product, final GCTileFile gcTileFile) throws IOException {
+        super.addBands(product, gcTileFile);
 
-    private Product createProduct() throws IOException {
-        final File inputfile = getInputFile();
-        final GCTileFile refGcFile = new GCTileFile(inputfile);
-        final Product product;
-        int width = (TileIndex.MAX_HORIZ_INDEX + 1) * TileIndex.TILE_SIZE;
-        int height = (TileIndex.MAX_VERT_INDEX + 1) * TileIndex.TILE_SIZE;
-        final String fileName = FileUtils.getFilenameWithoutExtension(new File(refGcFile.getFilePath()));
-        // product name == file name without tile indeces
-        final String prodName = fileName.substring(0, fileName.lastIndexOf('_'));
-        final String prodType;
-        if (refGcFile.isAnnualFile()) {
-            prodType = PRODUCT_TYPE_ANNUAL;
-        } else {
-            prodType = PRODUCT_TYPE_BIMON;
-        }
-        product = new Product(prodName, prodType, width, height);
-        product.setFileLocation(inputfile);
-        product.setStartTime(refGcFile.getStartDate());
-        product.setEndTime(refGcFile.getEndDate());
-
-        addGeoCoding(product);
-        addBands(product, refGcFile);
-        GCTileFile.addIndexCodingAndBitmasks(product.getBand("SM"));
-        product.getMetadataRoot().addElement(refGcFile.getMetadata());
-        product.setPreferredTileSize(TileIndex.TILE_SIZE, TileIndex.TILE_SIZE);
-        return product;
-    }
-
-    private void addBands(Product product, final GCTileFile gcTileFile) throws IOException {
-        final List<BandDescriptor> bandDescriptorList = gcTileFile.getBandDescriptorList();
-        for (BandDescriptor descriptor : bandDescriptorList) {
-            final Band band = new Band(descriptor.getName(), descriptor.getDataType(),
-                                       product.getSceneRasterWidth(),
-                                       product.getSceneRasterHeight());
-            band.setScalingFactor(descriptor.getScaleFactor());
-            band.setScalingOffset(descriptor.getOffsetValue());
-            band.setDescription(descriptor.getDescription());
-            band.setUnit(descriptor.getUnit());
-            band.setNoDataValueUsed(descriptor.isFillValueUsed());
-            band.setNoDataValue(descriptor.getFillValue());
-
+        final Band[] bands = product.getBands();
+        for (Band band : bands) {
             final AffineTransform imageToModelTransform = product.getGeoCoding().getImageToModelTransform();
             final DefaultMultiLevelModel model = new DefaultMultiLevelModel(imageToModelTransform,
                                                                             band.getSceneRasterWidth(),
                                                                             band.getSceneRasterHeight());
             final GCMosaicMultiLevelSource multiLevelSource = new GCMosaicMultiLevelSource(model, band, inputFileMap);
             band.setSourceImage(new DefaultMultiLevelImage(multiLevelSource));
-            product.addBand(band);
         }
     }
 
-    private void addGeoCoding(Product product) throws IOException {
-        final Rectangle2D.Double rect = new Rectangle2D.Double(0, 0,
-                                                               product.getSceneRasterWidth(),
-                                                               product.getSceneRasterHeight());
-        AffineTransform transform = new AffineTransform();
-        transform.translate(-180, 90);
-        transform.scale(PIXEL_SIZE_DEG, -PIXEL_SIZE_DEG);
-        transform.translate(-PIXEL_CENTER, -PIXEL_CENTER);
+    @Override
+    protected GeoPos getUpperLeftPosition() throws IOException {
+        return new GeoPos(-180, 90);
+    }
 
-        try {
-            final CrsGeoCoding geoCoding = new CrsGeoCoding(DefaultGeographicCRS.WGS84, rect, transform);
-            product.setGeoCoding(geoCoding);
-        } catch (Exception e) {
-            throw new IOException("Not able to create GeoCoding: ", e);
+    @Override
+    protected String getBimonthlyProductType() {
+        return PRODUCT_TYPE_BIMON;
+    }
+
+    @Override
+    protected String getAnnualProductType() {
+        return PRODUCT_TYPE_ANNUAL;
+    }
+
+    @Override
+    public void close() throws IOException {
+        for (GCTileFile tileFile : inputFileMap.values()) {
+            tileFile.close();
         }
+        super.close();
     }
 
     private Map<TileIndex, GCTileFile> getInputFileMap() throws IOException {
@@ -159,7 +130,7 @@ class GlobCoverMosaicProductReader extends AbstractProductReader {
         return new File(String.valueOf(input));
     }
 
-    private static class MosaicFileFilter implements FileFilter {
+    private class MosaicFileFilter implements FileFilter {
 
         private final String filePrefix;
 
@@ -170,7 +141,8 @@ class GlobCoverMosaicProductReader extends AbstractProductReader {
         @Override
         public boolean accept(File file) {
             final String fileName = file.getName();
-            return fileName.startsWith(filePrefix) && fileName.endsWith(HDF_EXTENSION);
+            return fileName.startsWith(filePrefix) && fileName.endsWith(
+                    getReaderPlugIn().getDefaultFileExtensions()[0]);
         }
     }
 }

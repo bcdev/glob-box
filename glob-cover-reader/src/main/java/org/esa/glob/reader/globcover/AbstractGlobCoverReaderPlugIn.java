@@ -13,9 +13,9 @@ import java.util.Locale;
  */
 abstract class AbstractGlobCoverReaderPlugIn implements ProductReaderPlugIn {
 
-    protected static final String[] FILE_EXTENSIONS = new String[]{".hdf"};
     protected static final String FILE_PREFIX = "GLOBCOVER-L3_MOSAIC";
-    protected static final Class[] INPUT_TYPES = new Class[]{String.class, File.class};
+    private static final Class[] INPUT_TYPES = new Class[]{String.class, File.class};
+    private static final String[] FILE_EXTENSIONS = new String[]{".hdf"};
 
     private final String formatName;
     private final String description;
@@ -40,9 +40,10 @@ abstract class AbstractGlobCoverReaderPlugIn implements ProductReaderPlugIn {
     public BeamFileFilter getProductFileFilter() {
         return new BeamFileFilter(getFormatNames()[0], getDefaultFileExtensions(), getDescription(null));
     }
+
     @Override
     public String[] getFormatNames() {
-        return new String[]{formatName} ;
+        return new String[]{formatName};
     }
 
     @Override

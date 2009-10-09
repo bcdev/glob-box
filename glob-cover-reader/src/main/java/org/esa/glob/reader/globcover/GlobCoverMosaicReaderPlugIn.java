@@ -24,4 +24,5 @@ public class GlobCoverMosaicReaderPlugIn extends AbstractGlobCoverReaderPlugIn {
     public ProductReader createReaderInstance() {
         return new GlobCoverMosaicProductReader(this);
     }
+
 }
