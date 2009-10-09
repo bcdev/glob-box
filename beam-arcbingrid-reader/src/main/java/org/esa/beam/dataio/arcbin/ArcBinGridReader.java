@@ -158,44 +158,52 @@ public class ArcBinGridReader extends AbstractProductReader {
     }
     
     private MetadataElement createHeaderElement(Header header) {
-        MetadataElement headerElement = new MetadataElement("Header");
-        headerElement.addAttribute(createMetadataAttributeInt("cellType", header.cellType));
-        headerElement.addAttribute(createMetadataAttributeDouble("pixelSizeX", header.pixelSizeX));
-        headerElement.addAttribute(createMetadataAttributeDouble("pixelSizeY", header.pixelSizeY));
-        headerElement.addAttribute(createMetadataAttributeDouble("xRef", header.xRef));
-        headerElement.addAttribute(createMetadataAttributeDouble("yRef", header.yRef));
-        headerElement.addAttribute(createMetadataAttributeInt("tilesPerRow", header.tilesPerRow));
-        headerElement.addAttribute(createMetadataAttributeInt("tilesPerColumn", header.tilesPerColumn));
-        headerElement.addAttribute(createMetadataAttributeInt("tileXSize", header.tileXSize));
-        headerElement.addAttribute(createMetadataAttributeInt("tileYSize", header.tileYSize));
-        return headerElement;
+        MetadataElement elem = new MetadataElement("Header");
+        elem.addAttribute(createIntAttr("cellType", header.cellType, "1 = int cover, 2 = float cover."));
+        elem.addAttribute(createDoubleAttr("pixelSizeX", header.pixelSizeX, "Width of a pixel in georeferenced coordinates."));
+        elem.addAttribute(createDoubleAttr("pixelSizeY", header.pixelSizeY, "Height of a pixel in georeferenced coordinates."));
+        elem.addAttribute(createDoubleAttr("xRef", header.xRef, null));
+        elem.addAttribute(createDoubleAttr("yRef", header.yRef, null));
+        elem.addAttribute(createIntAttr("tilesPerRow", header.tilesPerRow, "The width of the file in tiles."));
+        elem.addAttribute(createIntAttr("tilesPerColumn", header.tilesPerColumn, "The height of the file in tiles. Note this may be much more than the number of tiles actually represented in the index file."));
+        elem.addAttribute(createIntAttr("tileXSize", header.tileXSize, "The width of a file in pixels. Normally 256."));
+        elem.addAttribute(createIntAttr("tileYSize", header.tileYSize, "Height of a tile in pixels, usually 4."));
+        return elem;
     }
     
     private MetadataElement createGeorefBoundsElement(GeorefBounds georefBounds) {
-        MetadataElement georefBoundsElement = new MetadataElement("GeorefBounds");
-        georefBoundsElement.addAttribute(createMetadataAttributeDouble("llx", georefBounds.llx));
-        georefBoundsElement.addAttribute(createMetadataAttributeDouble("lly", georefBounds.lly));
-        georefBoundsElement.addAttribute(createMetadataAttributeDouble("urx", georefBounds.urx));
-        georefBoundsElement.addAttribute(createMetadataAttributeDouble("ury", georefBounds.ury));
-        return georefBoundsElement;
+        MetadataElement elem = new MetadataElement("GeorefBounds");
+        elem.addAttribute(createDoubleAttr("llx", georefBounds.llx, "Lower left X (easting) of the grid."));
+        elem.addAttribute(createDoubleAttr("lly", georefBounds.lly, "Lower left Y (northing) of the grid."));
+        elem.addAttribute(createDoubleAttr("urx", georefBounds.urx, "Upper right X (northing) of the grid."));
+        elem.addAttribute(createDoubleAttr("ury", georefBounds.ury, "Upper right Y (northing) of the grid."));
+        return elem;
     }
     
-    private MetadataElement createRasterStatisticsElement(RasterStatistics rasterStatistics) {
-        MetadataElement rasterStatisticsElement = new MetadataElement("RasterStatistics");
-        rasterStatisticsElement.addAttribute(createMetadataAttributeDouble("min", rasterStatistics.min));
-        rasterStatisticsElement.addAttribute(createMetadataAttributeDouble("max", rasterStatistics.max));
-        rasterStatisticsElement.addAttribute(createMetadataAttributeDouble("mean", rasterStatistics.mean));
-        rasterStatisticsElement.addAttribute(createMetadataAttributeDouble("stddev", rasterStatistics.stddev));
-        return rasterStatisticsElement;
+    private MetadataElement createRasterStatisticsElement(RasterStatistics rasterStat) {
+        MetadataElement elem = new MetadataElement("RasterStatistics");
+        elem.addAttribute(createDoubleAttr("min", rasterStat.min, "Minimum value of a raster cell in this grid."));
+        elem.addAttribute(createDoubleAttr("max", rasterStat.max, "Maximum value of a raster cell in this grid."));
+        elem.addAttribute(createDoubleAttr("mean", rasterStat.mean, "Mean value of a raster cells in this grid."));
+        elem.addAttribute(createDoubleAttr("stddev", rasterStat.stddev, "Standard deviation of raster cells in this grid."));
+        return elem;
     }
 
-    private MetadataAttribute createMetadataAttributeInt(String name, int value) {
+    private MetadataAttribute createIntAttr(String name, int value, String desc) {
         ProductData productData = ProductData.createInstance(new int[] {value});
-        return new MetadataAttribute(name, productData, true);
+        MetadataAttribute attribute = new MetadataAttribute(name, productData, true);
+        if (desc != null) {
+            attribute.setDescription(desc);
+        }
+        return attribute;
     }
     
-    private MetadataAttribute createMetadataAttributeDouble(String name, double value) {
+    private MetadataAttribute createDoubleAttr(String name, double value, String desc) {
         ProductData productData = ProductData.createInstance(new double[] {value});
-        return new MetadataAttribute(name, productData, true);
+        MetadataAttribute attribute = new MetadataAttribute(name, productData, true);
+        if (desc != null) {
+            attribute.setDescription(desc);
+        }
+        return attribute;
     }
 }
