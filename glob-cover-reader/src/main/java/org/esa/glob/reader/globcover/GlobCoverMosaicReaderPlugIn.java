@@ -18,8 +18,7 @@ public class GlobCoverMosaicReaderPlugIn implements ProductReaderPlugIn {
     static final String FILE_PREFIX = "GLOBCOVER-L3_MOSAIC";
     static final String[] FILE_EXTENSIONS = new String[0];
     private static final Class[] INPUT_TYPES = new Class[]{String.class, File.class};
-    private static final BeamFileFilter FILE_FILTER = new GlobCoverMosaicFileFilter(
-    );
+    private static final BeamFileFilter FILE_FILTER = new GlobCoverMosaicFileFilter();
 
     @Override
     public DecodeQualification getDecodeQualification(Object input) {
