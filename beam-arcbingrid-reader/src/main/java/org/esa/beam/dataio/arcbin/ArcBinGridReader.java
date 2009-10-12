@@ -10,6 +10,8 @@ import com.bc.ceres.glevel.support.DefaultMultiLevelModel;
 import org.esa.beam.framework.dataio.AbstractProductReader;
 import org.esa.beam.framework.dataio.ProductIOException;
 import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.ColorPaletteDef;
+import org.esa.beam.framework.datamodel.ImageInfo;
 import org.esa.beam.framework.datamodel.IndexCoding;
 import org.esa.beam.framework.datamodel.MetadataAttribute;
 import org.esa.beam.framework.datamodel.MetadataElement;
@@ -45,7 +47,6 @@ public class ArcBinGridReader extends AbstractProductReader {
         File headerFile = getCaseInsensitiveFile(gridDir, Header.FILE_NAME);
         final Header header = Header.create(headerFile);
 //        CoordinateReferenceSystem crs = ProjectionReader.parsePrjFile(getCaseInsensitiveFile(dir, "prj.adf"));
-
         final int width = MathUtils.floorInt((georefBounds.urx - georefBounds.llx) / header.pixelSizeX);
         final int height = MathUtils.floorInt((georefBounds.ury - georefBounds.lly) / header.pixelSizeY);
         int numTiles = header.tilesPerColumn * header.tilesPerRow;
@@ -64,6 +65,12 @@ public class ArcBinGridReader extends AbstractProductReader {
         i2m.translate(-width/2, height/2);
         i2m.scale(header.pixelSizeX, -header.pixelSizeY);
         i2m.translate(-0.5, -0.5);
+        
+        File colorPaletteFile = ColorPalette.findColorPaletteFile(gridDir);
+        ColorPaletteDef colorPaletteDef = null;
+        if (colorPaletteFile != null) {
+            colorPaletteDef = ColorPalette.create(colorPaletteFile, rasterStatistics);
+        }
         
         int productdataType = getDataType(header, rasterStatistics);
         Band band = product.addBand("band1", productdataType);
@@ -88,7 +95,10 @@ public class ArcBinGridReader extends AbstractProductReader {
         };
         MultiLevelImage image = new DefaultMultiLevelImage(multiLevelSource);
         band.setSourceImage(image);
-         
+        if (colorPaletteDef != null) {
+            band.setImageInfo(new ImageInfo(colorPaletteDef));
+        }
+    
 //         (mz) add these bands for debugging of the reader
         addDebugBands(product, header, tileIndex, gridTileSize);
         
