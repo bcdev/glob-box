@@ -12,7 +12,6 @@ import org.esa.beam.framework.dataio.ProductIOException;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.ColorPaletteDef;
 import org.esa.beam.framework.datamodel.ImageInfo;
-import org.esa.beam.framework.datamodel.IndexCoding;
 import org.esa.beam.framework.datamodel.MetadataAttribute;
 import org.esa.beam.framework.datamodel.MetadataElement;
 import org.esa.beam.framework.datamodel.Product;
@@ -26,8 +25,6 @@ import java.awt.geom.AffineTransform;
 import java.awt.image.RenderedImage;
 import java.io.File;
 import java.io.IOException;
-
-import javax.media.jai.PlanarImage;
 
 
 public class ArcBinGridReader extends AbstractProductReader {
@@ -73,16 +70,16 @@ public class ArcBinGridReader extends AbstractProductReader {
         }
         
         int productdataType = getDataType(header, rasterStatistics);
-        Band band = product.addBand("band1", productdataType);
+        Band band = product.addBand("band_1", productdataType);
         double nodataValue = getNodataValue(productdataType);
         band.setNoDataValue(nodataValue);
         band.setNoDataValueUsed(true);
         final int databufferType = ImageManager.getDataBufferType(productdataType);
-        final int tileLength = gridTileSize.width * gridTileSize.height;
         final GridTileProvider gridTileProvider;
         if (ProductData.isIntType(productdataType)) {
-            gridTileProvider = new IntegerGridTileProvider(rasterDataFile, tileIndex, (int)nodataValue, tileLength, productdataType);
+            gridTileProvider = new IntegerGridTileProvider(rasterDataFile, tileIndex, (int)nodataValue, gridTileSize, productdataType);
         } else {
+            final int tileLength = gridTileSize.width * gridTileSize.height;
             gridTileProvider = new FloatGridTileProvider(rasterDataFile, tileIndex, (float)nodataValue, tileLength, productdataType);
         }
         final MultiLevelModel model = new DefaultMultiLevelModel(i2m, width, height);
@@ -98,9 +95,6 @@ public class ArcBinGridReader extends AbstractProductReader {
         if (colorPaletteDef != null) {
             band.setImageInfo(new ImageInfo(colorPaletteDef));
         }
-    
-//         (mz) add these bands for debugging of the reader
-        addDebugBands(product, header, tileIndex, gridTileSize);
         
         MetadataElement metadataRoot = product.getMetadataRoot();
         metadataRoot.addElement(createHeaderElement(header));
@@ -217,40 +211,5 @@ public class ArcBinGridReader extends AbstractProductReader {
             return upperCaseFile;
         }
         return null;
-    }
-    
-    private void addDebugBands(Product product, Header header, TileIndex tileIndex, Dimension gridTileSize) {
-        int width = product.getSceneRasterWidth();
-        int height = product.getSceneRasterHeight();
-        int productdataType = product.getBandAt(0).getDataType();
-        
-        if (ProductData.isIntType(productdataType)) {
-            Band band = product.addBand("type", ProductData.TYPE_INT8);
-            band.setNoDataValue(42);
-            band.setNoDataValueUsed(true);
-            PlanarImage typeImage = new IntegerTypeOpImage(width, height, gridTileSize, header, tileIndex, rasterDataFile);
-            band.setSourceImage(typeImage);
-            IndexCoding indexCoding = new IndexCoding("type_coding");
-            indexCoding.addIndex("const_block", ArcBinGridConstants.CONST_BLOCK, "");
-            indexCoding.addIndex("raw_1bit", ArcBinGridConstants.RAW_1BIT, "");
-            indexCoding.addIndex("raw_4bit", ArcBinGridConstants.RAW_4BIT, "");
-            indexCoding.addIndex("raw_8bit", ArcBinGridConstants.RAW_8BIT, "");
-            indexCoding.addIndex("raw_16bit", ArcBinGridConstants.RAW_16BIT, "");
-            indexCoding.addIndex("raw_32bit", ArcBinGridConstants.RAW_32BIT, "");
-            indexCoding.addIndex("run_16bit", ArcBinGridConstants.RUN_16BIT, "");
-            indexCoding.addIndex("run_8bit", ArcBinGridConstants.RUN_8BIT, "");
-            indexCoding.addIndex("run_min", ArcBinGridConstants.RUN_MIN, "");
-            indexCoding.addIndex("rle_32bit", ArcBinGridConstants.RLE_32BIT, "");
-            indexCoding.addIndex("rle_16bit", ArcBinGridConstants.RLE_16BIT, "");
-            indexCoding.addIndex("rle_8bit", ArcBinGridConstants.RLE_8BIT, "");
-            indexCoding.addIndex("rle_4bit", ArcBinGridConstants.RLE_4BIT, "");
-            indexCoding.addIndex("ccitt", ArcBinGridConstants.CCITT, "");
-            product.getIndexCodingGroup().add(indexCoding);
-            band.setSampleCoding(indexCoding);
-        }
-        
-        Band band = product.addBand("index", ProductData.TYPE_INT32);
-        PlanarImage indexImage = new TileIndexOpImage(width, height, gridTileSize, header);
-        band.setSourceImage(indexImage);
     }
 }

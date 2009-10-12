@@ -25,6 +25,7 @@ import org.esa.beam.dataio.arcbin.TileIndex.IndexEntry;
 import org.esa.beam.framework.dataio.ProductIOException;
 import org.esa.beam.framework.datamodel.ProductData;
 
+import java.awt.Dimension;
 import java.awt.image.DataBuffer;
 import java.io.IOException;
 import java.nio.ByteOrder;
@@ -42,13 +43,15 @@ class IntegerGridTileProvider implements GridTileProvider {
     private final int nodataValue;
     private final int size;
     private final int productDataType;
+    private final Dimension gridTileSize;
     
 
-    IntegerGridTileProvider(RasterDataFile rasterDataFile, TileIndex tileIndex, int nodataValue, int size, int productDataType) {
+    IntegerGridTileProvider(RasterDataFile rasterDataFile, TileIndex tileIndex, int nodataValue, Dimension gridTileSize, int productDataType) {
         this.rasterDataFile = rasterDataFile;
         this.tileIndex = tileIndex;
         this.nodataValue = nodataValue;
-        this.size = size;
+        this.gridTileSize = gridTileSize;
+        this.size = gridTileSize.width * gridTileSize.height;
         this.productDataType = productDataType;
     }
 
@@ -70,122 +73,46 @@ class IntegerGridTileProvider implements GridTileProvider {
                 int tileDataSize = indexEntry.size - 2 - minSize;
                 int tileOffset = 2 + 2 + minSize;
                 switch (tileType) {
-                    
-//                    static final int RUN_8BIT = 0xd7;
-//                    static final int RUN_16BIT = 0xcf;
-//                    static final int RAW_1BIT = 0x01;
-                    
                     case ArcBinGridConstants.CONST_BLOCK:
                         fillBuffer(dataBuffer, min);
                         break;
-                    case ArcBinGridConstants.RAW_4BIT:{
-                        int rawValue = 0;
-                        for (int i = 0; i < size; i++) {
-                            int value;
-                            if (i%2 == 0) {
-                                rawValue = rawTileData[tileOffset++] & 0xff;
-                                value = ((rawValue & 0xf0) >> 4);
-                            } else {
-                                value = (rawValue & 0xf);    
-                            }
-                            dataBuffer.setElemIntAt(i, value + min);
-                        }
-                    }
-                    break;
-                    case ArcBinGridConstants.RAW_8BIT:{
-                      for (int i = 0; i < size; i++) {
-                          dataBuffer.setElemIntAt(i, rawTileData[tileOffset++] + min);
-                      }
-                    }
-                    break;
-                    case ArcBinGridConstants.RAW_16BIT:{
-                        for (int i = 0; i < size; i++) {
-                            short value = byteArrayCodec.getShort(rawTileData, tileOffset);
-                            tileOffset += 2;
-                            dataBuffer.setElemIntAt(i, value + min);
-                        }
-                      }
-                    break;
-                    case ArcBinGridConstants.RAW_32BIT:{
-                        for (int i = 0; i < size; i++) {
-                            int value = byteArrayCodec.getInt(rawTileData, tileOffset);
-                            tileOffset += 4;
-                            dataBuffer.setElemIntAt(i, value + min);
-                        }
+                    case ArcBinGridConstants.RAW_1BIT:
+                        handleRaw1Bit(dataBuffer, rawTileData, min, tileOffset);
                         break;
-                    }
+                    case ArcBinGridConstants.RAW_4BIT:
+                        handleRaw4Bit(dataBuffer, rawTileData, min, tileOffset);
+                        break;
+                    case ArcBinGridConstants.RAW_8BIT:
+                      tileOffset = handleRaw8Bit(dataBuffer, rawTileData, min, tileOffset);
+                      break;
+                    case ArcBinGridConstants.RAW_16BIT:
+                        tileOffset = handleRaw16Bit(dataBuffer, rawTileData, min, tileOffset);
+                        break;
+                    case ArcBinGridConstants.RAW_32BIT:
+                        tileOffset = handleRaw32Bit(dataBuffer, rawTileData, min, tileOffset);
+                        break;
                     case ArcBinGridConstants.RLE_4BIT:
-                    case ArcBinGridConstants.RLE_8BIT:{
-                        int count = 0;
-                        int value = 0;
-                        for (int i = 0; i < size; i++) {
-                            if (count == 0) {
-                                count = rawTileData[tileOffset++] & 0xff;
-                                value = (rawTileData[tileOffset++] & 0xff) + min;
-                            }
-                            dataBuffer.setElemIntAt(i, value);
-                            count--;
-                        }
+                    case ArcBinGridConstants.RLE_8BIT:
+                        handleRle8Bit(dataBuffer, rawTileData, min, tileOffset);
                         break;
-                    }
-                    case ArcBinGridConstants.RLE_16BIT: {
-                        int count = 0;
-                        int value = 0;
-                        for (int i = 0; i < size; i++) {
-                            if (count == 0) {
-                                count = rawTileData[tileOffset++] & 0xff;
-                                value = byteArrayCodec.getShort(rawTileData, tileOffset) + min;
-                                tileOffset +=2;
-                            }
-                            dataBuffer.setElemIntAt(i, value);
-                            count--;
-                        }
+                    case ArcBinGridConstants.RLE_16BIT: 
+                        handleRle16Bit(dataBuffer, rawTileData, min, tileOffset);
                         break;
-                    }
-                    case ArcBinGridConstants.RLE_32BIT:{
-                        int count = 0;
-                        int value = 0;
-                        for (int i = 0; i < size; i++) {
-                            if (count == 0) {
-                                count = rawTileData[tileOffset++] & 0xff;
-                                value = byteArrayCodec.getInt(rawTileData, tileOffset) + min;
-                                tileOffset +=4;
-                            }
-                            dataBuffer.setElemIntAt(i, value);
-                            count--;
-                        }
+                    case ArcBinGridConstants.RLE_32BIT:
+                        handleRle32Bit(dataBuffer, rawTileData, min, tileOffset);
                         break;
-                    }
-                    case ArcBinGridConstants.RUN_MIN:{
-                        int count = 0;
-                        int value = 0;
-                        for (int i = 0; i < size; i++) {
-                            if (count == 0) {
-                                count = rawTileData[tileOffset++] & 0xff;
-                                if (count < 128) {
-                                    value = min;
-                                } else {
-                                    count = 256 - count;
-                                    value = nodataValue;
-                                }
-                            }
-                            dataBuffer.setElemIntAt(i, value);
-                            count--;
-                        }
+                    case ArcBinGridConstants.RUN_MIN:
+                        handleRunMin(dataBuffer, rawTileData, min, tileOffset);
                         break;
-                    }
-                    case ArcBinGridConstants.CCITT: {
-                        byte[] buffer = doFoo(rawTileData, tileOffset, tileDataSize);
-                        //  Convert the bit buffer into 32bit integers and account for nMin
-                        for (int i = 0; i < size; i++) {
-                            if((buffer[i>>3] & (0x80 >> (i&0x7))) != 0) {
-                                dataBuffer.setElemIntAt(i, min+1);
-                            } else {
-                                dataBuffer.setElemIntAt(i, min);
-                            }
-                        }
+                    case ArcBinGridConstants.RUN_8BIT:
+                        handleRun8Bit(dataBuffer, rawTileData, min, tileOffset);
                         break;
-                    }
+                    case ArcBinGridConstants.RUN_16BIT:
+                        handleRun16Bit(dataBuffer, rawTileData, min, tileOffset);
+                        break;                        
+                    case ArcBinGridConstants.CCITT:
+                        handleCCITT(dataBuffer, rawTileData, min, tileDataSize, tileOffset);
+                        break;
                     default:
                         fillBuffer(dataBuffer, nodataValue);
                         break;
@@ -195,6 +122,167 @@ class IntegerGridTileProvider implements GridTileProvider {
             }
         }
         return dataBuffer;
+    }
+
+    private void handleCCITT(ProductData dataBuffer, byte[] rawTileData, int min, int tileDataSize, int tileOffset) throws IOException {
+        byte[] buffer = decompressCCITT(rawTileData, tileOffset, tileDataSize);
+        //  Convert the bit buffer into 32bit integers and account for nMin
+        handleRaw1Bit(dataBuffer, buffer, min, 0);
+    }
+
+    private void handleRunMin(ProductData dataBuffer, byte[] rawTileData, int min, int tileOffset) {
+        int count = 0;
+        int value = 0;
+        for (int i = 0; i < size; i++) {
+            if (count == 0) {
+                count = rawTileData[tileOffset++] & 0xff;
+                if (count < 128) {
+                    value = min;
+                } else {
+                    count = 256 - count;
+                    value = nodataValue;
+                }
+            }
+            dataBuffer.setElemIntAt(i, value);
+            count--;
+        }
+    }
+    
+    private void handleRun8Bit(ProductData dataBuffer, byte[] rawTileData, int min, int tileOffset) {
+        int count = 0;
+        int value = 0;
+        boolean readData = true;
+        for (int i = 0; i < size; i++) {
+            if (count == 0) {
+                count = rawTileData[tileOffset++] & 0xff;
+                if (count < 128) {
+                    readData = true;
+                } else {
+                    count = 256 - count;
+                    value = nodataValue;
+                    readData = false;
+                }
+            }
+            if (readData) {
+                value = (rawTileData[tileOffset++] & 0xff) + min;
+            }
+            dataBuffer.setElemIntAt(i, value);
+            count--;
+        }
+    }
+
+    private void handleRun16Bit(ProductData dataBuffer, byte[] rawTileData, int min, int tileOffset) {
+        int count = 0;
+        int value = 0;
+        boolean readData = true;
+        for (int i = 0; i < size; i++) {
+            if (count == 0) {
+                count = rawTileData[tileOffset++] & 0xff;
+                if (count < 128) {
+                    readData = true;
+                } else {
+                    count = 256 - count;
+                    value = nodataValue;
+                    readData = false;
+                }
+            }
+            if (readData) {
+                value = byteArrayCodec.getByte(rawTileData, tileOffset) + min;
+                tileOffset += 2;
+            }
+            dataBuffer.setElemIntAt(i, value);
+            count--;
+        }
+    }
+    
+    private void handleRle32Bit(ProductData dataBuffer, byte[] rawTileData, int min, int tileOffset) {
+        int count = 0;
+        int value = 0;
+        for (int i = 0; i < size; i++) {
+            if (count == 0) {
+                count = rawTileData[tileOffset++] & 0xff;
+                value = byteArrayCodec.getInt(rawTileData, tileOffset) + min;
+                tileOffset +=4;
+            }
+            dataBuffer.setElemIntAt(i, value);
+            count--;
+        }
+    }
+
+    private void handleRle16Bit(ProductData dataBuffer, byte[] rawTileData, int min, int tileOffset) {
+        int count = 0;
+        int value = 0;
+        for (int i = 0; i < size; i++) {
+            if (count == 0) {
+                count = rawTileData[tileOffset++] & 0xff;
+                value = byteArrayCodec.getShort(rawTileData, tileOffset) + min;
+                tileOffset +=2;
+            }
+            dataBuffer.setElemIntAt(i, value);
+            count--;
+        }
+    }
+
+    private void handleRle8Bit(ProductData dataBuffer, byte[] rawTileData, int min, int tileOffset) {
+        int count = 0;
+        int value = 0;
+        for (int i = 0; i < size; i++) {
+            if (count == 0) {
+                count = rawTileData[tileOffset++] & 0xff;
+                value = (rawTileData[tileOffset++] & 0xff) + min;
+            }
+            dataBuffer.setElemIntAt(i, value);
+            count--;
+        }
+    }
+
+    private int handleRaw32Bit(ProductData dataBuffer, byte[] rawTileData, int min, int tileOffset) {
+        for (int i = 0; i < size; i++) {
+            int value = byteArrayCodec.getInt(rawTileData, tileOffset);
+            tileOffset += 4;
+            dataBuffer.setElemIntAt(i, value + min);
+        }
+        return tileOffset;
+    }
+
+    private int handleRaw16Bit(ProductData dataBuffer, byte[] rawTileData, int min, int tileOffset) {
+        for (int i = 0; i < size; i++) {
+            short value = byteArrayCodec.getShort(rawTileData, tileOffset);
+            tileOffset += 2;
+            dataBuffer.setElemIntAt(i, value + min);
+        }
+        return tileOffset;
+    }
+
+    private int handleRaw8Bit(ProductData dataBuffer, byte[] rawTileData, int min, int tileOffset) {
+        for (int i = 0; i < size; i++) {
+              dataBuffer.setElemIntAt(i, rawTileData[tileOffset++] + min);
+          }
+        return tileOffset;
+    }
+
+    private void handleRaw4Bit(ProductData dataBuffer, byte[] rawTileData, int min, int tileOffset) {
+        int rawValue = 0;
+        for (int i = 0; i < size; i++) {
+            int value;
+            if (i%2 == 0) {
+                rawValue = rawTileData[tileOffset++] & 0xff;
+                value = ((rawValue & 0xf0) >> 4);
+            } else {
+                value = (rawValue & 0xf);    
+            }
+            dataBuffer.setElemIntAt(i, value + min);
+        }
+    }
+    
+    private void handleRaw1Bit(ProductData dataBuffer, byte[] rawTileData, int min, int tileOffset) {
+        for (int i = 0; i < size; i++) {
+            if((rawTileData[tileOffset + (i>>3)] & (0x80 >> (i&0x7))) != 0) {
+                dataBuffer.setElemIntAt(i, min+1);
+            } else {
+                dataBuffer.setElemIntAt(i, min);
+            }
+        }
     }
     
     @Override
@@ -237,16 +325,13 @@ class IntegerGridTileProvider implements GridTileProvider {
         }
     }
     
-    static byte[] doFoo(byte[] rawTileData, int tileOffset, int tileDataSize) throws IOException {
-        int width = 256;
-        int height = 4;
+    private byte[] decompressCCITT(byte[] rawTileData, int tileOffset, int tileDataSize) throws IOException {
         SeekableStream stream = new ByteArraySeekableStream(rawTileData, tileOffset, tileDataSize);
         TIFFFaxDecompressorExtension decompressor = new TIFFFaxDecompressorExtension(tileOffset, tileDataSize);
         ImageInputStream imageInputStream = new MemoryCacheImageInputStream(stream);
         decompressor.setStream(imageInputStream);
-        int bufferSize = ((width*height)/8);
-        byte[] buffer = new byte[bufferSize];
-        decompressor.decodeRaw(buffer, 0, 1, 256/8);
+        byte[] buffer = new byte[size/8];
+        decompressor.decodeRaw(buffer, 0, 1, gridTileSize.width/8);
         return buffer;
     }
     
