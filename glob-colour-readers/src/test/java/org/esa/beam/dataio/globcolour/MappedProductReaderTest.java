@@ -66,7 +66,7 @@ public final class MappedProductReaderTest extends TestCase {
         assertNotNull(product);
         assertFalse(ProductUtilities.addDiagnosticSitePin(product));
 
-        final Pin pin = product.getPin("SITE_1");
+        final Pin pin = product.getPinGroup().get("SITE_1");
         assertNotNull(pin);
 
         assertEquals("SITE_1", pin.getName());
