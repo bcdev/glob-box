@@ -14,8 +14,8 @@ import org.esa.beam.framework.datamodel.Product;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 
 import java.awt.Color;
+import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
-import java.awt.geom.Rectangle2D;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -66,9 +66,7 @@ public abstract class AbstractGcProductReader extends AbstractProductReader {
 
     protected void addGeoCoding(Product product) throws IOException {
         GeoPos ulPos = getUpperLeftPosition();
-        final Rectangle2D.Double rect = new Rectangle2D.Double(0, 0,
-                                                               product.getSceneRasterWidth(),
-                                                               product.getSceneRasterHeight());
+        final Rectangle rect = new Rectangle(product.getSceneRasterWidth(), product.getSceneRasterHeight());
         AffineTransform transform = new AffineTransform();
         transform.translate(ulPos.getLon(), ulPos.getLat());
         transform.scale(PIXEL_SIZE_DEG, -PIXEL_SIZE_DEG);
