@@ -18,7 +18,7 @@ package org.geotools.referencing.operation.projection;
 
 import com.bc.ceres.core.CoreException;
 import com.bc.ceres.core.ServiceRegistry;
-import com.bc.ceres.core.ServiceRegistryFactory;
+import com.bc.ceres.core.ServiceRegistryManager;
 import com.bc.ceres.core.runtime.Activator;
 import com.bc.ceres.core.runtime.ModuleContext;
 
@@ -34,7 +34,7 @@ public class Avtivator implements Activator{
 
     @Override
     public void start(ModuleContext moduleContext) throws CoreException {
-        final ServiceRegistry<MathTransformProvider> serviceRegistry = ServiceRegistryFactory.getInstance().getServiceRegistry(MathTransformProvider.class);
+        final ServiceRegistry<MathTransformProvider> serviceRegistry = ServiceRegistryManager.getInstance().getServiceRegistry(MathTransformProvider.class);
         factoryIteratorProvider = new CeresFactoryIteratorProvider(serviceRegistry);
         GeoTools.addFactoryIteratorProvider(factoryIteratorProvider);
     }
