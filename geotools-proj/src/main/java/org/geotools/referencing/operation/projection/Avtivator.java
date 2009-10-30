@@ -46,7 +46,7 @@ public class Avtivator implements Activator{
         }
     }
 
-    private final class CeresFactoryIteratorProvider implements FactoryIteratorProvider {
+    private final static class CeresFactoryIteratorProvider implements FactoryIteratorProvider {
         private final ServiceRegistry<MathTransformProvider> serviceRegistry;
 
         private CeresFactoryIteratorProvider(ServiceRegistry<MathTransformProvider> serviceRegistry) {
