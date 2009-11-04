@@ -17,7 +17,7 @@
         <module>ceres-core</module>
     </dependency>
 
-    <activator>org.geotools.referencing.operation.projection.Avtivator</activator>
+    <activator>org.geotools.referencing.operation.projection.GeotoolsProjectionsActivator</activator>
 
     <categories>Library</categories>
 

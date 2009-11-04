@@ -28,7 +28,7 @@ import org.geotools.referencing.operation.MathTransformProvider;
 
 import java.util.Iterator;
 
-public class Avtivator implements Activator{
+public class GeotoolsProjectionsActivator implements Activator{
 
     private CeresFactoryIteratorProvider factoryIteratorProvider;
 
