@@ -30,10 +30,10 @@ import java.util.List;
  */
 class GCTileFile {
 
-    static final String XDIM = "XDim";
-    static final String YDIM = "YDim";
-    static final String GROUP_POSTEL = "POSTEL";
-    static final String GROUP_DATA_FIELDS = "Data Fields";
+    private static final String XDIM = "XDim";
+    private static final String YDIM = "YDim";
+    private static final String GROUP_POSTEL = "POSTEL";
+    private static final String GROUP_DATA_FIELDS = "Data Fields";
     private static final String GROUP_GRID_ATTRIBUTES = "Grid Attributes";
     private static final String STRUCT_METADATA_0 = "StructMetadata%2e0";   // StructMetadata.0
     private static final String DF_DIMENSION_X = GROUP_POSTEL + "/" + GROUP_DATA_FIELDS + "/" + XDIM;
@@ -47,10 +47,6 @@ class GCTileFile {
 
     GCTileFile(File ncfile) throws IOException {
         ncFile = NetcdfFile.open(ncfile.getCanonicalPath());
-    }
-
-    public NetcdfFile getNetcdfFile() {
-        return ncFile;
     }
 
     public String getFilePath() {
@@ -116,7 +112,7 @@ class GCTileFile {
         return array;
     }
 
-    public List<BandDescriptor> getBandDescriptorList() throws IOException {
+    public List<BandDescriptor> getBandDescriptorList() {
         final Group rootGroup = ncFile.getRootGroup();
         final Group group = rootGroup.findGroup(GROUP_POSTEL).findGroup(GROUP_DATA_FIELDS);
         final List<Variable> bandVariables = group.getVariables();
@@ -232,7 +228,11 @@ class GCTileFile {
         } else {
             degrees = 0;
         }
-        return degrees + minutes / 60.0f + seconds / 3600.0f;
+        if (dgmString.startsWith("-")) {
+            return degrees - minutes / 60.0f - seconds / 3600.0f;
+        } else {
+            return degrees + minutes / 60.0f + seconds / 3600.0f;
+        }
     }
 
 }

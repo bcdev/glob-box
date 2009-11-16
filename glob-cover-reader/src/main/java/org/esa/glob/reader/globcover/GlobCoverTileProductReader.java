@@ -1,14 +1,18 @@
 package org.esa.glob.reader.globcover;
 
-import com.bc.ceres.core.ProgressMonitor;
+import com.bc.ceres.glevel.MultiLevelImage;
+import com.bc.ceres.glevel.support.AbstractMultiLevelSource;
+import com.bc.ceres.glevel.support.DefaultMultiLevelImage;
+import com.bc.ceres.glevel.support.DefaultMultiLevelModel;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.jai.ImageManager;
 import org.esa.beam.util.io.FileUtils;
-import ucar.ma2.Array;
-import ucar.ma2.InvalidRangeException;
+import org.esa.beam.util.math.MathUtils;
 
+import java.awt.geom.AffineTransform;
+import java.awt.image.RenderedImage;
 import java.io.File;
 import java.io.IOException;
 
@@ -41,32 +45,26 @@ class GlobCoverTileProductReader extends AbstractGcProductReader {
         return createProduct(refGcFile, prodName, prodType, width, height);
     }
 
-    @SuppressWarnings({"SuspiciousSystemArraycopy"})
-    @Override
-    protected void readBandRasterDataImpl(int sourceOffsetX, int sourceOffsetY, int sourceWidth, int sourceHeight,
-                                          int sourceStepX, int sourceStepY, Band destBand, int destOffsetX,
-                                          int destOffsetY, int destWidth, int destHeight, ProductData destBuffer,
-                                          ProgressMonitor pm) throws IOException {
-        final String bandName = destBand.getName();
-        pm.beginTask("Reading band '" + bandName + "'...", 1);
-        try {
-            final Array array = gcTileFile.readData(bandName,
-                                                    sourceOffsetX, sourceOffsetY,
-                                                    sourceWidth, sourceHeight,
-                                                    sourceStepX, sourceStepY);
-            final Object storage = array.getStorage();
-            System.arraycopy(storage, 0, destBuffer.getElems(), 0, destWidth * destHeight);
-            pm.worked(1);
-        } catch (InvalidRangeException e) {
-            throw new IOException(e);
-        } finally {
-            pm.done();
-        }
-    }
-
     @Override
     protected GeoPos getUpperLeftPosition() throws IOException {
         return gcTileFile.getUpperLeftCorner();
+    }
+
+    @Override
+    protected MultiLevelImage getMultiLevelImage(final Band band) {
+        AffineTransform i2mTransform = ImageManager.getImageToModelTransform(band.getGeoCoding());
+        int width = band.getSceneRasterWidth();
+        int height = band.getSceneRasterHeight();
+        DefaultMultiLevelModel model = new DefaultMultiLevelModel(i2mTransform, width, height);
+        AbstractMultiLevelSource levelSource = new AbstractMultiLevelSource(model) {
+            @Override
+            protected RenderedImage createImage(int level) {
+                int scale = MathUtils.ceilInt(getModel().getScale(level));
+                int bufferType = ImageManager.getDataBufferType(band.getDataType());
+                return new GCTileImage(gcTileFile, band.getName(), bufferType, scale);
+            }
+        };
+        return new DefaultMultiLevelImage(levelSource);
     }
 
     @Override

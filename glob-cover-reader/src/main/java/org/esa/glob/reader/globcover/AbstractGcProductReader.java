@@ -1,5 +1,7 @@
 package org.esa.glob.reader.globcover;
 
+import com.bc.ceres.core.ProgressMonitor;
+import com.bc.ceres.glevel.MultiLevelImage;
 import org.esa.beam.framework.dataio.AbstractProductReader;
 import org.esa.beam.framework.dataio.ProductReaderPlugIn;
 import org.esa.beam.framework.datamodel.Band;
@@ -11,6 +13,7 @@ import org.esa.beam.framework.datamodel.ImageInfo;
 import org.esa.beam.framework.datamodel.IndexCoding;
 import org.esa.beam.framework.datamodel.MetadataAttribute;
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 
 import java.awt.Color;
@@ -25,7 +28,7 @@ import java.util.List;
  * @version $ Revision $ Date $
  * @since BEAM 4.7
  */
-public abstract class AbstractGcProductReader extends AbstractProductReader {
+abstract class AbstractGcProductReader extends AbstractProductReader {
 
     private static final double PIXEL_SIZE_DEG = 1 / 360.0;
     private static final double PIXEL_CENTER = 0.5;
@@ -48,7 +51,7 @@ public abstract class AbstractGcProductReader extends AbstractProductReader {
         return product;
     }
 
-    protected void addBands(Product product, GCTileFile gcTileFile) throws IOException {
+    protected void addBands(Product product, GCTileFile gcTileFile) {
         final List<BandDescriptor> bandDescriptorList = gcTileFile.getBandDescriptorList();
         for (BandDescriptor descriptor : bandDescriptorList) {
             final Band band = new Band(descriptor.getName(), descriptor.getDataType(),
@@ -61,6 +64,7 @@ public abstract class AbstractGcProductReader extends AbstractProductReader {
             band.setNoDataValueUsed(descriptor.isFillValueUsed());
             band.setNoDataValue(descriptor.getFillValue());
             product.addBand(band);
+            band.setSourceImage(getMultiLevelImage(band));
         }
     }
 
@@ -73,10 +77,9 @@ public abstract class AbstractGcProductReader extends AbstractProductReader {
         transform.translate(-PIXEL_CENTER, -PIXEL_CENTER);
 
         try {
-            final CrsGeoCoding geoCoding = new CrsGeoCoding(DefaultGeographicCRS.WGS84, rect, transform);
-            product.setGeoCoding(geoCoding);
+            product.setGeoCoding(new CrsGeoCoding(DefaultGeographicCRS.WGS84, rect, transform));
         } catch (Exception e) {
-            throw new IOException("Can not create GeoCoding: ", e);
+            throw new IOException("Cannot create GeoCoding: ", e);
         }
     }
 
@@ -128,4 +131,14 @@ public abstract class AbstractGcProductReader extends AbstractProductReader {
     protected abstract String getAnnualProductType();
 
     protected abstract GeoPos getUpperLeftPosition() throws IOException;
+
+    protected abstract MultiLevelImage getMultiLevelImage(Band band);
+
+    @Override
+    protected void readBandRasterDataImpl(int sourceOffsetX, int sourceOffsetY, int sourceWidth, int sourceHeight,
+                                          int sourceStepX, int sourceStepY, Band destBand, int destOffsetX,
+                                          int destOffsetY, int destWidth, int destHeight, ProductData destBuffer,
+                                          ProgressMonitor pm) throws IOException {
+        throw new IOException(getClass().getSimpleName() + ".readBandRasterDataImpl not implemented");
+    }
 }

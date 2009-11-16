@@ -1,15 +1,12 @@
 package org.esa.glob.reader.globcover;
 
-import com.bc.ceres.core.ProgressMonitor;
+import com.bc.ceres.glevel.MultiLevelImage;
 import com.bc.ceres.glevel.support.DefaultMultiLevelImage;
-import com.bc.ceres.glevel.support.DefaultMultiLevelModel;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.util.io.FileUtils;
 
-import java.awt.geom.AffineTransform;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
@@ -44,38 +41,19 @@ class GlobCoverMosaicProductReader extends AbstractGcProductReader {
         final String prodName = fileName.substring(0, fileName.lastIndexOf('_'));
         final String prodType = getProductType(refGcFile);
 
-        final Product product = createProduct(refGcFile, prodName, prodType, width, height);
-
-        product.setPreferredTileSize(TileIndex.TILE_SIZE, TileIndex.TILE_SIZE);
-        return product;
+        return createProduct(refGcFile, prodName, prodType, width, height);
     }
 
-    @Override
-    protected void readBandRasterDataImpl(int sourceOffsetX, int sourceOffsetY, int sourceWidth, int sourceHeight,
-                                          int sourceStepX, int sourceStepY, Band destBand, int destOffsetX,
-                                          int destOffsetY, int destWidth, int destHeight, ProductData destBuffer,
-                                          ProgressMonitor pm) throws IOException {
-        throw new IOException("GlobCoverMosaicProductReader.readBandRasterDataImpl not implemented");
-    }
 
-    @Override
-    protected void addBands(Product product, final GCTileFile gcTileFile) throws IOException {
-        super.addBands(product, gcTileFile);
-
-        final Band[] bands = product.getBands();
-        for (Band band : bands) {
-            final AffineTransform imageToModelTransform = product.getGeoCoding().getImageToModelTransform();
-            final DefaultMultiLevelModel model = new DefaultMultiLevelModel(imageToModelTransform,
-                                                                            band.getSceneRasterWidth(),
-                                                                            band.getSceneRasterHeight());
-            final GCMosaicMultiLevelSource multiLevelSource = new GCMosaicMultiLevelSource(model, band, inputFileMap);
-            band.setSourceImage(new DefaultMultiLevelImage(multiLevelSource));
-        }
+    protected MultiLevelImage getMultiLevelImage(Band band) {
+        return new DefaultMultiLevelImage(new GCMosaicMultiLevelSource(band, inputFileMap));
     }
 
     @Override
     protected GeoPos getUpperLeftPosition() throws IOException {
-        return new GeoPos(-180, 90);
+        float lon = -180.0f + 0.5f * 1 / 360.0f;
+        float lat = 90.0f - 0.5f * 1 / 360.0f;
+        return new GeoPos(lat, lon);
     }
 
     @Override
@@ -141,8 +119,9 @@ class GlobCoverMosaicProductReader extends AbstractGcProductReader {
         @Override
         public boolean accept(File file) {
             final String fileName = file.getName();
-            return fileName.startsWith(filePrefix) && fileName.endsWith(
-                    getReaderPlugIn().getDefaultFileExtensions()[0]);
+            String fileExtension = getReaderPlugIn().getDefaultFileExtensions()[0];
+            return fileName.startsWith(filePrefix) && fileName.endsWith(fileExtension);
         }
     }
+
 }
