@@ -58,7 +58,7 @@ public class ProductUtilities {
                 if (band == null || band.isFloatingPointType() || band.getFlagCoding() != null) {
                     continue;
                 }
-                if (!product.containsFlagCoding(flagCoding.getName())) {
+                if (!product.getFlagCodingGroup().contains(flagCoding.getName())) {
                     product.getFlagCodingGroup().add(flagCoding);
                 }
 
