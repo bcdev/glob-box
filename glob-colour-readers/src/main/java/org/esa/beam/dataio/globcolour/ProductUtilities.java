@@ -59,7 +59,7 @@ public class ProductUtilities {
                     continue;
                 }
                 if (!product.containsFlagCoding(flagCoding.getName())) {
-                    product.addFlagCoding(flagCoding);
+                    product.getFlagCodingGroup().add(flagCoding);
                 }
 
                 band.setFlagCoding(flagCoding);
