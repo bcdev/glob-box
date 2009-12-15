@@ -11,6 +11,7 @@ import org.esa.beam.framework.dataio.AbstractProductReader;
 import org.esa.beam.framework.dataio.ProductIOException;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.ColorPaletteDef;
+import org.esa.beam.framework.datamodel.CrsGeoCoding;
 import org.esa.beam.framework.datamodel.ImageInfo;
 import org.esa.beam.framework.datamodel.MetadataAttribute;
 import org.esa.beam.framework.datamodel.MetadataElement;
@@ -19,8 +20,12 @@ import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.jai.ImageManager;
 import org.esa.beam.jai.ResolutionLevel;
 import org.esa.beam.util.math.MathUtils;
+import org.geotools.referencing.crs.DefaultGeographicCRS;
+import org.opengis.referencing.FactoryException;
+import org.opengis.referencing.operation.TransformException;
 
 import java.awt.Dimension;
+import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.awt.image.RenderedImage;
 import java.io.File;
@@ -58,10 +63,23 @@ public class ArcBinGridReader extends AbstractProductReader {
         final Dimension imageTileSize = new Dimension(tileExtend, tileExtend);
         product.setPreferredTileSize(imageTileSize);
 
+        
         AffineTransform i2m = new AffineTransform();
-        i2m.translate(-width/2, height/2);
+        i2m.translate(georefBounds.llx, georefBounds.lly);
         i2m.scale(header.pixelSizeX, -header.pixelSizeY);
-        i2m.translate(-0.5, -0.5);
+        i2m.translate(0, -height);
+        
+//        i2m.translate(-width/2, height/2);
+//        i2m.scale(header.pixelSizeX, -header.pixelSizeY);
+//        i2m.translate(georefBounds.llx, georefBounds.lly);
+        
+        Rectangle rect = new Rectangle(width,height);
+        try {
+            CrsGeoCoding coding = new CrsGeoCoding(DefaultGeographicCRS.WGS84, rect, i2m);
+            product.setGeoCoding(coding);
+        } catch (FactoryException e) {
+        } catch (TransformException e) {
+        }
         
         File colorPaletteFile = ColorPalette.findColorPaletteFile(gridDir);
         ColorPaletteDef colorPaletteDef = null;
