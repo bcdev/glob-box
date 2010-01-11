@@ -148,15 +148,15 @@
                             File[] gtModuleFiles = modulesDir.listFiles(new FileFilter() {
                             public boolean accept(File file) {
                             String name = file.getName();
-                            return name.startsWith("smos-");
+                            return name.startsWith("glob-") || name.startsWith("geotools-proj") ;
                             }
                             });
 
-                            if (smosModuleFiles != null &amp;&amp; smosModuleFiles.length &gt; 0) {
+                            if (gtModuleFiles != null &amp;&amp; gtModuleFiles.length &gt; 0) {
                             StringBuilder sb = new StringBuilder("Following existing BEAM GlobToolbox Reader Pack
                             modules will be removed:\n");
-                            for (int i = 0; i &lt; smosModuleFiles.length; i++) {
-                            File file = smosModuleFiles[i];
+                            for (int i = 0; i &lt; gtModuleFiles.length; i++) {
+                            File file = gtModuleFiles[i];
                             sb.append(" " + file.getName() + "\n");
                             }
                             Util.showMessage(sb.toString());
@@ -164,8 +164,8 @@
                             sb = new StringBuilder();
 
                             Deque&lt;File&gt; toDelete = new ArrayDeque&lt;File&gt;();
-                            for (int i = 0; i &lt; smosModuleFiles.length; i++) {
-                            File file = smosModuleFiles[i];
+                            for (int i = 0; i &lt; gtModuleFiles.length; i++) {
+                            File file = gtModuleFiles[i];
                             toDelete.add(file);
                             }
                             while (!toDelete.isEmpty()) {
@@ -235,57 +235,6 @@
                                         <object class="com.install4j.runtime.beans.actions.desktop.RegisterAddRemoveAction">
                                             <void property="itemName">
                                                 <string>${compiler:sys.fullName} ${compiler:sys.version}</string>
-                                            </void>
-                                        </object>
-                                    </java>
-                                </serializedBean>
-                                <condition/>
-                            </action>
-                            <action name="" id="168"
-                                    beanClass="com.install4j.runtime.beans.actions.text.ReplaceInstallerVariablesAction"
-                                    enabled="true" commentSet="false" comment="" rollbackBarrier="false"
-                                    multiExec="false" failureStrategy="1" errorMessage="">
-                                <serializedBean>
-                                    <java class="java.beans.XMLDecoder">
-                                        <object class="com.install4j.runtime.beans.actions.text.ReplaceInstallerVariablesAction">
-                                            <void property="file">
-                                                <object class="java.io.File">
-                                                    <string>bin/export-grid-cells.sh</string>
-                                                </object>
-                                            </void>
-                                        </object>
-                                    </java>
-                                </serializedBean>
-                                <condition/>
-                            </action>
-                            <action name="" id="203"
-                                    beanClass="com.install4j.runtime.beans.actions.text.ReplaceInstallerVariablesAction"
-                                    enabled="true" commentSet="false" comment="" rollbackBarrier="false"
-                                    multiExec="false" failureStrategy="1" errorMessage="">
-                                <serializedBean>
-                                    <java class="java.beans.XMLDecoder">
-                                        <object class="com.install4j.runtime.beans.actions.text.ReplaceInstallerVariablesAction">
-                                            <void property="file">
-                                                <object class="java.io.File">
-                                                    <string>bin/export-grid-cells.command</string>
-                                                </object>
-                                            </void>
-                                        </object>
-                                    </java>
-                                </serializedBean>
-                                <condition/>
-                            </action>
-                            <action name="" id="204"
-                                    beanClass="com.install4j.runtime.beans.actions.text.ReplaceInstallerVariablesAction"
-                                    enabled="true" commentSet="false" comment="" rollbackBarrier="false"
-                                    multiExec="false" failureStrategy="1" errorMessage="">
-                                <serializedBean>
-                                    <java class="java.beans.XMLDecoder">
-                                        <object class="com.install4j.runtime.beans.actions.text.ReplaceInstallerVariablesAction">
-                                            <void property="file">
-                                                <object class="java.io.File">
-                                                    <string>bin/export-grid-cells.bat</string>
-                                                </object>
                                             </void>
                                         </object>
                                     </java>
@@ -412,10 +361,6 @@
             </application>
         </applications>
     </installerGui>
-    <buildIds buildAll="true">
-        <mediaSet refId="18"/>
-        <mediaSet refId="59"/>
-        <mediaSet refId="60"/>
-    </buildIds>
+    <buildIds buildAll="true"/>
 </install4j>
 
