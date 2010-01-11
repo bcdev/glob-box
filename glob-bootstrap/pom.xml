@@ -50,7 +50,7 @@
         </dependency>
         <dependency>
             <groupId>org.esa.glob</groupId>
-            <artifactId>beam-arcbingrid-reader</artifactId>
+            <artifactId>glob-arcbingrid-reader</artifactId>
             <version>${pom.version}</version>
         </dependency>
     </dependencies>
