@@ -1,7 +1,7 @@
 <module>
     <manifestVersion>1.0.0</manifestVersion>
     <symbolicName>glob-fire-reader</symbolicName>
-    <version>1.5</version>
+    <version>1.0</version>
     <name>World Fire Reader</name>
 
     <description>Enables BEAM to read AATSR World Fire Reader data products.</description>
@@ -14,7 +14,7 @@
 
     <changelog>
         <![CDATA[
-        ]]>
+                ]]>
     </changelog>
 
     <dependency>
