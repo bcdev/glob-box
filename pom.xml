@@ -5,14 +5,14 @@
     <groupId>org.esa.glob</groupId>
     <artifactId>globtoolbox</artifactId>
     <packaging>pom</packaging>
-    <version>0.1-SNAPSHOT</version>
-    <name>GlobToolbox</name>
+    <version>1.0-SNAPSHOT</version>
+    <name>GlobToolbox Reader Pack</name>
 
-    <organization>        <!-- TODO  Correct this-->
+    <organization>
         <name>Brockmann Consult GmbH</name>
         <url>http://www.brockmann-consult.de</url>
     </organization>
-    <inceptionYear>2009</inceptionYear>
+    <inceptionYear>2010</inceptionYear>
 
     <licenses>
         <license>
