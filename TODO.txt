@@ -1,2 +1,0 @@
-* Use project abbrev. "globtbx" where applicable (modules).
-* Rename module "geotools-proj" --> "globtbx-gt-referencing-ext"

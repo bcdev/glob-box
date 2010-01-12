@@ -4,9 +4,10 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <artifactId>globtoolbox</artifactId>
-        <groupId>org.esa.glob</groupId>
+        <groupId>org.esa.globtbx</groupId>
         <version>1.0-SNAPSHOT</version>
     </parent>
-    <artifactId>geotools-proj</artifactId>
-    <name>GeoTools Projections</name>
+    <artifactId>globtbx-gt-referencing-ext</artifactId>
+    <name>GlobToolbox gt-referencing Extension</name>
+    <description>Extends GeoTools gt-referencing with additional projections</description>
 </project>

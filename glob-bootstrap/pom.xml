@@ -4,11 +4,10 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <artifactId>globtoolbox</artifactId>
-        <groupId>org.esa.glob</groupId>
+        <groupId>org.esa.globtbx</groupId>
         <version>1.0-SNAPSHOT</version>
     </parent>
-    <groupId>org.esa.glob</groupId>
-    <artifactId>glob-bootstrap</artifactId>
+    <artifactId>globtbx-bootstrap</artifactId>
     <name>GlobToolbox Bootstrap</name>
     <packaging>jar</packaging>
     <description>Provides the bootstrap classpath for all GlobToolbox modules</description>
@@ -19,38 +18,38 @@
             <artifactId>beam-bootstrap</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.esa.glob</groupId>
-            <artifactId>glob-cover-reader</artifactId>
+            <groupId>org.esa.globtbx</groupId>
+            <artifactId>globtbx-cover-reader</artifactId>
             <version>${pom.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.esa.glob</groupId>
-            <artifactId>glob-colour-readers</artifactId>
+            <groupId>org.esa.globtbx</groupId>
+            <artifactId>globtbx-colour-readers</artifactId>
             <version>${pom.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.esa.glob</groupId>
-            <artifactId>glob-aerosol-reader</artifactId>
+            <groupId>org.esa.globtbx</groupId>
+            <artifactId>globtbx-aerosol-reader</artifactId>
             <version>${pom.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.esa.glob</groupId>
-            <artifactId>glob-medspiration-reader</artifactId>
+            <groupId>org.esa.globtbx</groupId>
+            <artifactId>globtbx-medspiration-reader</artifactId>
             <version>${pom.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.esa.glob</groupId>
-            <artifactId>glob-fire-reader</artifactId>
+            <groupId>org.esa.globtbx</groupId>
+            <artifactId>globtbx-fire-reader</artifactId>
             <version>${pom.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.esa.glob</groupId>
-            <artifactId>geotools-proj</artifactId>
+            <groupId>org.esa.globtbx</groupId>
+            <artifactId>globtbx-gt-referencing-ext</artifactId>
             <version>${pom.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.esa.glob</groupId>
-            <artifactId>glob-arcbingrid-reader</artifactId>
+            <groupId>org.esa.globtbx</groupId>
+            <artifactId>globtbx-arcbingrid-reader</artifactId>
             <version>${pom.version}</version>
         </dependency>
     </dependencies>

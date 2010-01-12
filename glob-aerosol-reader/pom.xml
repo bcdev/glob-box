@@ -4,10 +4,10 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <artifactId>globtoolbox</artifactId>
-        <groupId>org.esa.glob</groupId>
+        <groupId>org.esa.globtbx</groupId>
         <version>1.0-SNAPSHOT</version>
     </parent>
-    <artifactId>glob-aerosol-reader</artifactId>
+    <artifactId>globtbx-aerosol-reader</artifactId>
     <name>GlobAerosol Reader</name>
     <dependencies>
         <dependency>

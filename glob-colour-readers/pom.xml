@@ -5,13 +5,13 @@
 
     <parent>
         <artifactId>globtoolbox</artifactId>
-        <groupId>org.esa.glob</groupId>
+        <groupId>org.esa.globtbx</groupId>
         <version>1.0-SNAPSHOT</version>
     </parent>
 
     <packaging>jar</packaging>
 
-    <artifactId>glob-colour-readers</artifactId>
+    <artifactId>globtbx-colour-readers</artifactId>
     <name>GlobColour Readers</name>
     <description>
         This module provides product readers for importing Binned and Mapped GlobColour data products into BEAM/VISAT.
