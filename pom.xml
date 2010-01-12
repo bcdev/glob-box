@@ -6,7 +6,7 @@
     <artifactId>globtoolbox</artifactId>
     <packaging>pom</packaging>
     <version>1.0-SNAPSHOT</version>
-    <name>GlobToolbox Reader Pack</name>
+    <name>GlobToolbox</name>
 
     <organization>
         <name>Brockmann Consult GmbH</name>
@@ -40,7 +40,7 @@
         <module>globtbx-medspiration-reader</module>
         <module>globtbx-gt-referencing-ext</module>
         <module>glob-arcbingrid-reader</module>
-        <module>glob-bootstrap</module>
+        <module>globtbx-bootstrap</module>
     </modules>
 
     <dependencies>
