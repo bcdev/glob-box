@@ -6,7 +6,7 @@ File modulesDir = new File(context.getInstallationDirectory(), "modules");
 File[] gtModuleFiles = modulesDir.listFiles(new FileFilter() {
     public boolean accept(File file) {
         String name = file.getName();
-        return name.startsWith("glob-") || name.startsWith("geotools-proj");
+        return name.startsWith("globtbx-"));
     }
 });
 
