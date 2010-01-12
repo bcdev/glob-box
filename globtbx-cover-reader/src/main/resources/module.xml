@@ -1,6 +1,6 @@
 <module>
     <manifestVersion>1.0.0</manifestVersion>
-    <symbolicName>glob-cover-reader</symbolicName>
+    <symbolicName>globtbx-cover-reader</symbolicName>
     <version>1.0</version>
     <name>GlobCover Reader</name>
 
