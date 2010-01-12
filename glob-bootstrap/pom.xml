@@ -7,9 +7,10 @@
         <groupId>org.esa.glob</groupId>
         <version>1.0-SNAPSHOT</version>
     </parent>
-    <groupId>org.esa.glob</groupId>
     <artifactId>glob-bootstrap</artifactId>
+    <groupId>org.esa.glob</groupId>
     <name>GlobToolbox Bootstrap</name>
+    <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
     <description>Provides the bootstrap classpath for all GlobToolbox modules</description>
 

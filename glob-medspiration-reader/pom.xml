@@ -8,7 +8,10 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
     <artifactId>glob-medspiration-reader</artifactId>
+    <groupId>org.esa.glob</groupId>
     <name>Medspiration Reader</name>
+    <version>1.0-SNAPSHOT</version>
+    
     <dependencies>
         <dependency>
             <groupId>org.esa.beam</groupId>
