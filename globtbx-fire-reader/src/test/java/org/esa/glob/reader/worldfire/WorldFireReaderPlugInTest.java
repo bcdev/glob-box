@@ -35,7 +35,7 @@ public class WorldFireReaderPlugInTest {
 
     @Test
     public void testDefaultFileExtensions() {
-        assertArrayContains("FIRE", plugIn.getDefaultFileExtensions());
+        assertArrayContains(".FIRE", plugIn.getDefaultFileExtensions());
     }
 
     @Test
