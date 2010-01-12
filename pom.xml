@@ -37,7 +37,7 @@
         <module>glob-cover-reader</module>
         <module>glob-colour-readers</module>
         <module>glob-aerosol-reader</module>
-        <module>glob-medspiration-reader</module>
+        <module>globtbx-medspiration-reader</module>
         <module>globtbx-gt-referencing-ext</module>
         <module>glob-arcbingrid-reader</module>
         <module>glob-bootstrap</module>
