@@ -12,7 +12,6 @@
     <packaging>jar</packaging>
 
     <artifactId>globtbx-colour-readers</artifactId>
-    <version>1.5.1</version>
     
     <name>GlobColour Readers</name>
     <description>
