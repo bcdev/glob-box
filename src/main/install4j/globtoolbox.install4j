@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <install4j version="4.2.6" transformSequenceNumber="2">
-  <directoryPresets config="../../../target/gt-reader-pack-bin.dir" />
+  <directoryPresets config="./CustomisedMessages.utf8" />
   <application name="BEAM GlobToolbox Reader Pack" distributionSourceDir="" applicationId="6066-4195-6114-2396" mediaDir="../../../target/installers" mediaFilePattern="${compiler:sys.shortName}_${compiler:sys.version}_${compiler:sys.platform}_installer" compression="6" lzmaCompression="false" pack200Compression="false" excludeSignedFromPacking="true" keepModificationTimes="false" missingFilesStrategy="warn" shortName="globtbxrp" publisher="Brockmann Consult" publisherWeb="http://www.brockmann-consult.de/" version="1.0" allPathsRelative="true" backupOnSave="true" autoSave="true" convertDotsToUnderscores="false" macSignature="????" installerName="" javaMinVersion="1.6" javaMaxVersion="" allowBetaVM="false" jdkMode="runtimeJre" jdkName="">
     <languages skipLanguageSelection="false" languageSelectionInPrincipalLanguage="false">
-      <principalLanguage id="en" customLocalizationFile="" />
+      <principalLanguage id="en" customLocalizationFile="./CustomisedMessages.utf8" />
       <additionalLanguages />
     </languages>
     <searchSequence>
@@ -55,7 +55,21 @@
           <screen name="" id="2" beanClass="com.install4j.runtime.beans.screens.WelcomeScreen" enabled="true" commentSet="false" comment="" rollbackBarrier="false" backButton="2" finishScreen="false">
             <serializedBean>
               <java class="java.beans.XMLDecoder">
-                <object class="com.install4j.runtime.beans.screens.WelcomeScreen" />
+                <object class="com.install4j.runtime.beans.screens.WelcomeScreen">
+                  <void property="bannerBackground">
+                    <object class="java.awt.Color">
+                      <int>255</int>
+                      <int>255</int>
+                      <int>255</int>
+                      <int>255</int>
+                    </object>
+                  </void>
+                  <void property="bannerImageFile">
+                    <object class="com.install4j.api.beans.ExternalFile">
+                      <string>./GlobToolbox-Logo-160p.png</string>
+                    </object>
+                  </void>
+                </object>
               </java>
             </serializedBean>
             <condition />
@@ -336,6 +350,6 @@ return;</preActivation>
       </installerScript>
     </unixInstaller>
   </mediaSets>
-  <buildIds buildAll="true" />
+  <buildIds buildAll="false" />
 </install4j>
 

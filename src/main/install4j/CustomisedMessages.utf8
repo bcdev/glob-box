@@ -1,0 +1,1 @@
+SetupAppRunningError=Setup has detected that BEAM is currently running.\n\nPlease close all instances of it now, then click OK to continue, or Cancel to exit.
