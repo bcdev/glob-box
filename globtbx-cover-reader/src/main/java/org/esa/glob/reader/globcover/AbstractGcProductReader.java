@@ -5,15 +5,16 @@ import com.bc.ceres.glevel.MultiLevelImage;
 import org.esa.beam.framework.dataio.AbstractProductReader;
 import org.esa.beam.framework.dataio.ProductReaderPlugIn;
 import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.BitmaskDef;
 import org.esa.beam.framework.datamodel.ColorPaletteDef;
 import org.esa.beam.framework.datamodel.CrsGeoCoding;
 import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.framework.datamodel.ImageInfo;
 import org.esa.beam.framework.datamodel.IndexCoding;
+import org.esa.beam.framework.datamodel.Mask;
 import org.esa.beam.framework.datamodel.MetadataAttribute;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.datamodel.ProductNodeGroup;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 
 import java.awt.Color;
@@ -105,14 +106,26 @@ abstract class AbstractGcProductReader extends AbstractProductReader {
                 new ColorPaletteDef.Point(6, Color.RED, "invalid")
         };
         smBand.setImageInfo(new ImageInfo(new ColorPaletteDef(points)));
-        product.addBitmaskDef(new BitmaskDef("land", land.getDescription(), "SM == 0", Color.GREEN.darker(), 0.5f));
-        product.addBitmaskDef(
-                new BitmaskDef("flooded", flooded.getDescription(), "SM == 1", Color.BLUE, 0.5f));
-        product.addBitmaskDef(new BitmaskDef("suspect", suspect.getDescription(), "SM == 2", Color.ORANGE, 0.5f));
-        product.addBitmaskDef(new BitmaskDef("cloud", cloud.getDescription(), "SM == 3", Color.GRAY, 0.5f));
-        product.addBitmaskDef(new BitmaskDef("water", water.getDescription(), "SM == 4", Color.BLUE.darker(), 0.5f));
-        product.addBitmaskDef(new BitmaskDef("snow", snow.getDescription(), "SM == 5", Color.LIGHT_GRAY, 0.5f));
-        product.addBitmaskDef(new BitmaskDef("invalid", invalid.getDescription(), "SM == 6", Color.RED, 0.5f));
+
+        addMask(land, "SM == 0", Color.GREEN.darker(), product);
+        addMask(flooded, "SM == 1", Color.BLUE, product);
+        addMask(suspect, "SM == 2", Color.ORANGE, product);
+        addMask(cloud, "SM == 3", Color.GRAY, product);
+        addMask(water, "SM == 4", Color.BLUE.darker(), product);
+        addMask(snow, "SM == 5", Color.LIGHT_GRAY, product);
+        addMask(invalid, "SM == 6", Color.RED, product);
+    }
+
+    private void addMask(MetadataAttribute meatdataSample, String expression, Color color, Product product) {
+        final ProductNodeGroup<Mask> maskGroup = product.getMaskGroup();
+        final int width = product.getSceneRasterWidth();
+        final int height = product.getSceneRasterHeight();
+        final Mask mask = new Mask(meatdataSample.getName().toLowerCase(), width, height, new Mask.BandMathType());
+        mask.setDescription(meatdataSample.getDescription());
+        mask.setImageColor(color);
+        mask.setImageTransparency(0.5);
+        Mask.BandMathType.setExpression(mask, expression);
+        maskGroup.add(mask);
     }
 
 

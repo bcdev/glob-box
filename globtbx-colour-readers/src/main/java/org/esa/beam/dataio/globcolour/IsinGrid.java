@@ -64,7 +64,7 @@ class IsinGrid {
      * @param rowCount the number of ISIN grid rows, must be a positive number.
      * @throws IllegalArgumentException if <code>rowCount</code> is not a positive number.
      */
-    public IsinGrid(final int rowCount) {
+    IsinGrid(final int rowCount) {
         if (rowCount < 1) {
             throw new IllegalArgumentException("rowCount < 1");
         }

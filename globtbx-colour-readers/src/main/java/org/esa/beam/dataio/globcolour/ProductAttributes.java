@@ -90,4 +90,6 @@ public class ProductAttributes {
      */
     public static final String FILL_VALUE = "_FillValue";
 
+    private ProductAttributes() {
+    }
 }

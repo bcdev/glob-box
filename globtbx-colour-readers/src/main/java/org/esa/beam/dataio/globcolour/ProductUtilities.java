@@ -20,7 +20,18 @@
 */
 package org.esa.beam.dataio.globcolour;
 
-import org.esa.beam.framework.datamodel.*;
+import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.BitmaskDef;
+import org.esa.beam.framework.datamodel.FlagCoding;
+import org.esa.beam.framework.datamodel.GeoPos;
+import org.esa.beam.framework.datamodel.Mask;
+import org.esa.beam.framework.datamodel.MetadataAttribute;
+import org.esa.beam.framework.datamodel.MetadataElement;
+import org.esa.beam.framework.datamodel.Pin;
+import org.esa.beam.framework.datamodel.PlacemarkSymbol;
+import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.datamodel.ProductNodeGroup;
 
 import java.text.ParseException;
 
@@ -62,7 +73,7 @@ public class ProductUtilities {
                     product.getFlagCodingGroup().add(flagCoding);
                 }
 
-                band.setFlagCoding(flagCoding);
+                band.setSampleCoding(flagCoding);
                 addBitmaskDefinitions(product, name);
 
                 codingAdded = true;
@@ -76,18 +87,20 @@ public class ProductUtilities {
         for (final Flags flag : Flags.values()) {
             final String name = new StringBuilder(flagsBandName.split("flags")[0]).append(flag.name()).toString();
 
-            if (product.containsBitmaskDef(name)) {
+            final ProductNodeGroup<Mask> maskGroup = product.getMaskGroup();
+            if (maskGroup.contains(name)) {
                 continue;
             }
 
             final String expression = new StringBuilder(flagsBandName).append(".").append(flag.name()).toString();
-            final BitmaskDef bitmaskDef = new BitmaskDef(name,
-                                                         flag.getDescription(),
-                                                         expression,
-                                                         flag.getColor(),
-                                                         flag.getTransparency());
-
-            product.addBitmaskDef(bitmaskDef);
+            final int width = product.getSceneRasterWidth();
+            final int height = product.getSceneRasterHeight();
+            final Mask mask = new Mask(name, width, height, new Mask.BandMathType());
+            mask.setDescription(flag.getDescription());
+            mask.setImageColor(flag.getColor());
+            mask.setImageTransparency(flag.getTransparency());
+            Mask.BandMathType.setExpression(mask, expression);
+            maskGroup.add(mask);
         }
     }
 
@@ -115,7 +128,8 @@ public class ProductUtilities {
 
         final String pinLabel = pa.getAttributeString(ProductAttributes.SITE_NAME, pinName);
         product.getPinGroup().add(new Pin(pinName, pinLabel, "GlobColour diagnostic site",
-                                          null, new GeoPos(siteLat, siteLon), PlacemarkSymbol.createDefaultPinSymbol()));
+                                          null, new GeoPos(siteLat, siteLon),
+                                          PlacemarkSymbol.createDefaultPinSymbol(), product.getGeoCoding()));
         return true;
     }
 
@@ -137,7 +151,9 @@ public class ProductUtilities {
      *
      * @param product      the product.
      * @param timeAttrName the name of the time attribute.
+     *
      * @return the attribute value as UTC or {@code null} if the attribute vallue cannot be parsed.
+     *
      * @see MetadataAttribute
      * @see ProductData.UTC
      */
@@ -156,7 +172,7 @@ public class ProductUtilities {
         }
 
         final String timeString = timeAttrData.getElemString();
-        if (timeString.trim().equals("")) {
+        if ("".equals(timeString.trim())) {
             return null;
         }
 

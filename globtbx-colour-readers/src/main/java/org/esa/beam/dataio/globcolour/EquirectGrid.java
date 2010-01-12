@@ -49,7 +49,7 @@ class EquirectGrid {
      *                                  <code>minLat + rowCount * latStep > 90.0</code>, or
      *                                  <code>minLon + colCount * lonStep > 180.0</code>.
      */
-    public EquirectGrid(final int rowCount, final int colCount, final double minLat, final double minLon,
+    EquirectGrid(final int rowCount, final int colCount, final double minLat, final double minLon,
                         final double latStep, final double lonStep) {
         if (rowCount < 1) {
             throw new IllegalArgumentException("rowCount < 1");

@@ -83,7 +83,7 @@ public class MedspirationReader extends NetcdfReader {
                 return null;
             }
         }
-        if (attributes.size() == 0) {
+        if (attributes.isEmpty()) {
             return null;
         }
         FlagCoding coding = new FlagCoding(codingName);

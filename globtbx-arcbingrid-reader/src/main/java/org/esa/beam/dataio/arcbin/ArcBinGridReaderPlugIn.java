@@ -17,6 +17,7 @@ public class ArcBinGridReaderPlugIn implements ProductReaderPlugIn {
     private static final Class[] INPUT_TYPES = new Class[]{String.class, File.class};
     private static final BeamFileFilter FILE_FILTER = new ArcBinGridFileFilter();
 
+    @Override
     public DecodeQualification getDecodeQualification(Object input) {
         File file = new File(String.valueOf(input));
         if (isGridDirectory(file.getParentFile())) {
@@ -25,33 +26,39 @@ public class ArcBinGridReaderPlugIn implements ProductReaderPlugIn {
         return DecodeQualification.UNABLE;
     }
 
+    @Override
     public Class[] getInputTypes() {
         return INPUT_TYPES;
     }
 
+    @Override
     public ProductReader createReaderInstance() {
         return new ArcBinGridReader(this);
     }
 
+    @Override
     public String[] getFormatNames() {
         return FORMAT_NAMES;
     }
 
+    @Override
     public String[] getDefaultFileExtensions() {
         return FILE_EXTENSIONS;
     }
 
+    @Override
     public String getDescription(Locale locale) {
         return DESCRIPTION;
     }
 
+    @Override
     public BeamFileFilter getProductFileFilter() {
         return FILE_FILTER;
     }
 
     private static class ArcBinGridFileFilter extends BeamFileFilter {
 
-        public ArcBinGridFileFilter() {
+        private ArcBinGridFileFilter() {
             setFormatName(FORMAT_NAMES[0]);
             setDescription(DESCRIPTION);
         }

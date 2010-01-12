@@ -48,7 +48,7 @@ class IsinGridStorageInfo {
      *                 northernmost) row stored, while the smallest offset corresponds to the
      *                 first (i.e. southernmost) row.
      */
-    public IsinGridStorageInfo(final int minRow, final int binCount, final int[] offsets) {
+    IsinGridStorageInfo(final int minRow, final int binCount, final int[] offsets) {
         if (minRow < 0) {
             throw new IllegalArgumentException("minRow < 0");
         }

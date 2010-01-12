@@ -46,7 +46,7 @@ public class GeotoolsProjectionsActivator implements Activator{
         }
     }
 
-    private final static class CeresFactoryIteratorProvider implements FactoryIteratorProvider {
+    private static final class CeresFactoryIteratorProvider implements FactoryIteratorProvider {
         private final ServiceRegistry<MathTransformProvider> serviceRegistry;
 
         private CeresFactoryIteratorProvider(ServiceRegistry<MathTransformProvider> serviceRegistry) {

@@ -45,6 +45,7 @@ class GlobCoverMosaicProductReader extends AbstractGcProductReader {
     }
 
 
+    @Override
     protected MultiLevelImage getMultiLevelImage(Band band) {
         return new DefaultMultiLevelImage(new GCMosaicMultiLevelSource(band, inputFileMap));
     }

@@ -30,16 +30,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-class ColorPalette {
+class ColorPalette {private ColorPalette() {
+    }
 
     private static final class ColorPaletteFilenameFilter implements FilenameFilter {
 
         @Override
         public boolean accept(File dir, String name) {
-            if (name.endsWith(".clr") || name.endsWith(".CLR")) {
-                return true;
-            }
-            return false;
+            return name.endsWith(".clr") || name.endsWith(".CLR");
         }
     }
 

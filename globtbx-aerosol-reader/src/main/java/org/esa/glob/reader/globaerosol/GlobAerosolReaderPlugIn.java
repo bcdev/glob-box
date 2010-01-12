@@ -17,6 +17,7 @@ public class GlobAerosolReaderPlugIn implements ProductReaderPlugIn {
     private static final Class[] INPUT_TYPES = new Class[]{String.class, File.class};
     private static final BeamFileFilter FILE_FILTER = new BeamFileFilter(FORMAT_NAME, FILE_EXTENSIONS, DESCRIPTION);
 
+    @Override
     public DecodeQualification getDecodeQualification(Object input) {
         final File file;
         if (input instanceof String) {
@@ -35,26 +36,32 @@ public class GlobAerosolReaderPlugIn implements ProductReaderPlugIn {
         return DecodeQualification.UNABLE;
     }
 
+    @Override
     public Class[] getInputTypes() {
         return INPUT_TYPES;
     }
 
+    @Override
     public ProductReader createReaderInstance() {
         return new GlobAerosolReader(this);
     }
 
+    @Override
     public String[] getFormatNames() {
         return FORMAT_NAMES;
     }
 
+    @Override
     public String[] getDefaultFileExtensions() {
         return FILE_EXTENSIONS;
     }
 
+    @Override
     public String getDescription(Locale locale) {
         return DESCRIPTION;
     }
 
+    @Override
     public BeamFileFilter getProductFileFilter() {
         return FILE_FILTER;
     }

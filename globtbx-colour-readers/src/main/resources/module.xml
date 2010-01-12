@@ -30,7 +30,7 @@
 
     <categories>Reader,GlobColour</categories>
 
-    <extension point="beam-visat:actions">
+    <extension point="beam-ui:actions">
         <action>
             <class>org.esa.beam.visat.actions.ProductImportAction</class>
             <id>importGlobColourBinnedProduct</id>

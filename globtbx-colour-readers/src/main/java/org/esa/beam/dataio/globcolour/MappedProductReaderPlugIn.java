@@ -63,10 +63,12 @@ public class MappedProductReaderPlugIn implements ProductReaderPlugIn {
      *
      * @return a new reader instance.
      */
+    @Override
     public ProductReader createReaderInstance() {
         return new MappedProductReader(this);
     }
 
+    @Override
     public BeamFileFilter getProductFileFilter() {
         return new BeamFileFilter(FORMAT_NAME, getDefaultFileExtensions(), getDescription(null));
     }
@@ -77,6 +79,7 @@ public class MappedProductReaderPlugIn implements ProductReaderPlugIn {
      * @param input the input object
      * @return the decode qualification
      */
+    @Override
     public DecodeQualification getDecodeQualification(Object input) {
         if (DecodeQualification.UNABLE.equals(netcdfReaderPlugIn.getDecodeQualification(input))) {
             return DecodeQualification.UNABLE;
@@ -120,6 +123,7 @@ public class MappedProductReaderPlugIn implements ProductReaderPlugIn {
      *
      * @return an array containing valid input types.
      */
+    @Override
     public Class[] getInputTypes() {
         return new Class[]{String.class, File.class};
     }
@@ -129,6 +133,7 @@ public class MappedProductReaderPlugIn implements ProductReaderPlugIn {
      *
      * @return the format names associated with this {@link ProductReaderPlugIn}.
      */
+    @Override
     public String[] getFormatNames() {
         return new String[]{FORMAT_NAME};
     }
@@ -145,6 +150,7 @@ public class MappedProductReaderPlugIn implements ProductReaderPlugIn {
      *
      * @return the file extensions for this {@link ProductReaderPlugIn}.
      */
+    @Override
     public String[] getDefaultFileExtensions() {
         return new String[]{FILE_EXTENSION};
     }
@@ -159,6 +165,7 @@ public class MappedProductReaderPlugIn implements ProductReaderPlugIn {
      *               the default locale is used.
      * @return a textual description of this {@link ProductReaderPlugIn}.
      */
+    @Override
     public String getDescription(Locale locale) {
         return DESCRIPTION;
     }

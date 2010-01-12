@@ -26,11 +26,12 @@ public class WorldFireReaderPlugIn implements ProductReaderPlugIn {
 
     private static final String FORMAT_NAME = "ATSR World Fire";
     private static final String[] FORMAT_NAMES = new String[]{FORMAT_NAME};
-    private static final String DESCRIPTION = "ATSR2/AATSR based Global Fire Maps (Level 3)";
+    private static final String DESCRIPTION = "ATSR2/AATSR based Global Fire Maps";
     private static final Class[] INPUT_TYPES = new Class[]{String.class, File.class};
-    private static final String FIRE_FILE_EXTENSION = "FIRE";
+    private static final String FIRE_FILE_EXTENSION = ".FIRE";
     private static final String[] DEFAULT_FILE_EXTENSIONS = new String[]{FIRE_FILE_EXTENSION};
 
+    @Override
     public DecodeQualification getDecodeQualification(Object input) {
         File inputFile = new File(String.valueOf(input));
         if(!inputFile.getName().toUpperCase().endsWith(FIRE_FILE_EXTENSION)) {
@@ -52,26 +53,32 @@ public class WorldFireReaderPlugIn implements ProductReaderPlugIn {
         }
     }
 
+    @Override
     public Class[] getInputTypes() {
         return INPUT_TYPES;
     }
 
+    @Override
     public ProductReader createReaderInstance() {
         return new WorldFireReader(this);
     }
 
+    @Override
     public String[] getFormatNames() {
         return FORMAT_NAMES;
     }
 
+    @Override
     public String[] getDefaultFileExtensions() {
         return DEFAULT_FILE_EXTENSIONS;
     }
 
+    @Override
     public String getDescription(Locale locale) {
         return DESCRIPTION;
     }
 
+    @Override
     public BeamFileFilter getProductFileFilter() {
         return new BeamFileFilter(FORMAT_NAME, getDefaultFileExtensions(), getDescription(null));
     }

@@ -1,6 +1,6 @@
 package org.esa.beam.dataio.globcolour;
 
-import java.awt.*;
+import java.awt.Color;
 
 /**
  * The enumeration type <code>Flags</code> is a representation of
@@ -65,11 +65,11 @@ enum Flags {
     private float transparency;
     private String description;
 
-    private Flags(final int mask, final String description, final Color color) {
+    Flags(final int mask, final String description, final Color color) {
         this(mask, description, color, 0.5f);
     }
 
-    private Flags(final int mask, final String description, final Color color, final float transparency) {
+    Flags(final int mask, final String description, final Color color, final float transparency) {
         this.mask = mask;
         this.color = color;
         this.transparency = transparency;
@@ -81,7 +81,7 @@ enum Flags {
      *
      * @return the bit mask.
      */
-    public final int getMask() {
+    public int getMask() {
         return mask;
     }
 
@@ -90,7 +90,7 @@ enum Flags {
      *
      * @return the textual description.
      */
-    public final String getDescription() {
+    public String getDescription() {
         return description;
     }
 
@@ -108,7 +108,7 @@ enum Flags {
      *
      * @return the transparency.
      */
-    public final float getTransparency() {
+    public float getTransparency() {
         return transparency;
     }
 
@@ -118,7 +118,7 @@ enum Flags {
      * @param value the bit pattern.
      * @return true if the flag is set, false otherwise.
      */
-    public final boolean isSet(final int value) {
+    public boolean isSet(final int value) {
         return (value & mask) != 0;
     }
 }

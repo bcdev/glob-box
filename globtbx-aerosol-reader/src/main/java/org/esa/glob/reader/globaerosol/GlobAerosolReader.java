@@ -298,7 +298,7 @@ public class GlobAerosolReader extends AbstractProductReader {
         final int rowOffset;
         final int numBins;
 
-        public RowInfo(int rowOffset, int numBins) {
+        private RowInfo(int rowOffset, int numBins) {
             this.rowOffset = rowOffset;
             this.numBins = numBins;
         }
@@ -311,7 +311,7 @@ public class GlobAerosolReader extends AbstractProductReader {
         private final int rank;
         private final Map<Integer, Integer> dimSelection;
 
-        public VariableAccessor1D(Variable variable, int indexDim, Map<Integer, Integer> dimSelection) {
+        private VariableAccessor1D(Variable variable, int indexDim, Map<Integer, Integer> dimSelection) {
             this.variable = variable;
             this.indexDim = indexDim;
             this.dimSelection = dimSelection;

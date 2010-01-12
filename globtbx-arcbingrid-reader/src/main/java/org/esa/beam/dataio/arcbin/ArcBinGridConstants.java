@@ -38,4 +38,7 @@ class ArcBinGridConstants {
     static final int CELL_TYPE_FLOAT = 2;
 
     static final float NODATA_VALUE_FLOAT = -340282346638528859811704183484516925440.0f;
+
+    private ArcBinGridConstants() {
+    }
 }

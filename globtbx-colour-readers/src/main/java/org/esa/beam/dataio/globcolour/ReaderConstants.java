@@ -60,4 +60,7 @@ public class ReaderConstants {
      * The type identifier for Mapped DDS products.
      */
     public static final String MAPPED_DDS = "GlobColour-L3m-DDS";
+
+    private ReaderConstants() {
+    }
 }

@@ -65,9 +65,8 @@ class RasterStatistics {
         }
         CompoundData data = context.createData();
         try {
-            RasterStatistics rasterStatistics = new RasterStatistics(data.getDouble(0), data.getDouble(1),
+            return new RasterStatistics(data.getDouble(0), data.getDouble(1),
                                                                      data.getDouble(2), data.getDouble(3));
-            return rasterStatistics;
         } catch (IOException ignore) {
             return null;
         } finally {

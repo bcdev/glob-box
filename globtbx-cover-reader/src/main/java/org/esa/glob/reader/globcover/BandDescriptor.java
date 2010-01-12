@@ -1,15 +1,5 @@
 package org.esa.glob.reader.globcover;
 
-import ucar.ma2.DataType;
-import ucar.nc2.Variable;
-import ucar.nc2.Attribute;
-
-import java.util.Map;
-import java.util.EnumMap;
-import java.io.IOException;
-
-import org.esa.beam.framework.datamodel.ProductData;
-
 /**
  * @author Marco Peters
 * @since BEAM 4.7

@@ -8,11 +8,11 @@ import com.bc.ceres.glevel.support.DefaultMultiLevelSource;
 import org.esa.beam.framework.dataio.AbstractProductReader;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.CrsGeoCoding;
+import org.esa.beam.framework.datamodel.GeoCoding;
 import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.framework.datamodel.IndexCoding;
 import org.esa.beam.framework.datamodel.Pin;
 import org.esa.beam.framework.datamodel.PinDescriptor;
-import org.esa.beam.framework.datamodel.PlacemarkSymbol;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.ProductNodeGroup;
@@ -87,8 +87,8 @@ class WorldFireReader extends AbstractProductReader {
         }
         // todo - pin layer needs speed improvements; with more than 6000 pins it is slow 
         final ProductNodeGroup<Pin> pinGroup = product.getPinGroup();
-        List<FireSpot> fireList = getFireSpotList(inputFile);
-        for (FireSpot fireSpot : fireList) {
+        List<Pin> fireList = getFireSpotList(inputFile, product.getGeoCoding());
+        for (Pin fireSpot : fireList) {
             pinGroup.add(fireSpot);
         }
         Band fireBand = product.addBand("fire_" + productName, ProductData.TYPE_UINT8);
@@ -117,14 +117,14 @@ class WorldFireReader extends AbstractProductReader {
     }
 
 
-    private List<FireSpot> getFireSpotList(File inputFile) throws IOException {
-        final ArrayList<FireSpot> fireList = new ArrayList<FireSpot>();
+    private List<Pin> getFireSpotList(File inputFile, GeoCoding geoCoding) throws IOException {
+        final ArrayList<Pin> fireList = new ArrayList<Pin>();
         BufferedReader bufferedReader = new BufferedReader(new FileReader(inputFile));
         try {
             String line = bufferedReader.readLine();
             int index = 0;
             while (line != null && !line.isEmpty()) {
-                final FireSpot fireSpot = parseLine(line, index);
+                final Pin fireSpot = parseLine(line, index, geoCoding);
                 if (fireSpot != null) {
                     fireList.add(fireSpot);
                 }
@@ -187,7 +187,7 @@ class WorldFireReader extends AbstractProductReader {
     }
 
 
-    private static FireSpot parseLine(String text, int index) {
+    private static Pin parseLine(String text, int index, GeoCoding geoCoding) {
         final String[] columns = text.trim().split("[\\s]++");
         if (columns.length == 5) { // AATSR
             final String dateColumn = columns[0];
@@ -215,7 +215,10 @@ class WorldFireReader extends AbstractProductReader {
             calendar.roll(Calendar.MILLISECOND, (int) date.getTime());
             final float lat = Float.parseFloat(columns[3]);
             final float lon = Float.parseFloat(columns[4]);
-            return new FireSpot("Fire_" + index, calendar, new GeoPos(lat, lon));
+            final String name = "Fire_" + index;
+            final GeoPos geoPos = new GeoPos(lat, lon);
+            return new Pin(name, String.format("%1$tF", calendar), "Fire", null, geoPos, PinDescriptor.INSTANCE.createDefaultSymbol(),
+                           geoCoding);
         } else if (columns.length == 6) { // ATSR2
             // todo - implement
             return null;//new FireSpot();
@@ -223,22 +226,4 @@ class WorldFireReader extends AbstractProductReader {
         return null;
     }
 
-    private static class FireSpot extends Pin {
-
-        private Calendar date;
-
-        private FireSpot(String name, Calendar date, GeoPos geoPos) {
-            super(name,
-                  String.format("%1$tF", date),       // same as "%tY-%tm-%td"
-                  "Fire",
-                  null, geoPos,
-                  new PlacemarkSymbol("FireIcon", new Rectangle(0, 0, 4, 4)));  // todo - define symbol
-            this.date = (Calendar) date.clone();
-        }
-
-        public Calendar getDate() {
-            return (Calendar) date.clone();
-        }
-
-    }
 }

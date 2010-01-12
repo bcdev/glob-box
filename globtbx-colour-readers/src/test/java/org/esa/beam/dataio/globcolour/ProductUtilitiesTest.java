@@ -42,7 +42,7 @@ public class ProductUtilitiesTest extends TestCase {
         ProductUtilities.addBitmaskDefinitions(product, "CHL1_flags");
 
         for (final Flags flag : Flags.values()) {
-            assertNotNull(product.getBitmaskDef("CHL1_" + flag.name()));
+            assertNotNull(product.getMaskGroup().get("CHL1_" + flag.name()));
         }
     }
 

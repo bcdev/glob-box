@@ -96,12 +96,12 @@ class ProjectionReader {
         content.add(keyValuePair);
     }
 
-    private class KeyValuePair {
+    private static class KeyValuePair {
 
         final String key;
         final String value;
 
-        public KeyValuePair(String key, String value) {
+        private KeyValuePair(String key, String value) {
             this.key = key;
             this.value = value;
         }

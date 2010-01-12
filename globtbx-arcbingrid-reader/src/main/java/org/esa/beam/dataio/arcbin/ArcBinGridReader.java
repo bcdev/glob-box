@@ -33,8 +33,6 @@ import java.io.IOException;
 
 public class ArcBinGridReader extends AbstractProductReader {
 
-    private RasterDataFile rasterDataFile;
-
     protected ArcBinGridReader(ArcBinGridReaderPlugIn readerPlugIn) {
         super(readerPlugIn);
     }
@@ -55,7 +53,8 @@ public class ArcBinGridReader extends AbstractProductReader {
         int numTiles = header.tilesPerColumn * header.tilesPerRow;
 
         TileIndex tileIndex = TileIndex.create(getCaseInsensitiveFile(gridDir, TileIndex.FILE_NAME), numTiles);
-        rasterDataFile = RasterDataFile.create(getCaseInsensitiveFile(gridDir, RasterDataFile.FILE_NAME));
+        RasterDataFile rasterDataFile = RasterDataFile.create(
+                getCaseInsensitiveFile(gridDir, RasterDataFile.FILE_NAME));
 
         Product product = new Product(gridDir.getName(), "ARC_INFO_BIN_GRID", width, height);
         product.setFileLocation(headerFile);

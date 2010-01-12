@@ -20,7 +20,24 @@
     <dependency>
         <module>beam-core</module>
     </dependency>
-
+    <dependency>
+        <module>beam-visat</module>
+        <optional>true</optional>
+    </dependency>
+    
     <categories>Reader</categories>
 
+    <extension point="beam-ui:actions">
+        <action>
+            <class>org.esa.beam.visat.actions.ProductImportAction</class>
+            <id>importWorldFireAATSRProduct</id>
+            <helpId>importWorldFireAATSRProduct</helpId>
+            <formatName>ATSR World Fire</formatName>
+            <useAllFileFilter>false</useAllFileFilter>
+            <text>Import AATSR World Fire Product...</text>
+            <mnemonic/>
+            <shortDescr>Import a AATSR World Fire product or product subset.</shortDescr>
+            <description>Import a AATSR World Fire product or product subset.</description>
+        </action>
+    </extension>
 </module>

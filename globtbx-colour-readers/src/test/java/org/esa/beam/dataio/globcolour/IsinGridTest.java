@@ -32,7 +32,7 @@ public class IsinGridTest extends TestCase {
 
     private static final int ROW_COUNT = 6;
     private static final int BIN_COUNT = 46;
-    private static final int COL_COUNTS[] = {3, 8, 12, 12, 8, 3};
+    private static final int[] COL_COUNTS = {3, 8, 12, 12, 8, 3};
 
     private static final double LAT_STEP = 180.0 / ROW_COUNT;
     private static final IsinGrid GRID = new IsinGrid(ROW_COUNT);

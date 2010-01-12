@@ -23,7 +23,11 @@ package org.esa.beam.dataio.globcolour;
 import junit.framework.Assert;
 import junit.framework.TestCase;
 import org.esa.beam.framework.dataio.ProductReader;
-import org.esa.beam.framework.datamodel.*;
+import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.FlagCoding;
+import org.esa.beam.framework.datamodel.GeoPos;
+import org.esa.beam.framework.datamodel.Pin;
+import org.esa.beam.framework.datamodel.Product;
 
 import java.io.File;
 import java.io.IOException;

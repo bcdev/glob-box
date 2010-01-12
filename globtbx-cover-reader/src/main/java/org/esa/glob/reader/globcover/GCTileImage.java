@@ -24,7 +24,7 @@ class GCTileImage extends SourcelessOpImage {
     private final GCTileFile tileFile;
     private final int subsampling;
 
-    public GCTileImage(GCTileFile tileFile, String variableName, int dataBufferType, int subsampling) {
+    GCTileImage(GCTileFile tileFile, String variableName, int dataBufferType, int subsampling) {
         this(createImageLayout(tileFile, subsampling, dataBufferType), tileFile, variableName, subsampling);
     }
 
