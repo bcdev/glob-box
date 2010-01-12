@@ -25,7 +25,7 @@
         <dependency>
             <groupId>org.esa.globtbx</groupId>
             <artifactId>globtbx-colour-readers</artifactId>
-            <version>${pom.version}</version>
+            <version>1.5.1</version>    <!-- TODO: use this or 1.0 as version -->
         </dependency>
         <dependency>
             <groupId>org.esa.globtbx</groupId>

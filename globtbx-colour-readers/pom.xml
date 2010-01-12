@@ -12,6 +12,8 @@
     <packaging>jar</packaging>
 
     <artifactId>globtbx-colour-readers</artifactId>
+    <version>1.5.1</version>
+    
     <name>GlobColour Readers</name>
     <description>
         This module provides product readers for importing Binned and Mapped GlobColour data products into BEAM/VISAT.
