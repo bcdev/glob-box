@@ -12,10 +12,7 @@
     <packaging>jar</packaging>
 
     <artifactId>glob-colour-readers</artifactId>
-    <groupId>org.esa.glob</groupId>
     <name>GlobColour Readers</name>
-    <version>1.0-SNAPSHOT</version>
-    
     <description>
         This module provides product readers for importing Binned and Mapped GlobColour data products into BEAM/VISAT.
     </description>

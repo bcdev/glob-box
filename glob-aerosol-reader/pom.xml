@@ -8,10 +8,7 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
     <artifactId>glob-aerosol-reader</artifactId>
-    <groupId>org.esa.glob</groupId>
     <name>GlobAerosol Reader</name>
-    <version>1.0-SNAPSHOT</version>
-    
     <dependencies>
         <dependency>
             <groupId>org.esa.beam</groupId>

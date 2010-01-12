@@ -8,8 +8,5 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
     <artifactId>geotools-proj</artifactId>
-    <groupId>org.esa.glob</groupId>
     <name>GeoTools Projections</name>
-    <version>1.0-SNAPSHOT</version>
-    
 </project>
