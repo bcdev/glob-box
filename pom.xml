@@ -33,7 +33,7 @@
     </properties>
 
     <modules>
-        <module>glob-fire-reader</module>
+        <module>globtbx-fire-reader</module>
         <module>glob-cover-reader</module>
         <module>glob-colour-readers</module>
         <module>glob-aerosol-reader</module>

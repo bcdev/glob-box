@@ -1,6 +1,6 @@
 <module>
     <manifestVersion>1.0.0</manifestVersion>
-    <symbolicName>glob-fire-reader</symbolicName>
+    <symbolicName>globtbx-fire-reader</symbolicName>
     <version>1.0</version>
     <name>World Fire Reader</name>
 
