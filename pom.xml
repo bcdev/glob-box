@@ -35,7 +35,7 @@
     <modules>
         <module>globtbx-fire-reader</module>
         <module>globtbx-cover-reader</module>
-        <module>glob-colour-readers</module>
+        <module>globtbx-colour-readers</module>
         <module>glob-aerosol-reader</module>
         <module>globtbx-medspiration-reader</module>
         <module>globtbx-gt-referencing-ext</module>
