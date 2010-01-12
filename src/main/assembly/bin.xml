@@ -21,7 +21,7 @@
     <moduleSets>
         <moduleSet>
             <excludes>
-                <exclude>org.esa.glob:glob-bootstrap</exclude>
+                <exclude>org.esa.glob:globtbx-bootstrap</exclude>
             </excludes>
 
             <binaries>
