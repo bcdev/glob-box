@@ -39,7 +39,7 @@
         <module>glob-aerosol-reader</module>
         <module>globtbx-medspiration-reader</module>
         <module>globtbx-gt-referencing-ext</module>
-        <module>glob-arcbingrid-reader</module>
+        <module>globtbx-arcbingrid-reader</module>
         <module>globtbx-bootstrap</module>
     </modules>
 
