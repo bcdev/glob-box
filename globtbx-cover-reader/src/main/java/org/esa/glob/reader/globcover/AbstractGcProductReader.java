@@ -116,15 +116,12 @@ abstract class AbstractGcProductReader extends AbstractProductReader {
         addMask(invalid, "SM == 6", Color.RED, product);
     }
 
-    private void addMask(MetadataAttribute meatdataSample, String expression, Color color, Product product) {
+    private void addMask(MetadataAttribute metadataSample, String expression, Color color, Product product) {
         final ProductNodeGroup<Mask> maskGroup = product.getMaskGroup();
         final int width = product.getSceneRasterWidth();
         final int height = product.getSceneRasterHeight();
-        final Mask mask = new Mask(meatdataSample.getName().toLowerCase(), width, height, new Mask.BandMathType());
-        mask.setDescription(meatdataSample.getDescription());
-        mask.setImageColor(color);
-        mask.setImageTransparency(0.5);
-        Mask.BandMathType.setExpression(mask, expression);
+        Mask mask = Mask.BandMathsType.create(metadataSample.getName().toLowerCase(), metadataSample.getDescription(), width, height,
+                    expression, color, 0.5);
         maskGroup.add(mask);
     }
 

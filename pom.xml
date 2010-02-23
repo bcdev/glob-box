@@ -29,7 +29,8 @@
            TODO: Move the sourceEncoding property to the build tag if version 3.0 is released
            -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <beam.version>4.7-SNAPSHOT</beam.version>
+        <beam.version>4.7</beam.version>
+        <ceres.version>0.10</ceres.version>
     </properties>
 
     <modules>
@@ -65,7 +66,7 @@
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-netcdf-reader</artifactId>
-                <version>1.1-SNAPSHOT</version>
+                <version>1.1</version>
             </dependency>
 
         </dependencies>
@@ -156,7 +157,7 @@
                 </plugin>
                 <plugin>
                     <artifactId>maven-assembly-plugin</artifactId>
-                    <version>2.2-beta-1</version>
+                    <version>2.2-beta-5</version>
                     <configuration>
                         <descriptors>
                             <descriptor>src/main/assembly/bin.xml</descriptor>

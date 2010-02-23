@@ -27,7 +27,7 @@ import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.framework.datamodel.Mask;
 import org.esa.beam.framework.datamodel.MetadataAttribute;
 import org.esa.beam.framework.datamodel.MetadataElement;
-import org.esa.beam.framework.datamodel.Pin;
+import org.esa.beam.framework.datamodel.Placemark;
 import org.esa.beam.framework.datamodel.PlacemarkSymbol;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
@@ -95,11 +95,8 @@ public class ProductUtilities {
             final String expression = new StringBuilder(flagsBandName).append(".").append(flag.name()).toString();
             final int width = product.getSceneRasterWidth();
             final int height = product.getSceneRasterHeight();
-            final Mask mask = new Mask(name, width, height, new Mask.BandMathType());
-            mask.setDescription(flag.getDescription());
-            mask.setImageColor(flag.getColor());
-            mask.setImageTransparency(flag.getTransparency());
-            Mask.BandMathType.setExpression(mask, expression);
+            Mask mask = Mask.BandMathsType.create(name, flag.getDescription(), width, height,
+                    expression, flag.getColor(), flag.getTransparency());
             maskGroup.add(mask);
         }
     }
@@ -127,7 +124,7 @@ public class ProductUtilities {
         }
 
         final String pinLabel = pa.getAttributeString(ProductAttributes.SITE_NAME, pinName);
-        product.getPinGroup().add(new Pin(pinName, pinLabel, "GlobColour diagnostic site",
+        product.getPinGroup().add(new Placemark(pinName, pinLabel, "GlobColour diagnostic site",
                                           null, new GeoPos(siteLat, siteLon),
                                           PlacemarkSymbol.createDefaultPinSymbol(), product.getGeoCoding()));
         return true;

@@ -26,7 +26,7 @@ import org.esa.beam.framework.dataio.ProductReader;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.FlagCoding;
 import org.esa.beam.framework.datamodel.GeoPos;
-import org.esa.beam.framework.datamodel.Pin;
+import org.esa.beam.framework.datamodel.Placemark;
 import org.esa.beam.framework.datamodel.Product;
 
 import java.io.File;
@@ -70,7 +70,7 @@ public final class MappedProductReaderTest extends TestCase {
         assertNotNull(product);
         assertFalse(ProductUtilities.addDiagnosticSitePin(product));
 
-        final Pin pin = product.getPinGroup().get("SITE_1");
+        final Placemark pin = product.getPinGroup().get("SITE_1");
         assertNotNull(pin);
 
         assertEquals("SITE_1", pin.getName());
