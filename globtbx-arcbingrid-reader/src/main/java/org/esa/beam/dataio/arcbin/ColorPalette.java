@@ -18,6 +18,7 @@ package org.esa.beam.dataio.arcbin;
 
 import org.esa.beam.framework.datamodel.ColorPaletteDef;
 import org.esa.beam.framework.datamodel.ColorPaletteDef.Point;
+import org.esa.beam.framework.datamodel.IndexCoding;
 
 import java.awt.Color;
 import java.io.BufferedReader;
@@ -58,7 +59,7 @@ class ColorPalette {private ColorPalette() {
         return null;
     }
 
-    static ColorPaletteDef create(File file, RasterStatistics statistics) {
+    static ColorPaletteDef createColorPalette(File file, RasterStatistics statistics) {
         FileReader fileReader;
         try {
             fileReader = new FileReader(file);
@@ -83,8 +84,9 @@ class ColorPalette {private ColorPalette() {
 
                                 final ColorPaletteDef.Point point = new ColorPaletteDef.Point();
                                 point.setSample(sample);
+                                point.setLabel(Integer.toString(sample));
                                 point.setColor(new Color(red, green, blue));
-                                System.out.println("add point " + point.getSample() + "  " + point.getColor());
+                                //System.out.println("add point " + point.getSample() + "  " + point.getColor());
                                 pointList.add(point);
                             }
                         } catch (NumberFormatException ignoreLine) {
@@ -108,4 +110,16 @@ class ColorPalette {private ColorPalette() {
         }
         return null;
     }
+
+    static IndexCoding createIndexCoding(ColorPaletteDef colorPaletteDef) {
+        final IndexCoding indexCoding = new IndexCoding("index_coding");
+        final Point[] points = colorPaletteDef.getPoints();
+        for (Point point : points) {
+            final int intSample = (int) point.getSample();
+            final String s = Integer.toString(intSample);
+            indexCoding.addIndex(s, intSample, "");
+        }
+        return indexCoding;
+    }
+
 }

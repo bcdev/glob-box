@@ -12,6 +12,7 @@ import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.ColorPaletteDef;
 import org.esa.beam.framework.datamodel.CrsGeoCoding;
 import org.esa.beam.framework.datamodel.ImageInfo;
+import org.esa.beam.framework.datamodel.IndexCoding;
 import org.esa.beam.framework.datamodel.MetadataAttribute;
 import org.esa.beam.framework.datamodel.MetadataElement;
 import org.esa.beam.framework.datamodel.Product;
@@ -67,7 +68,7 @@ public class ArcBinGridReader extends AbstractProductReader {
         i2m.scale(header.pixelSizeX, -header.pixelSizeY);
         i2m.translate(0, -height);
 
-        // TODO parse projection from prj.adf file. For now we assume WGS84 (applicable for GlobToolBox products)
+        // TODO parse projection from prj.adf file. For now we assume WGS84 (applicable for GlobToolBox products) (mz, 2010-02-24)
         //CoordinateReferenceSystem crs = ProjectionReader.parsePrjFile(getCaseInsensitiveFile(dir, "prj.adf"));
         Rectangle rect = new Rectangle(width, height);
         try {
@@ -111,8 +112,14 @@ public class ArcBinGridReader extends AbstractProductReader {
 
         File colorPaletteFile = ColorPalette.findColorPaletteFile(gridDir);
         if (colorPaletteFile != null) {
-            ColorPaletteDef colorPaletteDef = ColorPalette.create(colorPaletteFile, rasterStatistics);
-            band.setImageInfo(new ImageInfo(colorPaletteDef));
+            ColorPaletteDef colorPaletteDef = ColorPalette.createColorPalette(colorPaletteFile, rasterStatistics);
+            if (colorPaletteDef != null) {
+                band.setImageInfo(new ImageInfo(colorPaletteDef));
+                //TODO read vat.adf for better index coding
+                IndexCoding indexCoding = ColorPalette.createIndexCoding(colorPaletteDef);
+                product.getIndexCodingGroup().add(indexCoding);
+                band.setSampleCoding(indexCoding);
+            }
         }
 
         MetadataElement metadataRoot = product.getMetadataRoot();
