@@ -43,16 +43,16 @@ class GeorefBounds {
                      MEMBER("D_URY", DOUBLE)
             );
 
-    final double llx;
-    final double lly;
-    final double urx;
-    final double ury;
+    final double lowerLeftX;
+    final double lowerLeftY;
+    final double upperRightX;
+    final double upperRightY;
 
-    private GeorefBounds(double llx, double lly, double urx, double ury) {
-        this.llx = llx;
-        this.lly = lly;
-        this.urx = urx;
-        this.ury = ury;
+    private GeorefBounds(double lowerLeftX, double lowerLeftY, double upperRightX, double upperRightY) {
+        this.lowerLeftX = lowerLeftX;
+        this.lowerLeftY = lowerLeftY;
+        this.upperRightX = upperRightX;
+        this.upperRightY = upperRightY;
     }
 
     public static GeorefBounds create(File file) throws IOException {

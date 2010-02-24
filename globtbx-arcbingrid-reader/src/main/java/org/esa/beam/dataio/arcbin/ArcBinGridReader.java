@@ -49,8 +49,8 @@ public class ArcBinGridReader extends AbstractProductReader {
                 getCaseInsensitiveFile(gridDir, RasterStatistics.FILE_NAME));
         File headerFile = getCaseInsensitiveFile(gridDir, Header.FILE_NAME);
         final Header header = Header.create(headerFile);
-        final int width = MathUtils.floorInt((georefBounds.urx - georefBounds.llx) / header.pixelSizeX);
-        final int height = MathUtils.floorInt((georefBounds.ury - georefBounds.lly) / header.pixelSizeY);
+        final int width = MathUtils.floorInt((georefBounds.upperRightX - georefBounds.lowerLeftX) / header.pixelSizeX);
+        final int height = MathUtils.floorInt((georefBounds.upperRightY - georefBounds.lowerLeftY) / header.pixelSizeY);
         int numTiles = header.tilesPerColumn * header.tilesPerRow;
 
         TileIndex tileIndex = TileIndex.create(getCaseInsensitiveFile(gridDir, TileIndex.FILE_NAME), numTiles);
@@ -64,7 +64,7 @@ public class ArcBinGridReader extends AbstractProductReader {
         product.setPreferredTileSize(imageTileSize);
 
         AffineTransform i2m = new AffineTransform();
-        i2m.translate(georefBounds.llx, georefBounds.lly);
+        i2m.translate(georefBounds.lowerLeftX, georefBounds.lowerLeftY);
         i2m.scale(header.pixelSizeX, -header.pixelSizeY);
         i2m.translate(0, -height);
 
@@ -199,10 +199,10 @@ public class ArcBinGridReader extends AbstractProductReader {
 
     private MetadataElement createGeorefBoundsElement(GeorefBounds georefBounds) {
         MetadataElement elem = new MetadataElement("GeorefBounds");
-        elem.addAttribute(createDoubleAttr("llx", georefBounds.llx, "Lower left X (easting) of the grid."));
-        elem.addAttribute(createDoubleAttr("lly", georefBounds.lly, "Lower left Y (northing) of the grid."));
-        elem.addAttribute(createDoubleAttr("urx", georefBounds.urx, "Upper right X (northing) of the grid."));
-        elem.addAttribute(createDoubleAttr("ury", georefBounds.ury, "Upper right Y (northing) of the grid."));
+        elem.addAttribute(createDoubleAttr("llx", georefBounds.lowerLeftX, "Lower left X (easting) of the grid."));
+        elem.addAttribute(createDoubleAttr("lly", georefBounds.lowerLeftY, "Lower left Y (northing) of the grid."));
+        elem.addAttribute(createDoubleAttr("urx", georefBounds.upperRightX, "Upper right X (northing) of the grid."));
+        elem.addAttribute(createDoubleAttr("ury", georefBounds.upperRightY, "Upper right Y (northing) of the grid."));
         return elem;
     }
 
