@@ -44,26 +44,18 @@ class TileIndex {
         this.tileIndex = index;
     }
 
-    Set<Integer> getKeySet() {
-        return tileIndex.keySet();
-    }
-
-    boolean hasIndexEntry(int index) {
-        return tileIndex.containsKey(index);
-    }
-
     IndexEntry getIndexEntry(int index) {
         return tileIndex.get(index);
     }
 
-    static TileIndex create(File file, int numtiles) throws IOException {
-        DataFormat dataFormat = new DataFormat(createType(numtiles), ByteOrder.BIG_ENDIAN);
+    static TileIndex create(File file, int numTiles) throws IOException {
+        DataFormat dataFormat = new DataFormat(createType(numTiles), ByteOrder.BIG_ENDIAN);
         DataContext context = dataFormat.createContext(file, "r");
         CompoundData data = context.createData();
 
-        Map<Integer, IndexEntry> index = new HashMap<Integer, IndexEntry>(numtiles);
+        Map<Integer, IndexEntry> index = new HashMap<Integer, IndexEntry>(numTiles);
         SequenceData indexSeq = data.getSequence("Indices");
-        for (int i = 0; i < numtiles; i++) {
+        for (int i = 0; i < numTiles; i++) {
             CompoundData indexData = indexSeq.getCompound(i);
             int size = indexData.getInt(1);
             int offset = indexData.getInt(0);

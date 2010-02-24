@@ -48,7 +48,6 @@ public class ArcBinGridReader extends AbstractProductReader {
                 getCaseInsensitiveFile(gridDir, RasterStatistics.FILE_NAME));
         File headerFile = getCaseInsensitiveFile(gridDir, Header.FILE_NAME);
         final Header header = Header.create(headerFile);
-//        CoordinateReferenceSystem crs = ProjectionReader.parsePrjFile(getCaseInsensitiveFile(dir, "prj.adf"));
         final int width = MathUtils.floorInt((georefBounds.urx - georefBounds.llx) / header.pixelSizeX);
         final int height = MathUtils.floorInt((georefBounds.ury - georefBounds.lly) / header.pixelSizeY);
         int numTiles = header.tilesPerColumn * header.tilesPerRow;
@@ -63,28 +62,20 @@ public class ArcBinGridReader extends AbstractProductReader {
         final Dimension imageTileSize = new Dimension(tileExtend, tileExtend);
         product.setPreferredTileSize(imageTileSize);
 
-
         AffineTransform i2m = new AffineTransform();
         i2m.translate(georefBounds.llx, georefBounds.lly);
         i2m.scale(header.pixelSizeX, -header.pixelSizeY);
         i2m.translate(0, -height);
 
-//        i2m.translate(-width/2, height/2);
-//        i2m.scale(header.pixelSizeX, -header.pixelSizeY);
-//        i2m.translate(georefBounds.llx, georefBounds.lly);
-
+        // TODO parse projection from prj.adf file. For now we assume WGS84 (applicable for GlobToolBox products)
+        //CoordinateReferenceSystem crs = ProjectionReader.parsePrjFile(getCaseInsensitiveFile(dir, "prj.adf"));
         Rectangle rect = new Rectangle(width, height);
         try {
-            CrsGeoCoding coding = new CrsGeoCoding(DefaultGeographicCRS.WGS84, rect, i2m);
+            final DefaultGeographicCRS crs = DefaultGeographicCRS.WGS84;
+            CrsGeoCoding coding = new CrsGeoCoding(crs, rect, i2m);
             product.setGeoCoding(coding);
-        } catch (FactoryException e) {
-        } catch (TransformException e) {
-        }
-
-        File colorPaletteFile = ColorPalette.findColorPaletteFile(gridDir);
-        ColorPaletteDef colorPaletteDef = null;
-        if (colorPaletteFile != null) {
-            colorPaletteDef = ColorPalette.create(colorPaletteFile, rasterStatistics);
+        } catch (FactoryException ignored) {
+        } catch (TransformException ignored) {
         }
 
         int productdataType = getDataType(header, rasterStatistics);
@@ -117,7 +108,10 @@ public class ArcBinGridReader extends AbstractProductReader {
         };
         MultiLevelImage image = new DefaultMultiLevelImage(multiLevelSource);
         band.setSourceImage(image);
-        if (colorPaletteDef != null) {
+
+        File colorPaletteFile = ColorPalette.findColorPaletteFile(gridDir);
+        if (colorPaletteFile != null) {
+            ColorPaletteDef colorPaletteDef = ColorPalette.create(colorPaletteFile, rasterStatistics);
             band.setImageInfo(new ImageInfo(colorPaletteDef));
         }
 
