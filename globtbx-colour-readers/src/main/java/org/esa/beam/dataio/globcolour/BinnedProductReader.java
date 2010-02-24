@@ -24,15 +24,13 @@ import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.dataio.netcdf.NetcdfReaderUtils;
 import org.esa.beam.framework.dataio.AbstractProductReader;
 import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.MapGeoCoding;
+import org.esa.beam.framework.datamodel.CrsGeoCoding;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.framework.dataop.maptransf.Datum;
-import org.esa.beam.framework.dataop.maptransf.IdentityTransformDescriptor;
-import org.esa.beam.framework.dataop.maptransf.MapInfo;
-import org.esa.beam.framework.dataop.maptransf.MapProjection;
-import org.esa.beam.framework.dataop.maptransf.MapProjectionRegistry;
 import org.esa.beam.util.Guardian;
+import org.geotools.referencing.crs.DefaultGeographicCRS;
+import org.opengis.referencing.FactoryException;
+import org.opengis.referencing.operation.TransformException;
 import ucar.ma2.Array;
 import ucar.ma2.ArrayShort;
 import ucar.ma2.Index1D;
@@ -43,6 +41,8 @@ import ucar.nc2.Group;
 import ucar.nc2.NetcdfFile;
 import ucar.nc2.Variable;
 
+import java.awt.*;
+import java.awt.geom.AffineTransform;
 import java.io.File;
 import java.io.IOException;
 import java.text.MessageFormat;
@@ -380,20 +380,19 @@ public class BinnedProductReader extends AbstractProductReader {
     }
 
     private static void setGeoCoding(final Product product, final EquirectGrid grid) {
-        final MapProjection mapProjection = MapProjectionRegistry.getProjection(IdentityTransformDescriptor.NAME);
-        final MapInfo mapInfo = new MapInfo(mapProjection,
-                                            0.0f,
-                                            grid.getRowCount(),
-                                            (float) grid.getMinLon(),
-                                            (float) grid.getMinLat(),
-                                            (float) grid.getLonStep(),
-                                            (float) grid.getLatStep(),
-                                            Datum.WGS_84);
+        AffineTransform i2m = new AffineTransform();
+        i2m.translate(grid.getMinLon(), grid.getMinLat());
+        i2m.scale(grid.getLonStep(), -grid.getLatStep());
+        i2m.translate(0, -grid.getRowCount());
 
-        mapInfo.setSceneWidth(grid.getColCount());
-        mapInfo.setSceneHeight(grid.getRowCount());
-
-        product.setGeoCoding(new MapGeoCoding(mapInfo));
+        Rectangle imageBounds = new Rectangle(grid.getColCount(), grid.getRowCount());
+        try {
+            final DefaultGeographicCRS crs = DefaultGeographicCRS.WGS84;
+            CrsGeoCoding coding = new CrsGeoCoding(crs, imageBounds, i2m);
+            product.setGeoCoding(coding);
+        } catch (FactoryException ignored) {
+        } catch (TransformException ignored) {
+        }
     }
 
     private static double getDoubleValue(final Attribute attr, final double defaultValue) {

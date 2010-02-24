@@ -70,10 +70,10 @@ public class ArcBinGridReader extends AbstractProductReader {
 
         // TODO parse projection from prj.adf file. For now we assume WGS84 (applicable for GlobToolBox products) (mz, 2010-02-24)
         //CoordinateReferenceSystem crs = ProjectionReader.parsePrjFile(getCaseInsensitiveFile(dir, "prj.adf"));
-        Rectangle rect = new Rectangle(width, height);
+        Rectangle imageBounds = new Rectangle(width, height);
         try {
             final DefaultGeographicCRS crs = DefaultGeographicCRS.WGS84;
-            CrsGeoCoding coding = new CrsGeoCoding(crs, rect, i2m);
+            CrsGeoCoding coding = new CrsGeoCoding(crs, imageBounds, i2m);
             product.setGeoCoding(coding);
         } catch (FactoryException ignored) {
         } catch (TransformException ignored) {
