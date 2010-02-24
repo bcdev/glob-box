@@ -32,6 +32,7 @@ import java.io.IOException;
 
 
 public class ArcBinGridReader extends AbstractProductReader {
+    private RasterDataFile rasterDataFile;
 
     protected ArcBinGridReader(ArcBinGridReaderPlugIn readerPlugIn) {
         super(readerPlugIn);
@@ -53,8 +54,7 @@ public class ArcBinGridReader extends AbstractProductReader {
         int numTiles = header.tilesPerColumn * header.tilesPerRow;
 
         TileIndex tileIndex = TileIndex.create(getCaseInsensitiveFile(gridDir, TileIndex.FILE_NAME), numTiles);
-        RasterDataFile rasterDataFile = RasterDataFile.create(
-                getCaseInsensitiveFile(gridDir, RasterDataFile.FILE_NAME));
+        rasterDataFile = RasterDataFile.create(getCaseInsensitiveFile(gridDir, RasterDataFile.FILE_NAME));
 
         Product product = new Product(gridDir.getName(), "ARC_INFO_BIN_GRID", width, height);
         product.setFileLocation(headerFile);
@@ -88,7 +88,7 @@ public class ArcBinGridReader extends AbstractProductReader {
         }
 
         int productdataType = getDataType(header, rasterStatistics);
-        Band band = product.addBand("band_1", productdataType);
+        Band band = product.addBand("band", productdataType);
         double nodataValue = getNodataValue(productdataType);
         band.setNoDataValue(nodataValue);
         band.setNoDataValueUsed(true);
@@ -106,9 +106,13 @@ public class ArcBinGridReader extends AbstractProductReader {
         AbstractMultiLevelSource multiLevelSource = new AbstractMultiLevelSource(model) {
             @Override
             protected RenderedImage createImage(int level) {
-                ResolutionLevel resolutionLevel = ResolutionLevel.create(model, level);
-                return new GridTileOpImage(width, height, imageTileSize, databufferType, resolutionLevel, header,
-                                           gridTileSize, gridTileProvider);
+                if (rasterDataFile != null) {
+                    ResolutionLevel resolutionLevel = ResolutionLevel.create(model, level);
+                    return new GridTileOpImage(width, height, imageTileSize, databufferType, resolutionLevel, header,
+                                               gridTileSize, gridTileProvider);
+                } else {
+                    throw new IllegalStateException("rasterDataFile is closed");
+                }
             }
         };
         MultiLevelImage image = new DefaultMultiLevelImage(multiLevelSource);
@@ -138,7 +142,10 @@ public class ArcBinGridReader extends AbstractProductReader {
     @Override
     public void close() throws IOException {
         super.close();
-        // TODO close files
+        if (rasterDataFile != null) {
+            rasterDataFile.close();
+            rasterDataFile = null;
+        }
     }
 
     private int getDataType(Header header, RasterStatistics rasterStatistics) throws ProductIOException {

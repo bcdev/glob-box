@@ -30,8 +30,12 @@ class RasterDataFile {
 
     private final ImageInputStream imageInputStream;
 
-    RasterDataFile(ImageInputStream imageInputStream) {
+    private RasterDataFile(ImageInputStream imageInputStream) {
         this.imageInputStream = imageInputStream;
+    }
+
+    void close() throws IOException {
+        imageInputStream.close();
     }
 
     byte[] loadRawTileData(IndexEntry indexEntry) throws IOException {
