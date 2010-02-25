@@ -41,6 +41,7 @@
         <module>globtbx-medspiration-reader</module>
         <module>globtbx-gt-referencing-ext</module>
         <module>globtbx-arcbingrid-reader</module>
+        <module>globtbx-help</module>
         <module>globtbx-bootstrap</module>
     </modules>
 

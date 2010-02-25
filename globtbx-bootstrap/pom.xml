@@ -52,6 +52,11 @@
             <artifactId>globtbx-arcbingrid-reader</artifactId>
             <version>${pom.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.esa.globtbx</groupId>
+            <artifactId>globtbx-help</artifactId>
+            <version>${pom.version}</version>
+        </dependency>
     </dependencies>
 
 </project>
