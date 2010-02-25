@@ -38,7 +38,7 @@ class GCMosaicOpImage extends SingleBandedOpImage {
              fileMap, band.getName(), band.getNoDataValue(), level);
     }
 
-    GCMosaicOpImage(int dataBufferType, int sourceWidth, int sourceHeight,
+    private GCMosaicOpImage(int dataBufferType, int sourceWidth, int sourceHeight,
                     Map<TileIndex, GCTileFile> fileMap,
                     String name, double noDataValue, ResolutionLevel level) {
         super(dataBufferType, sourceWidth, sourceHeight,
