@@ -7,11 +7,13 @@ import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.util.io.FileUtils;
 
+import java.awt.geom.Area;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 class GlobCoverMosaicProductReader extends AbstractGcProductReader {
@@ -20,6 +22,7 @@ class GlobCoverMosaicProductReader extends AbstractGcProductReader {
     private static final String PRODUCT_TYPE_BIMON = "GC_MOSAIC_BI";
 
     private Map<TileIndex, GCTileFile> inputFileMap;
+    private Area coveredImageArea;
 
     protected GlobCoverMosaicProductReader(GlobCoverMosaicReaderPlugIn readerPlugIn) {
         super(readerPlugIn);
@@ -31,9 +34,10 @@ class GlobCoverMosaicProductReader extends AbstractGcProductReader {
     }
 
     private Product createProduct() throws IOException {
-        inputFileMap = getInputFileMap();
-        final File inputfile = getInputFile();
-        final GCTileFile refGcFile = new GCTileFile(inputfile);
+        final File inputFile = getInputFile();
+        inputFileMap = createInputFileMap(inputFile);
+        coveredImageArea = createCoveredImageArea(inputFileMap.keySet());
+        final GCTileFile refGcFile = new GCTileFile(inputFile);
         int width = (TileIndex.MAX_HORIZ_INDEX + 1) * TileIndex.TILE_SIZE;
         int height = (TileIndex.MAX_VERT_INDEX + 1) * TileIndex.TILE_SIZE;
         final String fileName = FileUtils.getFilenameWithoutExtension(new File(refGcFile.getFilePath()));
@@ -47,7 +51,7 @@ class GlobCoverMosaicProductReader extends AbstractGcProductReader {
 
     @Override
     protected MultiLevelImage getMultiLevelImage(Band band) {
-        return new DefaultMultiLevelImage(new GCMosaicMultiLevelSource(band, inputFileMap));
+        return new DefaultMultiLevelImage(new GCMosaicMultiLevelSource(band, inputFileMap, coveredImageArea));
     }
 
     @Override
@@ -75,8 +79,7 @@ class GlobCoverMosaicProductReader extends AbstractGcProductReader {
         super.close();
     }
 
-    private Map<TileIndex, GCTileFile> getInputFileMap() throws IOException {
-        final File refFile = getInputFile();
+    private Map<TileIndex, GCTileFile> createInputFileMap(File refFile) throws IOException {
         File dir = refFile.getParentFile();
         final String filePrefix = getProductFilePrefix(refFile);
         final File[] files = dir.listFiles(new MosaicFileFilter(filePrefix));
@@ -92,6 +95,14 @@ class GlobCoverMosaicProductReader extends AbstractGcProductReader {
             fileMap.put(tileIndex, new GCTileFile(file));
         }
         return Collections.unmodifiableMap(fileMap);
+    }
+
+    private static Area createCoveredImageArea(Set<TileIndex> tileIndexes) {
+        Area coveredImageArea = new Area();
+        for (TileIndex index : tileIndexes) {
+            coveredImageArea.add(new Area(index.getBounds()));
+        }
+        return coveredImageArea;
     }
 
 
