@@ -1,2 +1,2 @@
-org.esa.glob.reader.globcover.GlobCoverTileReaderPlugIn
-org.esa.glob.reader.globcover.GlobCoverMosaicReaderPlugIn
+org.esa.beam.dataio.globcover.GlobCoverTileReaderPlugIn
+org.esa.beam.dataio.globcover.GlobCoverMosaicReaderPlugIn

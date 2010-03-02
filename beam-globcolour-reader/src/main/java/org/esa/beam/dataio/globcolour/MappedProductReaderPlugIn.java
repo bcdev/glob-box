@@ -61,7 +61,7 @@ public class MappedProductReaderPlugIn implements ProductReaderPlugIn {
     /**
      * Creates and returns an instance of the actual  {@link ProductReader}.
      *
-     * @return a new reader instance.
+     * @return a new dataio instance.
      */
     @Override
     public ProductReader createReaderInstance() {
@@ -74,7 +74,7 @@ public class MappedProductReaderPlugIn implements ProductReaderPlugIn {
     }
 
     /**
-     * Gets the qualification of the product reader to decode a given input object.
+     * Gets the qualification of the product dataio to decode a given input object.
      *
      * @param input the input object
      * @return the decode qualification

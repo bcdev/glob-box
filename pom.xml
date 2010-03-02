@@ -5,7 +5,7 @@
     <groupId>org.esa.beam.glob</groupId>
     <artifactId>glob-box</artifactId>
     <packaging>pom</packaging>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0</version>
     <name>GlobToolbox</name>
 
     <organization>
