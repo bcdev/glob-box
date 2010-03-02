@@ -163,7 +163,7 @@
                         <descriptors>
                             <descriptor>src/main/assembly/bin.xml</descriptor>
                         </descriptors>
-                        <finalName>globtoolbox-reader-pack</finalName>
+                        <finalName>globtoolbox</finalName>
                     </configuration>
                 </plugin>
 

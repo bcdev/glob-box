@@ -20,7 +20,7 @@
       <mountPoint id="17" root="" location="modules" mode="755" />
     </mountPoints>
     <entries>
-      <dirEntry mountPoint="17" file="../../../target/gt-reader-pack-bin.dir/modules" overwrite="4" shared="false" mode="644" uninstallMode="0" excludeSuffixes="" dirMode="755">
+      <dirEntry mountPoint="17" file="../../../target/globtoolbox-bin/modules" overwrite="4" shared="false" mode="644" uninstallMode="0" excludeSuffixes="" dirMode="755">
         <exclude />
       </dirEntry>
     </entries>
