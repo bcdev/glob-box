@@ -85,7 +85,7 @@
                 <object class="com.install4j.runtime.beans.screens.LicenseScreen">
                   <void property="displayedTextFile">
                     <object class="com.install4j.api.beans.ExternalFile">
-                      <string>../../../target/gt-reader-pack-bin.dir/license.html</string>
+                      <string>../../../target/globtoolbox-bin/license.html</string>
                     </object>
                   </void>
                 </object>
@@ -123,7 +123,13 @@
 File[] gtModuleFiles = modulesDir.listFiles(new FileFilter() {
     public boolean accept(File file) {
         String name = file.getName();
-        return name.startsWith("globtbx-");
+        return name.startsWith("beam-arcbingrid-reader") ||
+				name.startsWith("beam-globaerosol-reader") ||
+				name.startsWith("beam-globcolour-reader") ||
+				name.startsWith("beam-gt-referencing-ext") ||
+				name.startsWith("beam-medspiration-reader") ||
+				name.startsWith("beam-worldfire-reader") ||
+				name.startsWith("glob-help");
     }
 });
 
