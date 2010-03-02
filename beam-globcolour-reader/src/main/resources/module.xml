@@ -1,0 +1,61 @@
+<module>
+    <manifestVersion>1.0.0</manifestVersion>
+    <symbolicName>beam-globcolour-reader</symbolicName>
+    <version>1.0</version>
+    <name>GlobColour Product Readers</name>
+    
+    <description>
+        This module provides product readers for importing Binned and Mapped GlobColour data products into BEAM/VISAT.
+    </description>
+
+    <vendor>Brockmann Consult GmbH</vendor>
+    <contactAddress>Max Planck Str.2, 21502 Geesthacht (Germany)</contactAddress>
+    <copyright>(C) 2008 by Brockmann Consult GmbH</copyright>
+    <url>http://envisat.esa.int/beam</url>
+    <licenseUrl>http://www.gnu.org/licenses/gpl.html</licenseUrl>
+
+    <dependency>
+        <module>beam-core</module>
+    </dependency>
+    <dependency>
+        <module>beam-netcdf-reader</module>
+    </dependency>
+    <dependency>
+        <module>lib-netcdf</module>
+    </dependency>
+    <dependency>
+        <module>beam-visat</module>
+        <optional>true</optional>
+    </dependency>
+
+    <categories>Reader,GlobColour</categories>
+
+    <extension point="beam-ui:actions">
+        <action>
+            <class>org.esa.beam.visat.actions.ProductImportAction</class>
+            <id>importGlobColourBinnedProduct</id>
+            <helpId>importGlobColourBinnedProduct</helpId>
+            <formatName>GlobColour-Binned</formatName>
+            <useAllFileFilter>true</useAllFileFilter>
+            <shortDescr>Import a Binned GlobColour data product or product subset.</shortDescr>
+            <description>Import a Mapped GlobColour data product or product subset.</description>
+        </action>
+        <action>
+            <class>org.esa.beam.visat.actions.ProductImportAction</class>
+            <id>importGlobColourMappedProduct</id>
+            <helpId>importGlobColourMappedProduct</helpId>
+            <formatName>GlobColour-Mapped</formatName>
+            <useAllFileFilter>true</useAllFileFilter>
+            <shortDescr>Import a Mapped GlobColour data product or product subset.</shortDescr>
+            <description>Import a Mapped GlobColour data product or product subset.</description>
+        </action>
+    </extension>
+
+    <extension point="beam-ui:helpSets">
+        <helpSet>
+            <parent>beam-help</parent>
+            <path>doc/help/globcolour.hs</path>
+        </helpSet>
+    </extension>
+
+</module>

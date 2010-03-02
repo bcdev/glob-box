@@ -2,8 +2,8 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>org.esa.globtbx</groupId>
-    <artifactId>globtoolbox</artifactId>
+    <groupId>org.esa.beam.glob</groupId>
+    <artifactId>glob-box</artifactId>
     <packaging>pom</packaging>
     <version>1.0-SNAPSHOT</version>
     <name>GlobToolbox</name>
@@ -34,15 +34,15 @@
     </properties>
 
     <modules>
-        <module>globtbx-fire-reader</module>
-        <module>globtbx-cover-reader</module>
-        <module>globtbx-colour-readers</module>
-        <module>globtbx-aerosol-reader</module>
-        <module>globtbx-medspiration-reader</module>
-        <module>globtbx-gt-referencing-ext</module>
-        <module>globtbx-arcbingrid-reader</module>
-        <module>globtbx-help</module>
-        <module>globtbx-bootstrap</module>
+        <module>beam-worldfire-reader</module>
+        <module>beam-globcover-reader</module>
+        <module>beam-globcolour-reader</module>
+        <module>beam-globaerosol-reader</module>
+        <module>beam-medspiration-reader</module>
+        <module>beam-gt-referencing-ext</module>
+        <module>beam-arcbingrid-reader</module>
+        <module>glob-help</module>
+        <module>glob-bootstrap</module>
     </modules>
 
     <dependencies>
@@ -163,7 +163,7 @@
                         <descriptors>
                             <descriptor>src/main/assembly/bin.xml</descriptor>
                         </descriptors>
-                        <finalName>gt-reader-pack</finalName>
+                        <finalName>globtoolbox-reader-pack</finalName>
                     </configuration>
                 </plugin>
 

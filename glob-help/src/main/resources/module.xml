@@ -1,0 +1,35 @@
+<module>
+    <manifestVersion>1.0.0</manifestVersion>
+
+    <symbolicName>glob-help</symbolicName>
+    <version>1.0</version>
+    <name>GlobToolbox Help</name>
+
+    <description>Provides the software user manual for the GlobToolbox.</description>
+
+    <changelog>
+        <![CDATA[
+        ]]>
+    </changelog>
+
+    <vendor>Brockmann Consult GmbH</vendor>
+    <contactAddress>Max Planck Str.2, 21502 Geesthacht (Germany)</contactAddress>
+    <copyright>(C) 2010 by Brockmann Consult GmbH</copyright>
+    <url>http://envisat.esa.int/beam</url>
+    <licenseUrl>http://www.gnu.org/licenses/gpl.html</licenseUrl>
+
+
+    <categories>Help</categories>
+
+    <dependency>
+        <module>beam-ui</module>
+    </dependency>
+
+    <extension point="beam-ui:helpSets">
+        <helpSet>
+            <parent>beam-help</parent>
+            <path>doc/help/glob-box.hs</path>
+        </helpSet>
+    </extension>
+
+</module>

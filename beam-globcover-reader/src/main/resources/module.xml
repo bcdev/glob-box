@@ -1,0 +1,64 @@
+<module>
+    <manifestVersion>1.0.0</manifestVersion>
+    <symbolicName>beam-globcover-reader</symbolicName>
+    <version>1.0</version>
+    <name>GlobCover Reader</name>
+
+    <description>Enables BEAM to read GlobCover data products.</description>
+
+    <vendor>Brockmann Consult GmbH</vendor>
+    <contactAddress>Max Planck Str.2, 21502 Geesthacht (Germany)</contactAddress>
+    <copyright>(C) 2007 by Brockmann Consult GmbH</copyright>
+    <url>http://envisat.esa.int/beam</url>
+    <licenseUrl>http://www.gnu.org/licenses/gpl.html</licenseUrl>
+
+    <changelog>
+        <![CDATA[
+                ]]>
+    </changelog>
+
+    <dependency>
+        <module>beam-core</module>
+    </dependency>
+
+    <dependency>
+        <module>beam-netcdf-reader</module>
+    </dependency>
+
+    <dependency>
+        <module>beam-visat</module>
+        <optional>true</optional>
+    </dependency>
+
+    <categories>Reader</categories>
+
+    <extension point="beam-ui:actions">
+        <action>
+            <class>org.esa.beam.visat.actions.ProductImportAction</class>
+            <id>importGlobCoverTileProduct</id>
+            <helpId>importGlobCoverTileProduct</helpId>
+            <formatName>GLOBCOVER-L3-MOSAIC-TILE</formatName>
+            <useAllFileFilter>false</useAllFileFilter>
+            <text>Import GlobCover Bimonthly or Annual MERIS FR Mosaic Tile Product...</text>
+            <mnemonic/>
+            <shortDescr>Import a GlobCover Bimonthly or Annual MERIS FR Mosaic Tile data product or product subset.
+            </shortDescr>
+            <description>Import a GlobCover Bimonthly or Annual MERIS FR Mosaic Tile data product or product subset.
+            </description>
+        </action>
+        <action>
+            <class>org.esa.beam.visat.actions.ProductImportAction</class>
+            <id>importGlobCoverMosaicProduct</id>
+            <helpId>importGlobCoverMosaicProduct</helpId>
+            <formatName>GLOBCOVER-L3-MOSAIC</formatName>
+            <useAllFileFilter>false</useAllFileFilter>
+            <text>Import GlobCover Bimonthly or Annual MERIS FR Mosaic Product...</text>
+            <mnemonic/>
+            <shortDescr>Import a GlobCover Bimonthly or Annual MERIS FR Mosaic data product or product subset.
+            </shortDescr>
+            <description>Import a GlobCover Bimonthly or Annual MERIS FR Mosaic data product or product subset.
+            </description>
+        </action>
+    </extension>
+
+</module>
