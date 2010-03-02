@@ -156,7 +156,6 @@ table.header {
     color: #0;
     vertical-align: bottom;
     border-width: 0;
-    border-bottom-width: 1;
     padding: 3;
     margin: 0;
 }
@@ -167,7 +166,6 @@ table.header {
     color: #0;
     vertical-align: bottom;
     border-width: 0;
-    border-bottom-width: 1;
     padding: 3;
     white-space: nowrap;
 }
