@@ -10,6 +10,6 @@
     
     <artifactId>beam-gt-referencing-ext</artifactId>
     <groupId>org.esa.beam</groupId>
-    <name>gt-referencing Extension</name>
+    <name>GeoTools Referencing Extension</name>
     <description>Extends GeoTools gt-referencing with additional projections</description>
 </project>
