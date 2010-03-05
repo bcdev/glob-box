@@ -1,0 +1,46 @@
+<module>
+    <manifestVersion>1.0.0</manifestVersion>
+
+    <symbolicName>glob-ui</symbolicName>
+    <version>1.1</version>
+    <name>GlobToolbox UI</name>
+
+    <description>Provides user interface components for the GlobToolbox.</description>
+
+    <changelog>
+        <![CDATA[
+                ]]>
+    </changelog>
+
+    <vendor>Brockmann Consult GmbH</vendor>
+    <contactAddress>Max Planck Str.2, 21502 Geesthacht (Germany)</contactAddress>
+    <copyright>(C) 2010 by Brockmann Consult GmbH</copyright>
+    <url>http://envisat.esa.int/beam</url>
+    <licenseUrl>http://www.gnu.org/licenses/gpl.html</licenseUrl>
+
+
+    <categories>ui</categories>
+
+    <dependency>
+        <module>beam-ui</module>
+    </dependency>
+
+    <extension point="beam-ui:toolViews">
+
+        <toolView>
+            <id>org.esa.beam.glob.ui.TimeSeriesView</id>
+            <class>org.esa.beam.glob.ui.TimeSeriesView</class>
+            <title>Time Series View</title>
+            <tabTitle>Time Series</tabTitle>
+            <mnemonic>T</mnemonic>
+            <accelerator>ctrl alt T</accelerator>
+            <smallIcon>/org/esa/beam/resources/images/icons/RsProduct16.gif</smallIcon>
+            <largeIcon>/org/esa/beam/resources/images/icons/RsProduct24.gif</largeIcon>
+            <initState>DOCKED</initState>
+            <initSide>WEST</initSide>
+            <initIndex>0</initIndex>
+        </toolView>
+
+    </extension>
+
+</module>
