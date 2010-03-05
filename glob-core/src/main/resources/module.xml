@@ -1,11 +1,11 @@
 <module>
     <manifestVersion>1.0.0</manifestVersion>
 
-    <symbolicName>glob-ui</symbolicName>
+    <symbolicName>glob-core</symbolicName>
     <version>1.1</version>
-    <name>GlobToolbox UI</name>
+    <name>GlobToolbox Core</name>
 
-    <description>Provides user interface components for the GlobToolbox.</description>
+    <description>Provides the data model for the GlobToolbox.</description>
 
     <changelog>
         <![CDATA[
@@ -19,28 +19,10 @@
     <licenseUrl>http://www.gnu.org/licenses/gpl.html</licenseUrl>
 
 
-    <categories>ui</categories>
+    <categories>system</categories>
 
     <dependency>
-        <module>beam-ui</module>
+        <module>beam-core</module>
     </dependency>
-
-    <extension point="beam-ui:toolViews">
-
-        <toolView>
-            <id>org.esa.beam.glob.ui.TimeSeriesView</id>
-            <class>org.esa.beam.glob.ui.TimeSeriesView</class>
-            <title>Time Series View</title>
-            <tabTitle>Time Series</tabTitle>
-            <mnemonic>T</mnemonic>
-            <accelerator>ctrl alt T</accelerator>
-            <smallIcon>/org/esa/beam/resources/images/icons/RsProduct16.gif</smallIcon>
-            <largeIcon>/org/esa/beam/resources/images/icons/RsProduct24.gif</largeIcon>
-            <initState>DOCKED</initState>
-            <initSide>WEST</initSide>
-            <initIndex>0</initIndex>
-        </toolView>
-
-    </extension>
 
 </module>
