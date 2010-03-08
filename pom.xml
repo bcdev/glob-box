@@ -44,7 +44,6 @@
         <module>glob-ui</module>
         <module>glob-help</module>
         <module>glob-bootstrap</module>
-        <module>glob-ui</module>
     </modules>
 
     <dependencies>
