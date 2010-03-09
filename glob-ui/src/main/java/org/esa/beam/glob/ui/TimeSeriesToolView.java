@@ -10,18 +10,14 @@ import org.esa.beam.framework.ui.diagram.DiagramCanvas;
 import org.esa.beam.framework.ui.product.ProductSceneView;
 import org.esa.beam.visat.VisatApp;
 
-import javax.swing.BorderFactory;
-import javax.swing.JComponent;
-import javax.swing.JPanel;
+import javax.swing.*;
 import javax.swing.border.BevelBorder;
 import javax.swing.event.InternalFrameAdapter;
 import javax.swing.event.InternalFrameEvent;
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Container;
-import java.awt.Dimension;
+import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
+import java.util.List;
 
 public class TimeSeriesToolView extends AbstractToolView {
 
@@ -54,10 +50,10 @@ public class TimeSeriesToolView extends AbstractToolView {
 
         VisatApp.getApp().addInternalFrameListener(new TimeSeriesIFL());
         VisatApp.getApp().getProductManager().addListener(new TimeSeriesPML());
+        setCurrentView(VisatApp.getApp().getSelectedProductSceneView());
 
-
-        final ProductSceneView view = VisatApp.getApp().getSelectedProductSceneView();
-        setCurrentView(view);
+        recreateTimeSeriesDiagram();
+        diagramCanvas.setDiagram(timeSeriesDiagram);
         updateUIState();
         return control;
     }
@@ -87,18 +83,22 @@ public class TimeSeriesToolView extends AbstractToolView {
         return currentView;
     }
 
-    private void recreateSpectraDiagram() {
-        TimeSeriesDiagram timeSeriesDiagram = getTimeSeriesDiagram();
-        timeSeriesDiagram.setBands(getAvailableBands());
+    private void recreateTimeSeriesDiagram() {
+        List<Product> availableProducts = getAvailableProducts();
+        ArrayList<RasterDataNode> availableBands = getAvailableBands(availableProducts);
+
+        timeSeriesDiagram = new TimeSeriesDiagram(availableProducts);
+        timeSeriesDiagram.setBands(availableBands);
+        
         updateUIState();
     }
 
-    private ArrayList<RasterDataNode> getAvailableBands() {
+    private ArrayList<RasterDataNode> getAvailableBands(List<Product> availableProducts) {
         ArrayList<RasterDataNode> rasterList = new ArrayList<RasterDataNode>();
         final ProductSceneView sceneView = getCurrentView();
         if (sceneView != null) {
             final String rasterName = sceneView.getRaster().getName();
-            for (Product p : getAvailableProducts()) {
+            for (Product p : availableProducts) {
                 rasterList.add(p.getRasterDataNode(rasterName));
             }
         }
@@ -106,9 +106,9 @@ public class TimeSeriesToolView extends AbstractToolView {
         return rasterList;
     }
 
-    private ArrayList<Product> getAvailableProducts() {
+    private List<Product> getAvailableProducts() {
         final ProductSceneView sceneView = getCurrentView();
-        ArrayList<Product> productList = new ArrayList<Product>();
+        List<Product> productList = new ArrayList<Product>();
         if (sceneView != null) {
             final String productType = sceneView.getProduct().getProductType();
             final ProductManager productManager = VisatApp.getApp().getProductManager();
@@ -139,15 +139,16 @@ public class TimeSeriesToolView extends AbstractToolView {
             if (contentPane instanceof ProductSceneView) {
                 setCurrentView((ProductSceneView) contentPane);
             }
-
+            recreateTimeSeriesDiagram();
         }
 
         @Override
         public void internalFrameClosed(InternalFrameEvent e) {
-            final Container contentPane = e.getInternalFrame().getContentPane();
+/*            final Container contentPane = e.getInternalFrame().getContentPane();
             if (contentPane == currentView) {
                 setCurrentView(null);
             }
+            recreateTimeSeriesDiagram(); */
         }
     }
 
@@ -155,10 +156,16 @@ public class TimeSeriesToolView extends AbstractToolView {
 
         @Override
         public void productAdded(ProductManager.Event event) {
+            getTimeSeriesDiagram().getCurrentGraph().addProduct(event.getProduct());
+            diagramCanvas.setMessageText(null); 
         }
 
         @Override
         public void productRemoved(ProductManager.Event event) {
+            getTimeSeriesDiagram().getCurrentGraph().removeProduct(event.getProduct());
+            if(VisatApp.getApp().getProductManager().getProductCount() == 0) {
+                diagramCanvas.setMessageText("No product selected.");
+            }
         }
     }
 
