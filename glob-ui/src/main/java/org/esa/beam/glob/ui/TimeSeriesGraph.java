@@ -22,13 +22,13 @@ public class TimeSeriesGraph extends AbstractDiagramGraph {
     @Override
     public String getXName() {
         // time
-        return "time";
+        return getDiagram().getXAxis().getName();
     }
 
     @Override
     public String getYName() {
         // value ("energy"?)
-        return null;
+        return getDiagram().getYAxis().getName();
     }
 
     @Override
@@ -100,6 +100,20 @@ public class TimeSeriesGraph extends AbstractDiagramGraph {
     }
 
     public void update(RasterDataNode r, int pixelX, int pixelY, int currentLevel) {
+        final String rasterName = r.getName();
+        getDiagram().getYAxis().setName(rasterName);
+        getDiagram().getYAxis().setUnit(r.getUnit());
+
+        final List<RasterDataNode> rasterList = new ArrayList<RasterDataNode>();
+        for (Product product : products) {
+            if(product.containsRasterDataNode(rasterName)) {
+                rasterList.add(product.getRasterDataNode(rasterName));
+            }
+        }
+
+        for (RasterDataNode node : rasterList) {
+
+        }
     }
 
     public List<Product> getProducts() {
