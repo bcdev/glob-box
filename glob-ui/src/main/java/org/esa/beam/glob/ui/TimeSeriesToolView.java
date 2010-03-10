@@ -8,6 +8,7 @@ import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.framework.ui.PixelPositionListener;
 import org.esa.beam.framework.ui.application.support.AbstractToolView;
 import org.esa.beam.framework.ui.product.ProductSceneView;
+import org.esa.beam.util.StringUtils;
 import org.esa.beam.visat.VisatApp;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
@@ -40,6 +41,8 @@ import java.util.Locale;
 public class TimeSeriesToolView extends AbstractToolView {
 
     private static final String NO_DATA_MESSAGE = "No data to display.";
+    private static final String DEFAULT_RANGE_LABEL = "Value";
+    private static final String DEFAULT_DOMAIN_LABEL = "Time";
 
     private String titleBase;
     private TimeSeriesPPL pixelPosListener;
@@ -52,15 +55,13 @@ public class TimeSeriesToolView extends AbstractToolView {
         pixelPosListener = new TimeSeriesPPL();
     }
 
-    private XYPlot getTimeSeriesPlot() {
-        return chartPanel.getChart().getXYPlot();
-    }
-
     @Override
     protected JComponent createControl() {
         titleBase = getDescriptor().getTitle();
         JPanel control = new JPanel(new BorderLayout(4, 4));
-        final JFreeChart chart = ChartFactory.createTimeSeriesChart("Time Series", "Time", "Value",
+        final JFreeChart chart = ChartFactory.createTimeSeriesChart("Time Series",
+                                                                    DEFAULT_DOMAIN_LABEL,
+                                                                    DEFAULT_RANGE_LABEL,
                                                                     null, false, true, false);
         chartPanel = new ChartPanel(chart);
         chartPanel.setPreferredSize(new Dimension(300, 200));
@@ -69,14 +70,15 @@ public class TimeSeriesToolView extends AbstractToolView {
         control.add(BorderLayout.CENTER, chartPanel);
         control.setPreferredSize(new Dimension(320, 200));
 
-        VisatApp.getApp().addInternalFrameListener(new TimeSeriesIFL());
-        VisatApp.getApp().getProductManager().addListener(new TimeSeriesPML());
-        setCurrentView(VisatApp.getApp().getSelectedProductSceneView());
+        final VisatApp visatApp = VisatApp.getApp();
+        visatApp.addInternalFrameListener(new TimeSeriesIFL());
+        visatApp.getProductManager().addListener(new TimeSeriesPML());
+        setCurrentView(visatApp.getSelectedProductSceneView());
 
         final XYPlot timeSeriesPlot = getTimeSeriesPlot();
         final ValueAxis domainAxis = timeSeriesPlot.getDomainAxis();
-        final ValueAxis rangeAxis = timeSeriesPlot.getRangeAxis();
         domainAxis.setAutoRange(true);
+        final ValueAxis rangeAxis = timeSeriesPlot.getRangeAxis();
         rangeAxis.setAutoRange(true);
         XYItemRenderer r = timeSeriesPlot.getRenderer();
         if (r instanceof XYLineAndShapeRenderer) {
@@ -85,9 +87,8 @@ public class TimeSeriesToolView extends AbstractToolView {
             renderer.setBaseShapesFilled(true);
         }
 
+
         timeSeries = new TimeSeries("cursorTimeSeries");
-        TimeSeriesCollection tsc = new TimeSeriesCollection(timeSeries);
-        timeSeriesPlot.setDataset(tsc);
 
         updateAvailableBands();
         updateUIState();
@@ -96,11 +97,33 @@ public class TimeSeriesToolView extends AbstractToolView {
 
     private void updateUIState() {
         if (currentView != null) {
-            setTitle(titleBase + " - " + currentView.getRaster().getName());
+            final RasterDataNode raster = currentView.getRaster();
+            final String rasterName = raster.getName();
+            setTitle(String.format("%s - %s", titleBase, rasterName));
+
+            final String unit = raster.getUnit();
+            final String rangeAxisLabel;
+            if (StringUtils.isNotNullAndNotEmpty(unit)) {
+                rangeAxisLabel = String.format("%s (%s)", rasterName, unit);
+            } else {
+                rangeAxisLabel = rasterName;
+            }
+            getTimeSeriesPlot().getRangeAxis().setLabel(rangeAxisLabel);
         } else {
             setTitle(titleBase);
+            getTimeSeriesPlot().getRangeAxis().setLabel(DEFAULT_RANGE_LABEL);
         }
     }
+
+
+    private JFreeChart getTimeSeriesChart() {
+        return chartPanel.getChart();
+    }
+
+    private XYPlot getTimeSeriesPlot() {
+        return getTimeSeriesChart().getXYPlot();
+    }
+
 
     private void setCurrentView(ProductSceneView view) {
         if (view != null) {
@@ -150,25 +173,26 @@ public class TimeSeriesToolView extends AbstractToolView {
     }
 
     private void updateTimeSeries(int pixelX, int pixelY, int currentLevel) {
-        for (RasterDataNode rdn : availableBands) {
-            final Product product = rdn.getProduct();
+        for (RasterDataNode raster : availableBands) {
+            final Product product = raster.getProduct();
             final ProductData.UTC startTime = product.getStartTime();
             final Millisecond timePeriod = new Millisecond(startTime.getAsDate(),
-                                                                 ProductData.UTC.UTC_TIME_ZONE,
-                                                                 Locale.getDefault());
+                                                           ProductData.UTC.UTC_TIME_ZONE,
+                                                           Locale.getDefault());
             final TimeSeriesDataItem dataItem = timeSeries.getDataItem(timePeriod);
-            final double value = getValue(rdn, pixelX, pixelY, currentLevel);
+            final double value = getValue(raster, pixelX, pixelY, currentLevel);
             if (dataItem != null) {
                 dataItem.setValue(value);
             }
         }
+        getTimeSeriesPlot().getRangeAxis().configure();
     }
 
-    private double getValue(RasterDataNode rdn, int pixelX, int pixelY, int currentLevel) {
-        final RenderedImage image = rdn.getGeophysicalImage().getImage(currentLevel);
+    private double getValue(RasterDataNode raster, int pixelX, int pixelY, int currentLevel) {
+        final RenderedImage image = raster.getGeophysicalImage().getImage(currentLevel);
         final Rectangle pixelRect = new Rectangle(pixelX, pixelY, 1, 1);
         final Raster data = image.getData(pixelRect);
-        final RenderedImage validMask = rdn.getValidMaskImage().getImage(currentLevel);
+        final RenderedImage validMask = raster.getValidMaskImage().getImage(currentLevel);
         final Raster validMaskData = validMask.getData(pixelRect);
         final double value;
         if (validMaskData.getSample(pixelX, pixelY, 0) > 0) {
@@ -179,11 +203,6 @@ public class TimeSeriesToolView extends AbstractToolView {
         return value;
     }
 
-
-    public JFreeChart getTimeSeriesChart() {
-        return chartPanel.getChart();
-    }
-
     private class TimeSeriesIFL extends InternalFrameAdapter {
 
         @Override
@@ -192,17 +211,22 @@ public class TimeSeriesToolView extends AbstractToolView {
             if (contentPane instanceof ProductSceneView) {
                 setCurrentView((ProductSceneView) contentPane);
             }
+            initTimeSeries(getAvailableProducts());
+            TimeSeriesCollection tsc = new TimeSeriesCollection(timeSeries);
+            getTimeSeriesPlot().setDataset(tsc);
             updateAvailableBands();
             updateUIState();
         }
 
         @Override
         public void internalFrameClosed(InternalFrameEvent e) {
-/*            final Container contentPane = e.getInternalFrame().getContentPane();
+            final Container contentPane = e.getInternalFrame().getContentPane();
             if (contentPane == currentView) {
                 setCurrentView(null);
             }
-            recreateTimeSeriesDiagram(); */
+            getTimeSeriesPlot().setDataset(null);
+            updateAvailableBands();
+            updateUIState();
         }
     }
 
@@ -211,29 +235,40 @@ public class TimeSeriesToolView extends AbstractToolView {
 
         @Override
         public void productAdded(ProductManager.Event event) {
-            addToTimeSeries(event.getProduct());
-            updateAvailableBands();
-            updateUIState();
-            getTimeSeriesPlot().setNoDataMessage(null);
+            if (currentView != null) {
+                addToTimeSeries(event.getProduct());
+                updateAvailableBands();
+                updateUIState();
+                getTimeSeriesPlot().setNoDataMessage(null);
+            }
         }
 
         @Override
         public void productRemoved(ProductManager.Event event) {
-            removeFromTimeSeries(event.getProduct());
-            updateAvailableBands();
-            updateUIState();
-            if (VisatApp.getApp().getProductManager().getProductCount() == 0) {
-                getTimeSeriesPlot().setNoDataMessage(NO_DATA_MESSAGE);
+            if (currentView != null) {
+                removeFromTimeSeries(event.getProduct());
+                updateAvailableBands();
+                updateUIState();
+                if (VisatApp.getApp().getProductManager().getProductCount() == 0) {
+                    getTimeSeriesPlot().setNoDataMessage(NO_DATA_MESSAGE);
+                }
             }
         }
 
     }
 
+    private void initTimeSeries(List<Product> productList) {
+        timeSeries.clear();
+        for (Product product : productList) {
+            addToTimeSeries(product);
+        }
+    }
+
     private void removeFromTimeSeries(Product product) {
         final ProductData.UTC startTime = product.getStartTime();
         final Millisecond timePeriod = new Millisecond(startTime.getAsDate(),
-                                                             ProductData.UTC.UTC_TIME_ZONE,
-                                                             Locale.getDefault());
+                                                       ProductData.UTC.UTC_TIME_ZONE,
+                                                       Locale.getDefault());
         timeSeries.delete(timePeriod);
     }
 
@@ -245,6 +280,7 @@ public class TimeSeriesToolView extends AbstractToolView {
         timeSeries.add(new TimeSeriesDataItem(timePeriod, Double.NaN));
     }
 
+
     private class TimeSeriesPPL implements PixelPositionListener {
 
         @Override
@@ -254,8 +290,11 @@ public class TimeSeriesToolView extends AbstractToolView {
                                     int currentLevel,
                                     boolean pixelPosValid,
                                     MouseEvent e) {
-            getTimeSeriesPlot().setNoDataMessage(null);
             if (pixelPosValid && isActive()) {
+                getTimeSeriesPlot().setNoDataMessage(null);
+                if(timeSeries.isEmpty()) {
+                    initTimeSeries(getAvailableProducts());
+                }
                 updateTimeSeries(pixelX, pixelY, currentLevel);
             }
         }
@@ -264,6 +303,8 @@ public class TimeSeriesToolView extends AbstractToolView {
         public void pixelPosNotAvailable() {
 
             if (isActive()) {
+                timeSeries.clear();
+                getTimeSeriesPlot().setNoDataMessage(NO_DATA_MESSAGE);
                 chartPanel.updateUI();
             }
         }
