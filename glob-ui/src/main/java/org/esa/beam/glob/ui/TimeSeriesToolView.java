@@ -160,11 +160,16 @@ public class TimeSeriesToolView extends AbstractToolView {
         final ProductSceneView sceneView = getCurrentView();
         List<Product> productList = new ArrayList<Product>();
         if (sceneView != null) {
-            final String productType = sceneView.getProduct().getProductType();
+            final Product refProduct = sceneView.getProduct();
+            if(refProduct.getStartTime() == null) {
+                return productList;
+            }
+            final String productType = refProduct.getProductType();
             final ProductManager productManager = VisatApp.getApp().getProductManager();
 
             for (Product p : productManager.getProducts()) {
-                if (p.getProductType().equals(productType)) {
+                if (p.getProductType().equals(productType) && p.getStartTime() != null &&
+                    refProduct.isCompatibleProduct(p, 1.0e-6f)) {
                     productList.add(p);
                 }
             }
