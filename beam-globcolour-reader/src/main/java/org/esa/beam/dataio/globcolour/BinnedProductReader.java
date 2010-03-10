@@ -184,6 +184,7 @@ public class BinnedProductReader extends AbstractProductReader {
 
         final Variable col = ncFile.findVariable(ReaderConstants.COL);
         final Variable var = ncFile.findVariable(targetBand.getName());
+        final double noDataValue = targetBand.getNoDataValue();
 
         pm.beginTask(MessageFormat.format("Resampling data from band ''{0}''", targetBand.getName()), targetHeight);
         try {
@@ -200,6 +201,7 @@ public class BinnedProductReader extends AbstractProductReader {
 
                 start[0] = storageInfo.getOffset(y);
                 shape[0] = storageInfo.getBinCount(y);
+                final int row = storageInfo.getRow(y);
 
                 Array cols = null;
                 Array data = null;
@@ -215,7 +217,7 @@ public class BinnedProductReader extends AbstractProductReader {
                 for (int j = 0, k = 0; j < targetWidth; ++j) {
                     final int x = sourceOffsetX + j;
                     // calculate the ISIN grid column corresponding to (x, y)
-                    final int z = ReaderConstants.IG.getCol(storageInfo.getRow(y), equirectGrid.getLon(x));
+                    final int z = ReaderConstants.IG.getCol(row, equirectGrid.getLon(x));
 
                     for (; k < shape[0]; ++k) {
                         index.set(k);
@@ -229,7 +231,7 @@ public class BinnedProductReader extends AbstractProductReader {
                             break;
                         }
                     }
-                    targetBuffer.setElemDoubleAt(i * targetWidth + j, targetBand.getNoDataValue());
+                    targetBuffer.setElemDoubleAt(i * targetWidth + j, noDataValue);
                 }
 
                 pm.worked(1);
