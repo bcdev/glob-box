@@ -25,6 +25,7 @@ import org.jfree.data.time.TimeSeriesDataItem;
 import javax.swing.BorderFactory;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 import javax.swing.event.InternalFrameAdapter;
 import javax.swing.event.InternalFrameEvent;
 import java.awt.BorderLayout;
@@ -285,9 +286,9 @@ public class TimeSeriesToolView extends AbstractToolView {
 
         @Override
         public void pixelPosChanged(ImageLayer imageLayer,
-                                    int pixelX,
-                                    int pixelY,
-                                    int currentLevel,
+                                    final int pixelX,
+                                    final int pixelY,
+                                    final int currentLevel,
                                     boolean pixelPosValid,
                                     MouseEvent e) {
             if (pixelPosValid && isActive()) {
@@ -295,7 +296,12 @@ public class TimeSeriesToolView extends AbstractToolView {
                 if(timeSeries.isEmpty()) {
                     initTimeSeries(getAvailableProducts());
                 }
-                updateTimeSeries(pixelX, pixelY, currentLevel);
+                SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        updateTimeSeries(pixelX, pixelY, currentLevel);
+                    }
+                });
             }
         }
 
