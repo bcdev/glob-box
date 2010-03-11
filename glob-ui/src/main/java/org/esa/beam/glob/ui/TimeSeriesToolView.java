@@ -22,16 +22,15 @@ import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 import org.jfree.data.time.TimeSeriesDataItem;
 
-import javax.swing.BorderFactory;
-import javax.swing.JComponent;
-import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
+import javax.swing.*;
 import javax.swing.event.InternalFrameAdapter;
 import javax.swing.event.InternalFrameEvent;
 import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
@@ -80,7 +79,7 @@ public class TimeSeriesToolView extends AbstractToolView {
         final ValueAxis domainAxis = timeSeriesPlot.getDomainAxis();
         domainAxis.setAutoRange(true);
         final ValueAxis rangeAxis = timeSeriesPlot.getRangeAxis();
-        rangeAxis.setAutoRange(true);
+        rangeAxis.setAutoRange(false);
         XYItemRenderer r = timeSeriesPlot.getRenderer();
         if (r instanceof XYLineAndShapeRenderer) {
             XYLineAndShapeRenderer renderer = (XYLineAndShapeRenderer) r;
@@ -93,6 +92,22 @@ public class TimeSeriesToolView extends AbstractToolView {
 
         updateAvailableBands();
         updateUIState();
+
+        JPanel buttonPanel = new JPanel(new BorderLayout());
+        buttonPanel.setPreferredSize(new Dimension(100, 200));
+
+        JCheckBox autoAdjustBox = new JCheckBox( "Auto adjust" );
+        buttonPanel.add( BorderLayout.NORTH, autoAdjustBox );
+        autoAdjustBox.addActionListener( new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                final boolean isSelected = ((JCheckBox) e.getSource()).isSelected();
+                timeSeriesPlot.getRangeAxis().setAutoRange(isSelected);
+            }
+        } );
+
+        control.add( BorderLayout.EAST, buttonPanel );
+
         return control;
     }
 
