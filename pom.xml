@@ -29,8 +29,8 @@
            TODO: Move the sourceEncoding property to the build tag if version 3.0 is released
            -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <beam.version>4.7</beam.version>
-        <ceres.version>0.10</ceres.version>
+        <beam.version>4.8-SNAPSHOT</beam.version>
+        <ceres.version>0.11-SNAPSHOT</ceres.version>
     </properties>
 
     <modules>
@@ -41,6 +41,8 @@
         <module>beam-medspiration-reader</module>
         <module>beam-gt-referencing-ext</module>
         <module>beam-arcbingrid-reader</module>
+        <module>glob-core</module>
+        <module>glob-ui</module>
         <module>glob-help</module>
         <module>glob-bootstrap</module>
     </modules>
@@ -57,6 +59,16 @@
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-core</artifactId>
+                <version>${beam.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.esa.beam</groupId>
+                <artifactId>beam-ui</artifactId>
+                <version>${beam.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.esa.beam</groupId>
+                <artifactId>beam-visat-rcp</artifactId>
                 <version>${beam.version}</version>
             </dependency>
             <dependency>
