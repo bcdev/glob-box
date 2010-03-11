@@ -22,7 +22,7 @@
     <categories>ui</categories>
 
     <dependency>
-        <module>beam-ui</module>
+        <module>beam-visat-rcp</module>
     </dependency>
 
     <extension point="beam-ui:toolViews">
@@ -36,9 +36,23 @@
             <accelerator>ctrl alt T</accelerator>
             <smallIcon>/org/esa/beam/resources/images/icons/RsProduct16.gif</smallIcon>
             <largeIcon>/org/esa/beam/resources/images/icons/RsProduct24.gif</largeIcon>
-            <initState>DOCKED</initState>
-            <initSide>WEST</initSide>
-            <initIndex>0</initIndex>
+            <initState>FLOATING</initState>
+            <initSide>EAST</initSide>
+            <initIndex>3</initIndex>
+        </toolView>
+
+        <toolView>
+            <id>org.esa.beam.glob.ui.TimeSeriesManagerToolView</id>
+            <class>org.esa.beam.glob.ui.TimeSeriesManagerToolView</class>
+            <title>Time Series Manager</title>
+            <tabTitle>Time Manager</tabTitle>
+            <mnemonic>T</mnemonic>
+            <accelerator>ctrl alt T</accelerator>
+            <smallIcon>/org/esa/beam/resources/images/icons/RsProduct16.gif</smallIcon>
+            <largeIcon>/org/esa/beam/resources/images/icons/RsProduct24.gif</largeIcon>
+            <initState>FLOATING</initState>
+            <initSide>EAST</initSide>
+            <initIndex>3</initIndex>
         </toolView>
 
     </extension>
