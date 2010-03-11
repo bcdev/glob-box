@@ -37,6 +37,8 @@ import java.awt.image.RenderedImage;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class TimeSeriesToolView extends AbstractToolView {
 
@@ -50,9 +52,12 @@ public class TimeSeriesToolView extends AbstractToolView {
     private ChartPanel chartPanel;
     private TimeSeries timeSeries;
     private List<RasterDataNode> availableBands = new ArrayList<RasterDataNode>();
+    private ExecutorService executorService;
+
 
     public TimeSeriesToolView() {
         pixelPosListener = new TimeSeriesPPL();
+        executorService = Executors.newSingleThreadExecutor();
     }
 
     @Override
@@ -316,12 +321,7 @@ public class TimeSeriesToolView extends AbstractToolView {
                 if(timeSeries.isEmpty()) {
                     initTimeSeries(getAvailableProducts());
                 }
-                SwingUtilities.invokeLater(new Runnable() {
-                    @Override
-                    public void run() {
-                        updateTimeSeries(pixelX, pixelY, currentLevel);
-                    }
-                });
+                executorService.submit(new TimeSeriesUpdater(pixelX, pixelY, currentLevel));
             }
         }
 
@@ -339,6 +339,24 @@ public class TimeSeriesToolView extends AbstractToolView {
             return isVisible() && getTimeSeriesChart() != null;
         }
 
+        private class TimeSeriesUpdater implements Runnable {
+
+            private final int pixelX;
+            private final int pixelY;
+            private final int currentLevel;
+
+            TimeSeriesUpdater(int pixelX, int pixelY, int currentLevel) {
+                this.pixelX = pixelX;
+                this.pixelY = pixelY;
+                this.currentLevel = currentLevel;
+            }
+
+            @Override
+            public void run() {
+                updateTimeSeries(pixelX, pixelY, currentLevel);
+
+            }
+        }
     }
 
 }
