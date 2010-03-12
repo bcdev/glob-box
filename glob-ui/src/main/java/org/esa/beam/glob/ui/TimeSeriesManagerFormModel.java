@@ -2,11 +2,13 @@ package org.esa.beam.glob.ui;
 
 import com.bc.ceres.binding.PropertyContainer;
 import com.bc.ceres.binding.PropertySet;
+import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.framework.ui.product.ProductSceneView;
 import org.esa.beam.glob.GlobBoxManager;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.List;
 
 
 @SuppressWarnings({"UnusedDeclaration"})
@@ -51,5 +53,13 @@ class TimeSeriesManagerFormModel {
 
     public boolean isShowingWorldMapLayer() {
         return showingWorldMapLayer;
+    }
+
+    public boolean isSynchronizingColorInformation() {
+        return syncColorInformation;
+    }
+
+    public List<RasterDataNode> getCurrentRasterList() {
+        return globBoxManager.getCurrentRasterList();
     }
 }

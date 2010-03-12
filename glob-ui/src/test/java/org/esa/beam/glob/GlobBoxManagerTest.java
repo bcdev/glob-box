@@ -33,14 +33,14 @@ public class GlobBoxManagerTest {
 
     @Test
     public void testBasics() {
-        assertNotNull( globBoxManager );
+        assertNotNull(globBoxManager);
 
         final List<Product> productList = globBoxManager.getCurrentProductList();
         assertEquals(0, productList.size());
 
-        assertEquals( 0, globBoxManager.getCompatibleRasterList().size() );
+        assertEquals(0, globBoxManager.getCurrentRasterList().size());
 
-        assertNotNull( globBoxManager.getSceneViewListener() );
+        assertNotNull(globBoxManager.getSceneViewListener());
 
     }
 
@@ -69,23 +69,23 @@ public class GlobBoxManagerTest {
         productManager.addProduct(firstProduct);
         productManager.addProduct(createProduct("p2"));
 
-        List<RasterDataNode> rasterDataNodes = globBoxManager.getCompatibleRasterList();
+        List<RasterDataNode> rasterDataNodes = globBoxManager.getCurrentRasterList();
         assertEquals(2, rasterDataNodes.size());
 
         productManager.addProduct(createProduct("p3"));
         assertEquals(3, productManager.getProducts().length);
         assertEquals(3, globBoxManager.getCurrentProductList().size());
 
-        rasterDataNodes = globBoxManager.getCompatibleRasterList();
+        rasterDataNodes = globBoxManager.getCurrentRasterList();
         assertEquals(3, rasterDataNodes.size());
 
-        assertSame(rasterDataNodes, globBoxManager.getCompatibleRasterList());
+        assertSame(rasterDataNodes, globBoxManager.getCurrentRasterList());
 
     }
 
     @Test(expected = UnsupportedOperationException.class)
     public void productListUnmodifiable() {
-        globBoxManager.getCurrentProductList().add( null );
+        globBoxManager.getCurrentProductList().add(null);
     }
 
     private Product createProduct(String name) {

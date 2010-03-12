@@ -16,12 +16,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class GlobBoxManager  {
+public class GlobBoxManager {
 
     public static final String CURRENT_VIEW_PROPERTY = "currentView";
 
     private static GlobBoxManager instance;
-    
+
     private final ArrayList<Product> productList;
     private final SceneViewListener sceneViewListener;
     private final AtomicReference<RasterDataNode> refRaster;
@@ -37,7 +37,7 @@ public class GlobBoxManager  {
     private List<RasterDataNode> rasterList;
 
     public static GlobBoxManager getInstance() {
-        if(instance == null) {
+        if (instance == null) {
             instance = new GlobBoxManager();
         }
         return instance;
@@ -56,24 +56,24 @@ public class GlobBoxManager  {
     }
 
     public void setProductManager(ProductManager productManager) {
-        if(this.productManager != null ) {
-            this.productManager.removeListener(this.productManagerListener );
+        if (this.productManager != null) {
+            this.productManager.removeListener(this.productManagerListener);
         }
         this.productManager = productManager;
-        if(this.productManager != null ) {
-            this.productManager.addListener( this.productManagerListener );
+        if (this.productManager != null) {
+            this.productManager.addListener(this.productManagerListener);
         }
     }
 
-    public List<RasterDataNode> getCompatibleRasterList() {
-        if(rasterList == null) {
+    public List<RasterDataNode> getCurrentRasterList() {
+        if (rasterList == null) {
             rasterList = createRasterList(getReferenceRaster());
         }
         return rasterList;
     }
 
     public List<Product> getCurrentProductList() {
-        return Collections.unmodifiableList( productList );
+        return Collections.unmodifiableList(productList);
     }
 
     void setReferenceRaster(final RasterDataNode newRefRaster) {
@@ -83,7 +83,7 @@ public class GlobBoxManager  {
             productList.clear();
             resetRasterList();
             for (Product product : productManager.getProducts()) {
-                if(isAddableProduct(product)) {
+                if (isAddableProduct(product)) {
                     productList.add(product);
                 }
             }
@@ -117,12 +117,12 @@ public class GlobBoxManager  {
                referenceRaster.getProduct().isCompatibleProduct(newProduct, 1.0e-6f);
     }
 
-    public void addPropertyChangeListener( String property, PropertyChangeListener pcl ) {
-        this.propertyChangeSupport.addPropertyChangeListener( property, pcl );
+    public void addPropertyChangeListener(String property, PropertyChangeListener pcl) {
+        this.propertyChangeSupport.addPropertyChangeListener(property, pcl);
     }
 
-    public void removePropertyChangeListener( String property, PropertyChangeListener pcl ) {
-        this.propertyChangeSupport.removePropertyChangeListener( property, pcl );
+    public void removePropertyChangeListener(String property, PropertyChangeListener pcl) {
+        this.propertyChangeSupport.removePropertyChangeListener(property, pcl);
     }
 
     private void setCurrentView(ProductSceneView sceneView) {
@@ -159,8 +159,8 @@ public class GlobBoxManager  {
             final Container contentPane = e.getInternalFrame().getContentPane();
             if (contentPane instanceof ProductSceneView) {
                 ProductSceneView sceneView = (ProductSceneView) contentPane;
-                setCurrentView(sceneView);
                 setReferenceRaster(sceneView.getRaster());
+                setCurrentView(sceneView);
             }
         }
 
@@ -168,8 +168,8 @@ public class GlobBoxManager  {
         public void internalFrameDeactivated(InternalFrameEvent e) {
             final Container contentPane = e.getInternalFrame().getContentPane();
             if (contentPane instanceof ProductSceneView) {
-                setCurrentView(null);
                 setReferenceRaster(null);
+                setCurrentView(null);
             }
         }
     }

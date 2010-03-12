@@ -238,7 +238,7 @@ public class TimeSeriesToolView extends AbstractToolView {
 
 
     private void updateTimeSeries(int pixelX, int pixelY, int currentLevel) {
-        final List<RasterDataNode> rasterList = globBoxManager.getCompatibleRasterList();
+        final List<RasterDataNode> rasterList = globBoxManager.getCurrentRasterList();
         TimeSeries timeSeries = new TimeSeries("cursorTimeSeries");
         for (RasterDataNode raster : rasterList) {
             final Product product = raster.getProduct();
@@ -250,10 +250,10 @@ public class TimeSeriesToolView extends AbstractToolView {
             final double value = getValue(raster, pixelX, pixelY, currentLevel);
             timeSeries.add(new TimeSeriesDataItem(timePeriod, value));
         }
-        
+
         getTimeSeriesPlot().setDataset(new TimeSeriesCollection(timeSeries));
 
-        if( autoAdjustBox.isSelected() ) {
+        if (autoAdjustBox.isSelected()) {
             getTimeSeriesPlot().getRangeAxis().configure();
         }
     }
