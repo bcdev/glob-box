@@ -9,6 +9,8 @@ import javax.swing.event.InternalFrameAdapter;
 import javax.swing.event.InternalFrameEvent;
 import javax.swing.event.InternalFrameListener;
 import java.awt.Container;
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -16,12 +18,21 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class GlobBoxManager  {
 
-    private static GlobBoxManager instance;
+    public static final String CURRENT_VIEW_PROPERTY = "currentView";
 
+    private static GlobBoxManager instance;
+    
     private final ArrayList<Product> productList;
     private final SceneViewListener sceneViewListener;
     private final AtomicReference<RasterDataNode> refRaster;
     private final ProductManager.Listener productManagerListener;
+    private final PropertyChangeSupport propertyChangeSupport;
+
+    public ProductSceneView getCurrentView() {
+        return currentView;
+    }
+
+    private ProductSceneView currentView;
     private ProductManager productManager;
     private List<RasterDataNode> rasterList;
 
@@ -37,6 +48,7 @@ public class GlobBoxManager  {
         productManagerListener = new ProductManagerListener();
         sceneViewListener = new SceneViewListener();
         refRaster = new AtomicReference<RasterDataNode>();
+        propertyChangeSupport = new PropertyChangeSupport(this);
     }
 
     public InternalFrameListener getSceneViewListener() {
@@ -105,6 +117,21 @@ public class GlobBoxManager  {
                referenceRaster.getProduct().isCompatibleProduct(newProduct, 1.0e-6f);
     }
 
+    public void addPropertyChangeListener( String property, PropertyChangeListener pcl ) {
+        this.propertyChangeSupport.addPropertyChangeListener( property, pcl );
+    }
+
+    public void removePropertyChangeListener( String property, PropertyChangeListener pcl ) {
+        this.propertyChangeSupport.removePropertyChangeListener( property, pcl );
+    }
+
+    private void setCurrentView(ProductSceneView sceneView) {
+        ProductSceneView oldView = currentView;
+        currentView = sceneView;
+        propertyChangeSupport.firePropertyChange(CURRENT_VIEW_PROPERTY, oldView, currentView);
+    }
+
+
     private class ProductManagerListener implements ProductManager.Listener {
 
         @Override
@@ -125,7 +152,6 @@ public class GlobBoxManager  {
 
     }
 
-
     private class SceneViewListener extends InternalFrameAdapter {
 
         @Override
@@ -133,6 +159,7 @@ public class GlobBoxManager  {
             final Container contentPane = e.getInternalFrame().getContentPane();
             if (contentPane instanceof ProductSceneView) {
                 ProductSceneView sceneView = (ProductSceneView) contentPane;
+                setCurrentView(sceneView);
                 setReferenceRaster(sceneView.getRaster());
             }
         }
@@ -141,6 +168,7 @@ public class GlobBoxManager  {
         public void internalFrameDeactivated(InternalFrameEvent e) {
             final Container contentPane = e.getInternalFrame().getContentPane();
             if (contentPane instanceof ProductSceneView) {
+                setCurrentView(null);
                 setReferenceRaster(null);
             }
         }
