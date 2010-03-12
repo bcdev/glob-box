@@ -33,10 +33,11 @@ import java.util.List;
 class TimeSeriesManagerForm extends JPanel {
 
     private TimeSeriesManagerFormModel model;
-    private JSlider timeSlider;
-    private JCheckBox syncColorChecker;
-    private JCheckBox useAlphaBlendingChecker;
     private JCheckBox showWorldMapChecker;
+    private JCheckBox syncColorChecker;
+
+    private JCheckBox useAlphaBlendingChecker;
+    private JSlider timeSlider;
 
     TimeSeriesManagerForm(TimeSeriesManagerFormModel model) {
         this.model = model;
