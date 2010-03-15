@@ -1,9 +1,11 @@
 package org.esa.beam.glob.ui;
 
+import com.bc.ceres.binding.Property;
 import com.bc.ceres.binding.PropertySet;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.glayer.CollectionLayer;
 import com.bc.ceres.glayer.Layer;
+import com.bc.ceres.glayer.LayerFilter;
 import com.bc.ceres.glayer.LayerType;
 import com.bc.ceres.glayer.LayerTypeRegistry;
 import com.bc.ceres.glayer.support.ImageLayer;
@@ -14,24 +16,32 @@ import com.bc.ceres.swing.binding.BindingContext;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.ColorPaletteDef;
 import org.esa.beam.framework.datamodel.ImageInfo;
+import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.ProductNodeEvent;
 import org.esa.beam.framework.datamodel.ProductNodeListenerAdapter;
 import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.framework.datamodel.Stx;
 import org.esa.beam.framework.ui.product.ProductSceneView;
+import org.esa.beam.glayer.RasterImageLayerType;
 import org.esa.beam.glevel.BandImageMultiLevelSource;
 import org.esa.beam.glob.GlobBox;
 import org.esa.beam.visat.VisatApp;
 
 import javax.swing.JCheckBox;
 import javax.swing.JInternalFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Hashtable;
 import java.util.List;
 
 class GlobToolboxManagerForm extends JPanel {
@@ -63,6 +73,10 @@ class GlobToolboxManagerForm extends JPanel {
         syncColorChecker = new JCheckBox("Synchronise colour information");
         useAlphaBlendingChecker = new JCheckBox("Use transparency blending");
         timeSlider = new JSlider(JSlider.HORIZONTAL);
+        timeSlider.setPaintLabels(true);
+        timeSlider.setPaintTicks(true);
+        timeSlider.setPaintTrack(true);
+        configureTimeSlider();
         add(showWorldMapChecker);
         add(syncColorChecker);
         add(useAlphaBlendingChecker);
@@ -79,8 +93,46 @@ class GlobToolboxManagerForm extends JPanel {
         context.addPropertyChangeListener(GlobBox.CURRENT_VIEW_PROPERTY, worldMapHandler);
 
         final ColorSynchronizer colorSynchronizer = new ColorSynchronizer();
+        final SliderUpdater sliderUpdater = new SliderUpdater();
         context.addPropertyChangeListener(GlobToolboxManagerFormModel.PROPERTY_NAME_SYNCCOLOR, colorSynchronizer);
         context.addPropertyChangeListener(GlobBox.CURRENT_VIEW_PROPERTY, colorSynchronizer);
+        GlobBox.getInstance().addPropertyChangeListener(GlobBox.RASTER_LIST_PROPERTY, sliderUpdater);
+        context.addPropertyChangeListener(GlobBox.CURRENT_VIEW_PROPERTY, sliderUpdater);
+    }
+
+    private void configureTimeSlider() {
+        final List<RasterDataNode> rasterList = model.getCurrentRasterList();
+
+        timeSlider.setMinimum(0);
+        timeSlider.setMaximum(rasterList.size() - 1);
+        timeSlider.setInverted(true);
+
+        if (!rasterList.isEmpty()) {
+            timeSlider.setEnabled(true);
+            final Hashtable<Integer, JLabel> labelTable = new Hashtable<Integer, JLabel>();
+            for (int i = 0; i < rasterList.size(); i++) {
+                labelTable.put(i, new JLabel(rasterList.get(i).getProductRefString()));
+            }
+            timeSlider.setLabelTable(labelTable);
+        } else {
+            timeSlider.setEnabled(false);
+        }
+
+
+        timeSlider.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+
+                final CollectionLayer collectionLayer = model.getLayerGroup();
+                if (collectionLayer != null) {
+                    final List<Layer> children = collectionLayer.getChildren();
+                    for (int i = 0, childrenSize = children.size(); i < childrenSize; i++) {
+                        Layer child = children.get(i);
+                        child.setVisible(i == timeSlider.getValue());
+                    }
+                }
+            }
+        });
     }
 
     private class WorldMapHandler implements PropertyChangeListener {
@@ -223,4 +275,105 @@ class GlobToolboxManagerForm extends JPanel {
         }
     }
 
+    // todo - think about creating own CollectionLayer which handles synchronizing with rasterList
+    private void updateLayerGroup(ProductSceneView view) {
+        final List<RasterDataNode> rasterList = model.getCurrentRasterList();
+        if (view != null && rasterList.size() > 1) {
+            final Layer rootLayer = view.getRootLayer();
+            final String rasterName = view.getRaster().getName();
+            CollectionLayer collectionLayer = model.getLayerGroup();
+            boolean layerGroupCreated = false;
+            if (collectionLayer == null) {
+                layerGroupCreated = true;
+                collectionLayer = createLayerGroup(view, rootLayer, rasterName);
+            }
+            final List<Layer> children = synchronizeLayerGroup(rasterList, collectionLayer);
+
+            if (layerGroupCreated && !children.isEmpty()) {
+                children.get(0).setVisible(true);
+            }
+
+        }
+    }
+
+    private List<Layer> synchronizeLayerGroup(List<RasterDataNode> rasterList, CollectionLayer collectionLayer) {
+        final List<Layer> children = collectionLayer.getChildren();
+        final List<Layer> layerToRemove = new ArrayList<Layer>();
+        for (Layer child : children) {
+            final PropertySet propertySet1 = child.getConfiguration();
+            final Property property = propertySet1.getProperty(RasterImageLayerType.PROPERTY_NAME_RASTER);
+            if (property != null) {
+                RasterDataNode layerRaster = (RasterDataNode) property.getValue();
+                if (!rasterList.contains(layerRaster)) {
+                    layerToRemove.add(child);
+                }
+            }
+        }
+        children.removeAll(layerToRemove);
+
+        for (int i = 0, rasterListSize = rasterList.size(); i < rasterListSize; i++) {
+            RasterDataNode raster = rasterList.get(i);
+            final Layer foundLayer = LayerUtils.getChildLayer(collectionLayer,
+                                                              LayerUtils.SearchMode.DEEP,
+                                                              new RasterLayerFilter(raster));
+            if (foundLayer == null) {
+                final RasterImageLayerType imageLayerType = LayerTypeRegistry.getLayerType(
+                        RasterImageLayerType.class);
+                final BandImageMultiLevelSource mls = BandImageMultiLevelSource.create(raster,
+                                                                                       ProgressMonitor.NULL);
+                final ProductData.UTC utcStartTime = raster.getProduct().getStartTime();
+
+                //todo - add more granularity to date format
+                SimpleDateFormat sdf = new SimpleDateFormat("dd-MMM-yyyy_HH:mm:ss");
+                sdf.setCalendar(utcStartTime.getAsCalendar());
+                String layerName = String.format("%s-%s", raster.getProductRefString(),
+                                                 sdf.format(utcStartTime.getAsDate()));
+
+                final Layer layer = imageLayerType.createLayer(raster, mls);
+                layer.setVisible(false);
+                layer.setName(layerName);
+                collectionLayer.getChildren().add(i, layer);
+            }
+        }
+        return children;
+    }
+
+    private CollectionLayer createLayerGroup(ProductSceneView view, Layer rootLayer, String rasterName) {
+        CollectionLayer collectionLayer;
+        collectionLayer = new CollectionLayer(rasterName);
+        final ImageLayer baseLayer = view.getBaseImageLayer();
+        final int childIndex = rootLayer.getChildIndex(baseLayer.getId());
+        rootLayer.getChildren().add(childIndex, collectionLayer);
+        baseLayer.setVisible(false);
+        return collectionLayer;
+    }
+
+    private static class RasterLayerFilter implements LayerFilter {
+
+        private final RasterDataNode raster;
+
+        private RasterLayerFilter(RasterDataNode raster) {
+            this.raster = raster;
+        }
+
+        @Override
+        public boolean accept(Layer layer) {
+            final PropertySet propertySet1 = layer.getConfiguration();
+            final Property property = propertySet1.getProperty(RasterImageLayerType.PROPERTY_NAME_RASTER);
+            if (property != null) {
+                RasterDataNode layerRaster = (RasterDataNode) property.getValue();
+                return layerRaster == raster;
+            }
+            return false;
+        }
+    }
+
+    private class SliderUpdater implements PropertyChangeListener {
+
+        @Override
+        public void propertyChange(PropertyChangeEvent evt) {
+            updateLayerGroup(model.getCurrentView());
+            configureTimeSlider();
+        }
+    }
 }
