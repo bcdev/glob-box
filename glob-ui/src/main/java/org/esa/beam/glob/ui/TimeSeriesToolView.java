@@ -7,7 +7,7 @@ import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.framework.ui.PixelPositionListener;
 import org.esa.beam.framework.ui.application.support.AbstractToolView;
 import org.esa.beam.framework.ui.product.ProductSceneView;
-import org.esa.beam.glob.GlobBoxManager;
+import org.esa.beam.glob.GlobBox;
 import org.esa.beam.util.StringUtils;
 import org.esa.beam.visat.VisatApp;
 import org.jfree.chart.ChartFactory;
@@ -68,7 +68,7 @@ public class TimeSeriesToolView extends AbstractToolView {
     private final JTextField maxInput = new JTextField(8);
     private static final String MINIMUM_MUST_BE_DOUBLE = "<HTML><BODY>Minimum must be<BR>a double value</BODY></HTML>";
     private static final String MAXIMUM_MUST_BE_DOUBLE = "<HTML><BODY>Maximum must be<BR>a double value</BODY></HTML>";
-    private GlobBoxManager globBoxManager;
+    private GlobBox globBox;
     private JCheckBox autoAdjustBox;
 
     public TimeSeriesToolView() {
@@ -78,7 +78,7 @@ public class TimeSeriesToolView extends AbstractToolView {
 
     @Override
     protected JComponent createControl() {
-        globBoxManager = GlobBoxManager.getInstance();
+        globBox = GlobBox.getInstance();
         titleBase = getDescriptor().getTitle();
         JPanel control = new JPanel(new BorderLayout(4, 4));
         final JFreeChart chart = ChartFactory.createTimeSeriesChart("Time Series",
@@ -108,7 +108,7 @@ public class TimeSeriesToolView extends AbstractToolView {
             renderer.setBaseShapesFilled(true);
         }
 
-
+        setCurrentView(globBox.getCurrentView());
         updateUIState();
 
         final JPanel autoAdjustButtonPanel = new JPanel(new FlowLayout());
@@ -238,7 +238,7 @@ public class TimeSeriesToolView extends AbstractToolView {
 
 
     private void updateTimeSeries(int pixelX, int pixelY, int currentLevel) {
-        final List<RasterDataNode> rasterList = globBoxManager.getCurrentRasterList();
+        final List<RasterDataNode> rasterList = globBox.getRasterList();
         TimeSeries timeSeries = new TimeSeries("cursorTimeSeries");
         for (RasterDataNode raster : rasterList) {
             final Product product = raster.getProduct();

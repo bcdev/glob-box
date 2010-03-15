@@ -13,14 +13,17 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class GlobBoxManager {
+public class GlobBox {
 
     public static final String CURRENT_VIEW_PROPERTY = "currentView";
+    public static final String RASTER_LIST_PROPERTY = "rasterList";
 
-    private static GlobBoxManager instance;
+    private static GlobBox instance;
 
     private final ArrayList<Product> productList;
     private final SceneViewListener sceneViewListener;
@@ -36,18 +39,19 @@ public class GlobBoxManager {
     private ProductManager productManager;
     private List<RasterDataNode> rasterList;
 
-    public static GlobBoxManager getInstance() {
+    public static GlobBox getInstance() {
         if (instance == null) {
-            instance = new GlobBoxManager();
+            instance = new GlobBox();
         }
         return instance;
     }
 
-    private GlobBoxManager() {
+    private GlobBox() {
         productList = new ArrayList<Product>();
         productManagerListener = new ProductManagerListener();
         sceneViewListener = new SceneViewListener();
         refRaster = new AtomicReference<RasterDataNode>();
+        rasterList = Collections.emptyList();
         propertyChangeSupport = new PropertyChangeSupport(this);
     }
 
@@ -65,10 +69,7 @@ public class GlobBoxManager {
         }
     }
 
-    public List<RasterDataNode> getCurrentRasterList() {
-        if (rasterList == null) {
-            rasterList = createRasterList(getReferenceRaster());
-        }
+    public List<RasterDataNode> getRasterList() {
         return rasterList;
     }
 
@@ -81,17 +82,14 @@ public class GlobBoxManager {
         if (currentRefRaster != newRefRaster) {
             refRaster.set(newRefRaster);
             productList.clear();
-            resetRasterList();
             for (Product product : productManager.getProducts()) {
                 if (isAddableProduct(product)) {
                     productList.add(product);
                 }
             }
+            rasterList = createRasterList(getReferenceRaster());
+            propertyChangeSupport.firePropertyChange(RASTER_LIST_PROPERTY, null, rasterList);
         }
-    }
-
-    private void resetRasterList() {
-        rasterList = null;
     }
 
     private List<RasterDataNode> createRasterList(RasterDataNode referenceRaster) {
@@ -102,7 +100,19 @@ public class GlobBoxManager {
                 rasterList.add(p.getRasterDataNode(rasterName));
             }
         }
+        sortRasterList(rasterList);
         return rasterList;
+    }
+
+    private void sortRasterList(List<RasterDataNode> rasterList) {
+        Collections.sort(rasterList, new Comparator<RasterDataNode>() {
+            @Override
+            public int compare(RasterDataNode raster1, RasterDataNode raster2) {
+                final Date raster1Date = raster1.getProduct().getStartTime().getAsDate();
+                final Date raster2Date = raster2.getProduct().getStartTime().getAsDate();
+                return raster1Date.compareTo(raster2Date) * -1;
+            }
+        });
     }
 
     private RasterDataNode getReferenceRaster() {
@@ -139,7 +149,7 @@ public class GlobBoxManager {
             final Product newProduct = event.getProduct();
             if (isAddableProduct(newProduct)) {
                 productList.add(newProduct);
-                resetRasterList();
+                addToRasterList(newProduct);
             }
         }
 
@@ -147,9 +157,31 @@ public class GlobBoxManager {
         public void productRemoved(ProductManager.Event event) {
             final Product oldProduct = event.getProduct();
             productList.remove(oldProduct);
-            resetRasterList();
+            removeFromRasterList(oldProduct);
         }
 
+    }
+
+    private void addToRasterList(Product newProduct) {
+        final RasterDataNode raster = getReferenceRaster();
+        if (raster != null) {
+            final String rasterName = raster.getName();
+            final RasterDataNode newRaster = newProduct.getRasterDataNode(rasterName);
+            rasterList.add(newRaster);
+            sortRasterList(rasterList);
+            propertyChangeSupport.firePropertyChange(RASTER_LIST_PROPERTY, null, newRaster);
+        }
+    }
+
+    private void removeFromRasterList(Product oldProduct) {
+        final RasterDataNode raster = getReferenceRaster();
+        if (raster != null) {
+            final String rasterName = raster.getName();
+            final RasterDataNode removedRaster = oldProduct.getRasterDataNode(rasterName);
+            rasterList.remove(removedRaster);
+            sortRasterList(rasterList);
+            propertyChangeSupport.firePropertyChange(RASTER_LIST_PROPERTY, removedRaster, null);
+        }
     }
 
     private class SceneViewListener extends InternalFrameAdapter {

@@ -4,10 +4,10 @@ import org.esa.beam.framework.ui.application.support.AbstractToolView;
 
 import javax.swing.JComponent;
 
-public class TimeSeriesManagerToolView extends AbstractToolView{
+public class GlobToolboxManagerToolView extends AbstractToolView {
 
     @Override
     protected JComponent createControl() {
-        return new TimeSeriesManagerForm(new TimeSeriesManagerFormModel());
+        return new GlobToolboxManagerForm(new GlobToolboxManagerFormModel());
     }
 }

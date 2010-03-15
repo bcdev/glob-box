@@ -12,10 +12,10 @@ public class GlobBoxPlugIn implements VisatPlugIn {
 
     @Override
     public void start(VisatApp visatApp) {
-        GlobBoxManager globBoxManager = GlobBoxManager.getInstance();
-        sceneViewListener = globBoxManager.getSceneViewListener();
+        GlobBox globBox = GlobBox.getInstance();
+        sceneViewListener = globBox.getSceneViewListener();
         ProductManager productManager = visatApp.getProductManager();
-        globBoxManager.setProductManager(productManager);
+        globBox.setProductManager(productManager);
         visatApp.addInternalFrameListener(sceneViewListener);
     }
 

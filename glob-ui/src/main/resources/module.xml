@@ -42,10 +42,10 @@
         </toolView>
 
         <toolView>
-            <id>org.esa.beam.glob.ui.TimeSeriesManagerToolView</id>
-            <class>org.esa.beam.glob.ui.TimeSeriesManagerToolView</class>
-            <title>Time Series Manager</title>
-            <tabTitle>Time Manager</tabTitle>
+            <id>org.esa.beam.glob.ui.GlobToolboxManagerToolView</id>
+            <class>org.esa.beam.glob.ui.GlobToolboxManagerToolView</class>
+            <title>GlobToolbox Manager</title>
+            <tabTitle>GlobToolbox</tabTitle>
             <mnemonic>T</mnemonic>
             <accelerator>ctrl alt T</accelerator>
             <smallIcon>/org/esa/beam/resources/images/icons/RsProduct16.gif</smallIcon>

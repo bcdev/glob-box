@@ -2,10 +2,13 @@ package org.esa.beam.glob.ui;
 
 import com.bc.ceres.binding.PropertySet;
 import com.bc.ceres.core.ProgressMonitor;
+import com.bc.ceres.glayer.CollectionLayer;
 import com.bc.ceres.glayer.Layer;
 import com.bc.ceres.glayer.LayerType;
 import com.bc.ceres.glayer.LayerTypeRegistry;
+import com.bc.ceres.glayer.support.ImageLayer;
 import com.bc.ceres.glayer.support.LayerUtils;
+import com.bc.ceres.glevel.MultiLevelSource;
 import com.bc.ceres.swing.TableLayout;
 import com.bc.ceres.swing.binding.BindingContext;
 import org.esa.beam.framework.datamodel.Band;
@@ -16,7 +19,8 @@ import org.esa.beam.framework.datamodel.ProductNodeListenerAdapter;
 import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.framework.datamodel.Stx;
 import org.esa.beam.framework.ui.product.ProductSceneView;
-import org.esa.beam.glob.GlobBoxManager;
+import org.esa.beam.glevel.BandImageMultiLevelSource;
+import org.esa.beam.glob.GlobBox;
 import org.esa.beam.visat.VisatApp;
 
 import javax.swing.JCheckBox;
@@ -30,16 +34,16 @@ import java.beans.PropertyChangeListener;
 import java.util.Arrays;
 import java.util.List;
 
-class TimeSeriesManagerForm extends JPanel {
+class GlobToolboxManagerForm extends JPanel {
 
-    private TimeSeriesManagerFormModel model;
+    private GlobToolboxManagerFormModel model;
     private JCheckBox showWorldMapChecker;
     private JCheckBox syncColorChecker;
 
     private JCheckBox useAlphaBlendingChecker;
     private JSlider timeSlider;
 
-    TimeSeriesManagerForm(TimeSeriesManagerFormModel model) {
+    GlobToolboxManagerForm(GlobToolboxManagerFormModel model) {
         this.model = model;
         createComponents(model.getPropertySet());
     }
@@ -66,17 +70,17 @@ class TimeSeriesManagerForm extends JPanel {
         add(tableLayout.createVerticalSpacer());
 
         final BindingContext context = new BindingContext(propertySet);
-        context.bind(TimeSeriesManagerFormModel.PROPERTY_NAME_WORLDMAP, showWorldMapChecker);
-        context.bind(TimeSeriesManagerFormModel.PROPERTY_NAME_SYNCCOLOR, syncColorChecker);
-        context.bind(TimeSeriesManagerFormModel.PROPERTY_NAME_BLENDING, useAlphaBlendingChecker);
+        context.bind(GlobToolboxManagerFormModel.PROPERTY_NAME_WORLDMAP, showWorldMapChecker);
+        context.bind(GlobToolboxManagerFormModel.PROPERTY_NAME_SYNCCOLOR, syncColorChecker);
+        context.bind(GlobToolboxManagerFormModel.PROPERTY_NAME_BLENDING, useAlphaBlendingChecker);
 
         final WorldMapHandler worldMapHandler = new WorldMapHandler();
-        context.addPropertyChangeListener(TimeSeriesManagerFormModel.PROPERTY_NAME_WORLDMAP, worldMapHandler);
-        context.addPropertyChangeListener(GlobBoxManager.CURRENT_VIEW_PROPERTY, worldMapHandler);
+        context.addPropertyChangeListener(GlobToolboxManagerFormModel.PROPERTY_NAME_WORLDMAP, worldMapHandler);
+        context.addPropertyChangeListener(GlobBox.CURRENT_VIEW_PROPERTY, worldMapHandler);
 
         final ColorSynchronizer colorSynchronizer = new ColorSynchronizer();
-        context.addPropertyChangeListener(TimeSeriesManagerFormModel.PROPERTY_NAME_SYNCCOLOR, colorSynchronizer);
-        context.addPropertyChangeListener(GlobBoxManager.CURRENT_VIEW_PROPERTY, colorSynchronizer);
+        context.addPropertyChangeListener(GlobToolboxManagerFormModel.PROPERTY_NAME_SYNCCOLOR, colorSynchronizer);
+        context.addPropertyChangeListener(GlobBox.CURRENT_VIEW_PROPERTY, colorSynchronizer);
     }
 
     private class WorldMapHandler implements PropertyChangeListener {
@@ -107,7 +111,7 @@ class TimeSeriesManagerForm extends JPanel {
 
     private class ColorSynchronizer implements PropertyChangeListener {
 
-        private TimeSeriesManagerForm.ColorSynchronizer.ImageInfoListener listener;
+        private GlobToolboxManagerForm.ColorSynchronizer.ImageInfoListener listener;
         private RasterDataNode currentRaster;
 
         @Override
@@ -123,7 +127,6 @@ class TimeSeriesManagerForm extends JPanel {
                 } else {
                     if (currentRaster != null) {
                         currentRaster.getProduct().removeProductNodeListener(listener);
-                        resetImageInfos(rasterList);
                     }
                 }
             } else {
@@ -135,16 +138,33 @@ class TimeSeriesManagerForm extends JPanel {
             }
         }
 
-        private void resetImageInfos(List<RasterDataNode> rasterList) {
+        private void transferImageInfo(RasterDataNode referenceRaster, List<RasterDataNode> rasterList) {
+            final ColorPaletteDef colorDef = referenceRaster.getImageInfo().getColorPaletteDef();
             for (RasterDataNode raster : rasterList) {
-                final ImageInfo imageInfo = raster.createDefaultImageInfo(null, ProgressMonitor.NULL);
-                applyColorPaletteDef(raster, imageInfo.getColorPaletteDef());
+                if (raster != referenceRaster) {
+                    applyColorPaletteDef(raster, colorDef);
+                }
             }
+            updateLayerCollection(referenceRaster);
         }
 
-        private void transferImageInfo(RasterDataNode referenceRaster, List<RasterDataNode> rasterList) {
-            for (RasterDataNode raster : rasterList) {
-                applyColorPaletteDef(raster, referenceRaster.getImageInfo().getColorPaletteDef());
+        private void updateLayerCollection(RasterDataNode referenceRaster) {
+            // todo this block should be moved to CollectionLayer
+            final CollectionLayer collectionLayer = model.getLayerGroup();
+            if (collectionLayer != null) {
+                final List<Layer> children = collectionLayer.getChildren();
+                final ImageInfo imageInfo = referenceRaster.getImageInfo();
+                for (Layer child : children) {
+                    if (child instanceof ImageLayer) {
+                        ImageLayer imageLayer = (ImageLayer) child;
+                        final MultiLevelSource source = imageLayer.getMultiLevelSource();
+                        if (source instanceof BandImageMultiLevelSource) {
+                            BandImageMultiLevelSource multiLevelSource = (BandImageMultiLevelSource) source;
+                            multiLevelSource.setImageInfo(imageInfo);
+                        }
+                    }
+                    child.regenerate();
+                }
             }
         }
 
@@ -162,13 +182,11 @@ class TimeSeriesManagerForm extends JPanel {
                                                        targetRaster.scale(stx.getMax()),
                                                        false);
                 }
+                targetRaster.fireImageInfoChanged();
                 updateSceneView(targetRaster, targetImageInfo);
             }
         }
 
-        // todo - not very intuitive code
-        // the following code is need to synchronize the ColorManipulationForm
-        // with the ImageInfo, why isn't it update automatically when the ImageInfo of the raster is changed
         private void updateSceneView(RasterDataNode targetRaster, ImageInfo targetImageInfo) {
             final VisatApp app = VisatApp.getApp();
             app.updateImages(new RasterDataNode[]{targetRaster});
