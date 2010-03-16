@@ -41,7 +41,6 @@
         <module>beam-medspiration-reader</module>
         <module>beam-gt-referencing-ext</module>
         <module>beam-arcbingrid-reader</module>
-        <module>glob-core</module>
         <module>glob-ui</module>
         <module>glob-help</module>
         <module>glob-bootstrap</module>
