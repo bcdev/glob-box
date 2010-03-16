@@ -34,11 +34,12 @@
             <tabTitle>Time Series</tabTitle>
             <mnemonic>T</mnemonic>
             <accelerator>ctrl alt T</accelerator>
-            <smallIcon>/org/esa/beam/resources/images/icons/RsProduct16.gif</smallIcon>
-            <largeIcon>/org/esa/beam/resources/images/icons/RsProduct24.gif</largeIcon>
+            <smallIcon>/org/esa/beam/glob/ui/icons/TimeSeries16.gif</smallIcon>
+            <largeIcon>/org/esa/beam/glob/ui/icons/TimeSeries24.gif</largeIcon>
             <initState>FLOATING</initState>
             <initSide>EAST</initSide>
             <initIndex>3</initIndex>
+            <toolBarId>GlobToolbox</toolBarId>
         </toolView>
 
         <toolView>
@@ -48,11 +49,12 @@
             <tabTitle>GlobToolbox</tabTitle>
             <mnemonic>T</mnemonic>
             <accelerator>ctrl alt T</accelerator>
-            <smallIcon>/org/esa/beam/resources/images/icons/RsProduct16.gif</smallIcon>
-            <largeIcon>/org/esa/beam/resources/images/icons/RsProduct24.gif</largeIcon>
+            <smallIcon>/org/esa/beam/glob/ui/icons/GlobToolbox16.gif</smallIcon>
+            <largeIcon>/org/esa/beam/glob/ui/icons/GlobToolbox24.gif</largeIcon>
             <initState>FLOATING</initState>
             <initSide>EAST</initSide>
             <initIndex>3</initIndex>
+            <toolBarId>GlobToolbox</toolBarId>
         </toolView>
 
     </extension>

@@ -82,12 +82,11 @@ public class TimeSeriesToolView extends AbstractToolView {
         globBox = GlobBox.getInstance();
         titleBase = getDescriptor().getTitle();
         JPanel control = new JPanel(new BorderLayout(4, 4));
-        final JFreeChart chart = ChartFactory.createTimeSeriesChart("Time Series",
+        final JFreeChart chart = ChartFactory.createTimeSeriesChart(null,
                                                                     DEFAULT_DOMAIN_LABEL,
                                                                     DEFAULT_RANGE_LABEL,
                                                                     null, false, true, false);
         chartPanel = new ChartPanel(chart);
-        chart.getTitle().setVisible(false);
         chartPanel.setPreferredSize(new Dimension(300, 200));
         chart.getXYPlot().setNoDataMessage(NO_DATA_MESSAGE);
         control.setBorder(BorderFactory.createEmptyBorder(6, 6, 6, 6));
