@@ -353,9 +353,9 @@ class GlobToolboxManagerForm extends JPanel {
                 final ProductData.UTC utcStartTime = raster.getProduct().getStartTime();
 
                 //todo - add more granularity to date format
-                SimpleDateFormat sdf = new SimpleDateFormat("dd-MMM-yyyy_HH:mm:ss");
+                SimpleDateFormat sdf = new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss");
                 sdf.setCalendar(utcStartTime.getAsCalendar());
-                String layerName = String.format("%s-%s", raster.getProductRefString(),
+                String layerName = String.format("%s %s", raster.getProductRefString(),
                                                  sdf.format(utcStartTime.getAsDate()));
 
                 final Layer layer = imageLayerType.createLayer(raster, mls);
