@@ -50,10 +50,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class TimeSeriesToolView extends AbstractToolView {
 
-    private static final String NO_DATA_MESSAGE = "No data to display.";
+    private static final String NO_DATA_MESSAGE = "No data to display";
     private static final String DEFAULT_RANGE_LABEL = "Value";
     private static final String DEFAULT_DOMAIN_LABEL = "Time";
 
@@ -239,6 +240,8 @@ public class TimeSeriesToolView extends AbstractToolView {
 
 
     private void updateTimeSeries(int pixelX, int pixelY, int currentLevel) {
+        getTimeSeriesPlot().setDataset(null);
+        getTimeSeriesPlot().setNoDataMessage("Loading data...");
         final List<RasterDataNode> rasterList = globBox.getRasterList();
         TimeSeries timeSeries = new TimeSeries("cursorTimeSeries");
         for (RasterDataNode raster : rasterList) {
@@ -253,6 +256,7 @@ public class TimeSeriesToolView extends AbstractToolView {
         }
 
         getTimeSeriesPlot().setDataset(new TimeSeriesCollection(timeSeries));
+        getTimeSeriesPlot().setNoDataMessage(NO_DATA_MESSAGE);
 
         if (autoAdjustBox.isSelected()) {
             getTimeSeriesPlot().getRangeAxis().configure();
@@ -296,6 +300,8 @@ public class TimeSeriesToolView extends AbstractToolView {
 
     private class TimeSeriesPPL implements PixelPositionListener {
 
+        private Future<?> future;
+
         @Override
         public void pixelPosChanged(ImageLayer imageLayer,
                                     final int pixelX,
@@ -303,9 +309,8 @@ public class TimeSeriesToolView extends AbstractToolView {
                                     final int currentLevel,
                                     boolean pixelPosValid,
                                     MouseEvent e) {
-            if (pixelPosValid && isActive()) {
-                getTimeSeriesPlot().setNoDataMessage(null);
-                executorService.submit(new TimeSeriesUpdater(pixelX, pixelY, currentLevel));
+            if (pixelPosValid && isActive() && (future == null || future.isDone())) {
+                future = executorService.submit(new TimeSeriesUpdater(pixelX, pixelY, currentLevel));
             }
             final Range range = getTimeSeriesPlot().getRangeAxis().getRange();
             double lowerBound = range.getLowerBound();
@@ -319,9 +324,8 @@ public class TimeSeriesToolView extends AbstractToolView {
 
         @Override
         public void pixelPosNotAvailable() {
-
+            getTimeSeriesPlot().setDataset(null);
             if (isActive()) {
-                getTimeSeriesPlot().setNoDataMessage(NO_DATA_MESSAGE);
                 chartPanel.updateUI();
             }
         }
@@ -345,7 +349,6 @@ public class TimeSeriesToolView extends AbstractToolView {
             @Override
             public void run() {
                 updateTimeSeries(pixelX, pixelY, currentLevel);
-
             }
         }
     }

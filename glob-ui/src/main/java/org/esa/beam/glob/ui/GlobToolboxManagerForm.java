@@ -3,6 +3,7 @@ package org.esa.beam.glob.ui;
 import com.bc.ceres.binding.Property;
 import com.bc.ceres.binding.PropertySet;
 import com.bc.ceres.core.ProgressMonitor;
+import com.bc.ceres.core.SubProgressMonitor;
 import com.bc.ceres.glayer.CollectionLayer;
 import com.bc.ceres.glayer.Layer;
 import com.bc.ceres.glayer.LayerFilter;
@@ -13,6 +14,7 @@ import com.bc.ceres.glayer.support.LayerUtils;
 import com.bc.ceres.glevel.MultiLevelSource;
 import com.bc.ceres.swing.TableLayout;
 import com.bc.ceres.swing.binding.BindingContext;
+import com.bc.ceres.swing.progress.ProgressMonitorSwingWorker;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.ColorPaletteDef;
 import org.esa.beam.framework.datamodel.ImageInfo;
@@ -93,9 +95,10 @@ class GlobToolboxManagerForm extends JPanel {
         context.addPropertyChangeListener(GlobBox.CURRENT_VIEW_PROPERTY, worldMapHandler);
 
         final ColorSynchronizer colorSynchronizer = new ColorSynchronizer();
-        final SliderUpdater sliderUpdater = new SliderUpdater();
         context.addPropertyChangeListener(GlobToolboxManagerFormModel.PROPERTY_NAME_SYNCCOLOR, colorSynchronizer);
         context.addPropertyChangeListener(GlobBox.CURRENT_VIEW_PROPERTY, colorSynchronizer);
+
+        final SliderUpdater sliderUpdater = new SliderUpdater();
         GlobBox.getInstance().addPropertyChangeListener(GlobBox.RASTER_LIST_PROPERTY, sliderUpdater);
         context.addPropertyChangeListener(GlobBox.CURRENT_VIEW_PROPERTY, sliderUpdater);
     }
@@ -185,14 +188,45 @@ class GlobToolboxManagerForm extends JPanel {
             }
         }
 
-        private void transferImageInfo(RasterDataNode referenceRaster, List<RasterDataNode> rasterList) {
-            final ColorPaletteDef colorDef = referenceRaster.getImageInfo().getColorPaletteDef();
-            for (RasterDataNode raster : rasterList) {
-                if (raster != referenceRaster) {
-                    applyColorPaletteDef(raster, colorDef);
+        private void transferImageInfo(final RasterDataNode referenceRaster, final List<RasterDataNode> rasterList) {
+            ProgressMonitorSwingWorker pmsw = new ProgressMonitorSwingWorker<Void, RasterDataNode>(
+                    GlobToolboxManagerForm.this,
+                    "Synchronising colour information") {
+                @Override
+                protected Void doInBackground(ProgressMonitor pm) throws Exception {
+                    pm.beginTask("Synchronising...", (rasterList.size() - 1) * 2);
+                    try {
+                        for (RasterDataNode raster : rasterList) {
+                            if (raster != referenceRaster) {
+                                // just to trigger computation
+                                raster.getImageInfo(new SubProgressMonitor(pm, 1));
+                                raster.getStx(false, new SubProgressMonitor(pm, 1));
+                                publish(raster);
+                            }
+                        }
+                    } finally {
+                        pm.done();
+                    }
+                    return null;
                 }
-            }
-            updateLayerCollection(referenceRaster);
+
+                @Override
+                protected void process(List<RasterDataNode> chunks) {
+                    final ColorPaletteDef colorDef = referenceRaster.getImageInfo().getColorPaletteDef();
+                    for (RasterDataNode raster : chunks) {
+                        if (raster != referenceRaster) {
+                            applyColorPaletteDef(raster, colorDef);
+                        }
+                    }
+
+                }
+
+                @Override
+                protected void done() {
+                    updateLayerCollection(referenceRaster);
+                }
+            };
+            pmsw.executeWithBlocking();
         }
 
         private void updateLayerCollection(RasterDataNode referenceRaster) {
@@ -216,14 +250,14 @@ class GlobToolboxManagerForm extends JPanel {
         }
 
         private void applyColorPaletteDef(RasterDataNode targetRaster, ColorPaletteDef refColorDef) {
-            final ImageInfo targetImageInfo = targetRaster.getImageInfo(ProgressMonitor.NULL);
+            final ImageInfo targetImageInfo = targetRaster.getImageInfo();
             final ColorPaletteDef.Point[] targetPoints = targetImageInfo.getColorPaletteDef().getPoints();
 
             if (!Arrays.equals(targetPoints, refColorDef.getPoints())) {
                 if (isIndexCoded(targetRaster)) {
                     targetImageInfo.setColors(refColorDef.getColors());
                 } else {
-                    Stx stx = targetRaster.getStx(false, ProgressMonitor.NULL);
+                    Stx stx = targetRaster.getStx();
                     targetImageInfo.setColorPaletteDef(refColorDef,
                                                        targetRaster.scale(stx.getMin()),
                                                        targetRaster.scale(stx.getMax()),
