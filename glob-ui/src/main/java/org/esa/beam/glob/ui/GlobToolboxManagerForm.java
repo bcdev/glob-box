@@ -81,7 +81,7 @@ class GlobToolboxManagerForm extends JPanel {
         configureTimeSlider();
         add(showWorldMapChecker);
         add(syncColorChecker);
-        add(useAlphaBlendingChecker);
+//        add(useAlphaBlendingChecker);  todo - not yet implemented
         add(timeSlider);
         add(tableLayout.createVerticalSpacer());
 
