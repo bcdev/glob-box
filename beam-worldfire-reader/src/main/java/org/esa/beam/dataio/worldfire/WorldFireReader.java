@@ -14,10 +14,10 @@ import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.framework.datamodel.ImageInfo;
 import org.esa.beam.framework.datamodel.IndexCoding;
 import org.esa.beam.framework.datamodel.PinDescriptor;
+import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Placemark;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.jai.PlacemarkMaskOpImage;
 import org.esa.beam.jai.ResolutionLevel;
 import org.esa.beam.util.Debug;
 import org.esa.beam.util.TreeNode;
@@ -88,12 +88,6 @@ class WorldFireReader extends AbstractProductReader {
             Debug.trace("Could not create GeoCoding");
             e.printStackTrace();
         }
-        // todo - pin layer needs speed improvements; with more than 6000 pins it is slow 
-//        final ProductNodeGroup<Placemark> pinGroup = product.getPinGroup();
-//        List<Placemark> fireList = getFireSpotList(inputFile, product.getGeoCoding());
-//        for (Placemark fireSpot : fireList) {
-//            pinGroup.add(fireSpot);
-//        }
         Band fireBand = product.addBand("fire_" + productName, ProductData.TYPE_UINT8);
         fireBand.setNoDataValue(0);
         fireBand.setNoDataValueUsed(true);
@@ -108,17 +102,19 @@ class WorldFireReader extends AbstractProductReader {
                 new ColorPaletteDef.Point(255, Color.RED, "fire"),
         };
         fireBand.setImageInfo(new ImageInfo(new ColorPaletteDef(points)));
-        final MultiLevelImage fireImage = createFireImage(product);
+
+        List<Placemark> fireList = getFireSpotList(inputFile, product.getGeoCoding());
+        final MultiLevelImage fireImage = createFireImage(fireList, product);
         fireBand.setSourceImage(fireImage);
         return product;
     }
 
-    private MultiLevelImage createFireImage(final Product product) {
-        final PlacemarkMaskOpImage opImage = new PlacemarkMaskOpImage(product,
-                                                                      PinDescriptor.INSTANCE, 1,
-                                                                      product.getSceneRasterWidth(),
-                                                                      product.getSceneRasterHeight(),
-                                                                      new ResolutionLevel(0, 1.0));
+    private MultiLevelImage createFireImage(List<Placemark> fireList, final Product product) {
+        final FireMaskOpImage opImage = new FireMaskOpImage(fireList,
+                                                            product.getSceneRasterWidth(),
+                                                            product.getSceneRasterHeight(),
+                                                            product.getPreferredTileSize(),
+                                                            new ResolutionLevel(0, 1.0));
         final MultiLevelSource multiLevelSource = new DefaultMultiLevelSource(opImage, 4);
 
         return new DefaultMultiLevelImage(multiLevelSource);
@@ -225,7 +221,8 @@ class WorldFireReader extends AbstractProductReader {
             final float lon = Float.parseFloat(columns[4]);
             final String name = "Fire_" + index;
             final GeoPos geoPos = new GeoPos(lat, lon);
-            return new Placemark(name, String.format("%1$tF", calendar), "Fire", null, geoPos,
+            final PixelPos pixelPos = geoCoding.getPixelPos(geoPos, null);
+            return new Placemark(name, String.format("%1$tF", calendar), "Fire", pixelPos, geoPos,
                                  PinDescriptor.INSTANCE.createDefaultSymbol(),
                                  geoCoding);
         } else if (columns.length == 6) { // ATSR2
