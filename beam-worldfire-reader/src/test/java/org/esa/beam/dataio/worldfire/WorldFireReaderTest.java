@@ -6,12 +6,13 @@ import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.util.TreeNode;
 import org.esa.beam.util.io.FileUtils;
-import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+
+import static org.junit.Assert.*;
 
 public class WorldFireReaderTest {
 
@@ -42,7 +43,6 @@ public class WorldFireReaderTest {
         assertNotNull(product);
         assertEquals(FileUtils.getFilenameWithoutExtension(file), product.getName());
         assertEquals(WorldFireReader.PRODUCT_TYPE_AATSR_ALGO1, product.getProductType());
-        assertEquals(6960, product.getPinGroup().getNodeCount());
         assertEquals(3600, product.getSceneRasterWidth());
         assertEquals(1800, product.getSceneRasterHeight());
 

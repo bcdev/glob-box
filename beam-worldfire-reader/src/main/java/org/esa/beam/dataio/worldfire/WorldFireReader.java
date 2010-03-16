@@ -104,6 +104,7 @@ class WorldFireReader extends AbstractProductReader {
         product.getIndexCodingGroup().add(indexCoding);
         fireBand.setSampleCoding(indexCoding);
         final ColorPaletteDef.Point[] points = new ColorPaletteDef.Point[]{
+                new ColorPaletteDef.Point(0, Color.BLACK, "No-data"),
                 new ColorPaletteDef.Point(255, Color.RED, "fire"),
         };
         fireBand.setImageInfo(new ImageInfo(new ColorPaletteDef(points)));
