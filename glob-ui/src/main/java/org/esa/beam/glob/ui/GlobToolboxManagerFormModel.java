@@ -23,7 +23,7 @@ class GlobToolboxManagerFormModel {
     static final String PROPERTY_CURRENT_VIEW = GlobBox.CURRENT_VIEW_PROPERTY;
 
     private boolean showingWorldMapLayer;
-    private boolean syncColorInformation = true;
+    private boolean syncColorInformation;
     private boolean alphaBlending;
     private GlobBox globBox;
     private ProductSceneView currentView;
