@@ -14,13 +14,18 @@
 
     <changelog>
         <![CDATA[
+          <p>Changes in 1.1:<br/>
+          [GBOX-001] 'Arc/Info Binary Grid Reader' does not work<br/>
+          </p>
                 ]]>
     </changelog>
 
     <dependency>
+        <module>ceres-binio</module>
+    </dependency>
+    <dependency>
         <module>beam-core</module>
     </dependency>
-
     <dependency>
         <module>beam-visat</module>
     </dependency>
