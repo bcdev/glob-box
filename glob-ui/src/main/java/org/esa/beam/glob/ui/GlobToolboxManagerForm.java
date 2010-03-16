@@ -101,6 +101,8 @@ class GlobToolboxManagerForm extends JPanel {
         final SliderUpdater sliderUpdater = new SliderUpdater();
         GlobBox.getInstance().addPropertyChangeListener(GlobBox.RASTER_LIST_PROPERTY, sliderUpdater);
         context.addPropertyChangeListener(GlobBox.CURRENT_VIEW_PROPERTY, sliderUpdater);
+
+        updateLayerGroup(GlobBox.getInstance().getCurrentView());
     }
 
     private void configureTimeSlider() {
