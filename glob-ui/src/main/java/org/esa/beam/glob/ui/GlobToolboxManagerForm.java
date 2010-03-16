@@ -47,14 +47,13 @@ import java.util.List;
 class GlobToolboxManagerForm extends JPanel {
 
     private GlobToolboxManagerFormModel model;
-    private JCheckBox showWorldMapChecker;
-    private JCheckBox syncColorChecker;
 
-    private JCheckBox useAlphaBlendingChecker;
     private JSlider timeSlider;
+    private final GlobToolboxManagerForm.SliderChangeListener sliderChangeListener;
 
     GlobToolboxManagerForm(GlobToolboxManagerFormModel model) {
         this.model = model;
+        sliderChangeListener = new SliderChangeListener();
         createComponents(model.getPropertySet());
     }
 
@@ -69,13 +68,14 @@ class GlobToolboxManagerForm extends JPanel {
         tableLayout.setRowWeightY(4, 1.0);
         setLayout(tableLayout);
 
-        showWorldMapChecker = new JCheckBox("Show world map layer");
-        syncColorChecker = new JCheckBox("Synchronise colour information");
-        useAlphaBlendingChecker = new JCheckBox("Use transparency blending");
+        JCheckBox showWorldMapChecker = new JCheckBox("Show world map layer");
+        JCheckBox syncColorChecker = new JCheckBox("Synchronise colour information");
+        JCheckBox useAlphaBlendingChecker = new JCheckBox("Use transparency blending");
         timeSlider = new JSlider(JSlider.HORIZONTAL);
         timeSlider.setPaintLabels(true);
         timeSlider.setPaintTicks(true);
         timeSlider.setPaintTrack(true);
+        timeSlider.addChangeListener(sliderChangeListener);
         configureTimeSlider();
         add(showWorldMapChecker);
         add(syncColorChecker);
@@ -104,35 +104,30 @@ class GlobToolboxManagerForm extends JPanel {
         final List<RasterDataNode> rasterList = model.getCurrentRasterList();
 
         timeSlider.setMinimum(0);
-        timeSlider.setMaximum(rasterList.size() - 1);
+        final int maximum = rasterList.size() - 1;
+        timeSlider.setMaximum(maximum);
         timeSlider.setInverted(true);
 
         if (!rasterList.isEmpty()) {
             timeSlider.setEnabled(true);
             final Hashtable<Integer, JLabel> labelTable = new Hashtable<Integer, JLabel>();
             for (int i = 0; i < rasterList.size(); i++) {
-                labelTable.put(i, new JLabel(rasterList.get(i).getProductRefString()));
+                final ProductData.UTC utcStartTime = rasterList.get(i).getProduct().getStartTime();
+                SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MMM-yyyy");
+                SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
+                dateFormat.setCalendar(utcStartTime.getAsCalendar());
+                final String dateText = dateFormat.format(utcStartTime.getAsDate());
+                final String timeText = timeFormat.format(utcStartTime.getAsDate());
+                String labelText = String.format("<html><p align=\"center\"> <font size=\"2\">%s<br>%s</font></p>",
+                                                 dateText, timeText);
+                labelTable.put(i, new JLabel(labelText));
             }
             timeSlider.setLabelTable(labelTable);
         } else {
             timeSlider.setEnabled(false);
         }
 
-
-        timeSlider.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(ChangeEvent e) {
-
-                final CollectionLayer collectionLayer = model.getLayerGroup();
-                if (collectionLayer != null) {
-                    final List<Layer> children = collectionLayer.getChildren();
-                    for (int i = 0, childrenSize = children.size(); i < childrenSize; i++) {
-                        Layer child = children.get(i);
-                        child.setVisible(i == timeSlider.getValue());
-                    }
-                }
-            }
-        });
+        timeSlider.setValue(maximum);
     }
 
     private class WorldMapHandler implements PropertyChangeListener {
@@ -374,6 +369,22 @@ class GlobToolboxManagerForm extends JPanel {
         public void propertyChange(PropertyChangeEvent evt) {
             updateLayerGroup(model.getCurrentView());
             configureTimeSlider();
+        }
+    }
+
+    private class SliderChangeListener implements ChangeListener {
+
+        @Override
+        public void stateChanged(ChangeEvent e) {
+
+            final CollectionLayer collectionLayer = model.getLayerGroup();
+            if (collectionLayer != null) {
+                final List<Layer> children = collectionLayer.getChildren();
+                for (int i = 0, childrenSize = children.size(); i < childrenSize; i++) {
+                    Layer child = children.get(i);
+                    child.setVisible(i == timeSlider.getValue());
+                }
+            }
         }
     }
 }

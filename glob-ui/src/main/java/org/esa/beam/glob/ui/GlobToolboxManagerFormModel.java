@@ -25,7 +25,6 @@ class GlobToolboxManagerFormModel {
     private boolean showingWorldMapLayer;
     private boolean syncColorInformation;
     private boolean alphaBlending;
-    private float timePos;
     private GlobBox globBox;
     private ProductSceneView currentView;
     private final PropertyContainer propertySet;

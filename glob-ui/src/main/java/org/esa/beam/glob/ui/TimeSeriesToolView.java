@@ -86,6 +86,7 @@ public class TimeSeriesToolView extends AbstractToolView {
                                                                     DEFAULT_RANGE_LABEL,
                                                                     null, false, true, false);
         chartPanel = new ChartPanel(chart);
+        chart.getTitle().setVisible(false);
         chartPanel.setPreferredSize(new Dimension(300, 200));
         chart.getXYPlot().setNoDataMessage(NO_DATA_MESSAGE);
         control.setBorder(BorderFactory.createEmptyBorder(6, 6, 6, 6));
