@@ -1,6 +1,10 @@
 package org.esa.beam.glob.ui;
 
 import com.bc.ceres.glayer.support.ImageLayer;
+import com.bc.ceres.grender.Viewport;
+import com.bc.ceres.swing.TableLayout;
+import org.esa.beam.framework.datamodel.PixelPos;
+import org.esa.beam.framework.datamodel.Placemark;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.RasterDataNode;
@@ -43,6 +47,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Point2D;
 import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
 import java.text.DecimalFormat;
@@ -67,21 +73,23 @@ public class TimeSeriesToolView extends AbstractToolView {
 
     private final JTextField minInput = new JTextField(8);
     private final JTextField maxInput = new JTextField(8);
-    private static final String MINIMUM_MUST_BE_DOUBLE = "<HTML><BODY>Minimum must be<BR>a double value</BODY></HTML>";
-    private static final String MAXIMUM_MUST_BE_DOUBLE = "<HTML><BODY>Maximum must be<BR>a double value</BODY></HTML>";
     private GlobBox globBox;
     private JCheckBox autoAdjustBox;
+    private TimeSeriesCollection timeSeriesCollection;
+    private TimeSeries cursorTimeSeries;
+    private TimeSeries pinTimeSeries;
 
     public TimeSeriesToolView() {
         pixelPosListener = new TimeSeriesPPL();
         executorService = Executors.newSingleThreadExecutor();
+        timeSeriesCollection = new TimeSeriesCollection();
     }
 
     @Override
     protected JComponent createControl() {
         globBox = GlobBox.getInstance();
         titleBase = getDescriptor().getTitle();
-        JPanel control = new JPanel(new BorderLayout(4, 4));
+        JPanel mainPanel = new JPanel(new BorderLayout(4, 4));
         final JFreeChart chart = ChartFactory.createTimeSeriesChart(null,
                                                                     DEFAULT_DOMAIN_LABEL,
                                                                     DEFAULT_RANGE_LABEL,
@@ -89,9 +97,9 @@ public class TimeSeriesToolView extends AbstractToolView {
         chartPanel = new ChartPanel(chart);
         chartPanel.setPreferredSize(new Dimension(300, 200));
         chart.getXYPlot().setNoDataMessage(NO_DATA_MESSAGE);
-        control.setBorder(BorderFactory.createEmptyBorder(6, 6, 6, 6));
-        control.add(BorderLayout.CENTER, chartPanel);
-        control.setPreferredSize(new Dimension(320, 200));
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(6, 6, 6, 6));
+        mainPanel.add(BorderLayout.CENTER, chartPanel);
+        mainPanel.setPreferredSize(new Dimension(320, 200));
 
         final VisatApp visatApp = VisatApp.getApp();
         visatApp.addInternalFrameListener(new TimeSeriesIFL());
@@ -109,29 +117,36 @@ public class TimeSeriesToolView extends AbstractToolView {
             renderer.setBaseShapesFilled(true);
         }
 
+        timeSeriesPlot.setDataset(timeSeriesCollection);
+
         setCurrentView(globBox.getCurrentView());
         updateUIState();
 
-        final JPanel autoAdjustButtonPanel = new JPanel(new FlowLayout());
-        autoAdjustButtonPanel.setPreferredSize(new Dimension(120, 200));
+        final TableLayout tableLayout = new TableLayout(2);
+        tableLayout.setTableFill(TableLayout.Fill.BOTH);
+        tableLayout.setTablePadding(4, 4);
+        tableLayout.setTableWeightX(1.0);
+        tableLayout.setTableWeightY(0.0);
+        tableLayout.setCellColspan(0, 0, 2);
+        tableLayout.setCellColspan(3, 0, 2);
 
+        final JPanel controlPanel = new JPanel(tableLayout);
         autoAdjustBox = new JCheckBox(AUTO_MIN_MAX);
-
-        final JPanel minPanel = new JPanel(new FlowLayout());
         final JLabel minLabel = new JLabel("Min:");
-        final JPanel maxPanel = new JPanel(new FlowLayout());
+        minInput.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         final JLabel maxLabel = new JLabel("Max:");
-        final JPanel minErrorPanel = new JPanel(new FlowLayout());
-        final JLabel minErrorLabel = new JLabel("");
-        minErrorLabel.setForeground(Color.red);
-        minErrorPanel.add(minErrorLabel);
+        maxInput.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        final JCheckBox showSelectedPinCheckbox = new JCheckBox("Show selected pin");
+        controlPanel.add(autoAdjustBox);
+        controlPanel.add(minLabel);
+        controlPanel.add(minInput);
+        controlPanel.add(maxLabel);
+        controlPanel.add(maxInput);
+        controlPanel.add(showSelectedPinCheckbox);
+        controlPanel.add(tableLayout.createVerticalSpacer());
 
-        final JPanel maxErrorPanel = new JPanel(new FlowLayout());
-        final JLabel maxErrorLabel = new JLabel("");
-        maxErrorLabel.setForeground(Color.red);
-        maxErrorPanel.add(maxErrorLabel);
+        mainPanel.add(BorderLayout.EAST, controlPanel);
 
-        autoAdjustButtonPanel.add(autoAdjustBox);
         autoAdjustBox.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -151,25 +166,13 @@ public class TimeSeriesToolView extends AbstractToolView {
             }
         });
 
-        minPanel.setPreferredSize(new Dimension(120, 25));
-
-        minInput.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-
-        minPanel.add(minLabel);
-        minPanel.add(minInput);
-
-        maxPanel.setPreferredSize(new Dimension(120, 25));
-
-        maxInput.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 
         minInput.addKeyListener(new KeyAdapter() {
             @Override
             public void keyReleased(final KeyEvent e) {
                 try {
                     getTimeSeriesPlot().getRangeAxis().setLowerBound(Double.parseDouble(minInput.getText()));
-                    minErrorLabel.setText("");
                 } catch (final NumberFormatException ignore) {
-                    minErrorLabel.setText(MINIMUM_MUST_BE_DOUBLE);
                 }
             }
         });
@@ -179,24 +182,59 @@ public class TimeSeriesToolView extends AbstractToolView {
             public void keyReleased(final KeyEvent e) {
                 try {
                     getTimeSeriesPlot().getRangeAxis().setUpperBound(Double.parseDouble(maxInput.getText()));
-                    maxErrorLabel.setText("");
                 } catch (final NumberFormatException ignore) {
-                    maxErrorLabel.setText(MAXIMUM_MUST_BE_DOUBLE);
                 }
             }
         });
 
-        maxPanel.add(maxLabel);
-        maxPanel.add(maxInput);
+        showSelectedPinCheckbox.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                //todo removing of pinTimeSeries does not work correctly yet
+                // todo setting pin events are not catched yet
+                if (currentView != null) {
+                    Placemark pin = currentView.getSelectedPin();
+                    if (showSelectedPinCheckbox.isSelected() && pin != null) {
+                        PixelPos position = pin.getPixelPos();
 
-        autoAdjustButtonPanel.add(minPanel);
-        autoAdjustButtonPanel.add(maxPanel);
-        autoAdjustButtonPanel.add(minErrorPanel);
-        autoAdjustButtonPanel.add(maxErrorPanel);
+                        final Viewport viewport = currentView.getViewport();
+                        final ImageLayer baseLayer = currentView.getBaseImageLayer();
+                        final int currentLevel = baseLayer.getLevel(viewport);
+                        final AffineTransform levelZeroToModel = baseLayer.getImageToModelTransform();
+                        final AffineTransform modelToCurrentLevel = baseLayer.getModelToImageTransform(currentLevel);
+                        final Point2D modelPos = levelZeroToModel.transform(position, null);
+                        final Point2D currentPos = modelToCurrentLevel.transform(modelPos, null);
+                        if (pinTimeSeries != null) {
+                            timeSeriesCollection.removeSeries(pinTimeSeries);
+                        }
+                        pinTimeSeries = computeTimeSeries("pinTimeSeries", globBox.getRasterList(),
+                                                          (int) currentPos.getX(), (int) currentPos.getY(),
+                                                          currentLevel);
 
-        control.add(BorderLayout.EAST, autoAdjustButtonPanel);
+                        timeSeriesCollection.addSeries(pinTimeSeries);
+                        getTimeSeriesPlot().setDataset(timeSeriesCollection);
+                    }
+                }
+            }
+        });
 
-        return control;
+        return mainPanel;
+    }
+
+    private TimeSeries computeTimeSeries(String title, final List<RasterDataNode> rasterList, int pixelX, int pixelY,
+                                         int currentLevel) {
+        TimeSeries timeSeries = new TimeSeries(title);
+        for (RasterDataNode raster : rasterList) {
+            final Product product = raster.getProduct();
+            final ProductData.UTC startTime = product.getStartTime();
+            final Millisecond timePeriod = new Millisecond(startTime.getAsDate(),
+                                                           ProductData.UTC.UTC_TIME_ZONE,
+                                                           Locale.getDefault());
+
+            final double value = getValue(raster, pixelX, pixelY, currentLevel);
+            timeSeries.add(new TimeSeriesDataItem(timePeriod, value));
+        }
+        return timeSeries;
     }
 
     private void updateUIState() {
@@ -241,20 +279,12 @@ public class TimeSeriesToolView extends AbstractToolView {
     private void updateTimeSeries(int pixelX, int pixelY, int currentLevel) {
         getTimeSeriesPlot().setDataset(null);
         getTimeSeriesPlot().setNoDataMessage("Loading data...");
-        final List<RasterDataNode> rasterList = globBox.getRasterList();
-        TimeSeries timeSeries = new TimeSeries("cursorTimeSeries");
-        for (RasterDataNode raster : rasterList) {
-            final Product product = raster.getProduct();
-            final ProductData.UTC startTime = product.getStartTime();
-            final Millisecond timePeriod = new Millisecond(startTime.getAsDate(),
-                                                           ProductData.UTC.UTC_TIME_ZONE,
-                                                           Locale.getDefault());
-
-            final double value = getValue(raster, pixelX, pixelY, currentLevel);
-            timeSeries.add(new TimeSeriesDataItem(timePeriod, value));
+        if (cursorTimeSeries != null) {
+            timeSeriesCollection.removeSeries(cursorTimeSeries);
         }
-
-        getTimeSeriesPlot().setDataset(new TimeSeriesCollection(timeSeries));
+        cursorTimeSeries = computeTimeSeries("cursorTimeSeries", globBox.getRasterList(), pixelX, pixelY, currentLevel);
+        timeSeriesCollection.addSeries(cursorTimeSeries);
+        getTimeSeriesPlot().setDataset(timeSeriesCollection);
         getTimeSeriesPlot().setNoDataMessage(NO_DATA_MESSAGE);
 
         if (autoAdjustBox.isSelected()) {
