@@ -14,7 +14,11 @@
 
     <changelog>
         <![CDATA[
-                ]]>
+          <p>Changes in 1.1:<br/>
+           [GBOX-003] Pins in Worldfire product are misplaced<br/>
+           [GBOX-002] Pins in Worldfire product slow down VISAT<br/>
+          </p>
+         ]]>
     </changelog>
 
     <dependency>
@@ -24,7 +28,7 @@
         <module>beam-visat</module>
         <optional>true</optional>
     </dependency>
-    
+
     <categories>Reader</categories>
 
     <extension point="beam-ui:actions">

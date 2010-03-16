@@ -6,7 +6,17 @@ import com.bc.ceres.glevel.MultiLevelSource;
 import com.bc.ceres.glevel.support.DefaultMultiLevelImage;
 import com.bc.ceres.glevel.support.DefaultMultiLevelSource;
 import org.esa.beam.framework.dataio.AbstractProductReader;
-import org.esa.beam.framework.datamodel.*;
+import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.ColorPaletteDef;
+import org.esa.beam.framework.datamodel.CrsGeoCoding;
+import org.esa.beam.framework.datamodel.GeoCoding;
+import org.esa.beam.framework.datamodel.GeoPos;
+import org.esa.beam.framework.datamodel.ImageInfo;
+import org.esa.beam.framework.datamodel.IndexCoding;
+import org.esa.beam.framework.datamodel.PinDescriptor;
+import org.esa.beam.framework.datamodel.Placemark;
+import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.jai.PlacemarkMaskOpImage;
 import org.esa.beam.jai.ResolutionLevel;
 import org.esa.beam.util.Debug;
@@ -14,6 +24,7 @@ import org.esa.beam.util.TreeNode;
 import org.esa.beam.util.io.FileUtils;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 
+import java.awt.Color;
 import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.io.BufferedReader;
@@ -35,6 +46,7 @@ import java.util.TimeZone;
 // TODO - consider reading zips in zip files (e.g. annual time series)
 
 // TODO - consider changeable filename convention
+
 /**
  * @author Marco Peters
  * @since GlobToolbox 2.0
@@ -77,11 +89,11 @@ class WorldFireReader extends AbstractProductReader {
             e.printStackTrace();
         }
         // todo - pin layer needs speed improvements; with more than 6000 pins it is slow 
-        final ProductNodeGroup<Placemark> pinGroup = product.getPinGroup();
-        List<Placemark> fireList = getFireSpotList(inputFile, product.getGeoCoding());
-        for (Placemark fireSpot : fireList) {
-            pinGroup.add(fireSpot);
-        }
+//        final ProductNodeGroup<Placemark> pinGroup = product.getPinGroup();
+//        List<Placemark> fireList = getFireSpotList(inputFile, product.getGeoCoding());
+//        for (Placemark fireSpot : fireList) {
+//            pinGroup.add(fireSpot);
+//        }
         Band fireBand = product.addBand("fire_" + productName, ProductData.TYPE_UINT8);
         fireBand.setNoDataValue(0);
         fireBand.setNoDataValueUsed(true);
@@ -91,6 +103,10 @@ class WorldFireReader extends AbstractProductReader {
         indexCoding.addIndex("fire", 255, "Fire detected");
         product.getIndexCodingGroup().add(indexCoding);
         fireBand.setSampleCoding(indexCoding);
+        final ColorPaletteDef.Point[] points = new ColorPaletteDef.Point[]{
+                new ColorPaletteDef.Point(255, Color.RED, "fire"),
+        };
+        fireBand.setImageInfo(new ImageInfo(new ColorPaletteDef(points)));
         final MultiLevelImage fireImage = createFireImage(product);
         fireBand.setSourceImage(fireImage);
         return product;
@@ -208,8 +224,9 @@ class WorldFireReader extends AbstractProductReader {
             final float lon = Float.parseFloat(columns[4]);
             final String name = "Fire_" + index;
             final GeoPos geoPos = new GeoPos(lat, lon);
-            return new Placemark(name, String.format("%1$tF", calendar), "Fire", null, geoPos, PinDescriptor.INSTANCE.createDefaultSymbol(),
-                           geoCoding);
+            return new Placemark(name, String.format("%1$tF", calendar), "Fire", null, geoPos,
+                                 PinDescriptor.INSTANCE.createDefaultSymbol(),
+                                 geoCoding);
         } else if (columns.length == 6) { // ATSR2
             // todo - implement
             return null;//new FireSpot();
