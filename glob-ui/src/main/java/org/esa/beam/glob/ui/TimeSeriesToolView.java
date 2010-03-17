@@ -125,9 +125,6 @@ public class TimeSeriesToolView extends AbstractToolView {
             xyRenderer.setBaseShapesVisible(true);
             xyRenderer.setBaseShapesFilled(true);
         }
-        renderer.setSeriesPaint(0, Color.RED);
-        renderer.setSeriesPaint(1, Color.BLUE);
-
         timeSeriesPlot.setDataset(timeSeriesCollection);
 
         setCurrentView(globBox.getCurrentView());
@@ -207,7 +204,7 @@ public class TimeSeriesToolView extends AbstractToolView {
                     Placemark pin = currentView.getSelectedPin();
                     final boolean pinCheckboxSelected = showSelectedPinCheckbox.isSelected();
                     if (pinCheckboxSelected && pin != null && somePinIsSelected) {
-                        showSelectedPinSeries(pin);
+                        addSelectedPinSeries(pin);
                     }
                     if (!pinCheckboxSelected) {
                         removePinTimeSeries();
@@ -219,7 +216,7 @@ public class TimeSeriesToolView extends AbstractToolView {
         return mainPanel;
     }
 
-    private void showSelectedPinSeries(Placemark pin) {
+    private void addSelectedPinSeries(Placemark pin) {
         PixelPos position = pin.getPixelPos();
 
         final Viewport viewport = currentView.getViewport();
@@ -235,9 +232,8 @@ public class TimeSeriesToolView extends AbstractToolView {
                                           currentLevel);
 
         timeSeriesCollection.addSeries(pinTimeSeries);
+
         getTimeSeriesPlot().setDataset(timeSeriesCollection);
-        getTimeSeriesPlot().getRenderer().setSeriesPaint(0, Color.BLUE);
-        getTimeSeriesPlot().getRenderer().setSeriesPaint(1, Color.RED);
     }
 
     private TimeSeries computeTimeSeries(String title, final List<RasterDataNode> rasterList, int pixelX, int pixelY,
@@ -318,6 +314,13 @@ public class TimeSeriesToolView extends AbstractToolView {
         }
         cursorTimeSeries = computeTimeSeries("cursorTimeSeries", globBox.getRasterList(), pixelX, pixelY, currentLevel);
         timeSeriesCollection.addSeries(cursorTimeSeries);
+        if (timeSeriesCollection.getSeries(0) == cursorTimeSeries) {
+            getTimeSeriesPlot().getRenderer().setSeriesPaint(0, Color.RED);
+            getTimeSeriesPlot().getRenderer().setSeriesPaint(1, Color.BLUE);
+        } else {
+            getTimeSeriesPlot().getRenderer().setSeriesPaint(0, Color.BLUE);
+            getTimeSeriesPlot().getRenderer().setSeriesPaint(1, Color.RED);
+        }
         getTimeSeriesPlot().setDataset(timeSeriesCollection);
         getTimeSeriesPlot().setNoDataMessage(NO_DATA_MESSAGE);
 
@@ -439,7 +442,7 @@ public class TimeSeriesToolView extends AbstractToolView {
                     pin.getProduct().addProductNodeListener(pinMovedListener);
                 }
                 if (showSelectedPinCheckbox.isSelected() && somePinIsSelected) {
-                    showSelectedPinSeries(pin);
+                    addSelectedPinSeries(pin);
                 } else {
                     removePinTimeSeries();
                 }
@@ -457,7 +460,7 @@ public class TimeSeriesToolView extends AbstractToolView {
             if (event.getPropertyName().equals(Placemark.PROPERTY_NAME_PIXELPOS)) {
                 removePinTimeSeries();
                 if (showSelectedPinCheckbox.isSelected() && somePinIsSelected) {
-                    showSelectedPinSeries(currentView.getSelectedPin());
+                    addSelectedPinSeries(currentView.getSelectedPin());
                 }
             }
         }
