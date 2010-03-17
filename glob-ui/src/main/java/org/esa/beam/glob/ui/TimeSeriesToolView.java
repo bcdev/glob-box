@@ -40,7 +40,6 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -51,7 +50,10 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.text.DecimalFormat;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
@@ -66,6 +68,7 @@ public class TimeSeriesToolView extends AbstractToolView {
 
     private String titleBase;
     private TimeSeriesPPL pixelPosListener;
+    private final PinSelectionListener pinSelectionListener = new PinSelectionListener();
     private ProductSceneView currentView;
     private ChartPanel chartPanel;
     private ExecutorService executorService;
@@ -78,6 +81,8 @@ public class TimeSeriesToolView extends AbstractToolView {
     private TimeSeriesCollection timeSeriesCollection;
     private TimeSeries cursorTimeSeries;
     private TimeSeries pinTimeSeries;
+    private boolean somePinIsSelected = false;
+    private final JCheckBox showSelectedPinCheckbox = new JCheckBox("Show selected pin");
 
     public TimeSeriesToolView() {
         pixelPosListener = new TimeSeriesPPL();
@@ -110,12 +115,14 @@ public class TimeSeriesToolView extends AbstractToolView {
         final ValueAxis rangeAxis = timeSeriesPlot.getRangeAxis();
         rangeAxis.setAutoRange(false);
         rangeAxis.setUpperBound(1.0);
-        XYItemRenderer r = timeSeriesPlot.getRenderer();
-        if (r instanceof XYLineAndShapeRenderer) {
-            XYLineAndShapeRenderer renderer = (XYLineAndShapeRenderer) r;
-            renderer.setBaseShapesVisible(true);
-            renderer.setBaseShapesFilled(true);
+        XYItemRenderer renderer = timeSeriesPlot.getRenderer();
+        if (renderer instanceof XYLineAndShapeRenderer) {
+            XYLineAndShapeRenderer xyRenderer = (XYLineAndShapeRenderer) renderer;
+            xyRenderer.setBaseShapesVisible(true);
+            xyRenderer.setBaseShapesFilled(true);
         }
+        renderer.setSeriesPaint(0, Color.RED);
+        renderer.setSeriesPaint(1, Color.BLUE);
 
         timeSeriesPlot.setDataset(timeSeriesCollection);
 
@@ -130,13 +137,14 @@ public class TimeSeriesToolView extends AbstractToolView {
         tableLayout.setCellColspan(0, 0, 2);
         tableLayout.setCellColspan(3, 0, 2);
 
+        showSelectedPinCheckbox.setEnabled(somePinIsSelected);
+
         final JPanel controlPanel = new JPanel(tableLayout);
         autoAdjustBox = new JCheckBox(AUTO_MIN_MAX);
         final JLabel minLabel = new JLabel("Min:");
         minInput.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         final JLabel maxLabel = new JLabel("Max:");
         maxInput.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-        final JCheckBox showSelectedPinCheckbox = new JCheckBox("Show selected pin");
         controlPanel.add(autoAdjustBox);
         controlPanel.add(minLabel);
         controlPanel.add(minInput);
@@ -185,40 +193,48 @@ public class TimeSeriesToolView extends AbstractToolView {
                 } catch (final NumberFormatException ignore) {
                 }
             }
+
         });
 
         showSelectedPinCheckbox.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                //todo removing of pinTimeSeries does not work correctly yet
-                // todo setting pin events are not catched yet
                 if (currentView != null) {
                     Placemark pin = currentView.getSelectedPin();
-                    if (showSelectedPinCheckbox.isSelected() && pin != null) {
-                        PixelPos position = pin.getPixelPos();
-
-                        final Viewport viewport = currentView.getViewport();
-                        final ImageLayer baseLayer = currentView.getBaseImageLayer();
-                        final int currentLevel = baseLayer.getLevel(viewport);
-                        final AffineTransform levelZeroToModel = baseLayer.getImageToModelTransform();
-                        final AffineTransform modelToCurrentLevel = baseLayer.getModelToImageTransform(currentLevel);
-                        final Point2D modelPos = levelZeroToModel.transform(position, null);
-                        final Point2D currentPos = modelToCurrentLevel.transform(modelPos, null);
-                        if (pinTimeSeries != null) {
-                            timeSeriesCollection.removeSeries(pinTimeSeries);
-                        }
-                        pinTimeSeries = computeTimeSeries("pinTimeSeries", globBox.getRasterList(),
-                                                          (int) currentPos.getX(), (int) currentPos.getY(),
-                                                          currentLevel);
-
-                        timeSeriesCollection.addSeries(pinTimeSeries);
-                        getTimeSeriesPlot().setDataset(timeSeriesCollection);
+                    final boolean pinCheckboxSelected = showSelectedPinCheckbox.isSelected();
+                    if (pinCheckboxSelected && pin != null && somePinIsSelected) {
+                        showSelectedPinSeries(pin);
+                    }
+                    if (!pinCheckboxSelected && pinTimeSeries != null) {
+                        timeSeriesCollection.removeSeries(pinTimeSeries);
+                        getTimeSeriesPlot().getRenderer().setSeriesPaint(0, Color.RED);
                     }
                 }
             }
         });
 
         return mainPanel;
+    }
+
+    private void showSelectedPinSeries(Placemark pin) {
+        PixelPos position = pin.getPixelPos();
+
+        final Viewport viewport = currentView.getViewport();
+        final ImageLayer baseLayer = currentView.getBaseImageLayer();
+        final int currentLevel = baseLayer.getLevel(viewport);
+        final AffineTransform levelZeroToModel = baseLayer.getImageToModelTransform();
+        final AffineTransform modelToCurrentLevel = baseLayer.getModelToImageTransform(currentLevel);
+        final Point2D modelPos = levelZeroToModel.transform(position, null);
+        final Point2D currentPos = modelToCurrentLevel.transform(modelPos, null);
+
+        pinTimeSeries = computeTimeSeries("pinTimeSeries", globBox.getRasterList(),
+                                          (int) currentPos.getX(), (int) currentPos.getY(),
+                                          currentLevel);
+
+        timeSeriesCollection.addSeries(pinTimeSeries);
+        getTimeSeriesPlot().setDataset(timeSeriesCollection);
+        getTimeSeriesPlot().getRenderer().setSeriesPaint(0, Color.BLUE);
+        getTimeSeriesPlot().getRenderer().setSeriesPaint(1, Color.RED);
     }
 
     private TimeSeries computeTimeSeries(String title, final List<RasterDataNode> rasterList, int pixelX, int pixelY,
@@ -268,8 +284,15 @@ public class TimeSeriesToolView extends AbstractToolView {
 
 
     private void setCurrentView(ProductSceneView view) {
+
         if (view != null) {
             view.addPixelPositionListener(pixelPosListener);
+            final boolean isViewPinSelectionListening = Arrays.asList(
+                    view.getListeners(PropertyChangeListener.class)).contains(pinSelectionListener);
+            if (!isViewPinSelectionListening) {
+                view.addPropertyChangeListener(ProductSceneView.PROPERTY_NAME_SELECTED_PIN,
+                                               pinSelectionListener);
+            }
         }
         currentView = view;
         updateUIState();
@@ -382,4 +405,25 @@ public class TimeSeriesToolView extends AbstractToolView {
         }
     }
 
+    private class PinSelectionListener implements PropertyChangeListener {
+
+        @Override
+        public void propertyChange(PropertyChangeEvent evt) {
+            Placemark pin = (Placemark) evt.getNewValue();
+            if (pin != null) {
+                somePinIsSelected = true;
+            } else {
+                somePinIsSelected = false;
+            }
+            if (showSelectedPinCheckbox.isSelected() && somePinIsSelected) {
+                showSelectedPinSeries(pin);
+            } else {
+                if (pinTimeSeries != null) {
+                    timeSeriesCollection.removeSeries(pinTimeSeries);
+                    getTimeSeriesPlot().getRenderer().setSeriesPaint(0, Color.RED);
+                }
+            }
+            showSelectedPinCheckbox.setEnabled(somePinIsSelected);
+        }
+    }
 }
