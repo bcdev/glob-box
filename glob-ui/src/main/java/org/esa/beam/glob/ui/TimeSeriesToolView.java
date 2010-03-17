@@ -7,6 +7,9 @@ import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Placemark;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.datamodel.ProductNodeEvent;
+import org.esa.beam.framework.datamodel.ProductNodeListener;
+import org.esa.beam.framework.datamodel.ProductNodeListenerAdapter;
 import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.framework.ui.PixelPositionListener;
 import org.esa.beam.framework.ui.application.support.AbstractToolView;
@@ -69,6 +72,7 @@ public class TimeSeriesToolView extends AbstractToolView {
     private String titleBase;
     private TimeSeriesPPL pixelPosListener;
     private final PinSelectionListener pinSelectionListener = new PinSelectionListener();
+    private final ProductNodeListener pinMovedListener = new PinMovedListener();
     private ProductSceneView currentView;
     private ChartPanel chartPanel;
     private ExecutorService executorService;
@@ -396,7 +400,9 @@ public class TimeSeriesToolView extends AbstractToolView {
         private class TimeSeriesUpdater implements Runnable {
 
             private final int pixelX;
+
             private final int pixelY;
+
             private final int currentLevel;
 
             TimeSeriesUpdater(int pixelX, int pixelY, int currentLevel) {
@@ -409,25 +415,7 @@ public class TimeSeriesToolView extends AbstractToolView {
             public void run() {
                 updateCursorTimeSeries(pixelX, pixelY, currentLevel);
             }
-        }
-    }
 
-    private class PinSelectionListener implements PropertyChangeListener {
-
-        @Override
-        public void propertyChange(PropertyChangeEvent evt) {
-            if (currentView != null && currentView.getSelectedPins().length <= 1) {
-                Placemark pin = (Placemark) evt.getNewValue();
-                somePinIsSelected = pin != null;
-                if (showSelectedPinCheckbox.isSelected() && somePinIsSelected) {
-                    showSelectedPinSeries(pin);
-                } else {
-                    removePinTimeSeries();
-                }
-                showSelectedPinCheckbox.setEnabled(somePinIsSelected);
-            } else {
-                showSelectedPinCheckbox.setEnabled(false);
-            }
         }
 
     }
@@ -438,4 +426,41 @@ public class TimeSeriesToolView extends AbstractToolView {
             getTimeSeriesPlot().getRenderer().setSeriesPaint(0, Color.RED);
         }
     }
+
+    private class PinSelectionListener implements PropertyChangeListener {
+
+        @Override
+        public void propertyChange(PropertyChangeEvent evt) {
+            if (currentView != null && currentView.getSelectedPins().length <= 1) {
+                Placemark pin = (Placemark) evt.getNewValue();
+                somePinIsSelected = pin != null;
+                if (pin != null &&
+                    !Arrays.asList(pin.getProduct().getProductNodeListeners()).contains(pinMovedListener)) {
+                    pin.getProduct().addProductNodeListener(pinMovedListener);
+                }
+                if (showSelectedPinCheckbox.isSelected() && somePinIsSelected) {
+                    showSelectedPinSeries(pin);
+                } else {
+                    removePinTimeSeries();
+                }
+                showSelectedPinCheckbox.setEnabled(somePinIsSelected);
+            } else {
+                showSelectedPinCheckbox.setEnabled(false);
+            }
+        }
+    }
+
+    private class PinMovedListener extends ProductNodeListenerAdapter {
+
+        @Override
+        public void nodeChanged(ProductNodeEvent event) {
+            if (event.getPropertyName().equals(Placemark.PROPERTY_NAME_PIXELPOS)) {
+                removePinTimeSeries();
+                if (showSelectedPinCheckbox.isSelected() && somePinIsSelected) {
+                    showSelectedPinSeries(currentView.getSelectedPin());
+                }
+            }
+        }
+    }
+
 }
