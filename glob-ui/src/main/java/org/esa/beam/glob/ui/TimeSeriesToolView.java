@@ -127,6 +127,8 @@ public class TimeSeriesToolView extends AbstractToolView {
         timeSeriesPlot.setDataset(timeSeriesCollection);
 
         setCurrentView(globBox.getCurrentView());
+        showSelectedPinCheckbox.setEnabled(somePinIsSelected);
+
         updateUIState();
 
         final TableLayout tableLayout = new TableLayout(2);
@@ -136,8 +138,6 @@ public class TimeSeriesToolView extends AbstractToolView {
         tableLayout.setTableWeightY(0.0);
         tableLayout.setCellColspan(0, 0, 2);
         tableLayout.setCellColspan(3, 0, 2);
-
-        showSelectedPinCheckbox.setEnabled(somePinIsSelected);
 
         final JPanel controlPanel = new JPanel(tableLayout);
         autoAdjustBox = new JCheckBox(AUTO_MIN_MAX);
@@ -205,9 +205,8 @@ public class TimeSeriesToolView extends AbstractToolView {
                     if (pinCheckboxSelected && pin != null && somePinIsSelected) {
                         showSelectedPinSeries(pin);
                     }
-                    if (!pinCheckboxSelected && pinTimeSeries != null) {
-                        timeSeriesCollection.removeSeries(pinTimeSeries);
-                        getTimeSeriesPlot().getRenderer().setSeriesPaint(0, Color.RED);
+                    if (!pinCheckboxSelected) {
+                        removePinTimeSeries();
                     }
                 }
             }
@@ -293,13 +292,21 @@ public class TimeSeriesToolView extends AbstractToolView {
                 view.addPropertyChangeListener(ProductSceneView.PROPERTY_NAME_SELECTED_PIN,
                                                pinSelectionListener);
             }
+            if (view.getSelectedPin() != null) {
+                somePinIsSelected = true;
+                showSelectedPinCheckbox.setEnabled(true);
+            }
+        } else {
+            somePinIsSelected = false;
+            showSelectedPinCheckbox.setEnabled(false);
+            removePinTimeSeries();
         }
         currentView = view;
         updateUIState();
     }
 
 
-    private void updateTimeSeries(int pixelX, int pixelY, int currentLevel) {
+    private void updateCursorTimeSeries(int pixelX, int pixelY, int currentLevel) {
         getTimeSeriesPlot().setDataset(null);
         getTimeSeriesPlot().setNoDataMessage("Loading data...");
         if (cursorTimeSeries != null) {
@@ -400,7 +407,7 @@ public class TimeSeriesToolView extends AbstractToolView {
 
             @Override
             public void run() {
-                updateTimeSeries(pixelX, pixelY, currentLevel);
+                updateCursorTimeSeries(pixelX, pixelY, currentLevel);
             }
         }
     }
@@ -409,21 +416,26 @@ public class TimeSeriesToolView extends AbstractToolView {
 
         @Override
         public void propertyChange(PropertyChangeEvent evt) {
-            Placemark pin = (Placemark) evt.getNewValue();
-            if (pin != null) {
-                somePinIsSelected = true;
-            } else {
-                somePinIsSelected = false;
-            }
-            if (showSelectedPinCheckbox.isSelected() && somePinIsSelected) {
-                showSelectedPinSeries(pin);
-            } else {
-                if (pinTimeSeries != null) {
-                    timeSeriesCollection.removeSeries(pinTimeSeries);
-                    getTimeSeriesPlot().getRenderer().setSeriesPaint(0, Color.RED);
+            if (currentView != null && currentView.getSelectedPins().length <= 1) {
+                Placemark pin = (Placemark) evt.getNewValue();
+                somePinIsSelected = pin != null;
+                if (showSelectedPinCheckbox.isSelected() && somePinIsSelected) {
+                    showSelectedPinSeries(pin);
+                } else {
+                    removePinTimeSeries();
                 }
+                showSelectedPinCheckbox.setEnabled(somePinIsSelected);
+            } else {
+                showSelectedPinCheckbox.setEnabled(false);
             }
-            showSelectedPinCheckbox.setEnabled(somePinIsSelected);
+        }
+
+    }
+
+    private void removePinTimeSeries() {
+        if (pinTimeSeries != null) {
+            timeSeriesCollection.removeSeries(pinTimeSeries);
+            getTimeSeriesPlot().getRenderer().setSeriesPaint(0, Color.RED);
         }
     }
 }
