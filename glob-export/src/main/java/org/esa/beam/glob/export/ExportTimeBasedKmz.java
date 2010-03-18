@@ -19,8 +19,16 @@ import org.esa.beam.visat.VisatApp;
 import org.geotools.referencing.CRS;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
 import javax.swing.JFileChooser;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import java.awt.Dimension;
+import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
@@ -35,6 +43,7 @@ public class ExportTimeBasedKmz extends ExecCommand {
 
     private static final String IMAGE_EXPORT_DIR_PREFERENCES_KEY = "user.image.export.dir";
     BeamFileFilter kmzFileFilter = new BeamFileFilter("KMZ", "kmz", "KMZ - Google Earth File Format");
+    private int level = 2;
 
     @Override
     public void actionPerformed(CommandEvent event) {
@@ -58,7 +67,7 @@ public class ExportTimeBasedKmz extends ExecCommand {
         if (isGeographic) {
             final List<RasterDataNode> rasterList = GlobBox.getInstance().getRasterList();
             final File output = fetchOutputFile(view);
-            final ImageHandler imageHandler = new ImageHandler(app, "Save KMZ", view, output, rasterList, 3);
+            final ImageHandler imageHandler = new ImageHandler(app, "Save KMZ", view, output, rasterList, level);
             imageHandler.executeWithBlocking();
         } else {
             String message = "Product must be in ''Geographic Lat/Lon'' projection.";
@@ -91,6 +100,31 @@ public class ExportTimeBasedKmz extends ExecCommand {
         } else {
             fileChooser.setPreferredSize(new Dimension(512, 256));
         }
+
+        final JPanel regionPanel = new JPanel(new GridLayout(4, 1));
+        regionPanel.setBorder(BorderFactory.createTitledBorder("Level")); /*I18N*/
+        final JRadioButton levelZero = new JRadioButton("0", false); /*I18N*/
+        final JRadioButton levelOne = new JRadioButton("1", false); /*I18N*/
+        final JRadioButton levelTwo = new JRadioButton("2", true); /*I18N*/
+        final JRadioButton levelThree = new JRadioButton("3", false); /*I18N*/
+        ButtonGroup buttonGroup = new ButtonGroup();
+        buttonGroup.add(levelZero);
+        regionPanel.add(levelZero);
+        buttonGroup.add(levelOne);
+        regionPanel.add(levelOne);
+        buttonGroup.add(levelTwo);
+        regionPanel.add(levelTwo);
+        buttonGroup.add(levelThree);
+        regionPanel.add(levelThree);
+        final RadioButtonActionListener radioButtonListener = new RadioButtonActionListener();
+        levelZero.addActionListener(radioButtonListener);
+        levelOne.addActionListener(radioButtonListener);
+        levelTwo.addActionListener(radioButtonListener);
+        levelThree.addActionListener(radioButtonListener);
+        final JPanel accessory = new JPanel();
+        accessory.setLayout(new BoxLayout(accessory, BoxLayout.Y_AXIS));
+        accessory.add(regionPanel);
+        fileChooser.setAccessory(accessory);
 
         int result = fileChooser.showSaveDialog(visatApp.getMainFrame());
         File file = fileChooser.getSelectedFile();
@@ -127,4 +161,15 @@ public class ExportTimeBasedKmz extends ExecCommand {
         setEnabled(view != null);
     }
 
+    private class RadioButtonActionListener implements ActionListener {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            final JRadioButton button = (JRadioButton) e.getSource();
+            if (button.isSelected()) {
+                System.out.println(button.getText());
+                level = Integer.parseInt(button.getText());
+            }
+        }
+    }
 }

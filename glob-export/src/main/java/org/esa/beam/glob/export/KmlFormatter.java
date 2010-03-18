@@ -8,9 +8,7 @@ import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.ProductNodeGroup;
 import org.esa.beam.framework.datamodel.RasterDataNode;
-import org.esa.beam.framework.ui.product.ProductSceneView;
 
-import javax.swing.JInternalFrame;
 import java.text.SimpleDateFormat;
 import java.util.List;
 
@@ -21,29 +19,24 @@ import java.util.List;
  */
 public class KmlFormatter {
 
-    protected String formatKML(final List<RasterDataNode> rasterList, ProductSceneView view, final String imageName) {
-        return formatKML(rasterList, view, imageName, false);
+    protected String formatKML(final RasterDataNode refRaster, final List<RasterDataNode> rasterList,
+                               final String imageName) {
+        return formatKML(refRaster, rasterList, imageName, false);
     }
 
-    protected String formatKML(final List<RasterDataNode> rasterList, final ProductSceneView view,
+    protected String formatKML(RasterDataNode refRaster, final List<RasterDataNode> rasterList,
                                final String legendName, final boolean exportTime) {
-        String description;
-        String legendKml = "";
-        if (view.isRGB()) {
-            JInternalFrame parent = (JInternalFrame) view.getParent().getParent().getParent();
-            description = parent.getTitle() + "\n" + "###NAME###"; //getName();
-        } else {
-//            description = raster.getDescription() + "\n" + "###NAME###";
-            description = "###RasterDescription###_" + "_###NAME###";
-            legendKml = "    <ScreenOverlay>\n"
-                        + "      <name>Legend</name>\n"
-                        + "      <Icon>\n"
-                        + "        <href>" + legendName + ".png</href>\n"
-                        + "      </Icon>\n"
-                        + "      <overlayXY x=\"0\" y=\"1\" xunits=\"fraction\" yunits=\"fraction\" />\n"
-                        + "      <screenXY x=\"0\" y=\"1\" xunits=\"fraction\" yunits=\"fraction\" />\n"
-                        + "    </ScreenOverlay>\n";
-        }
+        String description = String.format("%s (%s)", refRaster.getName(), refRaster.getUnit().replace('*', ' '));
+
+        String legendKml =
+                "    <ScreenOverlay>\n"
+                + "      <name>Legend</name>\n"
+                + "      <Icon>\n"
+                + "        <href>" + legendName + ".png</href>\n"
+                + "      </Icon>\n"
+                + "      <overlayXY x=\"0\" y=\"1\" xunits=\"fraction\" yunits=\"fraction\" />\n"
+                + "      <screenXY x=\"0\" y=\"1\" xunits=\"fraction\" yunits=\"fraction\" />\n"
+                + "    </ScreenOverlay>\n";
 
         String pinKml = "";
         final Product product = rasterList.get(0).getProduct();
@@ -81,8 +74,13 @@ public class KmlFormatter {
             sdf.setCalendar(endTime.getAsCalendar());
             String endTimeString = sdf.format(endTime.getAsDate());
 
+            sdf = new SimpleDateFormat("MMM-dd-yyyy");
+            sdf.setCalendar(startTime.getAsCalendar());
+            String name = raster.getDisplayName();
+            name += " (" + sdf.format(startTime.getAsDate()) + ")";
+
             result.append("      <GroundOverlay>\n");
-            result.append("        <name>startTime formatted in a certain way</name>\n");
+            result.append("        <name>").append(name).append("</name>\n");
             result.append("        <TimeSpan>\n");
             result.append("          <begin>").append(startTimeString).append("</begin>\n");
             result.append("          <end>").append(endTimeString).append("</end>\n");

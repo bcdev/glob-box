@@ -48,48 +48,49 @@ public class ImageHandler extends ProgressMonitorSwingWorker {
     @Override
     protected Object doInBackground(ProgressMonitor pm) throws Exception {
         try {
-            final String message = String.format("Saving image as %s...", file.getPath());
-            pm.beginTask(message, view.isRGB() ? 4 : 3);
-            visatApp.setStatusBarMessage(message);
-            visatApp.getMainFrame().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+            if (file != null) {
+                visatApp.getMainFrame().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                final String message = String.format("Saving image as %s...", file.getPath());
+                pm.beginTask(message, rasterList.size() + 1);
+                visatApp.setStatusBarMessage(message);
 
-            ZipOutputStream outStream = new ZipOutputStream(new FileOutputStream(file));
+                ZipOutputStream outStream = new ZipOutputStream(new FileOutputStream(file));
 
-            RasterDataNode refRaster = view.getRaster();
+                RasterDataNode refRaster = view.getRaster();
 
-            for (RasterDataNode raster : rasterList) {
+                for (RasterDataNode raster : rasterList) {
 
-                if (raster.getImageInfo() == null) {
-                    raster.setImageInfo(refRaster.getImageInfo().createDeepCopy());
+                    if (raster.getImageInfo() == null) {
+                        raster.setImageInfo(refRaster.getImageInfo().createDeepCopy());
+                    }
+
+                    final RenderedImage image = ImageManager.getInstance().createColoredBandImage(
+                            new RasterDataNode[]{raster}, raster.getImageInfo(), level);
+
+                    outStream.putNextEntry(new ZipEntry(raster.getDisplayName() + ".png"));
+                    ImageEncoder encoder = ImageCodec.createImageEncoder(IMAGE_TYPE, outStream, null);
+                    encoder.encode(image);
+                    pm.worked(1);
+
+                }
+                final String legendName = refRaster.getName() + "_legend";
+                if (!view.isRGB()) {
+                    outStream.putNextEntry(new ZipEntry(legendName + ".png"));
+                    ImageEncoder encoder = ImageCodec.createImageEncoder(IMAGE_TYPE, outStream, null);
+                    encoder.encode(createImageLegend(refRaster));
+                    pm.worked(1);
                 }
 
-                final RenderedImage image = ImageManager.getInstance().createColoredBandImage(
-                        new RasterDataNode[]{raster}, raster.getImageInfo(), level);
-                pm.worked(1);
+                try {
 
-                outStream.putNextEntry(new ZipEntry(raster.getDisplayName() + ".png"));
-                ImageEncoder encoder = ImageCodec.createImageEncoder(IMAGE_TYPE, outStream, null);
-                encoder.encode(image);
-                pm.worked(1);
+                    outStream.putNextEntry(new ZipEntry(OVERLAY_KML));
+                    final String kmlContent = kmlFormatter.formatKML(refRaster, rasterList, legendName, true);
+                    outStream.write(kmlContent.getBytes());
+                    pm.worked(1);
 
-            }
-            final String legendName = refRaster.getName() + "_legend";
-            if (!view.isRGB()) {
-                outStream.putNextEntry(new ZipEntry(legendName + ".png"));
-                ImageEncoder encoder = ImageCodec.createImageEncoder(IMAGE_TYPE, outStream, null);
-                encoder.encode(createImageLegend(refRaster));
-                pm.worked(1);
-            }
-
-            try {
-
-                outStream.putNextEntry(new ZipEntry(OVERLAY_KML));
-                final String kmlContent = kmlFormatter.formatKML(rasterList, view, legendName, true);
-                outStream.write(kmlContent.getBytes());
-                pm.worked(1);
-
-            } finally {
-                outStream.close();
+                } finally {
+                    outStream.close();
+                }
             }
         } catch (OutOfMemoryError ignored) {
             visatApp.showOutOfMemoryErrorDialog("The image could not be exported."); /*I18N*/
