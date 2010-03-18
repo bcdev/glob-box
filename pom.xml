@@ -43,6 +43,7 @@
         <module>beam-arcbingrid-reader</module>
         <module>glob-ui</module>
         <module>glob-help</module>
+        <module>glob-export</module>
         <module>glob-bootstrap</module>
     </modules>
 

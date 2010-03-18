@@ -63,6 +63,11 @@
             <artifactId>glob-ui</artifactId>
             <version>${pom.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.esa.beam.glob</groupId>
+            <artifactId>glob-export</artifactId>
+            <version>${pom.version}</version>
+        </dependency>
     </dependencies>
 
 </project>
