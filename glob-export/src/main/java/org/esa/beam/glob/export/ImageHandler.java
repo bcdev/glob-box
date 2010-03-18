@@ -51,7 +51,7 @@ public class ImageHandler extends ProgressMonitorSwingWorker {
             if (file != null) {
                 visatApp.getMainFrame().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
                 final String message = String.format("Saving image as %s...", file.getPath());
-                pm.beginTask(message, rasterList.size() + 1);
+                pm.beginTask(message, rasterList.size() + 2);
                 visatApp.setStatusBarMessage(message);
 
                 ZipOutputStream outStream = new ZipOutputStream(new FileOutputStream(file));
@@ -84,7 +84,7 @@ public class ImageHandler extends ProgressMonitorSwingWorker {
                 try {
 
                     outStream.putNextEntry(new ZipEntry(OVERLAY_KML));
-                    final String kmlContent = kmlFormatter.formatKML(refRaster, rasterList, legendName, true);
+                    final String kmlContent = kmlFormatter.formatKML(refRaster, rasterList, legendName);
                     outStream.write(kmlContent.getBytes());
                     pm.worked(1);
 

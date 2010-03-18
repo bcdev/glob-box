@@ -89,7 +89,8 @@ public class ExportTimeBasedKmz extends ExecCommand {
         fileChooser.setAcceptAllFileFilterUsed(false);
 
         fileChooser.setDialogTitle(visatApp.getAppName() + " - " + "Export time series"); /* I18N */
-        fileChooser.setCurrentFilename("time_series_" + sceneView.getRaster().getName());
+        final RasterDataNode refRaster = sceneView.getRaster();
+        fileChooser.setCurrentFilename("time_series_" + refRaster.getName());
 
         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
@@ -101,26 +102,19 @@ public class ExportTimeBasedKmz extends ExecCommand {
             fileChooser.setPreferredSize(new Dimension(512, 256));
         }
 
-        final JPanel regionPanel = new JPanel(new GridLayout(4, 1));
-        regionPanel.setBorder(BorderFactory.createTitledBorder("Level")); /*I18N*/
-        final JRadioButton levelZero = new JRadioButton("0", false); /*I18N*/
-        final JRadioButton levelOne = new JRadioButton("1", false); /*I18N*/
-        final JRadioButton levelTwo = new JRadioButton("2", true); /*I18N*/
-        final JRadioButton levelThree = new JRadioButton("3", false); /*I18N*/
+        int maxLevel = refRaster.getSourceImage().getModel().getLevelCount() - 1;
+        maxLevel = maxLevel > 10 ? 10 : maxLevel;
+
+        final JPanel regionPanel = new JPanel(new GridLayout(maxLevel, 1));
+        regionPanel.setBorder(BorderFactory.createTitledBorder("Level"));
         ButtonGroup buttonGroup = new ButtonGroup();
-        buttonGroup.add(levelZero);
-        regionPanel.add(levelZero);
-        buttonGroup.add(levelOne);
-        regionPanel.add(levelOne);
-        buttonGroup.add(levelTwo);
-        regionPanel.add(levelTwo);
-        buttonGroup.add(levelThree);
-        regionPanel.add(levelThree);
         final RadioButtonActionListener radioButtonListener = new RadioButtonActionListener();
-        levelZero.addActionListener(radioButtonListener);
-        levelOne.addActionListener(radioButtonListener);
-        levelTwo.addActionListener(radioButtonListener);
-        levelThree.addActionListener(radioButtonListener);
+        for (int i = 0; i < maxLevel; i++) {
+            final JRadioButton button = new JRadioButton(Integer.toString(i), true);
+            buttonGroup.add(button);
+            regionPanel.add(button);
+            button.addActionListener(radioButtonListener);
+        }
         final JPanel accessory = new JPanel();
         accessory.setLayout(new BoxLayout(accessory, BoxLayout.Y_AXIS));
         accessory.add(regionPanel);
@@ -167,7 +161,6 @@ public class ExportTimeBasedKmz extends ExecCommand {
         public void actionPerformed(ActionEvent e) {
             final JRadioButton button = (JRadioButton) e.getSource();
             if (button.isSelected()) {
-                System.out.println(button.getText());
                 level = Integer.parseInt(button.getText());
             }
         }

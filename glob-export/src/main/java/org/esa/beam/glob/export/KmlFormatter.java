@@ -19,13 +19,8 @@ import java.util.List;
  */
 public class KmlFormatter {
 
-    protected String formatKML(final RasterDataNode refRaster, final List<RasterDataNode> rasterList,
-                               final String imageName) {
-        return formatKML(refRaster, rasterList, imageName, false);
-    }
-
     protected String formatKML(RasterDataNode refRaster, final List<RasterDataNode> rasterList,
-                               final String legendName, final boolean exportTime) {
+                               final String legendName) {
         String description = String.format("%s (%s)", refRaster.getName(), refRaster.getUnit().replace('*', ' '));
 
         String legendKml =
@@ -34,12 +29,12 @@ public class KmlFormatter {
                 + "      <Icon>\n"
                 + "        <href>" + legendName + ".png</href>\n"
                 + "      </Icon>\n"
-                + "      <overlayXY x=\"0\" y=\"1\" xunits=\"fraction\" yunits=\"fraction\" />\n"
-                + "      <screenXY x=\"0\" y=\"1\" xunits=\"fraction\" yunits=\"fraction\" />\n"
+                + "      <overlayXY x=\"0\" y=\"0\" xunits=\"fraction\" yunits=\"fraction\" />\n"
+                + "      <screenXY x=\"0\" y=\"0\" xunits=\"fraction\" yunits=\"fraction\" />\n"
                 + "    </ScreenOverlay>\n";
 
         String pinKml = "";
-        final Product product = rasterList.get(0).getProduct();
+        final Product product = refRaster.getProduct();
         ProductNodeGroup<Placemark> pinGroup = product.getPinGroup();
         Placemark[] pins = pinGroup.toArray(new Placemark[pinGroup.getNodeCount()]);
         for (Placemark placemark : pins) {
