@@ -8,6 +8,6 @@ public class GlobToolboxManagerToolView extends AbstractToolView {
 
     @Override
     protected JComponent createControl() {
-        return new GlobToolboxManagerForm(new GlobToolboxManagerFormModel());
+        return new GlobToolboxManagerForm();
     }
 }

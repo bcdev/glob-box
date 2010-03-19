@@ -4,6 +4,7 @@ import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductManager;
 import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.framework.ui.product.ProductSceneView;
+import org.esa.beam.glob.ui.GlobToolboxManagerFormModel;
 
 import javax.swing.event.InternalFrameAdapter;
 import javax.swing.event.InternalFrameEvent;
@@ -39,6 +40,8 @@ public class GlobBox {
     private ProductManager productManager;
     private List<RasterDataNode> rasterList;
 
+    private final GlobToolboxManagerFormModel model;
+
     public static GlobBox getInstance() {
         if (instance == null) {
             instance = new GlobBox();
@@ -53,6 +56,7 @@ public class GlobBox {
         refRaster = new AtomicReference<RasterDataNode>();
         rasterList = Collections.emptyList();
         propertyChangeSupport = new PropertyChangeSupport(this);
+        this.model = new GlobToolboxManagerFormModel(this);
     }
 
     public InternalFrameListener getSceneViewListener() {
@@ -131,10 +135,6 @@ public class GlobBox {
         this.propertyChangeSupport.addPropertyChangeListener(property, pcl);
     }
 
-    public void removePropertyChangeListener(String property, PropertyChangeListener pcl) {
-        this.propertyChangeSupport.removePropertyChangeListener(property, pcl);
-    }
-
     private void setCurrentView(ProductSceneView sceneView) {
         ProductSceneView oldView = currentView;
         currentView = sceneView;
@@ -204,5 +204,9 @@ public class GlobBox {
                 setCurrentView(null);
             }
         }
+    }
+
+    public GlobToolboxManagerFormModel getModel() {
+        return model;
     }
 }

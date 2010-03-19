@@ -53,8 +53,8 @@ class GlobToolboxManagerForm extends JPanel {
     private JSlider timeSlider;
     private final GlobToolboxManagerForm.SliderChangeListener sliderChangeListener;
 
-    GlobToolboxManagerForm(GlobToolboxManagerFormModel model) {
-        this.model = model;
+    GlobToolboxManagerForm() {
+        this.model = GlobBox.getInstance().getModel();
         sliderChangeListener = new SliderChangeListener();
         createComponents(model.getPropertySet());
     }

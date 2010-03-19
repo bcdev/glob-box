@@ -14,7 +14,7 @@ import java.util.List;
 
 
 @SuppressWarnings({"UnusedDeclaration"})
-class GlobToolboxManagerFormModel {
+public class GlobToolboxManagerFormModel {
 
     static final String PROPERTY_NAME_WORLDMAP = "showingWorldMapLayer";
     static final String PROPERTY_NAME_SYNCCOLOR = "syncColorInformation";
@@ -29,8 +29,8 @@ class GlobToolboxManagerFormModel {
     private ProductSceneView currentView;
     private final PropertyContainer propertySet;
 
-    GlobToolboxManagerFormModel() {
-        globBox = GlobBox.getInstance();
+    public GlobToolboxManagerFormModel(final GlobBox globBox) {
+        this.globBox = globBox;
         globBox.addPropertyChangeListener(PROPERTY_CURRENT_VIEW, new PropertyChangeListener() {
             @Override
             public void propertyChange(PropertyChangeEvent evt) {
