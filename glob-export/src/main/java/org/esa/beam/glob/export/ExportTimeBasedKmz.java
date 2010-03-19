@@ -11,7 +11,6 @@ import org.esa.beam.framework.ui.command.CommandEvent;
 import org.esa.beam.framework.ui.command.ExecCommand;
 import org.esa.beam.framework.ui.product.ProductSceneView;
 import org.esa.beam.glob.GlobBox;
-import org.esa.beam.util.Debug;
 import org.esa.beam.util.SystemUtils;
 import org.esa.beam.util.io.BeamFileChooser;
 import org.esa.beam.util.io.BeamFileFilter;
@@ -29,8 +28,6 @@ import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.util.List;
 
@@ -88,7 +85,7 @@ public class ExportTimeBasedKmz extends ExecCommand {
         fileChooser.addChoosableFileFilter(kmzFileFilter);
         fileChooser.setAcceptAllFileFilterUsed(false);
 
-        fileChooser.setDialogTitle(visatApp.getAppName() + " - " + "Export time series"); /* I18N */
+        fileChooser.setDialogTitle(visatApp.getAppName() + " - " + "Export time series as time based KMZ"); /* I18N */
         final RasterDataNode refRaster = sceneView.getRaster();
         fileChooser.setCurrentFilename("time_series_" + refRaster.getName());
 
@@ -122,13 +119,7 @@ public class ExportTimeBasedKmz extends ExecCommand {
 
         int result = fileChooser.showSaveDialog(visatApp.getMainFrame());
         File file = fileChooser.getSelectedFile();
-        fileChooser.addPropertyChangeListener(new PropertyChangeListener() {
-            @Override
-            public void propertyChange(PropertyChangeEvent evt) {
-                // @todo never comes here, why?
-                Debug.trace(evt.toString());
-            }
-        });
+
         final File currentDirectory = fileChooser.getCurrentDirectory();
         if (currentDirectory != null) {
             visatApp.getPreferences().setPropertyString(

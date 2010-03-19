@@ -6,10 +6,8 @@ import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Placemark;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.framework.datamodel.ProductNodeGroup;
-import org.esa.beam.framework.datamodel.RasterDataNode;
+import org.esa.beam.util.Debug;
 
-import java.awt.image.RenderedImage;
 import java.text.SimpleDateFormat;
 import java.util.List;
 
@@ -20,138 +18,134 @@ import java.util.List;
  */
 class KmlFormatter {
 
-    static String formatKML(RasterDataNode refRaster, final List<RasterDataNode> rasterList,
-                            final String legendName) {
-        String description = String.format("%s (%s)", refRaster.getName(), refRaster.getUnit().replace('*', ' '));
+    private static float eastLon;
+    private static float upperLeftLat;
+    private static float lowerRightLat;
+    private static float upperLeftGPLon;
 
-        String legendKml =
-                "    <ScreenOverlay>\n"
-                + "      <name>Legend</name>\n"
-                + "      <Icon>\n"
-                + "        <href>" + legendName + ".png</href>\n"
-                + "      </Icon>\n"
-                + "      <overlayXY x=\"0\" y=\"0\" xunits=\"fraction\" yunits=\"fraction\" />\n"
-                + "      <screenXY x=\"0\" y=\"0\" xunits=\"fraction\" yunits=\"fraction\" />\n"
-                + "    </ScreenOverlay>\n";
+    private KmlFormatter() {
+    }
 
-        String pinKml = "";
-        final Product product = refRaster.getProduct();
-        ProductNodeGroup<Placemark> pinGroup = product.getPinGroup();
-        Placemark[] pins = pinGroup.toArray(new Placemark[pinGroup.getNodeCount()]);
-        for (Placemark placemark : pins) {
-            GeoPos geoPos = placemark.getGeoPos();
-            if (geoPos != null && product.containsPixel(placemark.getPixelPos())) {
-                pinKml += String.format(
-                        "<Placemark>\n"
-                        + "  <name>%s</name>\n"
-                        + "  <Point>\n"
-                        + "    <coordinates>%f,%f,0</coordinates>\n"
-                        + "  </Point>\n"
-                        + "</Placemark>\n",
-                        placemark.getLabel(),
-                        geoPos.lon,
-                        geoPos.lat);
-            }
-        }
-
-        StringBuffer result = new StringBuffer();
+    public static String createHeader(boolean isTimeSeries, String description, String name) {
+        StringBuilder result = new StringBuilder();
         result.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
         result.append("<kml xmlns=\"http://earth.google.com/kml/2.0\">\n");
-        result.append("  <Folder>\n");
-        result.append("    <name>").append(description).append("</name>\n");
+        if (isTimeSeries) {
+            result.append("  <Folder>\n");
+        } else {
+            result.append("  <Document>\n");
+        }
+        result.append("    <name>").append(name).append("</name>\n");
+        result.append("   <description>").append(description).append("</description>");
+        return result.toString();
+    }
 
-        for (RasterDataNode raster : rasterList) {
-            String imageName = raster.getDisplayName() + ".png";
-            final ProductData.UTC startTime = raster.getProduct().getStartTime();
-            final ProductData.UTC endTime = raster.getProduct().getEndTime();
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM");
-            sdf.setCalendar(startTime.getAsCalendar());
-            String startTimeString = sdf.format(startTime.getAsDate());
-            sdf.setCalendar(endTime.getAsCalendar());
-            String endTimeString = sdf.format(endTime.getAsDate());
+    public static String createPlacemarks(List<Placemark> placemarks) {
+        StringBuilder result = new StringBuilder();
+        for (Placemark placemark : placemarks) {
+            GeoPos geoPos = placemark.getGeoPos();
+            if (geoPos != null) {
+                result.append("    <Placemark>\n");
+                result.append(String.format("       <name>%s</name>\n", placemark.getLabel()));
+                result.append("       <Point>\n");
+                result.append(String.format("         <coordinates>%f,%f,0</coordinates>\n", geoPos.lon, geoPos.lat));
+                result.append("       </Point>\n");
+                result.append("     </Placemark>\n");
+            }
+        }
+        return result.toString();
+    }
 
-            sdf = new SimpleDateFormat("MMM-dd-yyyy");
-            sdf.setCalendar(startTime.getAsCalendar());
-            String name = raster.getDisplayName();
-            name += " (" + sdf.format(startTime.getAsDate()) + ")";
+    public static String createOverlays(List<KmlLayer> kmlLayers, boolean isTimeSeries) {
+        StringBuilder result = new StringBuilder();
+
+        for (KmlLayer layer : kmlLayers) {
+
+            computeLatLon(layer);
+
+            String imageName = layer.getName();
+            String name = layer.getName();
 
             result.append("      <GroundOverlay>\n");
             result.append("        <name>").append(name).append("</name>\n");
-            result.append("        <TimeSpan>\n");
-            result.append("          <begin>").append(startTimeString).append("</begin>\n");
-            result.append("          <end>").append(endTimeString).append("</end>\n");
-            result.append("        </TimeSpan>\n");
+
+            if (isTimeSeries) {
+                TimedKmlLayer timedLayer = null;
+                try {
+                    timedLayer = (TimedKmlLayer) layer;
+                } catch (final ClassCastException cce) {
+                    Debug.trace(cce.getMessage());
+                }
+                final ProductData.UTC startTime = timedLayer.getStartTime();
+                final ProductData.UTC endTime = timedLayer.getEndTime();
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM");
+                sdf.setCalendar(startTime.getAsCalendar());
+                String startTimeString = sdf.format(startTime.getAsDate());
+                sdf.setCalendar(endTime.getAsCalendar());
+                String endTimeString = sdf.format(endTime.getAsDate());
+
+                sdf = new SimpleDateFormat("MMM-dd-yyyy");
+                sdf.setCalendar(startTime.getAsCalendar());
+
+                name += " (" + sdf.format(startTime.getAsDate()) + ")";
+
+                result.append("        <TimeSpan>\n");
+                result.append("          <begin>").append(startTimeString).append("</begin>\n");
+                result.append("          <end>").append(endTimeString).append("</end>\n");
+                result.append("        </TimeSpan>\n");
+            }
+
             result.append("        <Icon>").append(imageName).append("</Icon>\n");
             result.append("        <LatLonBox>\n");
-            result.append("          <north>").append(getUpperLeftLat(raster)).append("</north>\n");
-            result.append("          <south>").append(getLowerRightLat(raster)).append("</south>\n");
-            result.append("          <east>").append(getEastLon(raster)).append("</east>\n");
-            result.append("          <west>").append(upperLeftGPLon(raster)).append("</west>\n");
+            result.append("          <north>").append(upperLeftLat).append("</north>\n");
+            result.append("          <south>").append(lowerRightLat).append("</south>\n");
+            result.append("          <east>").append(eastLon).append("</east>\n");
+            result.append("          <west>").append(upperLeftGPLon).append("</west>\n");
             result.append("        </LatLonBox>\n");
             result.append("      </GroundOverlay>\n");
         }
 
-        result.append(legendKml);
-        result.append(pinKml);
-        result.append("  </Folder>\n");
-        result.append("</kml>\n");
-
         return result.toString();
     }
 
-    private static float getUpperLeftLat(final RasterDataNode raster) {
-        final GeoCoding geoCoding = raster.getGeoCoding();
-        final PixelPos upperLeftPP = new PixelPos(0.5f, 0.5f);
-        return geoCoding.getGeoPos(upperLeftPP, null).getLat();
+    public static String createLegend(String legendName) {
+
+        return "    <ScreenOverlay>\n"
+               + "      <name>" + legendName + "</name>\n"
+               + "      <Icon>\n"
+               + "        <href>" + legendName + ".png</href>\n"
+               + "      </Icon>\n"
+               + "      <overlayXY x=\"0\" y=\"0\" xunits=\"fraction\" yunits=\"fraction\" />\n"
+               + "      <screenXY x=\"0\" y=\"0\" xunits=\"fraction\" yunits=\"fraction\" />\n"
+               + "    </ScreenOverlay>\n";
     }
 
-    private static float getLowerRightLat(final RasterDataNode raster) {
-        final GeoCoding geoCoding = raster.getGeoCoding();
-        final Product product = raster.getProduct();
+    public static String createFooter(boolean isTimeSeries) {
+        StringBuilder result = new StringBuilder();
+        if (isTimeSeries) {
+            result.append("  </Folder>\n");
+        } else {
+            result.append("  </Document>\n");
+        }
+        result.append("</kml>\n");
+        return result.toString();
+    }
+
+    private static void computeLatLon(KmlLayer layer) {
+        final GeoCoding geoCoding = layer.getGeoCoding();
+        final PixelPos upperLeftPP = new PixelPos(0.5f, 0.5f);
+        final Product product = layer.getProduct();
         final PixelPos lowerRightPP = new PixelPos(product.getSceneRasterWidth() - 0.5f,
                                                    product.getSceneRasterHeight() - 0.5f);
-        return geoCoding.getGeoPos(lowerRightPP, null).getLat();
-    }
-
-    private static float getEastLon(final RasterDataNode raster) {
-        final PixelPos upperLeftPP = new PixelPos(0.5f, 0.5f);
-        final GeoCoding geoCoding = raster.getGeoCoding();
         final GeoPos upperLeftGP = geoCoding.getGeoPos(upperLeftPP, null);
-        final Product product = raster.getProduct();
-        final PixelPos lowerRightPP = new PixelPos(product.getSceneRasterWidth() - 0.5f,
-                                                   product.getSceneRasterHeight() - 0.5f);
         final GeoPos lowerRightGP = geoCoding.getGeoPos(lowerRightPP, null);
-        float eastLon = lowerRightGP.getLon();
+        eastLon = lowerRightGP.getLon();
         if (upperLeftGP.getLon() > lowerRightGP.getLon()) {
             eastLon += 360;
         }
-        return eastLon;
+        upperLeftLat = geoCoding.getGeoPos(upperLeftPP, null).getLat();
+        lowerRightLat = geoCoding.getGeoPos(lowerRightPP, null).getLat();
+        upperLeftGPLon = upperLeftGP.getLon();
     }
 
-    private static float upperLeftGPLon(RasterDataNode raster) {
-        final GeoCoding geoCoding = raster.getGeoCoding();
-        final PixelPos upperLeftPP = new PixelPos(0.5f, 0.5f);
-        final GeoPos upperLeftGP = geoCoding.getGeoPos(upperLeftPP, null);
-        return upperLeftGP.getLon();
-    }
-
-    public static String createHeader() {
-        return null;
-    }
-
-    public static String createPlacemarks(List<Placemark> placemarks) {
-        return null;
-    }
-
-    public static String createOverlays(List<KmlLayer> kmlLayers) {
-        return null;
-    }
-
-    public static String createLegend(RenderedImage legend, String legendName) {
-        return null;
-    }
-
-    public static String createFooter() {
-        return null;
-    }
 }
