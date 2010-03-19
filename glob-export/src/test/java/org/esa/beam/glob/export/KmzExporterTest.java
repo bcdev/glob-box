@@ -1,6 +1,5 @@
 package org.esa.beam.glob.export;
 
-import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.jai.ImageManager;
 import org.esa.beam.util.ImageUtils;
 import org.geotools.geometry.jts.ReferencedEnvelope;
@@ -8,10 +7,10 @@ import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.junit.Test;
 import org.opengis.geometry.BoundingBox;
 
+import javax.media.jai.PlanarImage;
 import javax.media.jai.SourcelessOpImage;
 import java.awt.Rectangle;
 import java.awt.image.DataBuffer;
-import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
 import java.awt.image.WritableRaster;
 import java.io.BufferedOutputStream;
@@ -31,9 +30,8 @@ public class KmzExporterTest {
         kmzExporter.addLayer("layerName", layer, boundBox);
         assertEquals(kmzExporter.getLayerCount(), 1);
 
-
         final OutputStream outStream = createOutputStream();
-        kmzExporter.export(outStream, ProgressMonitor.NULL);
+//        kmzExporter.export(outStream, ProgressMonitor.NULL);
     }
 
     private OutputStream createOutputStream() {
@@ -50,10 +48,10 @@ public class KmzExporterTest {
         }
 
         @Override
-        protected void computeRect(Raster[] sources, WritableRaster dest, Rectangle destRect) {
-            super.computeRect(sources, dest, destRect);
-
+        protected void computeRect(PlanarImage[] sources, WritableRaster dest, Rectangle destRect) {
+//            super.computeRect(sources, dest, destRect);
         }
+
     }
 
 
