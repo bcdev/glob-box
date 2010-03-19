@@ -31,8 +31,7 @@ public class ImageHandler extends ProgressMonitorSwingWorker {
     private final VisatApp visatApp;
     private final ProductSceneView view;
     private final File file;
-    private final KmlFormatter kmlFormatter = new KmlFormatter();
-    private final List<RasterDataNode> rasterList;
+    private final RasterDataNode[] rasterList;
     private final int level;
 
     public ImageHandler(final VisatApp visatApp, final String message, final ProductSceneView view, final File file,
@@ -41,7 +40,7 @@ public class ImageHandler extends ProgressMonitorSwingWorker {
         this.visatApp = visatApp;
         this.view = view;
         this.file = file;
-        this.rasterList = rasterList;
+        this.rasterList = rasterList.toArray(new RasterDataNode[rasterList.size()]);
         this.level = level;
     }
 
@@ -51,41 +50,41 @@ public class ImageHandler extends ProgressMonitorSwingWorker {
             if (file != null) {
                 visatApp.getMainFrame().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
                 final String message = String.format("Saving image as %s...", file.getPath());
-                pm.beginTask(message, rasterList.size() + 2);
+                pm.beginTask(message, rasterList.length + 2);
                 visatApp.setStatusBarMessage(message);
 
-                ZipOutputStream outStream = new ZipOutputStream(new FileOutputStream(file));
 
                 RasterDataNode refRaster = view.getRaster();
 
-                for (RasterDataNode raster : rasterList) {
+                ZipOutputStream outStream = new ZipOutputStream(new FileOutputStream(file));
+                try {
+                    for (RasterDataNode raster : rasterList) {
 
-                    if (raster.getImageInfo() == null) {
-                        raster.setImageInfo(refRaster.getImageInfo().createDeepCopy());
+                        if (raster.getImageInfo() == null) {
+                            raster.setImageInfo(refRaster.getImageInfo().createDeepCopy());
+                        }
+
+                        final RenderedImage image = ImageManager.getInstance().createColoredBandImage(
+                                new RasterDataNode[]{raster}, raster.getImageInfo(), level);
+
+                        outStream.putNextEntry(new ZipEntry(raster.getDisplayName() + ".png"));
+                        ImageEncoder encoder = ImageCodec.createImageEncoder(IMAGE_TYPE, outStream, null);
+                        encoder.encode(image);
+                        pm.worked(1);
+
+                    }
+                    final String legendName = refRaster.getName() + "_legend";
+                    if (!view.isRGB()) {
+                        outStream.putNextEntry(new ZipEntry(legendName + ".png"));
+                        ImageEncoder encoder = ImageCodec.createImageEncoder(IMAGE_TYPE, outStream, null);
+                        encoder.encode(createImageLegend(refRaster));
+                        pm.worked(1);
                     }
 
-                    final RenderedImage image = ImageManager.getInstance().createColoredBandImage(
-                            new RasterDataNode[]{raster}, raster.getImageInfo(), level);
-
-                    outStream.putNextEntry(new ZipEntry(raster.getDisplayName() + ".png"));
-                    ImageEncoder encoder = ImageCodec.createImageEncoder(IMAGE_TYPE, outStream, null);
-                    encoder.encode(image);
-                    pm.worked(1);
-
-                }
-                final String legendName = refRaster.getName() + "_legend";
-                if (!view.isRGB()) {
-                    outStream.putNextEntry(new ZipEntry(legendName + ".png"));
-                    ImageEncoder encoder = ImageCodec.createImageEncoder(IMAGE_TYPE, outStream, null);
-                    encoder.encode(createImageLegend(refRaster));
-                    pm.worked(1);
-                }
-
-                try {
 
                     outStream.putNextEntry(new ZipEntry(OVERLAY_KML));
-                    final String kmlContent = kmlFormatter.formatKML(refRaster, rasterList, legendName);
-                    outStream.write(kmlContent.getBytes());
+//                    final String kmlContent = KmlFormatter.formatKML(refRaster, rasterList, legendName);
+//                    outStream.write(kmlContent.getBytes());
                     pm.worked(1);
 
                 } finally {

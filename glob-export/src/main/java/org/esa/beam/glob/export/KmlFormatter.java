@@ -9,6 +9,7 @@ import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.ProductNodeGroup;
 import org.esa.beam.framework.datamodel.RasterDataNode;
 
+import java.awt.image.RenderedImage;
 import java.text.SimpleDateFormat;
 import java.util.List;
 
@@ -17,10 +18,10 @@ import java.util.List;
  * Date: 17.03.2010
  * Time: 17:21:00
  */
-public class KmlFormatter {
+class KmlFormatter {
 
-    protected String formatKML(RasterDataNode refRaster, final List<RasterDataNode> rasterList,
-                               final String legendName) {
+    static String formatKML(RasterDataNode refRaster, final List<RasterDataNode> rasterList,
+                            final String legendName) {
         String description = String.format("%s (%s)", refRaster.getName(), refRaster.getUnit().replace('*', ' '));
 
         String legendKml =
@@ -98,13 +99,13 @@ public class KmlFormatter {
         return result.toString();
     }
 
-    private float getUpperLeftLat(final RasterDataNode raster) {
+    private static float getUpperLeftLat(final RasterDataNode raster) {
         final GeoCoding geoCoding = raster.getGeoCoding();
         final PixelPos upperLeftPP = new PixelPos(0.5f, 0.5f);
         return geoCoding.getGeoPos(upperLeftPP, null).getLat();
     }
 
-    private float getLowerRightLat(final RasterDataNode raster) {
+    private static float getLowerRightLat(final RasterDataNode raster) {
         final GeoCoding geoCoding = raster.getGeoCoding();
         final Product product = raster.getProduct();
         final PixelPos lowerRightPP = new PixelPos(product.getSceneRasterWidth() - 0.5f,
@@ -112,7 +113,7 @@ public class KmlFormatter {
         return geoCoding.getGeoPos(lowerRightPP, null).getLat();
     }
 
-    private float getEastLon(final RasterDataNode raster) {
+    private static float getEastLon(final RasterDataNode raster) {
         final PixelPos upperLeftPP = new PixelPos(0.5f, 0.5f);
         final GeoCoding geoCoding = raster.getGeoCoding();
         final GeoPos upperLeftGP = geoCoding.getGeoPos(upperLeftPP, null);
@@ -127,10 +128,30 @@ public class KmlFormatter {
         return eastLon;
     }
 
-    private float upperLeftGPLon(RasterDataNode raster) {
+    private static float upperLeftGPLon(RasterDataNode raster) {
         final GeoCoding geoCoding = raster.getGeoCoding();
         final PixelPos upperLeftPP = new PixelPos(0.5f, 0.5f);
         final GeoPos upperLeftGP = geoCoding.getGeoPos(upperLeftPP, null);
         return upperLeftGP.getLon();
+    }
+
+    public static String createHeader() {
+        return null;
+    }
+
+    public static String createPlacemarks(List<Placemark> placemarks) {
+        return null;
+    }
+
+    public static String createOverlays(List<KmlLayer> kmlLayers) {
+        return null;
+    }
+
+    public static String createLegend(RenderedImage legend, String legendName) {
+        return null;
+    }
+
+    public static String createFooter() {
+        return null;
     }
 }
