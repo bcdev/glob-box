@@ -1,10 +1,10 @@
 package org.esa.beam.glob.export;
 
+import com.bc.ceres.glayer.Layer;
 import org.esa.beam.framework.datamodel.CrsGeoCoding;
 import org.esa.beam.framework.datamodel.GeoCoding;
 import org.esa.beam.framework.datamodel.MapGeoCoding;
 import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.framework.dataop.maptransf.IdentityTransformDescriptor;
 import org.esa.beam.framework.dataop.maptransf.MapTransformDescriptor;
@@ -13,7 +13,6 @@ import org.esa.beam.framework.ui.command.CommandEvent;
 import org.esa.beam.framework.ui.command.ExecCommand;
 import org.esa.beam.framework.ui.product.ProductSceneView;
 import org.esa.beam.glob.GlobBox;
-import org.esa.beam.jai.ImageManager;
 import org.esa.beam.util.SystemUtils;
 import org.esa.beam.util.io.BeamFileChooser;
 import org.esa.beam.util.io.BeamFileFilter;
@@ -34,7 +33,6 @@ import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.image.RenderedImage;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -181,28 +179,26 @@ public class ExportTimeBasedKmz extends ExecCommand {
     }
 
     private List<KmlLayer> createLayers() {
-        List<KmlLayer> layers = new ArrayList<KmlLayer>();
-        for (RasterDataNode raster : GlobBox.getInstance().getRasterList()) {
-            KmlLayer layer;
-            String name = raster.getDisplayName();
-            if (raster.getImageInfo() == null) {
-                raster.setImageInfo(view.getRaster().getImageInfo().createDeepCopy());
-            }
-            RenderedImage image = ImageManager.getInstance().createColoredBandImage(
-                    new RasterDataNode[]{raster}, raster.getImageInfo(), level);
+        List<KmlLayer> kmlLayers = new ArrayList<KmlLayer>();
+        final List<Layer> layers = view.getRootLayer().getChildren();
+        for (Layer layer : layers) {
+            KmlLayer kmlLayer;
+            String name = layer.getName();
             final BoundingBox boundBox = new ReferencedEnvelope(0, 20, 70, 30, DefaultGeographicCRS.WGS84);
-
-            final Product product = raster.getProduct();
-            final ProductData.UTC startTime = product.getStartTime();
-            final ProductData.UTC endTime = product.getEndTime();
-            if (exportTimed && startTime != null && product.getEndTime() != null) {
-                layer = new TimedKmlLayer(name, image, boundBox, startTime, endTime);
-            } else {
-                layer = new KmlLayer(name, image, boundBox);
+            final Product[] products = VisatApp.getApp().getProductManager().getProducts();
+            for (Product product : products) {
             }
-            layers.add(layer);
+//            final ProductData.UTC startTime = product.getStartTime();
+//            final ProductData.UTC endTime = product.getEndTime();
+//            RenderedImage image = null;
+//            if (exportTimed && startTime != null && product.getEndTime() != null) {
+//                kmlLayer = new TimedKmlLayer(name, image, boundBox, startTime, endTime);
+//            } else {
+//                kmlLayer = new KmlLayer(name, image, boundBox);
+//            }
+//            kmlLayers.add(kmlLayer);
         }
-        return layers;
+        return kmlLayers;
     }
 
     @Override

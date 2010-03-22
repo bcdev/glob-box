@@ -44,7 +44,7 @@ public class KmzExporter {
             for (KmlLayer kmlLayer : kmlLayers) {
                 zipStream.putNextEntry(new ZipEntry(kmlLayer.getName()));
                 ImageEncoder encoder = ImageCodec.createImageEncoder(IMAGE_TYPE, outStream, null);
-                encoder.encode(kmlLayer.getLayer());
+                encoder.encode(kmlLayer.getOverlay());
                 pm.worked(1);
             }
 
@@ -58,7 +58,7 @@ public class KmzExporter {
             zipStream.putNextEntry(new ZipEntry(OVERLAY_KML));
 
             final StringBuilder kmlContent = new StringBuilder();
-            kmlContent.append(KmlFormatter.createHeader(isTimeSeries, description, name));
+            kmlContent.append(KmlFormatter.createHeader());
             if (placemarks != null) {
                 kmlContent.append(KmlFormatter.createPlacemarks(placemarks));
             }
@@ -66,7 +66,7 @@ public class KmzExporter {
             if (legend != null) {
                 kmlContent.append(KmlFormatter.createLegend(legendName));
             }
-            kmlContent.append(KmlFormatter.createFooter(isTimeSeries));
+            kmlContent.append(KmlFormatter.createFooter());
 
             outStream.write(kmlContent.toString().getBytes());
             pm.worked(1);

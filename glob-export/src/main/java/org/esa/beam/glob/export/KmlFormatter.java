@@ -3,7 +3,6 @@ package org.esa.beam.glob.export;
 import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.framework.datamodel.Placemark;
 import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.util.Debug;
 import org.opengis.geometry.BoundingBox;
 
 import java.text.SimpleDateFormat;
@@ -16,25 +15,13 @@ import java.util.List;
  */
 class KmlFormatter {
 
-    private static float eastLon;
-    private static float upperLeftLat;
-    private static float lowerRightLat;
-    private static float upperLeftGPLon;
-
     private KmlFormatter() {
     }
 
-    public static String createHeader(boolean isTimeSeries, String description, String name) {
+    public static String createHeader() {
         StringBuilder result = new StringBuilder();
         result.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
         result.append("<kml xmlns=\"http://earth.google.com/kml/2.0\">\n");
-        if (isTimeSeries) {
-            result.append("  <Folder>\n");
-        } else {
-            result.append("  <Document>\n");
-        }
-        result.append("    <name>").append(name).append("</name>\n");
-        result.append("   <description>").append(description).append("</description>");
         return result.toString();
     }
 
@@ -57,52 +44,70 @@ class KmlFormatter {
     public static String createOverlays(List<KmlLayer> kmlLayers, boolean isTimeSeries) {
         StringBuilder result = new StringBuilder();
 
+        if (kmlLayers.size() == 1) {
+            result.append("  <Document>\n");
+            result.append(createGroundOverlay(kmlLayers.get(0), isTimeSeries));
+            result.append("  </Document>\n");
+        } else {
+            result.append("  <Folder>\n");
+            result.append("    <name>").append("root").append("</name>\n");
+            createOverlaysRecursive(kmlLayers, isTimeSeries, result);
+            result.append("  </Folder>\n");
+        }
 
+        return result.toString();
+    }
+
+    private static void createOverlaysRecursive(List<KmlLayer> kmlLayers, boolean isTimeSeries, StringBuilder result) {
         for (KmlLayer layer : kmlLayers) {
 
-            BoundingBox bbox = layer.getLatLonBox();
-
-            String imageName = layer.getName();
-            String name = layer.getName();
-
-            result.append("      <GroundOverlay>\n");
-            result.append("        <name>").append(name).append("</name>\n");
-
-            if (isTimeSeries) {
-                TimedKmlLayer timedLayer = null;
-                try {
-                    timedLayer = (TimedKmlLayer) layer;
-                } catch (final ClassCastException cce) {
-                    Debug.trace(cce.getMessage());
-                }
-                final ProductData.UTC startTime = timedLayer.getStartTime();
-                final ProductData.UTC endTime = timedLayer.getEndTime();
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM");
-                sdf.setCalendar(startTime.getAsCalendar());
-                String startTimeString = sdf.format(startTime.getAsDate());
-                sdf.setCalendar(endTime.getAsCalendar());
-                String endTimeString = sdf.format(endTime.getAsDate());
-
-                sdf = new SimpleDateFormat("MMM-dd-yyyy");
-                sdf.setCalendar(startTime.getAsCalendar());
-
-                name += " (" + sdf.format(startTime.getAsDate()) + ")";
-
-                result.append("        <TimeSpan>\n");
-                result.append("          <begin>").append(startTimeString).append("</begin>\n");
-                result.append("          <end>").append(endTimeString).append("</end>\n");
-                result.append("        </TimeSpan>\n");
+            if (layer.hasChildren()) {
+                result.append("  <Folder>\n");
+                result.append("    <name>").append(layer.getName()).append("</name>\n");
+                createOverlaysRecursive(layer.getChildren(), isTimeSeries, result);
+                result.append("  </Folder>\n");
+            } else {
+                result.append(createGroundOverlay(layer, isTimeSeries));
             }
-
-            result.append("        <Icon>").append(imageName).append("</Icon>\n");
-            result.append("        <LatLonBox>\n");
-            result.append("          <north>").append(bbox.getMaxY()).append("</north>\n");
-            result.append("          <south>").append(bbox.getMinY()).append("</south>\n");
-            result.append("          <east>").append(bbox.getMaxX()).append("</east>\n");
-            result.append("          <west>").append(bbox.getMinX()).append("</west>\n");
-            result.append("        </LatLonBox>\n");
-            result.append("      </GroundOverlay>\n");
         }
+    }
+
+    private static String createGroundOverlay(KmlLayer layer, boolean isTimeSeries) {
+        StringBuilder result = new StringBuilder();
+        String overlayName = layer.getName();
+        result.append("      <GroundOverlay>\n");
+
+        BoundingBox bbox = layer.getLatLonBox();
+        String imageName = layer.getName();
+
+        final ProductData.UTC startTime = layer.getStartTime();
+        final ProductData.UTC endTime = layer.getEndTime();
+        if (isTimeSeries && startTime != null && endTime != null) {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM");
+            String startTimeString = "";
+            String endTimeString = "";
+            sdf.setCalendar(startTime.getAsCalendar());
+            startTimeString = sdf.format(startTime.getAsDate());
+            sdf = new SimpleDateFormat("MMM-dd-yyyy");
+            sdf.setCalendar(startTime.getAsCalendar());
+
+            overlayName += " (" + sdf.format(startTime.getAsDate()) + ")";
+            sdf.setCalendar(endTime.getAsCalendar());
+            result.append("        <TimeSpan>\n");
+            result.append("          <begin>").append(startTimeString).append("</begin>\n");
+            result.append("          <end>").append(endTimeString).append("</end>\n");
+            result.append("        </TimeSpan>\n");
+        }
+
+        result.append("        <name>").append(overlayName).append("</name>\n");
+        result.append("        <Icon>").append(imageName).append(".png").append("</Icon>\n");
+        result.append("        <LatLonBox>\n");
+        result.append("          <north>").append(bbox.getMaxY()).append("</north>\n");
+        result.append("          <south>").append(bbox.getMinY()).append("</south>\n");
+        result.append("          <east>").append(bbox.getMaxX()).append("</east>\n");
+        result.append("          <west>").append(bbox.getMinX()).append("</west>\n");
+        result.append("        </LatLonBox>\n");
+        result.append("      </GroundOverlay>\n");
 
         return result.toString();
     }
@@ -119,13 +124,8 @@ class KmlFormatter {
                + "    </ScreenOverlay>\n";
     }
 
-    public static String createFooter(boolean isTimeSeries) {
+    public static String createFooter() {
         StringBuilder result = new StringBuilder();
-        if (isTimeSeries) {
-            result.append("  </Folder>\n");
-        } else {
-            result.append("  </Document>\n");
-        }
         result.append("</kml>\n");
         return result.toString();
     }
