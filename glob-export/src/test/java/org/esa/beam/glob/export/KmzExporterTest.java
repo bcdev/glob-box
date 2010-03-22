@@ -27,8 +27,8 @@ public class KmzExporterTest {
         final KmzExporter kmzExporter = new KmzExporter("description", "name");
         RenderedImage layer = new DummyTestOpImage(10, 10);
         final BoundingBox boundBox = new ReferencedEnvelope(0, 20, 70, 30, DefaultGeographicCRS.WGS84);
-        KmlLayer unTimedLayer = new KmlLayer("layerName", layer, boundBox);
-        KmlLayer timedLayer = new KmlLayer("layerName", layer, boundBox, new ProductData.UTC(), new ProductData.UTC());
+        KmlLayer unTimedLayer = new KmlLayer("untimedLayer", layer, boundBox);
+        KmlLayer timedLayer = new KmlLayer("timedLayer", layer, boundBox, new ProductData.UTC(), new ProductData.UTC());
 
         kmzExporter.addLayer(unTimedLayer);
 
