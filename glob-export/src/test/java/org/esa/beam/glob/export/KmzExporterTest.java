@@ -1,5 +1,6 @@
 package org.esa.beam.glob.export;
 
+import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.jai.ImageManager;
 import org.esa.beam.util.ImageUtils;
@@ -10,9 +11,8 @@ import org.opengis.geometry.BoundingBox;
 
 import javax.media.jai.PlanarImage;
 import javax.media.jai.SourcelessOpImage;
-import java.awt.Rectangle;
 import java.awt.image.DataBuffer;
-import java.awt.image.WritableRaster;
+import java.awt.image.RenderedImage;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -25,21 +25,21 @@ public class KmzExporterTest {
     @Test
     public void testExporter() throws IOException {
         final KmzExporter kmzExporter = new KmzExporter("description", "name");
-//        RenderedImage layer = new DummyTestOpImage(10, 10);
+        RenderedImage layer = new DummyTestOpImage(10, 10);
         final BoundingBox boundBox = new ReferencedEnvelope(0, 20, 70, 30, DefaultGeographicCRS.WGS84);
-        KmlLayer unTimedLayer = new KmlLayer("layerName", null, boundBox);
+        KmlLayer unTimedLayer = new KmlLayer("layerName", layer, boundBox);
         kmzExporter.addLayer(unTimedLayer);
 
         assertEquals(kmzExporter.getLayerCount(), 1);
 
-        KmlLayer timedLayer = new TimedKmlLayer("timedLayerName", null, boundBox, new ProductData.UTC(),
+        KmlLayer timedLayer = new TimedKmlLayer("timedLayerName", layer, boundBox, new ProductData.UTC(),
                                                 new ProductData.UTC());
         kmzExporter.addLayer(timedLayer);
 
         assertEquals(kmzExporter.getLayerCount(), 2);
 
         final OutputStream outStream = createOutputStream();
-//        kmzExporter.export(outStream, ProgressMonitor.NULL);
+        kmzExporter.export(outStream, ProgressMonitor.NULL);
     }
 
     private OutputStream createOutputStream() {
@@ -56,10 +56,16 @@ public class KmzExporterTest {
         }
 
         @Override
-        public void computeRect(PlanarImage[] sources, WritableRaster dest, Rectangle destRect) {
-            super.computeRect(sources, dest, destRect);
+        protected void computeRect(PlanarImage[] sources, java.awt.image.WritableRaster dest,
+                                   java.awt.Rectangle destRect) {
+            double[] value = new double[1];
+            for (int y = 0; y < destRect.height; y++) {
+                for (int x = 0; x < destRect.width; x++) {
+                    value[0] = x + y;
+                    dest.setPixel(x, y, value);
+                }
+            }
         }
-
     }
 
 

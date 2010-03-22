@@ -1,12 +1,10 @@
 package org.esa.beam.glob.export;
 
-import org.esa.beam.framework.datamodel.GeoCoding;
 import org.esa.beam.framework.datamodel.GeoPos;
-import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Placemark;
-import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.util.Debug;
+import org.opengis.geometry.BoundingBox;
 
 import java.text.SimpleDateFormat;
 import java.util.List;
@@ -59,9 +57,10 @@ class KmlFormatter {
     public static String createOverlays(List<KmlLayer> kmlLayers, boolean isTimeSeries) {
         StringBuilder result = new StringBuilder();
 
+
         for (KmlLayer layer : kmlLayers) {
 
-            computeLatLon(layer);
+            BoundingBox bbox = layer.getLatLonBox();
 
             String imageName = layer.getName();
             String name = layer.getName();
@@ -97,10 +96,10 @@ class KmlFormatter {
 
             result.append("        <Icon>").append(imageName).append("</Icon>\n");
             result.append("        <LatLonBox>\n");
-            result.append("          <north>").append(upperLeftLat).append("</north>\n");
-            result.append("          <south>").append(lowerRightLat).append("</south>\n");
-            result.append("          <east>").append(eastLon).append("</east>\n");
-            result.append("          <west>").append(upperLeftGPLon).append("</west>\n");
+            result.append("          <north>").append(bbox.getMaxY()).append("</north>\n");
+            result.append("          <south>").append(bbox.getMinY()).append("</south>\n");
+            result.append("          <east>").append(bbox.getMaxX()).append("</east>\n");
+            result.append("          <west>").append(bbox.getMinX()).append("</west>\n");
             result.append("        </LatLonBox>\n");
             result.append("      </GroundOverlay>\n");
         }
@@ -129,23 +128,6 @@ class KmlFormatter {
         }
         result.append("</kml>\n");
         return result.toString();
-    }
-
-    private static void computeLatLon(KmlLayer layer) {
-        final GeoCoding geoCoding = layer.getGeoCoding();
-        final PixelPos upperLeftPP = new PixelPos(0.5f, 0.5f);
-        final Product product = layer.getProduct();
-        final PixelPos lowerRightPP = new PixelPos(product.getSceneRasterWidth() - 0.5f,
-                                                   product.getSceneRasterHeight() - 0.5f);
-        final GeoPos upperLeftGP = geoCoding.getGeoPos(upperLeftPP, null);
-        final GeoPos lowerRightGP = geoCoding.getGeoPos(lowerRightPP, null);
-        eastLon = lowerRightGP.getLon();
-        if (upperLeftGP.getLon() > lowerRightGP.getLon()) {
-            eastLon += 360;
-        }
-        upperLeftLat = geoCoding.getGeoPos(upperLeftPP, null).getLat();
-        lowerRightLat = geoCoding.getGeoPos(lowerRightPP, null).getLat();
-        upperLeftGPLon = upperLeftGP.getLon();
     }
 
 }

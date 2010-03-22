@@ -48,9 +48,12 @@ public class KmzExporter {
                 pm.worked(1);
             }
 
-            zipStream.putNextEntry(new ZipEntry(legendName + ".png"));
-            ImageEncoder encoder = ImageCodec.createImageEncoder(IMAGE_TYPE, outStream, null);
-            encoder.encode(legend);
+            if (legend != null) {
+                zipStream.putNextEntry(new ZipEntry(legendName + ".png"));
+                ImageEncoder encoder = ImageCodec.createImageEncoder(IMAGE_TYPE, outStream, null);
+                encoder.encode(legend);
+            }
+
 
             zipStream.putNextEntry(new ZipEntry(OVERLAY_KML));
 
