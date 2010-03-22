@@ -63,7 +63,9 @@ public class KmzExporter {
                 kmlContent.append(KmlFormatter.createPlacemarks(placemarks));
             }
             kmlContent.append(KmlFormatter.createOverlays(kmlLayers, isTimeSeries));
-            kmlContent.append(KmlFormatter.createLegend(legendName));
+            if (legend != null) {
+                kmlContent.append(KmlFormatter.createLegend(legendName));
+            }
             kmlContent.append(KmlFormatter.createFooter(isTimeSeries));
 
             outStream.write(kmlContent.toString().getBytes());
