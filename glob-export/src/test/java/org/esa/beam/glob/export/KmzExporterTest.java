@@ -30,13 +30,13 @@ public class KmzExporterTest {
         KmlLayer unTimedLayer = new KmlLayer("layerName", layer, boundBox);
         kmzExporter.addLayer(unTimedLayer);
 
-        assertEquals(kmzExporter.getLayerCount(), 1);
+        assertEquals(1, kmzExporter.getLayerCount());
 
         KmlLayer timedLayer = new TimedKmlLayer("timedLayerName", layer, boundBox, new ProductData.UTC(),
                                                 new ProductData.UTC());
         kmzExporter.addLayer(timedLayer);
 
-        assertEquals(kmzExporter.getLayerCount(), 2);
+        assertEquals(2, kmzExporter.getLayerCount());
 
         final OutputStream outStream = createOutputStream();
         kmzExporter.export(outStream, ProgressMonitor.NULL);
@@ -46,7 +46,7 @@ public class KmzExporterTest {
         return new BufferedOutputStream(new ByteArrayOutputStream());
     }
 
-    class DummyTestOpImage extends SourcelessOpImage {
+    private static class DummyTestOpImage extends SourcelessOpImage {
 
         DummyTestOpImage(int width, int height) {
             super(ImageManager.createSingleBandedImageLayout(DataBuffer.TYPE_BYTE, width, height, width, height),
