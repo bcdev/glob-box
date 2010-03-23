@@ -20,7 +20,7 @@ public class KmzExporter {
     private RenderedImage legend;
 
     private final List<KmlLayer> kmlLayers;
-    private List<Placemark> placemarks;
+    private List<KmlPlacemark> placemarks;
     private String legendName;
     private boolean isTimeSeries;
     private final String description;
@@ -29,7 +29,7 @@ public class KmzExporter {
 
     public KmzExporter(final String description, final String name) {
         kmlLayers = new ArrayList<KmlLayer>();
-        placemarks = new ArrayList<Placemark>();
+        placemarks = new ArrayList<KmlPlacemark>();
         this.description = description;
         this.name = name;
     }

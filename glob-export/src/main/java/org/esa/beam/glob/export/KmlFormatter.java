@@ -5,6 +5,7 @@ import org.esa.beam.framework.datamodel.Placemark;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.opengis.geometry.BoundingBox;
 
+import java.awt.geom.Point2D;
 import java.text.SimpleDateFormat;
 import java.util.List;
 
@@ -20,24 +21,26 @@ class KmlFormatter {
 
     public static String createHeader() {
         StringBuilder result = new StringBuilder();
-        result.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
-        result.append("<kml xmlns=\"http://earth.google.com/kml/2.0\">\n");
+        result.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
+        result.append("<kml xmlns=\"http://earth.google.com/kml/2.0\">");
         return result.toString();
     }
 
-    public static String createPlacemarks(List<Placemark> placemarks) {
+    public static String createPlacemarks(List<KmlPlacemark> placemarks) {
         StringBuilder result = new StringBuilder();
-        for (Placemark placemark : placemarks) {
-            GeoPos geoPos = placemark.getGeoPos();
-            if (geoPos != null) {
-                result.append("    <Placemark>\n");
-                result.append(String.format("       <name>%s</name>\n", placemark.getLabel()));
-                result.append("       <Point>\n");
-                result.append(String.format("         <coordinates>%f,%f,0</coordinates>\n", geoPos.lon, geoPos.lat));
-                result.append("       </Point>\n");
-                result.append("     </Placemark>\n");
+        result.append("<Document>");
+        for (KmlPlacemark placemark : placemarks) {
+            Point2D pos = placemark.getPos();
+            if (pos != null) {
+                result.append("<Placemark>");
+                result.append(String.format("<name>%s</name>", placemark.getLabel()));
+                result.append("<Point>");
+                result.append(String.format("<coordinates>%s,%s,0</coordinates>", pos.getX(), pos.getY()));
+                result.append("</Point>");
+                result.append("</Placemark>");
             }
         }
+        result.append("</Document>");
         return result.toString();
     }
 
@@ -45,14 +48,14 @@ class KmlFormatter {
         StringBuilder result = new StringBuilder();
 
         if (kmlLayers.size() == 1) {
-            result.append("  <Document>\n");
+            result.append("<Document>");
             result.append(createGroundOverlay(kmlLayers.get(0), isTimeSeries));
-            result.append("  </Document>\n");
+            result.append("</Document>");
         } else {
-            result.append("  <Folder>\n");
-            result.append("    <name>").append("root").append("</name>\n");
+            result.append("<Folder>");
+            result.append("<name>").append("root").append("</name>");
             createOverlaysRecursive(kmlLayers, isTimeSeries, result);
-            result.append("  </Folder>\n");
+            result.append("</Folder>");
         }
 
         return result.toString();
@@ -62,10 +65,10 @@ class KmlFormatter {
         for (KmlLayer layer : kmlLayers) {
 
             if (layer.hasChildren()) {
-                result.append("  <Folder>\n");
-                result.append("    <name>").append(layer.getName()).append("</name>\n");
+                result.append("<Folder>");
+                result.append("<name>").append(layer.getName()).append("</name>");
                 createOverlaysRecursive(layer.getChildren(), isTimeSeries, result);
-                result.append("  </Folder>\n");
+                result.append("</Folder>");
             } else {
                 result.append(createGroundOverlay(layer, isTimeSeries));
             }
@@ -75,7 +78,7 @@ class KmlFormatter {
     private static String createGroundOverlay(KmlLayer layer, boolean isTimeSeries) {
         StringBuilder result = new StringBuilder();
         String overlayName = layer.getName();
-        result.append("      <GroundOverlay>\n");
+        result.append("<GroundOverlay>");
 
         BoundingBox bbox = layer.getLatLonBox();
         String imageName = layer.getName();
@@ -93,40 +96,42 @@ class KmlFormatter {
 
             overlayName += " (" + sdf.format(startTime.getAsDate()) + ")";
             sdf.setCalendar(endTime.getAsCalendar());
-            result.append("        <TimeSpan>\n");
-            result.append("          <begin>").append(startTimeString).append("</begin>\n");
-            result.append("          <end>").append(endTimeString).append("</end>\n");
-            result.append("        </TimeSpan>\n");
+            result.append("<TimeSpan>");
+            result.append("<begin>").append(startTimeString).append("</begin>");
+            result.append("<end>").append(endTimeString).append("</end>");
+            result.append("</TimeSpan>");
         }
 
-        result.append("        <name>").append(overlayName).append("</name>\n");
-        result.append("        <Icon>").append(imageName).append(".png").append("</Icon>\n");
-        result.append("        <LatLonBox>\n");
-        result.append("          <north>").append(bbox.getMaxY()).append("</north>\n");
-        result.append("          <south>").append(bbox.getMinY()).append("</south>\n");
-        result.append("          <east>").append(bbox.getMaxX()).append("</east>\n");
-        result.append("          <west>").append(bbox.getMinX()).append("</west>\n");
-        result.append("        </LatLonBox>\n");
-        result.append("      </GroundOverlay>\n");
+        result.append("<name>").append(overlayName).append("</name>");
+        result.append("<Icon>").append(imageName).append(".png").append("</Icon>");
+        result.append("<LatLonBox>");
+        result.append("<north>").append(bbox.getMaxY()).append("</north>");
+        result.append("<south>").append(bbox.getMinY()).append("</south>");
+        result.append("<east>").append(bbox.getMaxX()).append("</east>");
+        result.append("<west>").append(bbox.getMinX()).append("</west>");
+        result.append("</LatLonBox>");
+        result.append("</GroundOverlay>");
 
         return result.toString();
     }
 
     public static String createLegend(String legendName) {
 
-        return "    <ScreenOverlay>\n"
-               + "      <name>" + legendName + "</name>\n"
-               + "      <Icon>\n"
-               + "        <href>" + legendName + ".png</href>\n"
-               + "      </Icon>\n"
-               + "      <overlayXY x=\"0\" y=\"0\" xunits=\"fraction\" yunits=\"fraction\" />\n"
-               + "      <screenXY x=\"0\" y=\"0\" xunits=\"fraction\" yunits=\"fraction\" />\n"
-               + "    </ScreenOverlay>\n";
+        return "<Document>" 
+               + "<ScreenOverlay>"
+               + "<name>" + legendName + "</name>"
+               + "<Icon>"
+               + "<href>" + legendName + ".png</href>"
+               + "</Icon>"
+               + "<overlayXY x=\"0\" y=\"0\" xunits=\"fraction\" yunits=\"fraction\" />"
+               + "<screenXY x=\"0\" y=\"0\" xunits=\"fraction\" yunits=\"fraction\" />"
+               + "</ScreenOverlay>"
+               + "</Document>";
     }
 
     public static String createFooter() {
         StringBuilder result = new StringBuilder();
-        result.append("</kml>\n");
+        result.append("</kml>");
         return result.toString();
     }
 
