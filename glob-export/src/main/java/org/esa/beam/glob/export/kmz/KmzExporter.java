@@ -1,9 +1,8 @@
-package org.esa.beam.glob.export;
+package org.esa.beam.glob.export.kmz;
 
 import com.bc.ceres.core.ProgressMonitor;
 import com.sun.media.jai.codec.ImageCodec;
 import com.sun.media.jai.codec.ImageEncoder;
-import org.esa.beam.framework.datamodel.Placemark;
 
 import java.awt.image.RenderedImage;
 import java.io.IOException;

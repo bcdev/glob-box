@@ -1,4 +1,4 @@
-package org.esa.beam.glob.export;
+package org.esa.beam.glob.export.kmz;
 
 import org.esa.beam.jai.ImageManager;
 import org.esa.beam.util.ImageUtils;

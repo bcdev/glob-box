@@ -1,4 +1,4 @@
-package org.esa.beam.glob.export;
+package org.esa.beam.glob.export.kmz;
 
 import java.awt.geom.Point2D;
 

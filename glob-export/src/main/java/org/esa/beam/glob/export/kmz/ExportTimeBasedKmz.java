@@ -1,4 +1,4 @@
-package org.esa.beam.glob.export;
+package org.esa.beam.glob.export.kmz;
 
 import com.bc.ceres.glayer.Layer;
 import org.esa.beam.framework.datamodel.CrsGeoCoding;

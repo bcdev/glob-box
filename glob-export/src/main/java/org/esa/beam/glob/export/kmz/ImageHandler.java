@@ -1,4 +1,4 @@
-package org.esa.beam.glob.export;
+package org.esa.beam.glob.export.kmz;
 
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.swing.progress.ProgressMonitorSwingWorker;

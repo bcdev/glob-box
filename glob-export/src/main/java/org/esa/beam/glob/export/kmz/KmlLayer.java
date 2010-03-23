@@ -1,4 +1,4 @@
-package org.esa.beam.glob.export;
+package org.esa.beam.glob.export.kmz;
 
 import org.esa.beam.framework.datamodel.ProductData;
 import org.opengis.geometry.BoundingBox;
