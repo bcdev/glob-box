@@ -43,6 +43,17 @@
             <description>Export time series as time-based KMZ.</description>
         </action>
 
+        <action>
+            <parent>export</parent>
+            <placeAfter>exportTimeBasedKmz</placeAfter>
+            <id>exportTimeSeriesAsText</id>
+            <class>org.esa.beam.glob.export.text.ExportTimeBasedText</class>
+            <text>Export time series as text</text>
+            <mnemonic>t</mnemonic>
+            <shortDescr>Export time series as text.</shortDescr>
+            <description>Export time series as text.</description>
+        </action>
+
     </extension>
 
 </module>
