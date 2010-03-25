@@ -4,6 +4,7 @@ import org.esa.beam.framework.dataio.ProductWriter;
 import org.esa.beam.framework.dataio.ProductWriterPlugIn;
 import org.esa.beam.util.io.BeamFileFilter;
 
+import java.io.File;
 import java.util.Locale;
 
 /**
@@ -14,6 +15,8 @@ import java.util.Locale;
 public class NetCdfWriterPlugIn implements ProductWriterPlugIn {
 
     private String outputLocation;
+    public static final String NETCDF_FORMAT_NAME = "NetCDF4";
+    public static final String NETCDF_FILE_EXTENSION = ".nc";
 
     public NetCdfWriterPlugIn(String outputLocation) {
         this.outputLocation = outputLocation;
@@ -21,12 +24,12 @@ public class NetCdfWriterPlugIn implements ProductWriterPlugIn {
 
     @Override
     public String[] getDefaultFileExtensions() {
-        return new String[0];
+        return new String[]{NETCDF_FILE_EXTENSION};
     }
 
     @Override
     public String[] getFormatNames() {
-        return new String[0];
+        return new String[]{NETCDF_FORMAT_NAME};
     }
 
     @Override
@@ -41,7 +44,7 @@ public class NetCdfWriterPlugIn implements ProductWriterPlugIn {
 
     @Override
     public Class[] getOutputTypes() {
-        return new Class[0];
+        return new Class[]{String.class, File.class};
     }
 
     @Override

@@ -26,6 +26,8 @@ public class NetCdfWriter extends AbstractProductWriter {
     private NetcdfFileWriteable outFile;
     private String outputLocation;
 
+    private Array data;
+
     public NetCdfWriter(ProductWriterPlugIn writerPlugIn, String outputLocation) {
         super(writerPlugIn);
         this.outputLocation = outputLocation;
@@ -62,6 +64,7 @@ public class NetCdfWriter extends AbstractProductWriter {
 
     @Override
     protected void writeProductNodesImpl() throws IOException {
+        // implement: transform product nodes into NetCDF-arrays
     }
 
     @Override
@@ -87,8 +90,8 @@ public class NetCdfWriter extends AbstractProductWriter {
         outFile.writeCDL(new FileOutputStream(outputLocation), false);
     }
 
-    public void write(String varName, int[] origin, Array data) throws IOException, InvalidRangeException {
-        outFile.write(varName, origin, data);
+    public void write(String varName) throws IOException, InvalidRangeException {
+        outFile.write(varName, new int[3], data);
     }
 
     public Group getRootGroup() {
@@ -103,4 +106,9 @@ public class NetCdfWriter extends AbstractProductWriter {
     public void addGlobalAttribute(String key, String value) {
         outFile.addGlobalAttribute(key, value);
     }
+
+    public void setData(Array data) {
+        this.data = data;
+    }
+
 }
