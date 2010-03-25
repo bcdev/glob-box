@@ -5,7 +5,6 @@ import org.junit.Before;
 import org.junit.Test;
 import ucar.ma2.ArrayDouble;
 import ucar.ma2.DataType;
-import ucar.ma2.Index;
 import ucar.ma2.InvalidRangeException;
 import ucar.nc2.Attribute;
 import ucar.nc2.Dimension;
@@ -27,7 +26,7 @@ import static junit.framework.Assert.*;
 public class NetCdfWriterTest implements NetcdfConstants {
 
     private NetCdfWriter writer;
-    private static final String OUTPUT_FILE = "C:\\dev\\Ressourcen\\NetCDF\\netcdfTest.nc";
+    private static final String OUTPUT_FILE = System.getProperty("java.io.tmpdir") + "netcdfTest.nc";
     private Group rootGroup;
     private Dimension lat;
     private Dimension lon;
@@ -38,8 +37,8 @@ public class NetCdfWriterTest implements NetcdfConstants {
         writer = (NetCdfWriter) new NetCdfWriterPlugIn(OUTPUT_FILE).createWriterInstance();
         rootGroup = writer.getRootGroup();
 
-        lat = new Dimension(LAT_VAR_NAME, 180);
-        lon = new Dimension(LON_VAR_NAME, 360);
+        lat = new Dimension(LAT_VAR_NAME, 10);
+        lon = new Dimension(LON_VAR_NAME, 20);
         time = new Dimension("time", 0, true, true, false);
     }
 
@@ -123,20 +122,17 @@ public class NetCdfWriterTest implements NetcdfConstants {
         assertEquals(4, variableList.get(0).getAttributes().size());
         assertEquals(4, variableList.get(1).getAttributes().size());
         assertEquals(4, variableList.get(2).getAttributes().size());
-//    }
-//
-//    @Test
-//    public void testCreateData() throws IOException, InvalidRangeException {
+
         ArrayDouble data = new ArrayDouble.D3(lat.getLength(), lon.getLength(), time.getLength());
-        int la, lo, t;
-        Index ima = data.getIndex();
-        for (lo = 0; lo < lon.getLength(); lo++) {
-            for (la = 0; la < lat.getLength(); la++) {
-                for (t = 0; t < time.getLength(); t++) {
-                    data.setDouble(ima.set(la, lo, 0), la * 0.1 + lo * 0.1);
-                }
-            }
-        }
+//        int la, lo, t;
+//        Index ima = data.getIndex();
+//        for (lo = 0; lo < lon.getLength(); lo++) {
+//            for (la = 0; la < lat.getLength(); la++) {
+//                for (t = 0; t < time.getLength(); t++) {
+//                    data.setDouble(ima.set(la, lo, 0), la * 0.1 + lo * 0.1);
+//                }
+//            }
+//        }
 
         int[] origin = new int[3];
 
