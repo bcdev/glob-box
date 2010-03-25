@@ -26,7 +26,8 @@ import static junit.framework.Assert.*;
 public class NetCdfWriterTest implements NetcdfConstants {
 
     private NetCdfWriter writer;
-    private static final String OUTPUT_FILE = System.getProperty("java.io.tmpdir") + "netcdfTest.nc";
+    private static final String OUTPUT_FILE = System.getProperty("java.io.tmpdir") + System.getProperty(
+            "file.separator") + "netcdfTest.nc";
     private Group rootGroup;
     private Dimension lat;
     private Dimension lon;
