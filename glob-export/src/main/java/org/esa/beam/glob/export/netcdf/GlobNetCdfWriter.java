@@ -1,6 +1,5 @@
 package org.esa.beam.glob.export.netcdf;
 
-import org.esa.beam.dataio.netcdf.NetcdfConstants;
 import ucar.ma2.ArrayDouble;
 import ucar.ma2.DataType;
 import ucar.ma2.Index;
@@ -18,7 +17,7 @@ import java.io.IOException;
  * Date: 25.03.2010
  * Time: 16:36:10
  */
-public class GlobNetCdfWriter implements NetcdfConstants {
+public class GlobNetCdfWriter implements NetCdfConstants {
 
     private NetCdfWriter writer;
     private static final String OUTPUT_FILE_LOCAL = "c:\\dev\\ressourcen\\netcdf\\netcdfTest.nc";
@@ -30,21 +29,8 @@ public class GlobNetCdfWriter implements NetcdfConstants {
     private Dimension time;
     private ArrayDouble data;
 
-    private static final String TIME_VAR_NAME = "time";
-    private static final String LONG_NAME = "long_name";
-    private static final String STANDARD_NAME = "standard_name";
-    private static final String UNITS = "units";
-    private static final String AXIS = "axis";
-    private static final String DEGREES_NORTH = "degrees_north";
-    private static final String DEGREES_EAST = "degrees_east";
-    private static final String MISSING_VALUE = "missing_value";
-    private static final String NOT_A_NUMBER = "NaN";
-    private static final String LATITUDE = "Latitude";
-    private static final String LONGITUDE = "Longitude";
-    private static final String TIME = "time";
-
     public GlobNetCdfWriter() {
-        writer = (NetCdfWriter) new NetCdfWriterPlugIn(OUTPUT_FILE).createWriterInstance();
+        writer = (NetCdfWriter) new NetCdfWriterPlugIn(OUTPUT_FILE_LOCAL).createWriterInstance();
         rootGroup = writer.getRootGroup();
 
         lat = new Dimension(LAT_VAR_NAME, 180);
@@ -60,11 +46,6 @@ public class GlobNetCdfWriter implements NetcdfConstants {
         writer.addDimension(lat);
         writer.addDimension(lon);
         writer.addUnlimitedDimension(time);
-
-        Attribute longNameLat = new Attribute(LONG_NAME, LATITUDE);
-        Attribute standardNameLat = new Attribute(STANDARD_NAME, LATITUDE);
-        Attribute unitsLat = new Attribute(UNITS, DEGREES_NORTH);
-        Attribute axisLat = new Attribute(AXIS, "Y");
 
         Attribute longNameLon = new Attribute(LONG_NAME, LONGITUDE);
         Attribute standardNameLon = new Attribute(STANDARD_NAME, LONGITUDE);
@@ -84,14 +65,6 @@ public class GlobNetCdfWriter implements NetcdfConstants {
 
         final NetcdfFileWriteable outFile = writer.getOutFile();
         final Group rootGroup = outFile.getRootGroup();
-
-        Variable latVar = new Variable(outFile, rootGroup,
-                                       null, LAT_VAR_NAME, DataType.INT, LAT_VAR_NAME);
-        latVar.addAttribute(longNameLat);
-        latVar.addAttribute(standardNameLat);
-        latVar.addAttribute(unitsLat);
-        latVar.addAttribute(axisLat);
-        writer.addVariable(latVar);
 
         Variable lonVar = new Variable(outFile, rootGroup,
                                        null, LON_VAR_NAME, DataType.INT, LON_VAR_NAME);

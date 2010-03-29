@@ -6,7 +6,9 @@ import org.esa.beam.framework.dataio.ProductWriterPlugIn;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.ProductData;
 import ucar.ma2.Array;
+import ucar.ma2.DataType;
 import ucar.ma2.InvalidRangeException;
+import ucar.nc2.Attribute;
 import ucar.nc2.Dimension;
 import ucar.nc2.Group;
 import ucar.nc2.NetcdfFileWriteable;
@@ -21,12 +23,13 @@ import java.util.List;
  * Date: 25.03.2010
  * Time: 08:22:15
  */
-public class NetCdfWriter extends AbstractProductWriter {
+public class NetCdfWriter extends AbstractProductWriter implements NetCdfConstants {
 
     private NetcdfFileWriteable outFile;
     private String outputLocation;
 
     private Array data;
+    private Group rootGroup;
 
     public NetCdfWriter(ProductWriterPlugIn writerPlugIn, String outputLocation) {
         super(writerPlugIn);
@@ -48,6 +51,31 @@ public class NetCdfWriter extends AbstractProductWriter {
 
     public void addVariable(Variable var) {
         outFile.getRootGroup().addVariable(var);
+    }
+
+    public void addDefaultLatVariable() {
+        Attribute longNameLat = new Attribute(LONG_NAME, LATITUDE);
+        Attribute standardNameLat = new Attribute(STANDARD_NAME, LATITUDE);
+        Attribute unitsLat = new Attribute(UNITS, DEGREES_NORTH);
+        Attribute axisLat = new Attribute(AXIS, "Y");
+
+        rootGroup = getRootGroup();
+        Variable latVar = new Variable(outFile, rootGroup,
+                                       null, LAT_VAR_NAME, DataType.INT, LAT_VAR_NAME);
+        latVar.addAttribute(longNameLat);
+        latVar.addAttribute(standardNameLat);
+        latVar.addAttribute(unitsLat);
+        latVar.addAttribute(axisLat);
+
+        addVariable(latVar);
+    }
+
+    public void addDefaultLonVariable() {
+
+    }
+
+    public void addDefaultTimeVariable() {
+
     }
 
     int getDimensionCount() {

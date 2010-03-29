@@ -42,6 +42,7 @@
         <module>beam-gt-referencing-ext</module>
         <module>beam-arcbingrid-reader</module>
         <module>glob-ui</module>
+        <module>glob-core</module>
         <module>glob-help</module>
         <module>glob-export</module>
         <module>glob-bootstrap</module>
