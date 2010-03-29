@@ -10,7 +10,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>glob-export</artifactId>
-
+    <name>GlobToolbox Data Export</name>
     <dependencies>
         <dependency>
             <groupId>org.esa.beam</groupId>

@@ -4,11 +4,7 @@ import com.bc.ceres.core.ProgressMonitor;
 import com.sun.media.jai.codec.ImageCodec;
 import com.sun.media.jai.codec.ImageEncoder;
 
-import java.awt.image.RenderedImage;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -16,80 +12,68 @@ public class KmzExporter {
 
     private static final String OVERLAY_KML = "overlay.kml";
     private static final String IMAGE_TYPE = "PNG";
-    private RenderedImage legend;
-
-    private final List<KmlLayer> kmlLayers;
-    private List<KmlPlacemark> placemarks;
-    private String legendName;
-    private boolean isTimeSeries;
-    private final String description;
-    private final String name;
 
 
-    public KmzExporter(final String description, final String name) {
-        kmlLayers = new ArrayList<KmlLayer>();
-        placemarks = new ArrayList<KmlPlacemark>();
-        this.description = description;
-        this.name = name;
-    }
+    public void export(KmlFeature kmlFeature, ZipOutputStream zipOutputStream, final ProgressMonitor pm) throws
+                                                                                                         IOException {
 
-    public void export(final OutputStream outStream, final ProgressMonitor pm) throws IOException {
-
-        int workload = kmlLayers.size() + 1 + (legend != null ? 1 : 0);
-        pm.beginTask("Exporting KMZ", workload);
-
-        ZipOutputStream zipStream = new ZipOutputStream(outStream);
+        final int numOverlaysToExport = getNumOverlaysToExport(kmlFeature);
+        pm.beginTask("Exporting KMZ...", numOverlaysToExport);
         try {
-            for (KmlLayer kmlLayer : kmlLayers) {
-                zipStream.putNextEntry(new ZipEntry(kmlLayer.getName()));
-                ImageEncoder encoder = ImageCodec.createImageEncoder(IMAGE_TYPE, outStream, null);
-                encoder.encode(kmlLayer.getOverlay());
-                pm.worked(1);
-            }
+            exportImages(kmlFeature, zipOutputStream, pm);
 
-            if (legend != null) {
-                zipStream.putNextEntry(new ZipEntry(legendName + ".png"));
-                ImageEncoder encoder = ImageCodec.createImageEncoder(IMAGE_TYPE, outStream, null);
-                encoder.encode(legend);
-            }
-
-
-            zipStream.putNextEntry(new ZipEntry(OVERLAY_KML));
-
-            final StringBuilder kmlContent = new StringBuilder();
-            kmlContent.append(KmlFormatter.createHeader());
-            if (placemarks != null) {
-                kmlContent.append(KmlFormatter.createPlacemarks(placemarks));
-            }
-            kmlContent.append(KmlFormatter.createOverlays(kmlLayers, isTimeSeries));
-            if (legend != null) {
-                kmlContent.append(KmlFormatter.createLegend(legendName));
-            }
-            kmlContent.append(KmlFormatter.createFooter());
-
-            outStream.write(kmlContent.toString().getBytes());
-            pm.worked(1);
-
+            zipOutputStream.putNextEntry(new ZipEntry(OVERLAY_KML));
+            final String kml = createKml(kmlFeature);
+            zipOutputStream.write(kml.getBytes());
+            pm.isCanceled();
         } finally {
-            zipStream.close();
+            zipOutputStream.close();
+            pm.done();
         }
 
     }
 
-    public void addLayer(KmlLayer layer) {
-        kmlLayers.add(layer);
+    static String createKml(KmlFeature kmlFeature) {
+        StringBuilder result = new StringBuilder();
+        result.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
+        result.append("<kml xmlns=\"http://earth.google.com/kml/2.0\">");
+        kmlFeature.createKml(result);
+        result.append("</kml>");
+        return result.toString();
     }
 
-    public void setLegend(String name, RenderedImage imageLegend) {
-        legendName = name;
-        legend = imageLegend;
+    private int getNumOverlaysToExport(KmlFeature kmlFeature) {
+        int count = 0;
+        if (kmlFeature instanceof KmlOverlay) {
+            count++;
+        }
+        if (kmlFeature instanceof KmlContainer) {
+            KmlContainer container = (KmlContainer) kmlFeature;
+            for (KmlFeature feature : container.getChildren()) {
+                count += getNumOverlaysToExport(feature);
+            }
+        }
+        return count;
     }
 
-    public int getLayerCount() {
-        return kmlLayers.size();
+    private void exportImages(KmlFeature kmlFeature, ZipOutputStream zipOutputStream, ProgressMonitor pm) throws IOException {
+        if(pm.isCanceled()) {
+            return;
+        }
+        if (kmlFeature instanceof KmlOverlay) {
+            KmlOverlay overlay = (KmlOverlay) kmlFeature;
+            zipOutputStream.putNextEntry(new ZipEntry(overlay.getIconFileName()));
+            ImageEncoder encoder = ImageCodec.createImageEncoder(IMAGE_TYPE, zipOutputStream, null);
+            encoder.encode(overlay.getOverlay());
+            pm.worked(1);
+        }
+        if (kmlFeature instanceof KmlContainer) {
+            KmlContainer container = (KmlContainer) kmlFeature;
+            for (KmlFeature feature : container.getChildren()) {
+                exportImages(feature, zipOutputStream, pm);
+            }
+        }
+
     }
 
-    public void setTimeSeries(boolean timeSeries) {
-        isTimeSeries = timeSeries;
-    }
 }

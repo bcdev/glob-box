@@ -1,10 +1,14 @@
 package org.esa.beam.glob.export.kmz;
 
-import com.bc.ceres.glayer.Layer;
+import com.bc.ceres.core.ProgressMonitor;
+import com.bc.ceres.swing.progress.ProgressMonitorSwingWorker;
 import org.esa.beam.framework.datamodel.CrsGeoCoding;
 import org.esa.beam.framework.datamodel.GeoCoding;
+import org.esa.beam.framework.datamodel.GeoPos;
+import org.esa.beam.framework.datamodel.ImageInfo;
 import org.esa.beam.framework.datamodel.MapGeoCoding;
-import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.PixelPos;
+import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.framework.dataop.maptransf.IdentityTransformDescriptor;
 import org.esa.beam.framework.dataop.maptransf.MapTransformDescriptor;
@@ -13,6 +17,7 @@ import org.esa.beam.framework.ui.command.CommandEvent;
 import org.esa.beam.framework.ui.command.ExecCommand;
 import org.esa.beam.framework.ui.product.ProductSceneView;
 import org.esa.beam.glob.GlobBox;
+import org.esa.beam.jai.ImageManager;
 import org.esa.beam.util.SystemUtils;
 import org.esa.beam.util.io.BeamFileChooser;
 import org.esa.beam.util.io.BeamFileFilter;
@@ -25,7 +30,6 @@ import org.opengis.geometry.BoundingBox;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
-import javax.swing.JCheckBox;
 import javax.swing.JFileChooser;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
@@ -33,12 +37,13 @@ import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.image.RenderedImage;
 import java.io.BufferedOutputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
+import java.io.FileOutputStream;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.zip.ZipOutputStream;
 
 /**
  * User: Thomas Storm
@@ -48,9 +53,8 @@ import java.util.List;
 public class ExportTimeBasedKmz extends ExecCommand {
 
     private static final String IMAGE_EXPORT_DIR_PREFERENCES_KEY = "user.image.export.dir";
-    BeamFileFilter kmzFileFilter = new BeamFileFilter("KMZ", "kmz", "KMZ - Google Earth File Format");
+    private BeamFileFilter kmzFileFilter = new BeamFileFilter("KMZ", "kmz", "KMZ - Google Earth File Format");
     private int level = 2;
-    private boolean exportTimed = false;
     private ProductSceneView view;
 
     @Override
@@ -73,24 +77,13 @@ public class ExportTimeBasedKmz extends ExecCommand {
         }
 
         if (isGeographic) {
-            final List<RasterDataNode> rasterList = GlobBox.getInstance().getRasterList();
             final File output = fetchOutputFile(view);
-            final KmzExporter exporter = new KmzExporter("description", "name");
-            exporter.setTimeSeries(false);
-            final BoundingBox boundBox = new ReferencedEnvelope(0, 20, 70, 30, DefaultGeographicCRS.WGS84);
-            List<KmlLayer> layers = createLayers();
-            for (KmlLayer layer : layers) {
-                exporter.addLayer(layer);
+            if(output == null) {
+                return;
             }
-            try {
-                exporter.export(new BufferedOutputStream(new ByteArrayOutputStream()),
-                                com.bc.ceres.core.ProgressMonitor.NULL);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-//            final ImageHandler imageHandler = new ImageHandler(app, "Save KMZ", view, output, rasterList, level);
-//            imageHandler.executeWithBlocking();
+            final String title = "KMZ Export";
+            final ProgressMonitorSwingWorker worker = new KmzSwingWorker(title, output, app);
+            worker.executeWithBlocking();
         } else {
             String message = "Product must be in ''Geographic Lat/Lon'' projection.";
             app.showInfoDialog(message, null);
@@ -138,21 +131,10 @@ public class ExportTimeBasedKmz extends ExecCommand {
             button.addActionListener(radioButtonListener);
         }
 
-        final JPanel timedPanel = new JPanel(new GridLayout(1, 1));
-        timedPanel.setBorder(BorderFactory.createTitledBorder("Timed"));
-        final JCheckBox timedButton = new JCheckBox("Export Timed KMZ");
-        timedButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                exportTimed = timedButton.isSelected();
-            }
-        });
-        timedPanel.add(timedButton);
 
         final JPanel accessory = new JPanel();
         accessory.setLayout(new BoxLayout(accessory, BoxLayout.Y_AXIS));
         accessory.add(levelPanel);
-        accessory.add(timedPanel);
         fileChooser.setAccessory(accessory);
 
         int result = fileChooser.showSaveDialog(visatApp.getMainFrame());
@@ -178,27 +160,48 @@ public class ExportTimeBasedKmz extends ExecCommand {
         return file;
     }
 
-    private List<KmlLayer> createLayers() {
-        List<KmlLayer> kmlLayers = new ArrayList<KmlLayer>();
-        final List<Layer> layers = view.getRootLayer().getChildren();
-        for (Layer layer : layers) {
-            KmlLayer kmlLayer;
-            String name = layer.getName();
-            final BoundingBox boundBox = new ReferencedEnvelope(0, 20, 70, 30, DefaultGeographicCRS.WGS84);
-            final Product[] products = VisatApp.getApp().getProductManager().getProducts();
-            for (Product product : products) {
-            }
-//            final ProductData.UTC startTime = product.getStartTime();
-//            final ProductData.UTC endTime = product.getEndTime();
-//            RenderedImage image = null;
-//            if (exportTimed && startTime != null && product.getEndTime() != null) {
-//                kmlLayer = new TimedKmlLayer(name, image, boundBox, startTime, endTime);
-//            } else {
-//                kmlLayer = new KmlLayer(name, image, boundBox);
-//            }
-//            kmlLayers.add(kmlLayer);
+    private KmlFeature createKmlFeature() {
+        final GlobBox globBox = GlobBox.getInstance();
+        final List<RasterDataNode> rasterList = globBox.getRasterList();
+        if (rasterList.isEmpty()) {
+            return null;
         }
-        return kmlLayers;
+        final RasterDataNode refRaster = globBox.getCurrentView().getRaster();
+        final KmlFolder folder = new KmlFolder(refRaster.getName(), refRaster.getDescription());
+        for (RasterDataNode raster : rasterList) {
+            final GeoCoding geoCoding = raster.getGeoCoding();
+            final PixelPos upperLeftPP = new PixelPos(0.5f, 0.5f);
+            final PixelPos lowerRightPP = new PixelPos(raster.getSceneRasterWidth() - 0.5f,
+                                                       raster.getSceneRasterHeight() - 0.5f);
+            final GeoPos upperLeftGP = geoCoding.getGeoPos(upperLeftPP, null);
+            final GeoPos lowerRightGP = geoCoding.getGeoPos(lowerRightPP, null);
+            double north = upperLeftGP.getLat();
+            double south = lowerRightGP.getLat();
+            double east = lowerRightGP.getLon();
+            double west = upperLeftGP.getLon();
+            if (geoCoding.isCrossingMeridianAt180()) {
+                east += 360;
+            }
+
+            final BoundingBox referencedEnvelope = new ReferencedEnvelope(west, east, north, south,
+                                                                          DefaultGeographicCRS.WGS84);
+
+            final ProductData.UTC startTime = raster.getProduct().getStartTime();
+            final ProductData.UTC endTime = raster.getProduct().getEndTime();
+
+            final ImageManager imageManager = ImageManager.getInstance();
+            final ImageInfo imageInfo = raster.getImageInfo(ProgressMonitor.NULL);
+            final RenderedImage levelImage = imageManager.createColoredBandImage(new RasterDataNode[]{raster},
+                                                                                 imageInfo, level);
+            final String name = raster.getName();
+            final KmlGroundOverlay groundOverlay = new KmlGroundOverlay(name,
+                                                                        levelImage,
+                                                                        referencedEnvelope,
+                                                                        startTime, endTime);
+            groundOverlay.setIconName(name + raster.getProduct().getRefNo());
+            folder.addChild(groundOverlay);
+        }
+        return folder;
     }
 
     @Override
@@ -215,6 +218,53 @@ public class ExportTimeBasedKmz extends ExecCommand {
             if (button.isSelected()) {
                 level = Integer.parseInt(button.getText());
             }
+        }
+    }
+
+    private class KmzSwingWorker extends ProgressMonitorSwingWorker {
+
+        private final String title;
+        private final File output;
+        private final VisatApp app;
+        private static final int ONE_MEGABYTE = 1012 * 1024;
+
+        KmzSwingWorker(String title, File output, VisatApp app) {
+            super(ExportTimeBasedKmz.this.view, title);
+            this.title = title;
+            this.output = output;
+            this.app = app;
+        }
+
+        @Override
+        protected Object doInBackground(ProgressMonitor pm) throws Exception {
+            KmlFeature kmlFeature = createKmlFeature();
+            final FileOutputStream fileOutputStream = new FileOutputStream(output);
+            ZipOutputStream zipStream = new ZipOutputStream(new BufferedOutputStream(fileOutputStream, 5* ONE_MEGABYTE));
+            try {
+                final KmzExporter exporter = new KmzExporter();
+                exporter.export(kmlFeature, zipStream, pm);
+            } finally {
+                zipStream.close();
+            }
+            return null;
+        }
+
+        @Override
+        protected void done() {
+            Throwable exception = null;
+            try {
+                get();
+            } catch (InterruptedException e) {
+                exception = e;
+            } catch (ExecutionException e) {
+                exception = e.getCause();
+            }
+            if (exception != null) {
+                String message = String.format("Error occurred while exporting to KMZ.%n%s",
+                                               exception.getMessage());
+                app.showErrorDialog(title, message);
+            }
+
         }
     }
 }

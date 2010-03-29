@@ -13,7 +13,7 @@ import java.util.List;
 
 import static junit.framework.Assert.*;
 
-public class GlobBoxManagerTest {
+public class GlobBoxTest {
 
     private static GlobBox globBox;
     private static ProductManager productManager;
