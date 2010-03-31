@@ -40,8 +40,8 @@ public class NetCdfWriterTest implements NetcdfConstants {
         rootGroup = writer.getRootGroup();
 
         lat = new Dimension(LAT_VAR_NAME, 10);
-        lon = new Dimension(LON_VAR_NAME, 20);
-        time = new Dimension("time", 0, true, true, false);
+        lon = new Dimension(LON_VAR_NAME, 10);
+        time = new Dimension("time", 10, true, true, false);
     }
 
     @Test
@@ -131,7 +131,9 @@ public class NetCdfWriterTest implements NetcdfConstants {
         for (lo = 0; lo < lon.getLength(); lo++) {
             for (la = 0; la < lat.getLength(); la++) {
                 for (t = 0; t < time.getLength(); t++) {
-                    data.setDouble(ima.set(la, lo, 0), la * 0.1 + lo * 0.1);
+                    if (lo == lon.getLength() - 1) {
+                        data.setDouble(ima.set(la, lo, t), 10);
+                    }
                 }
             }
         }

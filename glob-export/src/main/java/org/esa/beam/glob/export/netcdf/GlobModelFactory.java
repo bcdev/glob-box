@@ -1,8 +1,10 @@
 package org.esa.beam.glob.export.netcdf;
 
+import org.esa.beam.dataio.netcdf4.Nc4ReaderParameters;
 import org.esa.beam.dataio.netcdf4.convention.AbstractModelFactory;
 import org.esa.beam.dataio.netcdf4.convention.InitialisationPart;
 import org.esa.beam.dataio.netcdf4.convention.ModelPart;
+import org.esa.beam.dataio.netcdf4.convention.beam.BeamBandPart;
 import org.esa.beam.dataio.netcdf4.convention.beam.BeamImageInfoPart;
 import org.esa.beam.dataio.netcdf4.convention.beam.BeamMaskOverlayPart;
 import org.esa.beam.dataio.netcdf4.convention.beam.BeamTiePointGridPart;
@@ -24,12 +26,17 @@ public class GlobModelFactory extends AbstractModelFactory {
 
     @Override
     public ModelPart getBandPart() {
-        return new GlobBandPart();
+        return new BeamBandPart();
     }
 
     @Override
     public ModelPart getDescriptionPart() {
         return new CfDescriptionPart();
+    }
+
+    @Override
+    protected boolean isIntendedFor(Nc4ReaderParameters rp) {
+        return false;
     }
 
     @Override
