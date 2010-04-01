@@ -1,12 +1,13 @@
-package org.esa.beam.glob.core;
+package org.esa.beam.glob.core.timeseries;
 
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.RasterDataNode;
-import org.esa.beam.glob.core.datamodel.TimeCoding;
-import org.esa.beam.glob.core.datamodel.TimeSeries;
-import org.esa.beam.glob.core.datamodel.TimedRaster;
+import org.esa.beam.glob.core.timeseries.datamodel.TimeCoding;
+import org.esa.beam.glob.core.timeseries.datamodel.TimeSeries;
+import org.esa.beam.glob.core.timeseries.datamodel.TimedRaster;
 
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,18 +24,20 @@ public class TimeSeriesFactory {
         this.timeDataHandler = timeDataHandler;
     }
 
-    public TimeSeries createTimeSeries(TimedRaster refRaster, List<Product> products, ProductData.UTC startTime,
-                                       ProductData.UTC endTime) {
+    public TimeSeries createTimeSeries(RasterDataNode refRaster, List<Product> products, ProductData.UTC startTime,
+                                       ProductData.UTC endTime) throws ParseException {
         if (refRaster != null) {
             final String rasterName = refRaster.getName();
             List<TimedRaster> rasterList = new ArrayList<TimedRaster>();
             for (Product product : products) {
                 final RasterDataNode newRaster = product.getRasterDataNode(rasterName);
-                final TimeCoding timeCoding = timeDataHandler.generateTimeCoding(newRaster, startTime, endTime);
+                final TimeCoding timeCoding = timeDataHandler.generateTimeCoding(newRaster);
                 final TimedRaster timedRaster = new TimedRaster(newRaster, timeCoding);
                 rasterList.add(timedRaster);
             }
-            final TimeSeries timeSeries = new TimeSeries(rasterList, refRaster, startTime, endTime);
+            final TimeCoding refTimeCoding = timeDataHandler.generateTimeCoding(refRaster);
+            TimedRaster newRefRaster = new TimedRaster(refRaster, refTimeCoding);
+            final TimeSeries timeSeries = new TimeSeries(rasterList, newRefRaster, startTime, endTime);
             timeSeries.applyGeoCoding(refRaster.getGeoCoding());
             return timeSeries;
         } else {
@@ -46,8 +49,8 @@ public class TimeSeriesFactory {
      * Convenience method, delegates to createTimeSeries( TimedRaster, List<Product>, UTC, UTC) using the start and
      * end time of the reference raster's product.
      */
-    public TimeSeries createTimeSeries(TimedRaster refRaster, List<Product> products) {
-        final Product refProduct = refRaster.getRaster().getProduct();
+    public TimeSeries createTimeSeries(RasterDataNode refRaster, List<Product> products) throws ParseException {
+        final Product refProduct = refRaster.getProduct();
         return createTimeSeries(refRaster, products, refProduct.getStartTime(), refProduct.getEndTime());
     }
 

@@ -1,4 +1,4 @@
-package org.esa.beam.glob.core.datamodel;
+package org.esa.beam.glob.core.timeseries.datamodel;
 
 import org.esa.beam.framework.datamodel.GeoCoding;
 import org.esa.beam.framework.datamodel.RasterDataNode;

@@ -1,4 +1,4 @@
-package org.esa.beam.glob.core.datamodel;
+package org.esa.beam.glob.core.timeseries.datamodel;
 
 import org.esa.beam.framework.datamodel.GeoCoding;
 import org.esa.beam.framework.datamodel.ProductData;
@@ -30,10 +30,12 @@ public class TimeSeries {
         this.rasterList = rasterList;
         this.refRaster = refRaster;
         this.startTime = startTime;
-        validateRasterList();
+        timeValidateRasterList();
+        applyGeoCoding(refRaster.getGeoCoding());
     }
 
     public void applyGeoCoding(GeoCoding gc) {
+        // TODO ts dummy
         setGeoCoding(gc);
         for (TimedRaster tr : rasterList) {
             tr.getRaster().setGeoCoding(gc);
@@ -45,11 +47,11 @@ public class TimeSeries {
     }
 
     public List<TimedRaster> getRasterList() {
-        validateRasterList();
+        timeValidateRasterList();
         return rasterList;
     }
 
-    private void validateRasterList() {
+    private void timeValidateRasterList() {
         List<TimedRaster> result = new ArrayList<TimedRaster>();
         for (TimedRaster tr : rasterList) {
             final Date rasterStartTime = tr.getTimeCoding().getStartTime().getAsDate();
