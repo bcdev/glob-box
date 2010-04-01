@@ -51,13 +51,14 @@ public class TimeCoding {
 
     public ProductData.UTC getDateAtPixel(final PixelPos pos) {
         Rectangle rect = new Rectangle(raster.getWidth(), raster.getHeight());
-        if (!rect.contains(pos)) {
-            return null;    // when pixel is not valid, it has no time
-        }
-        if (!hasTimePerPixel) { // no time per pixel set: all pixels have same time information
-            return startTime;
+        if (rect.contains(pos)) {
+            if (!hasTimePerPixel) { // no time per pixel set: all pixels have same time information
+                return startTime;
+            } else {
+                return pixelToDate.get(pos);
+            }
         } else {
-            return pixelToDate.get(pos);
+            return null;
         }
     }
 
