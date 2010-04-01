@@ -27,7 +27,6 @@ import org.esa.beam.framework.ui.product.ProductSceneView;
 import org.esa.beam.glayer.RasterImageLayerType;
 import org.esa.beam.glevel.BandImageMultiLevelSource;
 import org.esa.beam.glob.GlobBox;
-import org.esa.beam.glob.core.timeseries.datamodel.TimeSeries;
 import org.esa.beam.visat.VisatApp;
 
 import javax.swing.JCheckBox;
@@ -52,7 +51,6 @@ import java.util.List;
 class GlobToolboxManagerForm extends JPanel {
 
     private GlobToolboxManagerFormModel model;
-    private TimeSeries timeSeries;
 
     private JSlider timeSlider;
     private final GlobToolboxManagerForm.SliderChangeListener sliderChangeListener;
@@ -62,7 +60,6 @@ class GlobToolboxManagerForm extends JPanel {
         sliderChangeListener = new SliderChangeListener();
         createComponents(model.getPropertySet());
     }
-
 
     private void createComponents(PropertySet propertySet) {
         setPreferredSize(new Dimension(300, 200));
@@ -74,15 +71,8 @@ class GlobToolboxManagerForm extends JPanel {
         tableLayout.setRowWeightY(4, 1.0);
         setLayout(tableLayout);
 
-        String startTimeString = "";
-        String endTimeString = "";
-        if (timeSeries != null) {
-            startTimeString = timeSeries.getStartTime().toString();
-            endTimeString = timeSeries.getEndTime().toString();
-        } else {
-            startTimeString = "01.01.2000";
-            endTimeString = "31.12.2010";
-        }
+        String startTimeString = "01.01.2000";
+        String endTimeString = "31.12.2010";
 
         final TableLayout timePanelLayout = new TableLayout(4);
         timePanelLayout.setTableFill(TableLayout.Fill.BOTH);
