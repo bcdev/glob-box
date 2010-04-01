@@ -1,10 +1,9 @@
-package org.esa.beam.glob.core.timeseries.parser;
+package org.esa.beam.glob.core.timeseries;
 
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.glob.core.timeseries.GlobColourTimeHandler;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeCoding;
 import org.esa.beam.glob.export.netcdf.NetCdfConstants;
 import org.esa.beam.glob.export.netcdf.NetCdfWriter;
