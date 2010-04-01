@@ -6,7 +6,6 @@ import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeCoding;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeSeries;
 import org.esa.beam.glob.core.timeseries.datamodel.TimedRaster;
-import org.esa.beam.glob.core.timeseries.parser.TimeDataHandler;
 
 import java.text.ParseException;
 import java.util.ArrayList;

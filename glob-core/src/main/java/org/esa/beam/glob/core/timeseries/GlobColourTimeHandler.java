@@ -1,4 +1,4 @@
-package org.esa.beam.glob.core.timeseries.parser;
+package org.esa.beam.glob.core.timeseries;
 
 import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeCoding;
