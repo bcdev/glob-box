@@ -67,4 +67,11 @@ public class TimeSeries {
         this.rasterList = result;
     }
 
+    public ProductData.UTC getEndTime() {
+        return endTime;
+    }
+
+    public ProductData.UTC getStartTime() {
+        return startTime;
+    }
 }

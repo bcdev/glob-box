@@ -4,6 +4,7 @@ import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.RasterDataNode;
 
+import java.awt.Rectangle;
 import java.util.List;
 import java.util.Map;
 
@@ -49,6 +50,10 @@ public class TimeCoding {
     }
 
     public ProductData.UTC getDateAtPixel(final PixelPos pos) {
+        Rectangle rect = new Rectangle(raster.getWidth(), raster.getHeight());
+        if (!rect.contains(pos)) {
+            return null;    // when pixel is not valid, it has no time
+        }
         if (!hasTimePerPixel) { // no time per pixel set: all pixels have same time information
             return startTime;
         } else {

@@ -27,13 +27,16 @@ import org.esa.beam.framework.ui.product.ProductSceneView;
 import org.esa.beam.glayer.RasterImageLayerType;
 import org.esa.beam.glevel.BandImageMultiLevelSource;
 import org.esa.beam.glob.GlobBox;
+import org.esa.beam.glob.core.timeseries.datamodel.TimeSeries;
 import org.esa.beam.visat.VisatApp;
 
 import javax.swing.JCheckBox;
 import javax.swing.JInternalFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JSeparator;
 import javax.swing.JSlider;
+import javax.swing.JTextField;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import java.awt.Container;
@@ -49,6 +52,7 @@ import java.util.List;
 class GlobToolboxManagerForm extends JPanel {
 
     private GlobToolboxManagerFormModel model;
+    private TimeSeries timeSeries;
 
     private JSlider timeSlider;
     private final GlobToolboxManagerForm.SliderChangeListener sliderChangeListener;
@@ -70,6 +74,29 @@ class GlobToolboxManagerForm extends JPanel {
         tableLayout.setRowWeightY(4, 1.0);
         setLayout(tableLayout);
 
+        String startTimeString = "";
+        String endTimeString = "";
+        if (timeSeries != null) {
+            startTimeString = timeSeries.getStartTime().toString();
+            endTimeString = timeSeries.getEndTime().toString();
+        } else {
+            startTimeString = "01.01.2000";
+            endTimeString = "31.12.2010";
+        }
+
+        final TableLayout timePanelLayout = new TableLayout(4);
+        timePanelLayout.setTableFill(TableLayout.Fill.BOTH);
+        timePanelLayout.setTablePadding(4, 4);
+        JPanel timeSeriesPanel = new JPanel(timePanelLayout);
+        JLabel startTimeLabel = new JLabel("Start time:");
+        JTextField startTimeField = new JTextField(startTimeString);
+        JLabel endTimeLabel = new JLabel("End time:");
+        JTextField endTimeField = new JTextField(endTimeString);
+        timeSeriesPanel.add(startTimeLabel);
+        timeSeriesPanel.add(startTimeField);
+        timeSeriesPanel.add(endTimeLabel);
+        timeSeriesPanel.add(endTimeField);
+
         JCheckBox showWorldMapChecker = new JCheckBox("Show world map layer");
         JCheckBox syncColorChecker = new JCheckBox("Synchronise colour information");
         JCheckBox useAlphaBlendingChecker = new JCheckBox("Use transparency blending");
@@ -79,6 +106,11 @@ class GlobToolboxManagerForm extends JPanel {
         timeSlider.setPaintTrack(true);
         timeSlider.addChangeListener(sliderChangeListener);
         configureTimeSlider();
+
+        add(timeSeriesPanel);
+
+        add(new JSeparator(JSeparator.HORIZONTAL));
+
         add(showWorldMapChecker);
         add(syncColorChecker);
 //        add(useAlphaBlendingChecker);  todo - not yet implemented

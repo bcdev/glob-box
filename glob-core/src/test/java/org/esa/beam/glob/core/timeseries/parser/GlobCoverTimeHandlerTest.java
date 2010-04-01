@@ -1,7 +1,6 @@
-package org.esa.beam.glob.core;
+package org.esa.beam.glob.core.timeseries.parser;
 
 import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.glob.core.timeseries.GlobCoverTimeHandler;
 import org.junit.Before;
 import org.junit.Test;
 
