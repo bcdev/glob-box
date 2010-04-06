@@ -46,6 +46,9 @@ public class WorldFireTimeHandlerTest {
         final ProductData.UTC date3 = map.get(testPixel3)[0];
         assertEquals(date3.getMicroSecondsFraction(), testDate3.getMicroSecondsFraction());
 
+        PixelPos doublePixel = new PixelPos(32.131f, 47.415f);
+        assertEquals(2, map.get(doublePixel).length);
+
         PixelPos wrongPixel = new PixelPos(-999999999.000f, 7790.000f);
         final ProductData.UTC[] wrongDate = map.get(wrongPixel);
         assertNull(wrongDate);

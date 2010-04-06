@@ -23,6 +23,7 @@ public class WorldFireTimeHandler extends TimeDataHandler {
     @Override
     public TimeCoding generateTimeCoding(RasterDataNode raster) throws ParseException, IOException {
         final TimeCoding timeCoding = super.generateTimeCoding(raster);
+        timeCoding.setHasTimePerPixel(true);
         timeCoding.setPixelToDateMap(createPixelToDateMap(raster.getProduct().getFileLocation()));
         return timeCoding;
     }
@@ -39,9 +40,13 @@ public class WorldFireTimeHandler extends TimeDataHandler {
                 float x = Float.parseFloat(fields[3]);
                 float y = Float.parseFloat(fields[4]);
                 final PixelPos pos = new PixelPos(x, y);
-                if (map.keySet().contains(pos)) {
-                    ProductData.UTC[] dates = new ProductData.UTC[map.get(pos).length + 1];
-                    dates[dates.length - 1] = date;
+                if (map.containsKey(pos)) {
+                    final ProductData.UTC[] oldValues = map.get(pos);
+                    ProductData.UTC[] dates = new ProductData.UTC[oldValues.length + 1];
+                    for (int i = 0; i < oldValues.length; i++) {
+                        dates[i] = oldValues[i];
+                    }
+                    dates[oldValues.length] = date;
                     map.put(pos, dates);
                 } else {
                     map.put(pos, new ProductData.UTC[]{date});
