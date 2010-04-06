@@ -1,8 +1,6 @@
 package org.esa.beam.glob.core.timeseries;
 
 import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.framework.datamodel.RasterDataNode;
-import org.esa.beam.glob.core.timeseries.datamodel.TimeCoding;
 
 import java.text.ParseException;
 
@@ -11,25 +9,11 @@ import java.text.ParseException;
  * Date: 01.04.2010
  * Time: 09:19:38
  */
-public class GlobCoverTimeHandler implements TimeDataHandler {
+public class GlobCoverTimeHandler {
 
-    @Override
-    public TimeCoding generateTimeCoding(RasterDataNode raster) throws
-                                                                ParseException {
-        final String fileName = raster.getProduct().getFileLocation().getName();
-        ProductData.UTC[] dates = parseTimeFromFileName(fileName);
-        if (dates != null) {
-            if (dates.length > 1) {
-                return new TimeCoding(raster, dates[0], dates[1], false); // in any case we do not use time per pixel
-            } else {
-                return new TimeCoding(raster, dates[0]);
-            }
-        } else {
-            return null; // should not come here
-        }
-    }
+    // TODO ts move into GlobCover-Reader
 
-    ProductData.UTC[] parseTimeFromFileName(String fileName) throws ParseException {
+    protected ProductData.UTC[] parseTimeFromFileName(String fileName) throws ParseException {
         if (!fileName.contains("GLOBCOVER")) { // no Globcover Product
             return null;
         } else if (fileName.endsWith(".zip") || fileName.endsWith(".tif")) {    // at least possibly Globcover Land 

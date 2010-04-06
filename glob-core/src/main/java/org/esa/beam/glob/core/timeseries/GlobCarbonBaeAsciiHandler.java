@@ -18,34 +18,18 @@ import java.util.Map;
  * Date: 06.04.2010
  * Time: 08:59:55
  */
-public class GlobCarbonBaeAsciiHandler implements TimeDataHandler {
+public class GlobCarbonBaeAsciiHandler extends TimeDataHandler {
 
     @Override
-    public TimeCoding generateTimeCoding(RasterDataNode raster) throws ParseException, IOException {
-        final String fileName = raster.getProduct().getFileLocation().getName();
-        ProductData.UTC[] dates = parseTimeFromFileName(fileName);
-        if (dates != null) {
-            final TimeCoding timeCoding = new TimeCoding(raster, dates[0], dates[0], true);
-            timeCoding.setPixelToDateMap(generateTimePerPixelMap(raster.getProduct().getFileLocation()));
-            return timeCoding;
-        }
-        return null; // should not come here
+    public TimeCoding generateTimeCoding(final RasterDataNode raster) throws ParseException, IOException {
+        final TimeCoding timeCoding = super.generateTimeCoding(raster);
+        timeCoding.setHasTimePerPixel(true);
+        timeCoding.setPixelToDateMap(generateTimePerPixelMap(raster.getProduct().getFileLocation()));
+        return timeCoding;
     }
 
-    ProductData.UTC[] parseTimeFromFileName(String fileName) throws ParseException {
-        if (!fileName.contains("ASCII") || !(fileName.startsWith("BAE"))) { // no BAE ASCII Product
-            return null;
-        } else {
-            String temp = fileName.split("_ASCII")[0];
-            final String[] splitted = temp.split("_");
-            String date = splitted[splitted.length - 1];
-            final ProductData.UTC start = ProductData.UTC.parse(date, "yyyyMM");
-            return new ProductData.UTC[]{start};
-        }
-    }
-
-    Map<PixelPos, ProductData.UTC> generateTimePerPixelMap(final File productFile) throws IOException,
-                                                                                          ParseException {
+    protected Map<PixelPos, ProductData.UTC> generateTimePerPixelMap(final File productFile) throws IOException,
+                                                                                                    ParseException {
         if (productFile == null) {
             return null;
         }
@@ -68,4 +52,17 @@ public class GlobCarbonBaeAsciiHandler implements TimeDataHandler {
         return map;
     }
 
+    // TODO ts move into reader when reader has been written
+
+    protected ProductData.UTC[] parseTimeFromFileName(String fileName) throws ParseException {
+        if (!fileName.contains("ASCII") || !(fileName.startsWith("BAE"))) { // no BAE ASCII Product
+            return null;
+        } else {
+            String temp = fileName.split("_ASCII")[0];
+            final String[] splitted = temp.split("_");
+            String date = splitted[splitted.length - 1];
+            final ProductData.UTC start = ProductData.UTC.parse(date, "yyyyMM");
+            return new ProductData.UTC[]{start};
+        }
+    }
 }

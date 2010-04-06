@@ -10,7 +10,6 @@ import org.esa.beam.glob.export.netcdf.NetCdfWriter;
 import org.esa.beam.glob.export.netcdf.NetCdfWriterPlugIn;
 import org.junit.Before;
 import org.junit.Test;
-import ucar.nc2.NetcdfFile;
 
 import java.io.File;
 import java.io.IOException;
@@ -27,11 +26,11 @@ public class GlobColourTimeHandlerTest implements NetCdfConstants {
 
     private static final String OUTPUT_FILE = System.getProperty("java.io.tmpdir") + System.getProperty(
             "file.separator") + "netcdfTest.nc";
-    private GlobColourTimeHandler timeHandler;
+    private TimeDataHandler timeHandler;
 
     @Before
     public void setUp() throws IOException {
-        timeHandler = new GlobColourTimeHandler();
+        timeHandler = new TimeDataHandler();
         NetCdfWriter writer = (NetCdfWriter) new NetCdfWriterPlugIn(OUTPUT_FILE).createWriterInstance();
         writer.addGlobalAttribute("Conventions", "CF-1.0");
         writer.addGlobalAttribute("start_time", "19820705145322");
@@ -42,29 +41,20 @@ public class GlobColourTimeHandlerTest implements NetCdfConstants {
     }
 
     @Test
-    public void testTimeData() throws IOException, ParseException {
-        NetcdfFile testFile = NetcdfFile.open(OUTPUT_FILE);
-        final ProductData.UTC[] dates = timeHandler.getTimeInformation(testFile);
+    public void testTimeCodingGeneration() throws ParseException, IOException {
 
         final ProductData.UTC startTime = ProductData.UTC.parse("05_07_1982_14:53:22", "dd_MM_yyyy_hh:mm:ss");
         final ProductData.UTC endTime = ProductData.UTC.parse("06 08 2065 15 54 23", "dd MM yyyy hh mm ss");
 
-        assertEquals(startTime.getMicroSecondsFraction(), dates[0].getMicroSecondsFraction());
-        assertEquals(endTime.getMicroSecondsFraction(), dates[1].getMicroSecondsFraction());
-    }
-
-    @Test
-    public void testTimeCodingGeneration() throws ParseException, IOException {
         Product dummy = new Product("testProd", "super product", 10, 20);
         Band band = new Band("test", ProductData.TYPE_INT16, 10, 20);
         dummy.addBand(band);
         dummy.setFileLocation(new File(OUTPUT_FILE));
+        dummy.setStartTime(startTime);
+        dummy.setEndTime(endTime);
         final TimeCoding timeCoding = timeHandler.generateTimeCoding(band);
 
         assertNotNull(timeCoding);
-
-        final ProductData.UTC startTime = ProductData.UTC.parse("05_07_1982_14:53:22", "dd_MM_yyyy_hh:mm:ss");
-        final ProductData.UTC endTime = ProductData.UTC.parse("06 08 2065 15 54 23", "dd MM yyyy hh mm ss");
 
         assertEquals(startTime.getMicroSecondsFraction(), timeCoding.getStartTime().getMicroSecondsFraction());
         assertEquals(endTime.getMicroSecondsFraction(), timeCoding.getEndTime().getMicroSecondsFraction());

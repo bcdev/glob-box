@@ -5,7 +5,6 @@ import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.RasterDataNode;
 
 import java.awt.Rectangle;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -23,7 +22,7 @@ public class TimeCoding {
 
     private Map<PixelPos, ProductData.UTC> pixelToDate;
 
-    private final boolean hasTimePerPixel;
+    private boolean hasTimePerPixel;
 
     public TimeCoding(final RasterDataNode raster, ProductData.UTC startTime, ProductData.UTC endTime,
                       boolean hasTimePerPixel) {
@@ -44,16 +43,11 @@ public class TimeCoding {
         this(raster, startTime, startTime, false);
     }
 
-    public List<PixelPos> getPixelsAtDate(final ProductData.UTC date) {
-// TODO ts implement
-        return null;
-    }
-
     public ProductData.UTC getDateAtPixel(final PixelPos pos) {
         Rectangle rect = new Rectangle(raster.getWidth(), raster.getHeight());
         if (rect.contains(pos)) {
             if (!hasTimePerPixel) { // no time per pixel set: all pixels have same time information
-                return startTime;
+                return endTime;
             } else {
                 return pixelToDate.get(pos);
             }
@@ -72,5 +66,9 @@ public class TimeCoding {
 
     public ProductData.UTC getStartTime() {
         return startTime;
+    }
+
+    public void setHasTimePerPixel(boolean hasTimePerPixel) {
+        this.hasTimePerPixel = hasTimePerPixel;
     }
 }
