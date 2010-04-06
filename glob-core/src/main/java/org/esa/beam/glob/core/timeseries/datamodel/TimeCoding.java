@@ -20,7 +20,7 @@ public class TimeCoding {
 
     private final ProductData.UTC endTime;
 
-    private Map<PixelPos, ProductData.UTC> pixelToDate;
+    private Map<PixelPos, ProductData.UTC[]> pixelToDate;
 
     private boolean hasTimePerPixel;
 
@@ -43,11 +43,11 @@ public class TimeCoding {
         this(raster, startTime, startTime, false);
     }
 
-    public ProductData.UTC getDateAtPixel(final PixelPos pos) {
+    public ProductData.UTC[] getDatesAtPixel(final PixelPos pos) {
         Rectangle rect = new Rectangle(raster.getWidth(), raster.getHeight());
         if (rect.contains(pos)) {
             if (!hasTimePerPixel) { // no time per pixel set: all pixels have same time information
-                return endTime;
+                return new ProductData.UTC[]{endTime};
             } else {
                 return pixelToDate.get(pos);
             }
@@ -56,7 +56,7 @@ public class TimeCoding {
         }
     }
 
-    public void setPixelToDateMap(Map<PixelPos, ProductData.UTC> pixelToDate) {
+    public void setPixelToDateMap(Map<PixelPos, ProductData.UTC[]> pixelToDate) {
         this.pixelToDate = pixelToDate;
     }
 

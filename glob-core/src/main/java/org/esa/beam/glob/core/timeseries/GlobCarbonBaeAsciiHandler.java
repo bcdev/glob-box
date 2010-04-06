@@ -28,26 +28,32 @@ public class GlobCarbonBaeAsciiHandler extends TimeDataHandler {
         return timeCoding;
     }
 
-    protected Map<PixelPos, ProductData.UTC> generateTimePerPixelMap(final File productFile) throws IOException,
-                                                                                                    ParseException {
+    protected Map<PixelPos, ProductData.UTC[]> generateTimePerPixelMap(final File productFile) throws IOException,
+                                                                                                      ParseException {
         if (productFile == null) {
             return null;
         }
-        Map<PixelPos, ProductData.UTC> map = new HashMap<PixelPos, ProductData.UTC>();
+        Map<PixelPos, ProductData.UTC[]> map = new HashMap<PixelPos, ProductData.UTC[]>();
         BufferedReader reader = new BufferedReader(new FileReader(productFile));
         String line;
         while ((line = reader.readLine()) != null) {
             if (!line.contains("PROJECTION_ID") && !line.equals("$")) {
-                line = line.replaceAll("\\s+", " ");
+                line = line.trim().replaceAll("\\s+", " ");
                 final String[] fields = line.split(" ");
-                if (fields.length > 1) {
-                    ProductData.UTC date = ProductData.UTC.parse(fields[0], "yyyyMMdd");
-                    float x = Float.parseFloat(fields[3]);
-                    float y = Float.parseFloat(fields[4]);
-                    map.put(new PixelPos(x, y), date);
+                ProductData.UTC date = ProductData.UTC.parse(fields[0], "yyyyMMdd");
+                float x = Float.parseFloat(fields[3]);
+                float y = Float.parseFloat(fields[4]);
+                final PixelPos pos = new PixelPos(x, y);
+                if (map.keySet().contains(pos)) {
+                    ProductData.UTC[] dates = new ProductData.UTC[map.get(pos).length + 1];
+                    dates[dates.length - 1] = date;
+                    map.put(pos, dates);
+                } else {
+                    map.put(pos, new ProductData.UTC[]{date});
                 }
             }
         }
+        reader.close();
 
         return map;
     }

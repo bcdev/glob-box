@@ -59,10 +59,10 @@ public class GlobColourTimeHandlerTest implements NetCdfConstants {
         assertEquals(startTime.getMicroSecondsFraction(), timeCoding.getStartTime().getMicroSecondsFraction());
         assertEquals(endTime.getMicroSecondsFraction(), timeCoding.getEndTime().getMicroSecondsFraction());
 
-        final ProductData.UTC date = timeCoding.getDateAtPixel(new PixelPos(5.0f, 10.0f));
+        final ProductData.UTC date = timeCoding.getDatesAtPixel(new PixelPos(5.0f, 10.0f))[0];
         assertEquals(startTime.getMicroSecondsFraction(), date.getMicroSecondsFraction());
 
-        final ProductData.UTC wrongDate = timeCoding.getDateAtPixel(new PixelPos(10.0f, 10.0f));
+        final ProductData.UTC[] wrongDate = timeCoding.getDatesAtPixel(new PixelPos(10.0f, 10.0f));
         assertNull(wrongDate);
     }
 
