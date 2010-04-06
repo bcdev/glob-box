@@ -3,6 +3,7 @@ package org.esa.beam.glob.core.timeseries;
 import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeCoding;
 
+import java.io.IOException;
 import java.text.ParseException;
 
 /**
@@ -12,6 +13,6 @@ import java.text.ParseException;
  */
 public interface TimeDataHandler {
 
-    public TimeCoding generateTimeCoding(RasterDataNode raster) throws ParseException;
+    public TimeCoding generateTimeCoding(final RasterDataNode raster) throws ParseException, IOException;
 
 }

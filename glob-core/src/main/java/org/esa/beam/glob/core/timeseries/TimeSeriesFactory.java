@@ -7,6 +7,7 @@ import org.esa.beam.glob.core.timeseries.datamodel.TimeCoding;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeSeries;
 import org.esa.beam.glob.core.timeseries.datamodel.TimedRaster;
 
+import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +26,7 @@ public class TimeSeriesFactory {
     }
 
     public TimeSeries createTimeSeries(RasterDataNode refRaster, List<Product> products, ProductData.UTC startTime,
-                                       ProductData.UTC endTime) throws ParseException {
+                                       ProductData.UTC endTime) throws ParseException, IOException {
         if (refRaster != null) {
             final String rasterName = refRaster.getName();
             List<TimedRaster> rasterList = new ArrayList<TimedRaster>();
@@ -49,7 +50,8 @@ public class TimeSeriesFactory {
      * Convenience method, delegates to createTimeSeries( TimedRaster, List<Product>, UTC, UTC) using the start and
      * end time of the reference raster's product.
      */
-    public TimeSeries createTimeSeries(RasterDataNode refRaster, List<Product> products) throws ParseException {
+    public TimeSeries createTimeSeries(RasterDataNode refRaster, List<Product> products) throws ParseException,
+                                                                                                IOException {
         final Product refProduct = refRaster.getProduct();
         return createTimeSeries(refRaster, products, refProduct.getStartTime(), refProduct.getEndTime());
     }

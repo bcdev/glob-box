@@ -11,7 +11,7 @@ import java.text.ParseException;
  * Date: 01.04.2010
  * Time: 09:19:38
  */
-public class GlobCoverTimeHandler implements TimeFromFileNameParser {
+public class GlobCoverTimeHandler implements TimeDataHandler {
 
     @Override
     public TimeCoding generateTimeCoding(RasterDataNode raster) throws
@@ -29,11 +29,11 @@ public class GlobCoverTimeHandler implements TimeFromFileNameParser {
         }
     }
 
-    @Override
-    public ProductData.UTC[] parseTimeFromFileName(String fileName) throws ParseException {
+    ProductData.UTC[] parseTimeFromFileName(String fileName) throws ParseException {
         if (!fileName.contains("GLOBCOVER")) { // no Globcover Product
             return null;
-        } else if (fileName.endsWith(".zip") || fileName.endsWith(".tif")) {  // Globcover Land Cover Product
+        } else if (fileName.endsWith(".zip") || fileName.endsWith(".tif")) {    // at least possibly Globcover Land 
+            // Cover Product
             String temp = fileName.split("GLOBCOVER_")[1];
             temp = temp.split("_V")[0];
             String[] stringDates = temp.split("_");

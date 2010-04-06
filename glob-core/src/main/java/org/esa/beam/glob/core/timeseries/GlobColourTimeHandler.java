@@ -19,16 +19,10 @@ import static org.esa.beam.framework.datamodel.ProductData.*;
 public class GlobColourTimeHandler implements TimeDataHandler {
 
     @Override
-    public TimeCoding generateTimeCoding(RasterDataNode raster) {
+    public TimeCoding generateTimeCoding(RasterDataNode raster) throws ParseException, IOException {
         final File file = raster.getProduct().getFileLocation();
         UTC[] dates = null;
-        try {
-            dates = getTimeInformation(NetcdfFile.open(file.getAbsolutePath()));
-        } catch (IOException e) {
-            return null;
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
+        dates = getTimeInformation(NetcdfFile.open(file.getAbsolutePath()));
         if (dates != null) {
             if (dates.length > 1) {
                 return new TimeCoding(raster, dates[0], dates[1], false); // in any case we do not use time per pixel

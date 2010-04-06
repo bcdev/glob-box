@@ -54,7 +54,7 @@ public class GlobColourTimeHandlerTest implements NetCdfConstants {
     }
 
     @Test
-    public void testTimeCodingGeneration() throws ParseException {
+    public void testTimeCodingGeneration() throws ParseException, IOException {
         Product dummy = new Product("testProd", "super product", 10, 20);
         Band band = new Band("test", ProductData.TYPE_INT16, 10, 20);
         dummy.addBand(band);
