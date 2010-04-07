@@ -6,6 +6,7 @@ import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeCoding;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeSeries;
 import org.esa.beam.glob.core.timeseries.datamodel.TimedRaster;
+import org.esa.beam.util.Debug;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -17,12 +18,12 @@ import java.util.List;
  * Date: 31.03.2010
  * Time: 10:26:15
  */
-public class TimeSeriesFactory {
+public class TimeSeriesHandler {
 
-    private final TimeDataHandler timeDataHandler;
+    private final TimeHandler timeHandler;
 
-    public TimeSeriesFactory(TimeDataHandler timeDataHandler) {
-        this.timeDataHandler = timeDataHandler;
+    public TimeSeriesHandler(TimeHandler timeHandler) {
+        this.timeHandler = timeHandler;
     }
 
     public TimeSeries createTimeSeries(RasterDataNode refRaster, List<Product> products, ProductData.UTC startTime,
@@ -32,11 +33,11 @@ public class TimeSeriesFactory {
             List<TimedRaster> rasterList = new ArrayList<TimedRaster>();
             for (Product product : products) {
                 final RasterDataNode newRaster = product.getRasterDataNode(rasterName);
-                final TimeCoding timeCoding = timeDataHandler.generateTimeCoding(newRaster);
+                final TimeCoding timeCoding = timeHandler.generateTimeCoding(newRaster);
                 final TimedRaster timedRaster = new TimedRaster(newRaster, timeCoding);
                 rasterList.add(timedRaster);
             }
-            final TimeCoding refTimeCoding = timeDataHandler.generateTimeCoding(refRaster);
+            final TimeCoding refTimeCoding = timeHandler.generateTimeCoding(refRaster);
             TimedRaster newRefRaster = new TimedRaster(refRaster, refTimeCoding);
             final TimeSeries timeSeries = new TimeSeries(rasterList, newRefRaster, startTime, endTime);
             timeSeries.applyGeoCoding(refRaster.getGeoCoding());
@@ -54,6 +55,26 @@ public class TimeSeriesFactory {
                                                                                                 IOException {
         final Product refProduct = refRaster.getProduct();
         return createTimeSeries(refRaster, products, refProduct.getStartTime(), refProduct.getEndTime());
+    }
+
+    public void removeProductFromTimeSeries(final Product product, final TimeSeries timeSeries) {
+        final TimedRaster refRaster = timeSeries.getRefRaster();
+        final RasterDataNode raster = product.getRasterDataNode(refRaster.getName());
+        timeSeries.remove(raster);
+    }
+
+    public void addProductToTimeSeries(final Product product, final TimeSeries timeSeries) {
+        final TimedRaster refRaster = timeSeries.getRefRaster();
+        final RasterDataNode raster = product.getRasterDataNode(refRaster.getName());
+        TimeCoding timeCoding = null;
+        try {
+            timeCoding = timeHandler.generateTimeCoding(raster);
+            timeSeries.add(raster, timeCoding);
+        } catch (ParseException e) {
+            Debug.trace("No raster added. Reason: \n" + e.getMessage());
+        } catch (IOException e) {
+            Debug.trace("No raster added. Reason: \n" + e.getMessage());
+        }
     }
 
 }

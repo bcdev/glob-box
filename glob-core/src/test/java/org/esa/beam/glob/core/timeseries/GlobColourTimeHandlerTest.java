@@ -26,11 +26,11 @@ public class GlobColourTimeHandlerTest implements NetCdfConstants {
 
     private static final String OUTPUT_FILE = System.getProperty("java.io.tmpdir") + System.getProperty(
             "file.separator") + "netcdfTest.nc";
-    private TimeDataHandler timeHandler;
+    private TimeHandler timeHandler;
 
     @Before
     public void setUp() throws IOException {
-        timeHandler = new TimeDataHandler();
+        timeHandler = new TimeHandler();
         NetCdfWriter writer = (NetCdfWriter) new NetCdfWriterPlugIn(OUTPUT_FILE).createWriterInstance();
         writer.addGlobalAttribute("Conventions", "CF-1.0");
         writer.addGlobalAttribute("start_time", "19820705145322");

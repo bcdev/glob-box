@@ -27,7 +27,7 @@ import java.util.Map;
  * Date: 06.04.2010
  * Time: 16:23:31
  */
-public class MedspirationXmlTimeHandler extends TimeDataHandler {
+public class MedspirationXmlTimeHandler extends TimeHandler {
 
     @Override
     public TimeCoding generateTimeCoding(RasterDataNode raster) throws ParseException, IOException {

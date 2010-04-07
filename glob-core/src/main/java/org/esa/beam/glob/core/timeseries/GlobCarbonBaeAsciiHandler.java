@@ -18,7 +18,7 @@ import java.util.Map;
  * Date: 06.04.2010
  * Time: 08:59:55
  */
-public class GlobCarbonBaeAsciiHandler extends TimeDataHandler {
+public class GlobCarbonBaeAsciiHandler extends TimeHandler {
 
     @Override
     public TimeCoding generateTimeCoding(final RasterDataNode raster) throws ParseException, IOException {

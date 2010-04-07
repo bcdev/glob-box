@@ -46,4 +46,19 @@ public class TimedRaster {
     public int getHeight() {
         return raster.getRasterHeight();
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof TimedRaster && ((TimedRaster) obj).getName().equals(
+                this.getName()) && ((TimedRaster) obj).getRaster().equals(
+                getRaster()) && ((TimedRaster) obj).getTimeCoding().getStartTime().equals(
+                this.getTimeCoding().getStartTime()) && ((TimedRaster) obj).getTimeCoding().getEndTime().equals(
+                this.getTimeCoding().getEndTime());
+
+    }
+
+    @Override
+    public int hashCode() {
+        return getName().hashCode() * timeCoding.getStartTime().hashCode() * timeCoding.getEndTime().hashCode();
+    }
 }

@@ -12,7 +12,7 @@ import java.text.ParseException;
  * Date: 31.03.2010
  * Time: 11:22:49
  */
-public class TimeDataHandler {
+public class TimeHandler {
 
     public TimeCoding generateTimeCoding(RasterDataNode raster) throws ParseException, IOException {
         final ProductData.UTC startTime = raster.getProduct().getStartTime();
@@ -20,8 +20,8 @@ public class TimeDataHandler {
         if (endTime == null) {
             return new TimeCoding(raster, startTime);
         } else {
-            return new TimeCoding(raster, startTime, endTime, false);   // in any case: in this class, we do not use
-            // time per pixel
+            return new TimeCoding(raster, startTime, endTime, false);
+            // in any case: we do not use time per pixel
         }
     }
 

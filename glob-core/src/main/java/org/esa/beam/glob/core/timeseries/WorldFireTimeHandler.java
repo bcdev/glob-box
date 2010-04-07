@@ -18,7 +18,7 @@ import java.util.Map;
  * Date: 06.04.2010
  * Time: 14:29:25
  */
-public class WorldFireTimeHandler extends TimeDataHandler {
+public class WorldFireTimeHandler extends TimeHandler {
 
     @Override
     public TimeCoding generateTimeCoding(RasterDataNode raster) throws ParseException, IOException {
