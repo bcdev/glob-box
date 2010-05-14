@@ -59,6 +59,19 @@
             <description>Import a GlobCover Bimonthly or Annual MERIS FR Mosaic data product or product subset.
             </description>
         </action>
+        <action>
+            <class>org.esa.beam.visat.actions.ProductImportAction</class>
+            <id>importGlobCoverGeoTiffProduct</id>
+            <helpId>importGlobCoverGeoTiffProduct</helpId>
+            <formatName>GLOBCOVER-GeoTiff</formatName>
+            <useAllFileFilter>false</useAllFileFilter>
+            <text>Import GlobCover Global/Regional Land Cover Product...</text>
+            <mnemonic/>
+            <shortDescr>Import a GlobCover Global/Regional Land Cover data product or product subset.
+            </shortDescr>
+            <description>Import a GlobCover Global/Regional Land Cover data product or product subset.
+            </description>
+        </action>
     </extension>
 
 </module>
