@@ -13,15 +13,6 @@
     <name>GlobToolbox Data Export</name>
     <dependencies>
         <dependency>
-            <groupId>org.esa.beam</groupId>
-            <artifactId>beam-visat-rcp</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.esa.beam.glob</groupId>
-            <artifactId>glob-ui</artifactId>
-            <version>${pom.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.esa.beam.glob</groupId>
             <artifactId>glob-core</artifactId>
             <version>${pom.version}</version>
