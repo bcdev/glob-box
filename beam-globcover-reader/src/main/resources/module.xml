@@ -63,7 +63,7 @@
             <class>org.esa.beam.visat.actions.ProductImportAction</class>
             <id>importGlobCoverGeoTiffProduct</id>
             <helpId>importGlobCoverGeoTiffProduct</helpId>
-            <formatName>GLOBCOVER-GeoTiff</formatName>
+            <formatName>GeoTIFF-GC</formatName>
             <useAllFileFilter>false</useAllFileFilter>
             <text>Import GlobCover Global/Regional Land Cover Product...</text>
             <mnemonic/>

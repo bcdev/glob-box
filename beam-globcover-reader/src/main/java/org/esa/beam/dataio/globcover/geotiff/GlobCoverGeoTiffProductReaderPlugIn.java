@@ -13,6 +13,7 @@ public class GlobCoverGeoTiffProductReaderPlugIn implements ProductReaderPlugIn 
 
     private final GeoTiffProductReaderPlugIn geoTiffPlugIn;
     private LegendFilenameFilter legendFileFilter;
+    private static final String[] FORMAT_NAMES = {"GeoTIFF-GC"};
 
     public GlobCoverGeoTiffProductReaderPlugIn() {
         geoTiffPlugIn = new GeoTiffProductReaderPlugIn();
@@ -48,7 +49,7 @@ public class GlobCoverGeoTiffProductReaderPlugIn implements ProductReaderPlugIn 
 
     @Override
     public String[] getFormatNames() {
-        return geoTiffPlugIn.getFormatNames();
+        return FORMAT_NAMES;
     }
 
     @Override
@@ -58,7 +59,7 @@ public class GlobCoverGeoTiffProductReaderPlugIn implements ProductReaderPlugIn 
 
     @Override
     public String getDescription(Locale locale) {
-        return "GlobCover GeoTIFF data product.";
+        return "GlobCover Global/Regional Land Cover product";
     }
 
     @Override

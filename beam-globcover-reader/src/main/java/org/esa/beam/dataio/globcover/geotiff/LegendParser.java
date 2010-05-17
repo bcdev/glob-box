@@ -5,6 +5,8 @@ import jxl.Sheet;
 import jxl.Workbook;
 import jxl.read.biff.BiffException;
 import org.esa.beam.util.Debug;
+import org.esa.beam.util.StringUtils;
+import org.esa.beam.util.io.FileUtils;
 
 import java.awt.Color;
 import java.io.File;
@@ -15,8 +17,15 @@ public class LegendParser {
     private static final String GLOBAL_LEGEND_SHEET = "Global";
     private static final String REGIONAL_LEGEND_SHEET = "Regional";
 
-    static LegendClass[] parse(File inputFile) {
-        return new XlsLegendParser().parse(inputFile);
+    private LegendParser() {
+    }
+
+    static LegendClass[] parse(File inputFile, boolean isRegional) {
+        if (".xls".equalsIgnoreCase(FileUtils.getExtension(inputFile))) {
+            return new XlsLegendParser().parse(inputFile, isRegional);
+        }
+
+        return new LegendClass[0];
     }
 
     private static class XlsLegendParser implements Parser {
@@ -28,16 +37,18 @@ public class LegendParser {
         private static final String GREEN = "Green";
 
         @Override
-        public LegendClass[] parse(File inputFile) {
+        public LegendClass[] parse(File inputFile, boolean isRegional) {
             Workbook workbook = null;
             LegendClass[] classes = new LegendClass[0];
             try {
                 workbook = Workbook.getWorkbook(inputFile);
-
-                Sheet sheet = workbook.getSheet(REGIONAL_LEGEND_SHEET);
-                if (sheet == null) {
+                Sheet sheet;
+                if( isRegional ) {
+                    sheet = workbook.getSheet(REGIONAL_LEGEND_SHEET);
+                } else {
                     sheet = workbook.getSheet(GLOBAL_LEGEND_SHEET);
                 }
+
                 final int valueCol = sheet.findCell(VALUE).getColumn();
                 final int labelCol = sheet.findCell(LABEL).getColumn();
                 final int redCol = sheet.findCell(RED).getColumn();
@@ -48,6 +59,9 @@ public class LegendParser {
 
                 for (int i = 1; i < sheet.getRows(); i++) {
                     final Cell valueCell = sheet.getCell(valueCol, i);
+                    if(StringUtils.isNullOrEmpty(valueCell.getContents())) {
+                        continue;
+                    }
                     final Cell labelCell = sheet.getCell(labelCol, i);
                     final Cell redCell = sheet.getCell(redCol, i);
                     final Cell greenCell = sheet.getCell(greenCol, i);
@@ -79,6 +93,6 @@ public class LegendParser {
 
     private interface Parser {
 
-        LegendClass[] parse(File inputFile);
+        LegendClass[] parse(File inputFile, boolean isRegional);
     }
 }
