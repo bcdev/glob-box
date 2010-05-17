@@ -20,7 +20,6 @@ import java.io.IOException;
 public class GlobNetCdfWriter implements NetCdfConstants {
 
     private NetCdfWriter writer;
-    private static final String OUTPUT_FILE_LOCAL = "c:\\dev\\ressourcen\\netcdf\\netcdfTest.nc";
     private static final String OUTPUT_FILE = System.getProperty("java.io.tmpdir") + System.getProperty(
             "file.separator") + "netcdfTest.nc";
     private Group rootGroup;
@@ -30,7 +29,7 @@ public class GlobNetCdfWriter implements NetCdfConstants {
     private ArrayDouble data;
 
     public GlobNetCdfWriter() {
-        writer = (NetCdfWriter) new NetCdfWriterPlugIn(OUTPUT_FILE_LOCAL).createWriterInstance();
+        writer = (NetCdfWriter) new NetCdfWriterPlugIn(OUTPUT_FILE).createWriterInstance();
         rootGroup = writer.getRootGroup();
 
         lat = new Dimension(LAT_VAR_NAME, 180);
