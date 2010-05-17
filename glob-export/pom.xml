@@ -18,6 +18,11 @@
             <version>${pom.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.esa.beam.glob</groupId>
+            <artifactId>glob-ui</artifactId>
+            <version>${pom.version}</version>
+        </dependency>
+        <dependency>
             <groupId>ucar.netcdf</groupId>
             <artifactId>netcdf</artifactId>
             <version>4.0</version>
