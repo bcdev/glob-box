@@ -11,12 +11,16 @@ import org.esa.beam.framework.dataio.ProductIOException;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.ColorPaletteDef;
 import org.esa.beam.framework.datamodel.CrsGeoCoding;
+import org.esa.beam.framework.datamodel.GeoCoding;
 import org.esa.beam.framework.datamodel.ImageInfo;
 import org.esa.beam.framework.datamodel.IndexCoding;
+import org.esa.beam.framework.datamodel.Mask;
 import org.esa.beam.framework.datamodel.MetadataAttribute;
 import org.esa.beam.framework.datamodel.MetadataElement;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.datamodel.ProductNode;
+import org.esa.beam.framework.datamodel.ProductNodeGroup;
 import org.esa.beam.jai.ImageManager;
 import org.esa.beam.jai.ResolutionLevel;
 import org.esa.beam.util.math.MathUtils;
@@ -24,6 +28,7 @@ import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.operation.TransformException;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
@@ -33,6 +38,7 @@ import java.io.IOException;
 
 
 public class ArcBinGridReader extends AbstractProductReader {
+
     private RasterDataFile rasterDataFile;
 
     protected ArcBinGridReader(ArcBinGridReaderPlugIn readerPlugIn) {
@@ -63,36 +69,23 @@ public class ArcBinGridReader extends AbstractProductReader {
         final Dimension imageTileSize = new Dimension(tileExtend, tileExtend);
         product.setPreferredTileSize(imageTileSize);
 
-        AffineTransform i2m = new AffineTransform();
-        i2m.translate(georefBounds.lowerLeftX, georefBounds.lowerLeftY);
-        i2m.scale(header.pixelSizeX, -header.pixelSizeY);
-        i2m.translate(0, -height);
+        final AffineTransform i2m = createAffineTransform(georefBounds, header, height);
+        product.setGeoCoding(createGeoCoding(width, height, product, i2m));
 
-        // TODO parse projection from prj.adf file. For now we assume WGS84 (applicable for GlobToolBox products) (mz, 2010-02-24)
-        //CoordinateReferenceSystem crs = ProjectionReader.parsePrjFile(getCaseInsensitiveFile(dir, "prj.adf"));
-        Rectangle imageBounds = new Rectangle(width, height);
-        try {
-            final DefaultGeographicCRS crs = DefaultGeographicCRS.WGS84;
-            CrsGeoCoding coding = new CrsGeoCoding(crs, imageBounds, i2m);
-            product.setGeoCoding(coding);
-        } catch (FactoryException ignored) {
-        } catch (TransformException ignored) {
-        }
-
-        int productdataType = getDataType(header, rasterStatistics);
-        Band band = product.addBand("band", productdataType);
-        double nodataValue = getNodataValue(productdataType);
+        int productDataType = getDataType(header, rasterStatistics);
+        Band band = product.addBand("band", productDataType);
+        double nodataValue = getNodataValue(productDataType);
         band.setNoDataValue(nodataValue);
         band.setNoDataValueUsed(true);
-        final int databufferType = ImageManager.getDataBufferType(productdataType);
+        final int databufferType = ImageManager.getDataBufferType(productDataType);
         final GridTileProvider gridTileProvider;
-        if (ProductData.isIntType(productdataType)) {
+        if (ProductData.isIntType(productDataType)) {
             gridTileProvider = new IntegerGridTileProvider(rasterDataFile, tileIndex, (int) nodataValue, gridTileSize,
-                                                           productdataType);
+                                                           productDataType);
         } else {
             final int tileLength = gridTileSize.width * gridTileSize.height;
             gridTileProvider = new FloatGridTileProvider(rasterDataFile, tileIndex, (float) nodataValue, tileLength,
-                                                         productdataType);
+                                                         productDataType);
         }
         final MultiLevelModel model = new DefaultMultiLevelModel(i2m, width, height);
         AbstractMultiLevelSource multiLevelSource = new AbstractMultiLevelSource(model) {
@@ -119,6 +112,15 @@ public class ArcBinGridReader extends AbstractProductReader {
                 IndexCoding indexCoding = ColorPalette.createIndexCoding(colorPaletteDef);
                 product.getIndexCodingGroup().add(indexCoding);
                 band.setSampleCoding(indexCoding);
+
+                final ColorPaletteDef.Point[] points = colorPaletteDef.getPoints();
+                for (ColorPaletteDef.Point point : points) {
+                    MetadataAttribute attribute = new MetadataAttribute("" + (int) point.getSample(),
+                                                                        ProductData.TYPE_INT32);
+                    attribute.setDataElems(new int[]{(int) point.getSample()});
+                    addMask(attribute, "expression", point.getColor(), product);
+                }
+
             }
         }
 
@@ -130,6 +132,27 @@ public class ArcBinGridReader extends AbstractProductReader {
         }
 
         return product;
+    }
+
+    private GeoCoding createGeoCoding(int width, int height, Product product, AffineTransform i2m) {
+        // TODO parse projection from prj.adf file. For now we assume WGS84 (applicable for GlobToolBox products) (mz, 2010-02-24)
+        //CoordinateReferenceSystem crs = ProjectionReader.parsePrjFile(getCaseInsensitiveFile(dir, "prj.adf"));
+        Rectangle imageBounds = new Rectangle(width, height);
+        try {
+            final DefaultGeographicCRS crs = DefaultGeographicCRS.WGS84;
+            return new CrsGeoCoding(crs, imageBounds, i2m);
+        } catch (FactoryException ignored) {
+        } catch (TransformException ignored) {
+        }
+        return null;
+    }
+
+    private AffineTransform createAffineTransform(GeorefBounds georefBounds, Header header, int height) {
+        AffineTransform i2m = new AffineTransform();
+        i2m.translate(georefBounds.lowerLeftX, georefBounds.lowerLeftY);
+        i2m.scale(header.pixelSizeX, -header.pixelSizeY);
+        i2m.translate(0, -height);
+        return i2m;
     }
 
     @Override
@@ -245,4 +268,17 @@ public class ArcBinGridReader extends AbstractProductReader {
         }
         return null;
     }
+
+    private void addMask(final ProductNode metadataSample, final String expression,
+                         final Color color, final Product product) {
+        final ProductNodeGroup<Mask> maskGroup = product.getMaskGroup();
+        final int width = product.getSceneRasterWidth();
+        final int height = product.getSceneRasterHeight();
+        final Mask mask = Mask.BandMathsType.create(metadataSample.getName().toLowerCase(),
+                                                    metadataSample.getDescription(),
+                                                    width, height,
+                                                    expression, color, 0.5);
+        maskGroup.add(mask);
+    }
+
 }
