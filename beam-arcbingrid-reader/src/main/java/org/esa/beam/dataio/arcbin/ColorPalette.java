@@ -29,9 +29,12 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 
-class ColorPalette {private ColorPalette() {
+class ColorPalette {
+
+    private ColorPalette() {
     }
 
     private static final class ColorPaletteFilenameFilter implements FilenameFilter {
@@ -60,15 +63,10 @@ class ColorPalette {private ColorPalette() {
     }
 
     static ColorPaletteDef createColorPalette(File file, RasterStatistics statistics) {
-        FileReader fileReader;
-        try {
-            fileReader = new FileReader(file);
-        } catch (FileNotFoundException e) {
-            return null;
-        }
-        BufferedReader reader = new BufferedReader(fileReader);
+        BufferedReader reader = null;
         List<ColorPaletteDef.Point> pointList = new ArrayList<ColorPaletteDef.Point>();
         try {
+            reader = new BufferedReader(new FileReader(file));
             String line = reader.readLine();
             while (line != null) {
                 line = line.trim();
@@ -86,16 +84,15 @@ class ColorPalette {private ColorPalette() {
                                 point.setSample(sample);
                                 point.setLabel(Integer.toString(sample));
                                 point.setColor(new Color(red, green, blue));
-                                //System.out.println("add point " + point.getSample() + "  " + point.getColor());
                                 pointList.add(point);
                             }
-                        } catch (NumberFormatException ignoreLine) {
+                        } catch (NumberFormatException ignored) {
                         }
                     }
                 }
                 line = reader.readLine();
             }
-        } catch (IOException e1) {
+        } catch (IOException ignored) {
             return null;
         } finally {
             try {
@@ -111,13 +108,13 @@ class ColorPalette {private ColorPalette() {
         return null;
     }
 
-    static IndexCoding createIndexCoding(ColorPaletteDef colorPaletteDef) {
+    static IndexCoding createIndexCoding(ColorPaletteDef colorPaletteDef, Map<Integer, String> descriptionMap ) {
         final IndexCoding indexCoding = new IndexCoding("index_coding");
         final Point[] points = colorPaletteDef.getPoints();
         for (Point point : points) {
             final int intSample = (int) point.getSample();
             final String s = Integer.toString(intSample);
-            indexCoding.addIndex(s, intSample, "");
+            indexCoding.addIndex(s, intSample, descriptionMap.get(intSample) );
         }
         return indexCoding;
     }

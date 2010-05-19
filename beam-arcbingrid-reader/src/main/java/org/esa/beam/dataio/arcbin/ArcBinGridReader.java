@@ -14,13 +14,9 @@ import org.esa.beam.framework.datamodel.CrsGeoCoding;
 import org.esa.beam.framework.datamodel.GeoCoding;
 import org.esa.beam.framework.datamodel.ImageInfo;
 import org.esa.beam.framework.datamodel.IndexCoding;
-import org.esa.beam.framework.datamodel.Mask;
-import org.esa.beam.framework.datamodel.MetadataAttribute;
 import org.esa.beam.framework.datamodel.MetadataElement;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.framework.datamodel.ProductNode;
-import org.esa.beam.framework.datamodel.ProductNodeGroup;
 import org.esa.beam.jai.ImageManager;
 import org.esa.beam.jai.ResolutionLevel;
 import org.esa.beam.util.math.MathUtils;
@@ -28,13 +24,13 @@ import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.operation.TransformException;
 
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.awt.image.RenderedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
 
 
 public class ArcBinGridReader extends AbstractProductReader {
@@ -73,7 +69,7 @@ public class ArcBinGridReader extends AbstractProductReader {
         product.setGeoCoding(createGeoCoding(width, height, product, i2m));
 
         int productDataType = getDataType(header, rasterStatistics);
-        Band band = product.addBand("band", productDataType);
+        final Band band = product.addBand("band", productDataType);
         double nodataValue = getNodataValue(productDataType);
         band.setNoDataValue(nodataValue);
         band.setNoDataValueUsed(true);
@@ -108,27 +104,18 @@ public class ArcBinGridReader extends AbstractProductReader {
             ColorPaletteDef colorPaletteDef = ColorPalette.createColorPalette(colorPaletteFile, rasterStatistics);
             if (colorPaletteDef != null) {
                 band.setImageInfo(new ImageInfo(colorPaletteDef));
-                //TODO read vat.adf for better index coding
-                IndexCoding indexCoding = ColorPalette.createIndexCoding(colorPaletteDef);
+                final Map<Integer, String> descriptionMap = LegendFile.createDescriptionMap(gridDir);
+                IndexCoding indexCoding = ColorPalette.createIndexCoding(colorPaletteDef, descriptionMap);
                 product.getIndexCodingGroup().add(indexCoding);
                 band.setSampleCoding(indexCoding);
-
-                final ColorPaletteDef.Point[] points = colorPaletteDef.getPoints();
-                for (ColorPaletteDef.Point point : points) {
-                    MetadataAttribute attribute = new MetadataAttribute("" + (int) point.getSample(),
-                                                                        ProductData.TYPE_INT32);
-                    attribute.setDataElems(new int[]{(int) point.getSample()});
-                    addMask(attribute, "expression", point.getColor(), product);
-                }
-
             }
         }
 
         MetadataElement metadataRoot = product.getMetadataRoot();
-        metadataRoot.addElement(createHeaderElement(header));
-        metadataRoot.addElement(createGeorefBoundsElement(georefBounds));
+        metadataRoot.addElement(MetaDataHandler.createHeaderElement(header));
+        metadataRoot.addElement(MetaDataHandler.createGeorefBoundsElement(georefBounds));
         if (rasterStatistics != null) {
-            metadataRoot.addElement(createRasterStatisticsElement(rasterStatistics));
+            metadataRoot.addElement(MetaDataHandler.createRasterStatisticsElement(rasterStatistics));
         }
 
         return product;
@@ -203,60 +190,6 @@ public class ArcBinGridReader extends AbstractProductReader {
         }
     }
 
-    private MetadataElement createHeaderElement(Header header) {
-        MetadataElement elem = new MetadataElement("Header");
-        elem.addAttribute(createIntAttr("cellType", header.cellType, "1 = int cover, 2 = float cover."));
-        elem.addAttribute(
-                createDoubleAttr("pixelSizeX", header.pixelSizeX, "Width of a pixel in georeferenced coordinates."));
-        elem.addAttribute(
-                createDoubleAttr("pixelSizeY", header.pixelSizeY, "Height of a pixel in georeferenced coordinates."));
-        elem.addAttribute(createDoubleAttr("xRef", header.xRef, null));
-        elem.addAttribute(createDoubleAttr("yRef", header.yRef, null));
-        elem.addAttribute(createIntAttr("tilesPerRow", header.tilesPerRow, "The width of the file in tiles."));
-        elem.addAttribute(createIntAttr("tilesPerColumn", header.tilesPerColumn,
-                                        "The height of the file in tiles. Note this may be much more than the number of tiles actually represented in the index file."));
-        elem.addAttribute(createIntAttr("tileXSize", header.tileXSize, "The width of a file in pixels. Normally 256."));
-        elem.addAttribute(createIntAttr("tileYSize", header.tileYSize, "Height of a tile in pixels, usually 4."));
-        return elem;
-    }
-
-    private MetadataElement createGeorefBoundsElement(GeorefBounds georefBounds) {
-        MetadataElement elem = new MetadataElement("GeorefBounds");
-        elem.addAttribute(createDoubleAttr("llx", georefBounds.lowerLeftX, "Lower left X (easting) of the grid."));
-        elem.addAttribute(createDoubleAttr("lly", georefBounds.lowerLeftY, "Lower left Y (northing) of the grid."));
-        elem.addAttribute(createDoubleAttr("urx", georefBounds.upperRightX, "Upper right X (northing) of the grid."));
-        elem.addAttribute(createDoubleAttr("ury", georefBounds.upperRightY, "Upper right Y (northing) of the grid."));
-        return elem;
-    }
-
-    private MetadataElement createRasterStatisticsElement(RasterStatistics rasterStat) {
-        MetadataElement elem = new MetadataElement("RasterStatistics");
-        elem.addAttribute(createDoubleAttr("min", rasterStat.min, "Minimum value of a raster cell in this grid."));
-        elem.addAttribute(createDoubleAttr("max", rasterStat.max, "Maximum value of a raster cell in this grid."));
-        elem.addAttribute(createDoubleAttr("mean", rasterStat.mean, "Mean value of a raster cells in this grid."));
-        elem.addAttribute(
-                createDoubleAttr("stddev", rasterStat.stddev, "Standard deviation of raster cells in this grid."));
-        return elem;
-    }
-
-    private MetadataAttribute createIntAttr(String name, int value, String desc) {
-        ProductData productData = ProductData.createInstance(new int[]{value});
-        MetadataAttribute attribute = new MetadataAttribute(name, productData, true);
-        if (desc != null) {
-            attribute.setDescription(desc);
-        }
-        return attribute;
-    }
-
-    private MetadataAttribute createDoubleAttr(String name, double value, String desc) {
-        ProductData productData = ProductData.createInstance(new double[]{value});
-        MetadataAttribute attribute = new MetadataAttribute(name, productData, true);
-        if (desc != null) {
-            attribute.setDescription(desc);
-        }
-        return attribute;
-    }
-
     static File getCaseInsensitiveFile(File dir, String lowerCaseName) {
         File lowerCaseFile = new File(dir, lowerCaseName);
         if (lowerCaseFile.exists()) {
@@ -268,17 +201,4 @@ public class ArcBinGridReader extends AbstractProductReader {
         }
         return null;
     }
-
-    private void addMask(final ProductNode metadataSample, final String expression,
-                         final Color color, final Product product) {
-        final ProductNodeGroup<Mask> maskGroup = product.getMaskGroup();
-        final int width = product.getSceneRasterWidth();
-        final int height = product.getSceneRasterHeight();
-        final Mask mask = Mask.BandMathsType.create(metadataSample.getName().toLowerCase(),
-                                                    metadataSample.getDescription(),
-                                                    width, height,
-                                                    expression, color, 0.5);
-        maskGroup.add(mask);
-    }
-
 }
