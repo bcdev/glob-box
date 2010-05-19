@@ -3,7 +3,6 @@ package org.esa.beam.dataio.arcbin;
 import jxl.read.biff.BiffException;
 import org.geotools.data.shapefile.dbf.DbaseFileHeader;
 import org.geotools.data.shapefile.dbf.DbaseFileReader;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
@@ -16,10 +15,6 @@ import java.nio.charset.Charset;
 import static junit.framework.Assert.*;
 
 public class DbfReadingTest {
-
-    @Before
-    public void setup() {
-    }
 
     @Test
     public void testLegend1() throws BiffException, IOException, URISyntaxException {
@@ -71,11 +66,11 @@ public class DbfReadingTest {
         }
     }
 
-    private void testRow(DbaseFileReader reader, int value, String name ) throws IOException {
+    private void testRow(DbaseFileReader reader, int value, String name) throws IOException {
         DbaseFileReader.Row row = reader.readRow();
         final Object actual = row.read(0);
-        assertEquals( Double.class, actual.getClass() );
-        assertEquals(value, ((Double)actual).intValue());
+        assertEquals(Double.class, actual.getClass());
+        assertEquals(value, ((Double) actual).intValue());
         assertEquals(name, (String) row.read(1));
     }
 }
