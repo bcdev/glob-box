@@ -12,7 +12,7 @@ import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
 
-public class LegendParser {
+class LegendParser {
 
     private static final String GLOBAL_LEGEND_SHEET = "Global";
     private static final String REGIONAL_LEGEND_SHEET = "Regional";

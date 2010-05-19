@@ -18,7 +18,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class GlobCoverGeoTiffProductReader extends GeoTiffProductReader {
+class GlobCoverGeoTiffProductReader extends GeoTiffProductReader {
 
     /**
      * Constructs a new abstract product reader.

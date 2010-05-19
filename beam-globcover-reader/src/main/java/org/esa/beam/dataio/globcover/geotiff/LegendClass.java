@@ -2,14 +2,14 @@ package org.esa.beam.dataio.globcover.geotiff;
 
 import java.awt.Color;
 
-public class LegendClass {
+class LegendClass {
 
     private final String description;
     private final Color color;
     private final int value;
     private final String name;
 
-    public LegendClass(int value, String description, String name, Color color) {
+    LegendClass(int value, String description, String name, Color color) {
         this.value = value;
         this.description = description;
         this.name = name;

@@ -5,7 +5,7 @@ import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.List;
 
-public class LegendFilenameFilter implements FilenameFilter {
+class LegendFilenameFilter implements FilenameFilter {
 
     private List<String> regionLegendNames;
 
