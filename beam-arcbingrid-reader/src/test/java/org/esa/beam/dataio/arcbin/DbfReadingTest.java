@@ -3,7 +3,6 @@ package org.esa.beam.dataio.arcbin;
 import jxl.read.biff.BiffException;
 import org.geotools.data.shapefile.dbf.DbaseFileHeader;
 import org.geotools.data.shapefile.dbf.DbaseFileReader;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
@@ -12,13 +11,29 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
+import java.util.Map;
 
 import static junit.framework.Assert.*;
 
 public class DbfReadingTest {
 
-    @Before
-    public void setup() {
+    @Test
+    public void testFirstCreateDbfDescriptionMap() throws URISyntaxException, IOException {
+        File file = new File(getClass().getResource("test_legend_1.dbf").toURI());
+        final Map<Integer, String> map = LegendFile.createDbfDescriptionMap(file);
+        assertEquals("Tropical Broadleaved Forest", map.get(1));
+        assertEquals("Fragmented Tropical Broadleav", map.get(2));
+        assertEquals("Mangroves", map.get(5));
+    }
+
+    @Test
+    public void testSecondCreateDbfDescriptionMap() throws URISyntaxException, IOException {
+        File file = new File(getClass().getResource("test_legend_2.dbf").toURI());
+        final Map<Integer, String> map = LegendFile.createDbfDescriptionMap(file);
+        assertEquals("Unclassified", map.get(0));
+        assertEquals("Mosaic Forest / shrub cover", map.get(9));
+        assertEquals("", map.get(11));
+        assertEquals("Artificial surfaces", map.get(22));
     }
 
     @Test
@@ -71,11 +86,11 @@ public class DbfReadingTest {
         }
     }
 
-    private void testRow(DbaseFileReader reader, int value, String name ) throws IOException {
+    private void testRow(DbaseFileReader reader, int value, String name) throws IOException {
         DbaseFileReader.Row row = reader.readRow();
         final Object actual = row.read(0);
-        assertEquals( Double.class, actual.getClass() );
-        assertEquals(value, ((Double)actual).intValue());
+        assertEquals(Double.class, actual.getClass());
+        assertEquals(value, ((Double) actual).intValue());
         assertEquals(name, (String) row.read(1));
     }
 }

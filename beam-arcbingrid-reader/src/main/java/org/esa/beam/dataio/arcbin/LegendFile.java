@@ -15,7 +15,6 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.charset.Charset;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -25,36 +24,28 @@ public class LegendFile {
     private LegendFile() {
     }
 
-    static Map<Integer, String> createDescriptionMap( final File dir ) throws IOException {
+    static Map<Integer, String> createDescriptionMap(final File dir) throws IOException {
         File file = findDbfLegendFile(dir);
         if (file != null) {
             return createDbfDescriptionMap(file);
         }
 
-        file = findXlsLegendFile( dir );
-        if( file != null ) {
-            return createXlsDescriptionMap( file );
+        file = findXlsLegendFile(dir);
+        if (file != null) {
+            return createXlsDescriptionMap(file);
         }
 
         return Collections.emptyMap();
     }
 
-    private static Map<Integer, String> createXlsDescriptionMap(final File file) {
+    static Map<Integer, String> createXlsDescriptionMap(final File file) {
         Workbook workbook = null;
         final Map<Integer, String> map = new HashMap<Integer, String>();
         try {
             workbook = Workbook.getWorkbook(file);
             Sheet sheet = workbook.getSheet(0);
 
-            final Cell[] firstRow = sheet.getRow(0);
-            int descColIndex = -1;
-            for (int i = 0; i < firstRow.length; i++) {
-                Cell cell = firstRow[i];
-                final String columnName = cell.getContents().toLowerCase();
-                if (columnName.contains("class") && columnName.contains("name")) {
-                    descColIndex = i;
-                }
-            }
+            int descColIndex = getSheetColIndex(sheet);
 
             if (descColIndex == -1) {
                 return Collections.emptyMap();
@@ -71,7 +62,7 @@ public class LegendFile {
                 Cell descCell = descCol[i];
                 final int intValue = Integer.parseInt(value.trim());
 
-                map.put(intValue, descCell.getContents());
+                map.put(intValue, descCell.getContents().trim());
             }
 
         } catch (BiffException e) {
@@ -88,7 +79,20 @@ public class LegendFile {
         return map;
     }
 
-    private static Map<Integer, String> createDbfDescriptionMap(final File file) throws IOException {
+    private static int getSheetColIndex(Sheet sheet) {
+        final Cell[] firstRow = sheet.getRow(0);
+        int descColIndex = -1;
+        for (int i = 0; i < firstRow.length; i++) {
+            Cell cell = firstRow[i];
+            final String columnName = cell.getContents().toLowerCase();
+            if (columnName.contains("class") && columnName.contains("name")) {
+                descColIndex = i;
+            }
+        }
+        return descColIndex;
+    }
+
+    static Map<Integer, String> createDbfDescriptionMap(final File file) throws IOException {
 
         final DbaseFileReader reader = new DbaseFileReader(createChannel(file), true, Charset.defaultCharset());
         Map<Integer, String> map = new HashMap<Integer, String>();
@@ -104,7 +108,7 @@ public class LegendFile {
         return map;
     }
 
-    private static File findXlsLegendFile(final File dir) {
+    static File findXlsLegendFile(final File dir) {
         final File parentDir = dir.getParentFile();
 
         final File[] legendFiles = parentDir.listFiles(new FilenameFilter() {
@@ -121,7 +125,7 @@ public class LegendFile {
         }
     }
 
-    private static File findDbfLegendFile(final File dir) {
+    static File findDbfLegendFile(final File dir) {
         final File parentDir = dir.getParentFile();
 
         final File[] legendFiles = parentDir.listFiles(new FilenameFilter() {
@@ -138,7 +142,7 @@ public class LegendFile {
         }
     }
 
-    private static ReadableByteChannel createChannel(File legendFile) throws FileNotFoundException {
+    static ReadableByteChannel createChannel(File legendFile) throws FileNotFoundException {
         return new FileInputStream(legendFile).getChannel();
     }
 
