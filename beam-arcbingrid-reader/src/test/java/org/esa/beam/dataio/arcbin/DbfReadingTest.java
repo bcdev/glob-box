@@ -11,10 +11,30 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
+import java.util.Map;
 
 import static junit.framework.Assert.*;
 
 public class DbfReadingTest {
+
+    @Test
+    public void testFirstCreateDbfDescriptionMap() throws URISyntaxException, IOException {
+        File file = new File(getClass().getResource("test_legend_1.dbf").toURI());
+        final Map<Integer, String> map = LegendFile.createDbfDescriptionMap(file);
+        assertEquals("Tropical Broadleaved Forest", map.get(1));
+        assertEquals("Fragmented Tropical Broadleav", map.get(2));
+        assertEquals("Mangroves", map.get(5));
+    }
+
+    @Test
+    public void testSecondCreateDbfDescriptionMap() throws URISyntaxException, IOException {
+        File file = new File(getClass().getResource("test_legend_2.dbf").toURI());
+        final Map<Integer, String> map = LegendFile.createDbfDescriptionMap(file);
+        assertEquals("Unclassified", map.get(0));
+        assertEquals("Mosaic Forest / shrub cover", map.get(9));
+        assertEquals("", map.get(11));
+        assertEquals("Artificial surfaces", map.get(22));
+    }
 
     @Test
     public void testLegend1() throws BiffException, IOException, URISyntaxException {
