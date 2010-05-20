@@ -1,7 +1,7 @@
 <module>
     <manifestVersion>1.0.0</manifestVersion>
     <symbolicName>beam-globcover-reader</symbolicName>
-    <version>1.1</version>
+    <version>2.0</version>
     <name>GlobCover Reader</name>
 
     <description>Enables BEAM to read GlobCover data products.</description>

@@ -1,7 +1,7 @@
 <module>
     <manifestVersion>1.0.0</manifestVersion>
     <symbolicName>beam-medspiration-reader</symbolicName>
-    <version>1.1</version>
+    <version>2.0</version>
     <name>Medspiration Reader</name>
 
     <description>Enables BEAM to read Medspiration data products.</description>
@@ -27,6 +27,7 @@
 
     <dependency>
         <module>beam-visat</module>
+        <optional>true</optional>
     </dependency>
 
     <categories>Reader</categories>
