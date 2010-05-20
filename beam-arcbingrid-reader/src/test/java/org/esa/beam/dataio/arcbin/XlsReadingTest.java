@@ -22,6 +22,7 @@ public class XlsReadingTest {
         assertNotNull(file);
         file = LegendFile.findXlsLegendFile(file);
         assertNotNull(file);
+        file = new File(getClass().getResource("test_1_legend.xls").toURI());
         final Map<Integer, String> map = LegendFile.createXlsDescriptionMap(file);
         assertEquals("broadleaved evergreen forest", map.get(3));
         assertEquals("seaside wet lands", map.get(7));
