@@ -46,6 +46,7 @@
         <module>glob-export</module>
         <module>glob-core</module>
         <module>glob-bootstrap</module>
+        <module>beam-igbp-glcc-reader</module>
     </modules>
 
     <dependencies>

@@ -1,0 +1,43 @@
+<module>
+    <manifestVersion>1.0.0</manifestVersion>
+    <symbolicName>beam-igbp-glcc-reader</symbolicName>
+    <version>2.0</version>
+    <name>IGBP GLCC Reader</name>
+
+    <description>Enables BEAM to read IGBP Global Land Cover Classification products.</description>
+
+    <vendor>Brockmann Consult GmbH</vendor>
+    <contactAddress>Max Planck Str.2, 21502 Geesthacht (Germany)</contactAddress>
+    <copyright>(C) 2010 by Brockmann Consult GmbH</copyright>
+    <url>http://envisat.esa.int/beam</url>
+    <licenseUrl>http://www.gnu.org/licenses/gpl.html</licenseUrl>
+
+    <changelog>
+        <![CDATA[
+        ]]>
+    </changelog>
+
+    <dependency>
+        <module>beam-core</module>
+    </dependency>
+    <dependency>
+        <module>beam-visat</module>
+        <optional>true</optional>
+    </dependency>
+
+    <categories>Reader</categories>
+
+    <extension point="beam-ui:actions">
+        <action>
+            <class>org.esa.beam.visat.actions.ProductImportAction</class>
+            <id>importIgbpGlcc</id>
+            <helpId>importIgbpGlcc</helpId>
+            <formatName>IGBP_GLCC</formatName>
+            <useAllFileFilter>false</useAllFileFilter>
+            <text>Import IGBP GLCC product...</text>
+            <shortDescr>Import a IGBP GLCC product or product subset.</shortDescr>
+            <description>Import a IGBP Global Land Cover Classification product or product subset.</description>
+        </action>
+    </extension>
+
+</module>
