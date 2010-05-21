@@ -1,12 +1,12 @@
-1;Broadleaf Evergreen Trees;0,148,0
-2;Broadleaf Deciduous Trees;173,254,97
-3;Broadleaf and Needleleaf Trees;0,99,0
-4;Needleleaf Evergreen Trees;0,99,0
-5;Needleleaf Deciduous Trees;139,189,0
-6;Short Vegetation/C4 Grassland;0,229,0
-7;Shrubs with Bare Soil
-8;Dwarf Trees and Shrubs
-9;Agriculture or C3 Grassland 
-10;Water,Wetlands;63,127,191
-11;Ice/Snow;255,255,255
-100;NO DATA;0,0,0
+1;Broadleaf Evergreen Trees;50,137,50
+2;Broadleaf Deciduous Trees;90,170,50
+3;Broadleaf and Needleleaf Trees;74,157,54
+4;Needleleaf Evergreen Trees;20,120,20
+5;Needleleaf Deciduous Trees;56,172,110
+6;Short Vegetation/C4 Grassland;158,181,112
+7;Shrubs with Bare Soil;165,165,165
+8;Dwarf Trees and Shrubs;143,164,153
+9;Agriculture or C3 Grassland;217,217,147
+10;Water,Wetlands;50,90,190
+11;Ice/Snow;50,90,190
+100;NO DATA;50,50,50
