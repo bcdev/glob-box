@@ -66,7 +66,7 @@ class IgbpGlccProductReader extends AbstractProductReader {
 
     private IndexCoding createIndexCoding(String productName) throws IOException {
         final InputStream stream = this.getClass().getResourceAsStream(productName.toLowerCase() + ".csv");
-        final CsvReader csvReader = new CsvReader(new InputStreamReader(stream), new char[]{'\t'});
+        final CsvReader csvReader = new CsvReader(new InputStreamReader(stream), new char[]{';'});
         final List<String[]> legendStrings = csvReader.readStringRecords();
         final IndexCoding indexCoding = new IndexCoding(productName + "_classes");
         for (int i = 0; i < legendStrings.size(); i++) {
