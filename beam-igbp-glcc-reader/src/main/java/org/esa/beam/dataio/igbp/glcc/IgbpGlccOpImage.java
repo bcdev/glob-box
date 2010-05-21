@@ -15,36 +15,54 @@ import java.io.IOException;
 
 class IgbpGlccOpImage extends SingleBandedOpImage {
 
-    private ImageInputStream stream;
+    private File file;
 
-    IgbpGlccOpImage(int sourceWidth, int sourceHeight, ResolutionLevel level, File file) throws IOException {
+    IgbpGlccOpImage(int sourceWidth, int sourceHeight, ResolutionLevel level, File file) {
         super(DataBuffer.TYPE_BYTE, sourceWidth, sourceHeight,
               JAIUtils.computePreferredTileSize(sourceWidth, sourceHeight, 1),
               null, level);
-        this.stream = new FileImageInputStream(file);
+        this.file = file;
     }
 
     @Override
     protected void computeRect(PlanarImage[] sources, WritableRaster dest, Rectangle destRect) {
-        final int sourceX = getSourceX((int) destRect.getX());
-        final int sourceY = getSourceY((int) destRect.getY());
-        final int sourceWidth = getSourceWidth((int) destRect.getWidth());
-        final int sourceHeight = getSourceHeight((int) destRect.getHeight());
+        int x1 = destRect.x;
+        int x2 = destRect.x + destRect.width - 1;
+        int y1 = destRect.y;
+        int y2 = destRect.y + destRect.height - 1;
 
-        int subsampling = (int) Math.floor(getScale());
-
-        final DataBuffer buffer = dest.getDataBuffer();
+        ImageInputStream stream = null;
         try {
-            stream.seek(sourceX + sourceY * getWidth());
-            for (int i = 0; i < buffer.getSize(); i++) {
-                final int val = stream.read();
-                buffer.setElem(i, val);
-                stream.skipBytes(subsampling);
+            stream = new FileImageInputStream(file);
+            final byte[] data = new byte[1];
+            for (int y = y1; y <= y2; y++) {
+                final int sourceIndexY = getSourceY(y) * (getSourceWidth(getWidth() + 1));
+                for (int x = x1; x <= x2; x++) {
+                    final int sourceX = getSourceX(x);
+                    final int indexPos = sourceX + sourceIndexY;
+                    stream.seek(indexPos);
+                    long position = stream.getStreamPosition();
+                    final int val = stream.read(data);
+                    position = stream.getStreamPosition();
+
+                    if (val != -1) {
+                        dest.setSample(x, y, 0, data[0]);
+                    }
+                }
             }
-        } catch (IOException e) {
+        } catch (Throwable e) {
             e.printStackTrace();
+        } finally {
+            if (stream != null) {
+                try {
+                    stream.close();
+                } catch (IOException ignored) {
+
+                }
+            }
         }
 
 
     }
+
 }

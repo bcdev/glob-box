@@ -7,20 +7,26 @@ import com.bc.ceres.glevel.support.DefaultMultiLevelModel;
 import org.esa.beam.framework.dataio.AbstractProductReader;
 import org.esa.beam.framework.dataio.ProductReaderPlugIn;
 import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.ColorPaletteDef;
 import org.esa.beam.framework.datamodel.CrsGeoCoding;
+import org.esa.beam.framework.datamodel.ImageInfo;
 import org.esa.beam.framework.datamodel.IndexCoding;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.jai.ImageManager;
 import org.esa.beam.jai.ResolutionLevel;
 import org.esa.beam.util.Debug;
+import org.esa.beam.util.StringUtils;
 import org.esa.beam.util.io.CsvReader;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.operation.TransformException;
 
+import java.awt.Color;
 import java.awt.Rectangle;
+import java.awt.Shape;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.RenderedImage;
 import java.io.File;
 import java.io.IOException;
@@ -53,29 +59,37 @@ class IgbpGlccProductReader extends AbstractProductReader {
         final Product product = new Product(productName.toUpperCase(), PRODUCT_TYPE, RASTER_WIDTH, RASTER_HEIGHT);
         final CrsGeoCoding geoCoding = createGeoCoding();
         product.setGeoCoding(geoCoding);
-        final IndexCoding indexCoding = createIndexCoding(productName);
         // todo set description to product
         final Band band = product.addBand(BAND_NAME, ProductData.TYPE_INT8);
-        product.getIndexCodingGroup().add(indexCoding);
-        band.setSampleCoding(indexCoding);
-        // todo - band.setSampleCoding();
+        applyIndexCoding(band);
         band.setSourceImage(getMultiLevelImage(ImageManager.getImageToModelTransform(geoCoding)));
 
         return product;
     }
 
-    private IndexCoding createIndexCoding(String productName) throws IOException {
+    private void applyIndexCoding(Band band) throws IOException {
+        final Product product = band.getProduct();
+        final String productName = product.getName();
         final InputStream stream = this.getClass().getResourceAsStream(productName.toLowerCase() + ".csv");
         final CsvReader csvReader = new CsvReader(new InputStreamReader(stream), new char[]{';'});
         final List<String[]> legendStrings = csvReader.readStringRecords();
         final IndexCoding indexCoding = new IndexCoding(productName + "_classes");
+        ColorPaletteDef.Point[] colorPoints = new ColorPaletteDef.Point[legendStrings.size()];
         for (int i = 0; i < legendStrings.size(); i++) {
             String[] legendString = legendStrings.get(i);
             final int value = Integer.parseInt(legendString[0]);
             final String description = legendString[1].trim();
-            indexCoding.addIndex("class_" + i, value, description);
+            final String name = "class_" + i;
+            indexCoding.addIndex(name, value, description);
+            final String colorString = legendString[2];
+            final String[] rgb = StringUtils.csvToArray(colorString);
+            final Color color = new Color(Integer.parseInt(rgb[0]), Integer.parseInt(rgb[1]), Integer.parseInt(rgb[2]));
+            colorPoints[i] = new ColorPaletteDef.Point(value, color, name);
         }
-        return indexCoding;
+
+        band.setImageInfo(new ImageInfo(new ColorPaletteDef(colorPoints)));
+        product.getIndexCodingGroup().add(indexCoding);
+        band.setSampleCoding(indexCoding);
     }
 
     private File getInputFile() {
@@ -84,9 +98,9 @@ class IgbpGlccProductReader extends AbstractProductReader {
 
     private CrsGeoCoding createGeoCoding() {
         AffineTransform i2m = new AffineTransform();
-        double scale = 30 / 3600;
-        double easting = -647985 / 3600;
-        double northing = 323985 / 3600;
+        double scale = 1.0 / 120.0;
+        double easting = -647985.0 / 3600.0;
+        double northing = 323985.0 / 3600.0;
         i2m.translate(easting, northing);
         i2m.scale(scale, -scale);
         i2m.translate(-0.5, -0.5);
@@ -104,18 +118,13 @@ class IgbpGlccProductReader extends AbstractProductReader {
 
     private DefaultMultiLevelImage getMultiLevelImage(AffineTransform i2mTransform) {
 
-        final DefaultMultiLevelModel multiLevelModel = new DefaultMultiLevelModel(i2mTransform,
+        final DefaultMultiLevelModel multiLevelModel = new DefaultMultiLevelModel(i2mTransform, 
                                                                                   RASTER_WIDTH, RASTER_HEIGHT);
         return new DefaultMultiLevelImage(new AbstractMultiLevelSource(multiLevelModel) {
             @Override
             protected RenderedImage createImage(int level) {
-                try {
-                    return new IgbpGlccOpImage((int) multiLevelModel.getModelBounds().getWidth(),
-                                               (int) multiLevelModel.getModelBounds().getHeight(),
-                                               ResolutionLevel.create(multiLevelModel, level), getInputFile());
-                } catch (IOException e) {
-                    throw new IllegalStateException("Unable to create image.", e);
-                }
+                return new IgbpGlccOpImage(RASTER_WIDTH, RASTER_HEIGHT,
+                                           ResolutionLevel.create(multiLevelModel, level), getInputFile());
             }
         });
     }
