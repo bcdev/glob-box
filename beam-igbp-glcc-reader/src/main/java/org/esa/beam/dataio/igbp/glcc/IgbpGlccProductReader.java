@@ -8,11 +8,13 @@ import org.esa.beam.framework.dataio.AbstractProductReader;
 import org.esa.beam.framework.dataio.ProductReaderPlugIn;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.CrsGeoCoding;
+import org.esa.beam.framework.datamodel.IndexCoding;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.jai.ImageManager;
 import org.esa.beam.jai.ResolutionLevel;
 import org.esa.beam.util.Debug;
+import org.esa.beam.util.io.CsvReader;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.operation.TransformException;
@@ -22,12 +24,16 @@ import java.awt.geom.AffineTransform;
 import java.awt.image.RenderedImage;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.List;
 
 class IgbpGlccProductReader extends AbstractProductReader {
 
     private static final int RASTER_WIDTH = 43200;
     private static final int RASTER_HEIGHT = 21600;
     private static final String PRODUCT_TYPE = "IGBP_GLCC";
+    private static final String BAND_NAME = "classes";
 
     /**
      * Constructs a new abstract product reader.
@@ -44,15 +50,32 @@ class IgbpGlccProductReader extends AbstractProductReader {
         final File inputFile = getInputFile();
         String inputFileName = inputFile.getName();
         String productName = inputFileName.substring(1, inputFileName.indexOf('2'));
-        final Product product = new Product(productName, PRODUCT_TYPE, RASTER_WIDTH, RASTER_HEIGHT);
+        final Product product = new Product(productName.toUpperCase(), PRODUCT_TYPE, RASTER_WIDTH, RASTER_HEIGHT);
         final CrsGeoCoding geoCoding = createGeoCoding();
         product.setGeoCoding(geoCoding);
+        final IndexCoding indexCoding = createIndexCoding(productName);
         // todo set description to product
-        final Band band = product.addBand(productName.toUpperCase(), ProductData.TYPE_INT8);
+        final Band band = product.addBand(BAND_NAME, ProductData.TYPE_INT8);
+        product.getIndexCodingGroup().add(indexCoding);
+        band.setSampleCoding(indexCoding);
         // todo - band.setSampleCoding();
         band.setSourceImage(getMultiLevelImage(ImageManager.getImageToModelTransform(geoCoding)));
 
         return product;
+    }
+
+    private IndexCoding createIndexCoding(String productName) throws IOException {
+        final InputStream stream = this.getClass().getResourceAsStream(productName.toLowerCase() + ".csv");
+        final CsvReader csvReader = new CsvReader(new InputStreamReader(stream), new char[]{'\t'});
+        final List<String[]> legendStrings = csvReader.readStringRecords();
+        final IndexCoding indexCoding = new IndexCoding(productName + "_classes");
+        for (int i = 0; i < legendStrings.size(); i++) {
+            String[] legendString = legendStrings.get(i);
+            final int value = Integer.parseInt(legendString[0]);
+            final String description = legendString[1].trim();
+            indexCoding.addIndex("class_" + i, value, description);
+        }
+        return indexCoding;
     }
 
     private File getInputFile() {
