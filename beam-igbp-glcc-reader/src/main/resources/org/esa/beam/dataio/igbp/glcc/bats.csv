@@ -1,21 +1,21 @@
-1   Crops, Mixed Farming    254,192,197
-2	Short Grass
-3	Evergreen Needleleaf Trees
-4	Deciduous Needleleaf Trees
-5	Deciduous Broadleaf Trees
-6	Evergreen Broadleaf Trees
-7	Tall Grass
-8	Desert
-9	Tundra
-10	Irrigated Crops
-11	Semidesert
-12	Ice Caps and Glaciers
-13	Bogs and Marshes
-14	Inland Water
-15	Ocean
-16	Evergreen Shrubs
-17	Deciduous Shrubs
-18	Mixed Forest
-19	Forest/Field Mosaic
-20	Water and Land Mixtures
-100	NO DATA
+1;Crops, Mixed Farming;254,192,197
+2;Short Grass;0,229,0
+3;Evergreen Needleleaf Trees;0,229,0
+4;Deciduous Needleleaf Trees;0,99,0
+5;Deciduous Broadleaf Trees;173,254,97
+6;Evergreen Broadleaf Trees;0,148,0
+7;Tall Grass;254,178,0
+8;Desert;178,178,178
+9;Tundra;254,0,0
+10;Irrigated Crops;254,233,157
+11;Semidesert;221,201,159
+12;Ice Caps and Glaciers;238,238,238
+13;Bogs and Marshes;136,225,254
+14;Inland Water;119,148,254
+15;Ocean;0,70,198
+16;Evergreen Shrubs;138,68,17
+17;Deciduous Shrubs;204,126,95
+18;Mixed Forest;0,148,148
+19;Forest/Field Mosaic;254,118,0
+20;Water and Land Mixtures;201,136,254
+100;NO DATA;0,0,0

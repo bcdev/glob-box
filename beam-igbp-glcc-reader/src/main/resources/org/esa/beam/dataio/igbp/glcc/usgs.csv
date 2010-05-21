@@ -1,0 +1,25 @@
+1;Urban and Built-Up Land;255,0,0
+2;Dryland Cropland and Pasture;236,236,118
+3;Irrigated Cropland and Pasture;239,242,69
+4;Mixed Dryland/Irrigated Cropland and Pasture;212,232,58
+5;Cropland/Grassland Mosaic;174,220,90
+6;Cropland/Woodland Mosaic;121,189,58
+7;Grassland;187,213,146
+8;Shrubland;207,197,150
+9;Mixed Shrubland/Grassland;190,202,135
+10;Savanna;158,181,112
+11;Deciduous Broadleaf Forest;90,179,50
+12;Deciduous Needleleaf Forest;56,172,110
+13;Evergreen Broadleaf Forest;55,151,55
+14;Evergreen Needleleaf Forest;50,135,50
+15;Mixed Forest;76,156,52
+16;Water Bodies;50,90,190
+17;Herbaceous Wetland;155,150,0
+18;Wooded Wetland;145,184,187
+19;Barren or Sparsely Vegetated;165,165,165
+20;Herbaceous Tundra;100,153,94
+21;Wooded Tundra;143,164,153
+22;Mixed Tundra;135,146,146
+23;Bare Ground Tundra;162,183,165
+24;Snow or Ice;195,195,205
+100;NO DATA;0,0,0
