@@ -24,9 +24,7 @@ import org.opengis.referencing.operation.TransformException;
 
 import java.awt.Color;
 import java.awt.Rectangle;
-import java.awt.Shape;
 import java.awt.geom.AffineTransform;
-import java.awt.geom.Rectangle2D;
 import java.awt.image.RenderedImage;
 import java.io.File;
 import java.io.IOException;
@@ -118,7 +116,7 @@ class IgbpGlccProductReader extends AbstractProductReader {
 
     private DefaultMultiLevelImage getMultiLevelImage(AffineTransform i2mTransform) {
 
-        final DefaultMultiLevelModel multiLevelModel = new DefaultMultiLevelModel(i2mTransform, 
+        final DefaultMultiLevelModel multiLevelModel = new DefaultMultiLevelModel(i2mTransform,
                                                                                   RASTER_WIDTH, RASTER_HEIGHT);
         return new DefaultMultiLevelImage(new AbstractMultiLevelSource(multiLevelModel) {
             @Override

@@ -16,39 +16,41 @@ import java.io.IOException;
 class IgbpGlccOpImage extends SingleBandedOpImage {
 
     private File file;
+    private int sourceWidth;
 
     IgbpGlccOpImage(int sourceWidth, int sourceHeight, ResolutionLevel level, File file) {
         super(DataBuffer.TYPE_BYTE, sourceWidth, sourceHeight,
               JAIUtils.computePreferredTileSize(sourceWidth, sourceHeight, 1),
               null, level);
+        this.sourceWidth = sourceWidth;
         this.file = file;
     }
 
     @Override
     protected void computeRect(PlanarImage[] sources, WritableRaster dest, Rectangle destRect) {
-        int x1 = destRect.x;
-        int x2 = destRect.x + destRect.width - 1;
-        int y1 = destRect.y;
-        int y2 = destRect.y + destRect.height - 1;
+        final int x1 = destRect.x;
+        final int y1 = destRect.y;
+        final int y2 = destRect.y + destRect.height - 1;
 
         ImageInputStream stream = null;
         try {
             stream = new FileImageInputStream(file);
-            final byte[] data = new byte[1];
-            for (int y = y1; y <= y2; y++) {
-                final int sourceIndexY = getSourceY(y) * (getSourceWidth(getWidth() + 1));
-                for (int x = x1; x <= x2; x++) {
-                    final int sourceX = getSourceX(x);
-                    final int indexPos = sourceX + sourceIndexY;
-                    stream.seek(indexPos);
-                    long position = stream.getStreamPosition();
-                    final int val = stream.read(data);
-                    position = stream.getStreamPosition();
 
-                    if (val != -1) {
-                        dest.setSample(x, y, 0, data[0]);
+            final byte[] srcBuf = new byte[getSourceWidth(destRect.width)];
+            int[] destBuf = new int[destRect.width];
+            final int sourceX1 = getSourceX(x1);
+            for (int y = y1; y <= y2; y++) {
+                final int sourceIndex = getSourceY(y) * sourceWidth + sourceX1;
+                stream.seek(sourceIndex);
+                stream.read(srcBuf);
+                for (int i = 0; i < destBuf.length; i++) {
+                    int srcIndex = (int) (i * getScale());
+                    if (srcIndex >= srcBuf.length) {
+                        srcIndex = srcBuf.length - 1;
                     }
+                    destBuf[i] = srcBuf[srcIndex];
                 }
+                dest.setSamples(x1, y, destBuf.length, 1, 0, destBuf);
             }
         } catch (Throwable e) {
             e.printStackTrace();
@@ -62,7 +64,5 @@ class IgbpGlccOpImage extends SingleBandedOpImage {
             }
         }
 
-
     }
-
 }
