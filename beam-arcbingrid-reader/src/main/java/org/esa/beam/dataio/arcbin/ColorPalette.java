@@ -82,7 +82,7 @@ class ColorPalette {
 
                                 final ColorPaletteDef.Point point = new ColorPaletteDef.Point();
                                 point.setSample(sample);
-                                point.setLabel(Integer.toString(sample));
+                                point.setLabel("class_" + sample);
                                 point.setColor(new Color(red, green, blue));
                                 pointList.add(point);
                             }
@@ -112,9 +112,9 @@ class ColorPalette {
         final IndexCoding indexCoding = new IndexCoding("index_coding");
         final Point[] points = colorPaletteDef.getPoints();
         for (Point point : points) {
-            final int intSample = (int) point.getSample();
-            final String s = Integer.toString(intSample);
-            indexCoding.addIndex(s, intSample, descriptionMap.get(intSample) );
+            final int sample = (int) point.getSample();
+            final String name = "class_ " + sample;
+            indexCoding.addIndex(name, sample, descriptionMap.get(sample) );
         }
         return indexCoding;
     }

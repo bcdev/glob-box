@@ -36,6 +36,8 @@ import java.util.Map;
 public class ArcBinGridReader extends AbstractProductReader {
 
     private RasterDataFile rasterDataFile;
+    private static final String BAND_NAME = "classes";
+    private static final String PRODUCT_TYPE = "ARC_INFO_BIN_GRID";
 
     protected ArcBinGridReader(ArcBinGridReaderPlugIn readerPlugIn) {
         super(readerPlugIn);
@@ -58,7 +60,7 @@ public class ArcBinGridReader extends AbstractProductReader {
         TileIndex tileIndex = TileIndex.create(getCaseInsensitiveFile(gridDir, TileIndex.FILE_NAME), numTiles);
         rasterDataFile = RasterDataFile.create(getCaseInsensitiveFile(gridDir, RasterDataFile.FILE_NAME));
 
-        Product product = new Product(gridDir.getName(), "ARC_INFO_BIN_GRID", width, height);
+        Product product = new Product(gridDir.getName(), PRODUCT_TYPE, width, height);
         product.setFileLocation(headerFile);
         final Dimension gridTileSize = new Dimension(header.tileXSize, header.tileYSize);
         int tileExtend = Math.max(header.tileXSize, header.tileYSize);
@@ -69,7 +71,7 @@ public class ArcBinGridReader extends AbstractProductReader {
         product.setGeoCoding(createGeoCoding(width, height, product, i2m));
 
         int productDataType = getDataType(header, rasterStatistics);
-        final Band band = product.addBand("band", productDataType);
+        final Band band = product.addBand(BAND_NAME, productDataType);
         double nodataValue = getNodataValue(productDataType);
         band.setNoDataValue(nodataValue);
         band.setNoDataValueUsed(true);
