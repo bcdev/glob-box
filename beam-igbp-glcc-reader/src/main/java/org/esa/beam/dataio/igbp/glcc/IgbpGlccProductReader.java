@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.List;
+import java.util.Properties;
 
 class IgbpGlccProductReader extends AbstractProductReader {
 
@@ -38,6 +39,7 @@ class IgbpGlccProductReader extends AbstractProductReader {
     private static final int RASTER_HEIGHT = 21600;
     private static final String PRODUCT_TYPE = "IGBP_GLCC";
     private static final String BAND_NAME = "classes";
+    private static final String GLCC_PROPERTIES_FILE = "glcc.properties";
 
     /**
      * Constructs a new abstract product reader.
@@ -53,25 +55,31 @@ class IgbpGlccProductReader extends AbstractProductReader {
     protected Product readProductNodesImpl() throws IOException {
         final File inputFile = getInputFile();
         String inputFileName = inputFile.getName();
-        String productName = inputFileName.substring(1, inputFileName.indexOf('2'));
-        final Product product = new Product(productName.toUpperCase(), PRODUCT_TYPE, RASTER_WIDTH, RASTER_HEIGHT);
+        String productId = inputFileName.substring(1, inputFileName.indexOf('2'));
+        String productName = PRODUCT_TYPE + "_" + productId.toUpperCase();
+        final Product product = new Product(productName, PRODUCT_TYPE, RASTER_WIDTH, RASTER_HEIGHT);
         final CrsGeoCoding geoCoding = createGeoCoding();
         product.setGeoCoding(geoCoding);
-        // todo set description to product
+        product.setDescription( getDescription( productId ) );
         final Band band = product.addBand(BAND_NAME, ProductData.TYPE_INT8);
-        applyIndexCoding(band);
+        applyIndexCoding(band, productId);
         band.setSourceImage(getMultiLevelImage(ImageManager.getImageToModelTransform(geoCoding)));
 
         return product;
     }
 
-    private void applyIndexCoding(Band band) throws IOException {
+    private String getDescription(String productName) throws IOException {
+        Properties descriptions = new Properties();
+        descriptions.load( new InputStreamReader( getClass().getResourceAsStream(GLCC_PROPERTIES_FILE) ) );
+        return descriptions.getProperty( productName + ".description" );
+    }
+
+    private void applyIndexCoding(Band band, String productId) throws IOException {
         final Product product = band.getProduct();
-        final String productName = product.getName();
-        final InputStream stream = this.getClass().getResourceAsStream(productName.toLowerCase() + ".csv");
+        final InputStream stream = this.getClass().getResourceAsStream(productId.toLowerCase() + ".csv");
         final CsvReader csvReader = new CsvReader(new InputStreamReader(stream), new char[]{';'});
         final List<String[]> legendStrings = csvReader.readStringRecords();
-        final IndexCoding indexCoding = new IndexCoding(productName + "_classes");
+        final IndexCoding indexCoding = new IndexCoding(productId + "_classes");
         ColorPaletteDef.Point[] colorPoints = new ColorPaletteDef.Point[legendStrings.size()];
         for (int i = 0; i < legendStrings.size(); i++) {
             String[] legendString = legendStrings.get(i);
