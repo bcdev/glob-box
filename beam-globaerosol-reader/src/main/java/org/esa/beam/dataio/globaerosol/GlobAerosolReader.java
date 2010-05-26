@@ -1,7 +1,6 @@
 package org.esa.beam.dataio.globaerosol;
 
 import com.bc.ceres.core.ProgressMonitor;
-
 import org.esa.beam.dataio.merisl3.ISINGrid;
 import org.esa.beam.dataio.netcdf.NcAttributeMap;
 import org.esa.beam.dataio.netcdf.NcVariableMap;
@@ -12,6 +11,7 @@ import org.esa.beam.framework.datamodel.CrsGeoCoding;
 import org.esa.beam.framework.datamodel.IndexCoding;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.util.Debug;
 import org.esa.beam.util.io.FileUtils;
 import org.geotools.referencing.ReferencingFactoryFinder;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
@@ -23,10 +23,10 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.datum.Ellipsoid;
 import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.MathTransformFactory;
-
 import ucar.ma2.Array;
 import ucar.ma2.InvalidRangeException;
 import ucar.ma2.Section;
+import ucar.nc2.Attribute;
 import ucar.nc2.NetcdfFile;
 import ucar.nc2.Variable;
 
@@ -34,6 +34,8 @@ import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.io.File;
 import java.io.IOException;
+import java.text.ParseException;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -41,8 +43,12 @@ import java.util.Map;
 
 
 public class GlobAerosolReader extends AbstractProductReader {
+
+    private static final String NC_ATTRIBUTE_START_DATE = "StartDate";
+    private static final String NC_VARIABLE_MODEL = "model";
+
     private static final int ROW_COUNT = 2004;
-    
+
     private NetcdfFile ncfile;
     private ISINGrid isinGrid;
     private Map<Band, VariableAccessor1D> accessorMap;
@@ -50,8 +56,9 @@ public class GlobAerosolReader extends AbstractProductReader {
     private Band lonBand;
 
     private int width;
-
     private int height;
+    static final String UTC_DATE_PATTERN = "yyyy-MM-dd";
+    private static final String NC_ATTRIBUTE_PERIOD = "Period";
 
     protected GlobAerosolReader(GlobAerosolReaderPlugIn readerPlugIn) {
         super(readerPlugIn);
@@ -75,7 +82,7 @@ public class GlobAerosolReader extends AbstractProductReader {
                 rowInfos = createRowInfos();
             }
         }
-        
+
         pm.beginTask("Reading band '" + destBand.getName() + "'...", sourceHeight);
         try {
             for (int y = sourceOffsetY; y < sourceOffsetY + sourceHeight; y++) {
@@ -91,20 +98,20 @@ public class GlobAerosolReader extends AbstractProductReader {
                 }
                 final int rowIndex = (height - 1) - y;
                 RowInfo rowInfo = rowInfos[rowIndex];
-                if (rowInfo != null ) {
+                if (rowInfo != null) {
                     Array lonData = read(lonBand, rowInfo);
                     Array bandData = read(destBand, rowInfo);
                     int dataSize = (int) bandData.getSize();
                     for (int dataIndex = 0; dataIndex < dataSize; dataIndex++) {
                         double lon = lonData.getDouble(dataIndex) + 180;
                         int colIndex = isinGrid.getColIndex(rowIndex, lon);
-                        
+
                         int rowLength = isinGrid.getRowLength(rowIndex);
                         int x = isinGrid.getRowCount() - (rowLength / 2) + colIndex;
-                        
+
                         if (x >= sourceOffsetX && x < sourceOffsetX + sourceWidth) {
                             final int rasterIndex = sourceWidth * (y - sourceOffsetY) + (x - sourceOffsetX);
-                            destBuffer.setElemDoubleAt(rasterIndex,  bandData.getDouble(dataIndex));
+                            destBuffer.setElemDoubleAt(rasterIndex, bandData.getDouble(dataIndex));
                         }
                     }
                 } else {
@@ -116,7 +123,7 @@ public class GlobAerosolReader extends AbstractProductReader {
             pm.done();
         }
     }
-    
+
     private Array read(Band band, RowInfo rowInfo) throws IOException {
         VariableAccessor1D accessor = accessorMap.get(band);
         synchronized (ncfile) {
@@ -144,23 +151,43 @@ public class GlobAerosolReader extends AbstractProductReader {
         if (prodName == null) {
             prodName = FileUtils.getFilenameWithoutExtension(ncfile.getLocation());
         }
-        final String prodType = "FOOOOOOOOOOOOOOO";
+        final String[] idElements = prodName.split("_");
+        final String prodType = idElements[0] + "_" + idElements[1];
         final Product product = new Product(prodName, prodType, width, height);
-        //TODO
-//        product.setStartTime(getDate(GA_START_DATE));
-//        product.setEndTime(getDate(GA_END_DATE));
+
+        try {
+            final Attribute startDateAttribute = ncfile.findGlobalAttribute(NC_ATTRIBUTE_START_DATE);
+            final ProductData.UTC startTime = ProductData.UTC.parse(startDateAttribute.getStringValue(),
+                                                                    UTC_DATE_PATTERN);
+            product.setStartTime(startTime);
+            product.setEndTime(calcEndTime(startTime, getPeriod()));
+        } catch (ParseException e) {
+            Debug.trace(e);
+        }
 
         addBands(product);
         lonBand = product.getBand("lon");
         addGeoCoding(product);
-        
+
         NetcdfReaderUtils.transferMetadata(ncfile, product.getMetadataRoot());
         return product;
     }
-    
+
+    static ProductData.UTC calcEndTime(ProductData.UTC startDate, Period period) {
+        final Calendar asCalendar = startDate.getAsCalendar();
+        asCalendar.add(period.getCalendarFieldIndex(), period.getAmount());
+        asCalendar.add(Calendar.SECOND, -1);
+        return ProductData.UTC.create(asCalendar.getTime(), 0);
+    }
+
+    private Period getPeriod() {
+        final Attribute startDateAttribute = ncfile.findGlobalAttribute(NC_ATTRIBUTE_PERIOD);
+        return Period.valueOf(startDateAttribute.getStringValue());
+    }
+
     private void addGeoCoding(Product product) throws IOException {
         DefaultGeographicCRS base = DefaultGeographicCRS.WGS84;
-        
+
         final MathTransformFactory transformFactory = ReferencingFactoryFinder.getMathTransformFactory(null);
         ParameterValueGroup parameters;
         try {
@@ -179,8 +206,9 @@ public class GlobAerosolReader extends AbstractProductReader {
         } catch (Exception e) {
             throw new IOException(e);
         }
-        
-        CoordinateReferenceSystem modelCrs = new DefaultProjectedCRS("Sinusoidal", base, mathTransform, DefaultCartesianCS.PROJECTED);
+
+        CoordinateReferenceSystem modelCrs = new DefaultProjectedCRS("Sinusoidal", base, mathTransform,
+                                                                     DefaultCartesianCS.PROJECTED);
         Rectangle rectangle = new Rectangle(0, 0, width, height);
         AffineTransform i2m = new AffineTransform();
         i2m.scale(10000, -10000);
@@ -192,9 +220,9 @@ public class GlobAerosolReader extends AbstractProductReader {
             throw new IOException(e);
         }
     }
-    
+
     private void addBands(Product product) {
-        Variable modelVar = ncfile.getRootGroup().findVariable("model");
+        Variable modelVar = ncfile.getRootGroup().findVariable(NC_VARIABLE_MODEL);
         String[] modeNames = null;
         if (modelVar != null && modelVar.getDimension(0).getLength() > 1) {
             NcAttributeMap modelAttMap = NcAttributeMap.create(modelVar);
@@ -205,7 +233,7 @@ public class GlobAerosolReader extends AbstractProductReader {
             int cellDimemsionIndex = variable.findDimensionIndex("cell");
             if (cellDimemsionIndex != -1) {
                 final NcAttributeMap attMap = NcAttributeMap.create(variable);
-                int modelDimemsionIndex = variable.findDimensionIndex("model");
+                int modelDimemsionIndex = variable.findDimensionIndex(NC_VARIABLE_MODEL);
                 String bandName = NcVariableMap.getAbsoluteName(variable);
                 IndexCoding indexCoding = NetcdfReaderUtils.createIndexCoding(bandName + "_coding", attMap);
                 if (indexCoding != null) {
@@ -253,7 +281,7 @@ public class GlobAerosolReader extends AbstractProductReader {
 
         return NetcdfFile.open(path);
     }
-    
+
     private RowInfo[] createRowInfos() throws IOException {
         final RowInfo[] binLines = new RowInfo[height];
         final Variable latVariable = ncfile.getRootGroup().findVariable("lat");
@@ -267,13 +295,14 @@ public class GlobAerosolReader extends AbstractProductReader {
 
             final double lat = latValues[i];
             if (lat < lastLatValue) {
-                throw new IOException("Unrecognized level-3 format. Bins numbers expected to appear in ascending order.");
+                throw new IOException(
+                        "Unrecognized level-3 format. Bins numbers expected to appear in ascending order.");
             }
             if (lastLatValue == lat) {
                 lineLength++;
             } else {
                 lastLatValue = lat;
-                int rowIndex = (int) Math.round(((lat + 90.0) / deltaLat)+0.5);
+                int rowIndex = (int) Math.round(((lat + 90.0) / deltaLat) + 0.5);
 
                 if (rowIndex == lastRowIndex) {
                     throw new IOException("boooo");
@@ -293,8 +322,9 @@ public class GlobAerosolReader extends AbstractProductReader {
 
         return binLines;
     }
-    
+
     private static final class RowInfo {
+
         final int rowOffset;
         final int numBins;
 
@@ -303,7 +333,7 @@ public class GlobAerosolReader extends AbstractProductReader {
             this.numBins = numBins;
         }
     }
-    
+
     private static class VariableAccessor1D {
 
         private final Variable variable;
@@ -317,7 +347,7 @@ public class GlobAerosolReader extends AbstractProductReader {
             this.dimSelection = dimSelection;
             this.rank = variable.getRank();
         }
-        
+
         public Array read(RowInfo rowInfo) throws IOException {
             try {
                 Section section = getSection(rowInfo.rowOffset, rowInfo.numBins);
@@ -326,7 +356,7 @@ public class GlobAerosolReader extends AbstractProductReader {
                 throw new IOException(e);
             }
         }
-        
+
         private Section getSection(int offset, int length) throws InvalidRangeException {
             int[] origin = new int[rank];
             int[] size = new int[rank];
@@ -334,7 +364,7 @@ public class GlobAerosolReader extends AbstractProductReader {
                 if (i == indexDim) {
                     origin[i] = offset;
                     size[i] = length;
-                } else if (dimSelection.containsKey(i)){
+                } else if (dimSelection.containsKey(i)) {
                     origin[i] = dimSelection.get(i);
                     size[i] = 1;
                 } else {
@@ -345,4 +375,5 @@ public class GlobAerosolReader extends AbstractProductReader {
             return new Section(origin, size);
         }
     }
+
 }
