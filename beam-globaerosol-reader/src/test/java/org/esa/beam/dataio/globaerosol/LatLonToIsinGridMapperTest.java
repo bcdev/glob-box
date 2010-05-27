@@ -1,6 +1,5 @@
 package org.esa.beam.dataio.globaerosol;
 
-import org.esa.beam.framework.datamodel.GeoPos;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -47,12 +46,5 @@ public class LatLonToIsinGridMapperTest {
         final int equatorB_v = LatLonToIsinGridMapper.computeB_v(cellSizeY * 0);
         assertEquals(2 * equatorB_v + LatLonToIsinGridMapper.N_eq - 2,
                      LatLonToIsinGridMapper.computeB_v(cellSizeY * -1002));
-    }
-
-    @Test
-    public void testGeoPosToIsinGridIndex() throws Exception {
-        int index = LatLonToIsinGridMapper.toIsinGridIndex( new GeoPos( 90.0f, -180.0f ) );
-        index = LatLonToIsinGridMapper.toIsinGridIndex( new GeoPos( -90.0f, -180.0f ) );
-        assertEquals( 0, index );
     }
 }
