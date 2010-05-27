@@ -19,17 +19,8 @@ public class GlobAerosolReaderPlugIn implements ProductReaderPlugIn {
 
     @Override
     public DecodeQualification getDecodeQualification(Object input) {
-        final File file;
-        if (input instanceof String) {
-            file = new File((String) input);
-        } else if (input instanceof File) {
-            file = (File) input;
-        } else {
-            return DecodeQualification.UNABLE;
-        }
-
-        if (file.getName().matches("GLOBAER_.*_.*_DAILY.*") ||
-                file.getName().matches("GLOBAER_.*_.*_.*_ORBIT.*")) {
+        final File file = new File(input.toString());
+        if (file.getName().matches("GLOBAER_.*\\.nc[\\.gz]?")) {
             return DecodeQualification.INTENDED;
         }
 
