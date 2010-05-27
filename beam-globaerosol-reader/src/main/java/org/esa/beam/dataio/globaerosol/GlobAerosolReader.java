@@ -15,14 +15,9 @@ import org.esa.beam.util.Debug;
 import org.esa.beam.util.io.FileUtils;
 import org.geotools.referencing.ReferencingFactoryFinder;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
-import org.geotools.referencing.crs.DefaultProjectedCRS;
-import org.geotools.referencing.cs.DefaultCartesianCS;
-import org.opengis.parameter.ParameterValueGroup;
-import org.opengis.referencing.NoSuchIdentifierException;
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
-import org.opengis.referencing.datum.Ellipsoid;
-import org.opengis.referencing.operation.MathTransform;
-import org.opengis.referencing.operation.MathTransformFactory;
+import org.geotools.referencing.cs.DefaultEllipsoidalCS;
+import org.opengis.referencing.datum.DatumAuthorityFactory;
+import org.opengis.referencing.datum.GeodeticDatum;
 import ucar.ma2.Array;
 import ucar.ma2.InvalidRangeException;
 import ucar.ma2.Section;
@@ -59,6 +54,7 @@ public class GlobAerosolReader extends AbstractProductReader {
     private int height;
     static final String UTC_DATE_PATTERN = "yyyy-MM-dd";
     private static final String NC_ATTRIBUTE_PERIOD = "Period";
+    private static final String NC_ATTRIBUTE_PRODUCT_ID = "ProductID";
 
     protected GlobAerosolReader(GlobAerosolReaderPlugIn readerPlugIn) {
         super(readerPlugIn);
@@ -147,7 +143,7 @@ public class GlobAerosolReader extends AbstractProductReader {
         width = isinGrid.getRowCount() * 2;
         height = isinGrid.getRowCount();
         NcAttributeMap globalAttributes = NcAttributeMap.create(ncfile);
-        String prodName = globalAttributes.getStringValue("ProductID");
+        String prodName = globalAttributes.getStringValue(NC_ATTRIBUTE_PRODUCT_ID);
         if (prodName == null) {
             prodName = FileUtils.getFilenameWithoutExtension(ncfile.getLocation());
         }
@@ -186,35 +182,20 @@ public class GlobAerosolReader extends AbstractProductReader {
     }
 
     private void addGeoCoding(Product product) throws IOException {
-        DefaultGeographicCRS base = DefaultGeographicCRS.WGS84;
-
-        final MathTransformFactory transformFactory = ReferencingFactoryFinder.getMathTransformFactory(null);
-        ParameterValueGroup parameters;
-        try {
-            parameters = transformFactory.getDefaultParameters("OGC:Sinusoidal");
-        } catch (NoSuchIdentifierException e) {
-            throw new IOException(e);
-        }
-
-        Ellipsoid ellipsoid = base.getDatum().getEllipsoid();
-        parameters.parameter("semi_major").setValue(ellipsoid.getSemiMajorAxis());
-        parameters.parameter("semi_minor").setValue(ellipsoid.getSemiMinorAxis());
-
-        MathTransform mathTransform;
-        try {
-            mathTransform = transformFactory.createParameterizedTransform(parameters);
-        } catch (Exception e) {
-            throw new IOException(e);
-        }
-
-        CoordinateReferenceSystem modelCrs = new DefaultProjectedCRS("Sinusoidal", base, mathTransform,
-                                                                     DefaultCartesianCS.PROJECTED);
-        Rectangle rectangle = new Rectangle(0, 0, width, height);
         AffineTransform i2m = new AffineTransform();
-        i2m.scale(10000, -10000);
-        i2m.translate(-width, -height);
+        i2m.translate(-180, 90);
+        double pixelSizeX = 360.0 / width;
+        double pixelSizeY = 180.0 / height;
+        i2m.scale(pixelSizeX, -pixelSizeY);
+
         try {
-            CrsGeoCoding geoCoding = new CrsGeoCoding(modelCrs, rectangle, i2m);
+            Rectangle rectangle = new Rectangle(0, 0, width, height);
+            final DatumAuthorityFactory factory = ReferencingFactoryFinder.getDatumAuthorityFactory("EPSG", null);
+
+            final GeodeticDatum wgs66Datum = factory.createGeodeticDatum("EPSG:6760");
+            final DefaultGeographicCRS geographicCRS = new DefaultGeographicCRS("WGS 66", wgs66Datum,
+                                                                                DefaultEllipsoidalCS.GEODETIC_2D);
+            CrsGeoCoding geoCoding = new CrsGeoCoding(geographicCRS, rectangle, i2m);
             product.setGeoCoding(geoCoding);
         } catch (Exception e) {
             throw new IOException(e);
