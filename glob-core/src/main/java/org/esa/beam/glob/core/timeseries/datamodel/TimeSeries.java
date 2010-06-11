@@ -1,11 +1,13 @@
 package org.esa.beam.glob.core.timeseries.datamodel;
 
-import org.esa.beam.framework.datamodel.GeoCoding;
 import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.framework.datamodel.RasterDataNode;
+import org.geotools.referencing.crs.DefaultGeographicCRS;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
+import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.Collections;
+import java.util.GregorianCalendar;
 import java.util.List;
 
 /**
@@ -15,15 +17,34 @@ import java.util.List;
  */
 public class TimeSeries {
 
-    private List<TimedRaster> rasterList;
-
     private ProductData.UTC startTime;
 
     private ProductData.UTC endTime;
 
-    private TimedRaster refRaster;
+    private CoordinateReferenceSystem crs;
 
-    private GeoCoding geoCoding;
+    private List<TimedRaster> rasterList;
+
+    private boolean showWorldMap;
+
+    private boolean syncColor;
+
+    //raster currently shown in UI
+    private TimedRaster refRaster;
+    private ArrayList<TimeSeriesListener> listenerList;
+
+    public TimeSeries() {
+        showWorldMap = false;
+        syncColor = false;
+        crs = DefaultGeographicCRS.WGS84;
+        rasterList = new ArrayList<TimedRaster>();
+        try {
+            startTime = ProductData.UTC.parse("01-01-1970", "dd-MM-yyyy");
+            endTime = ProductData.UTC.create(new GregorianCalendar().getTime(), 0);
+        } catch (ParseException ignore) {
+        }
+        listenerList = new ArrayList<TimeSeriesListener>();
+    }
 
     public TimeSeries(final List<TimedRaster> rasterList, final TimedRaster refRaster, final ProductData.UTC startTime,
                       final ProductData.UTC endTime) {
@@ -31,49 +52,10 @@ public class TimeSeries {
         this.rasterList = rasterList;
         this.refRaster = refRaster;
         this.startTime = startTime;
-        validateRasterList();
-        applyGeoCoding(refRaster.getGeoCoding());
-    }
-
-    public void applyGeoCoding(final GeoCoding gc) {
-        // TODO ts dummy
-        setGeoCoding(gc);
-        for (TimedRaster tr : rasterList) {
-            tr.getRaster().setGeoCoding(gc);
-        }
-    }
-
-    public void setGeoCoding(final GeoCoding geoCoding) {
-        this.geoCoding = geoCoding;
-        applyGeoCoding(geoCoding);
     }
 
     public List<TimedRaster> getRasterList() {
-        return rasterList;
-    }
-
-    private void validateRasterList() {
-        timeValidateRasterList();
-        if (geoCoding == null) {
-            geoCoding = refRaster.getGeoCoding();
-        }
-        applyGeoCoding(geoCoding);
-    }
-
-    private void timeValidateRasterList() {
-        List<TimedRaster> result = new ArrayList<TimedRaster>();
-        for (TimedRaster tr : rasterList) {
-            final Date rasterStartTime = tr.getTimeCoding().getStartTime().getAsDate();
-            final Date rasterEndTime = tr.getTimeCoding().getEndTime().getAsDate();
-            final boolean isValidStartTime = rasterStartTime.equals(startTime.getAsDate())
-                                             || rasterStartTime.after(startTime.getAsDate());
-            final boolean isValidEndTime = rasterEndTime.equals(endTime.getAsDate())
-                                           || rasterEndTime.before(endTime.getAsDate());
-            if (isValidStartTime && isValidEndTime) {
-                result.add(tr);
-            }
-        }
-        this.rasterList = result;
+        return Collections.unmodifiableList(rasterList);
     }
 
     public ProductData.UTC getEndTime() {
@@ -84,38 +66,86 @@ public class TimeSeries {
         return startTime;
     }
 
-    public void setEndTime(final ProductData.UTC endTime) {
-        this.endTime = endTime;
-        validateRasterList();
+    public void setEndTime(final ProductData.UTC newEndTime) {
+        final ProductData.UTC oldEndTime = this.endTime;
+        this.endTime = newEndTime;
+        fireTimeSeriesChanged(TimeSeriesProperty.END_TIME, newEndTime, oldEndTime);
     }
 
     public void setStartTime(final ProductData.UTC startTime) {
+        ProductData.UTC oldStartTime = this.startTime;
         this.startTime = startTime;
-        validateRasterList();
+        fireTimeSeriesChanged(TimeSeriesProperty.START_TIME, oldStartTime, startTime);
     }
 
     public TimedRaster getRefRaster() {
         return refRaster;
     }
 
-    public void remove(final RasterDataNode raster) {
-        TimedRaster markedForDeletion = null;
-        for (TimedRaster tr : rasterList) {
-            if (tr.getRaster().equals(raster)) {
-                markedForDeletion = tr;
-            }
-        }
-        if (markedForDeletion != null) {
-            rasterList.remove(markedForDeletion);
-        }
-        validateRasterList();
+    public void setRefRaster(TimedRaster refRaster) {
+        TimedRaster oldRefRaster = this.refRaster;
+        this.refRaster = refRaster;
+        fireTimeSeriesChanged(TimeSeriesProperty.REF_RASTER, oldRefRaster, refRaster);
     }
 
-    public void add(final RasterDataNode raster, final TimeCoding timeCoding) {
-        final TimedRaster timedRaster = new TimedRaster(raster, timeCoding);
-        if (!rasterList.contains(timedRaster)) {
-            rasterList.add(timedRaster);
+    public boolean removeRaster(final TimedRaster raster) {
+        final int index = rasterList.indexOf(raster);
+        final boolean removed = rasterList.remove(raster);
+        if (removed) {
+            fireTimeSeriesChanged(TimeSeriesProperty.RASTER_REMOVED, index, -1);
         }
-        validateRasterList();
+        return removed;
+    }
+
+    public boolean addRaster(final TimedRaster timedRaster) {
+        if (!rasterList.contains(timedRaster)) {
+            final boolean added = rasterList.add(timedRaster);
+            fireTimeSeriesChanged(TimeSeriesProperty.RASTER_ADDED, -1, rasterList.size() - 1);
+            return added;
+        }
+        return false;
+    }
+
+    public void setCrs(CoordinateReferenceSystem crs) {
+        CoordinateReferenceSystem oldCrs = this.crs;
+        this.crs = crs;
+        fireTimeSeriesChanged(TimeSeriesProperty.CRS, oldCrs, crs);
+    }
+
+    public void setShowWorldMap(boolean showWorldMap) {
+        this.showWorldMap = showWorldMap;
+    }
+
+    public void setSyncColor(boolean syncColor) {
+        this.syncColor = syncColor;
+    }
+
+    public CoordinateReferenceSystem getCRS() {
+        return crs;
+    }
+
+    public int getRasterCount() {
+        return rasterList.size();
+    }
+
+    public TimedRaster getRasterAt(int index) {
+        return rasterList.get(index);
+    }
+
+    public void addListener(TimeSeriesListener listener) {
+        if (!listenerList.contains(listener)) {
+            listenerList.add(listener);
+        }
+    }
+
+    public void removeListener(TimeSeriesListener listener) {
+        listenerList.remove(listener);
+    }
+
+    private void fireTimeSeriesChanged(TimeSeriesProperty property, Object oldValue, Object newValue) {
+        final TimeSeriesChangeEvent changeEvent = new TimeSeriesChangeEvent(property, oldValue, newValue);
+        for (TimeSeriesListener listener : listenerList) {
+            listener.timeSeriesChanged(changeEvent);
+        }
     }
 }

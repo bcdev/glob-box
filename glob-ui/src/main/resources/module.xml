@@ -28,10 +28,10 @@
     <extension point="beam-ui:toolViews">
 
         <toolView>
-            <id>org.esa.beam.glob.ui.TimeSeriesToolView</id>
-            <class>org.esa.beam.glob.ui.TimeSeriesToolView</class>
-            <title>Time Series View</title>
-            <tabTitle>Time Series</tabTitle>
+            <id>org.esa.beam.glob.ui.TimeSeriesGraphToolView</id>
+            <class>org.esa.beam.glob.ui.TimeSeriesGraphToolView</class>
+            <title>Time Series Graph</title>
+            <tabTitle>Time Series Graph</tabTitle>
             <mnemonic>T</mnemonic>
             <accelerator>ctrl alt T</accelerator>
             <smallIcon>/org/esa/beam/glob/ui/icons/TimeSeries16.gif</smallIcon>
@@ -43,10 +43,10 @@
         </toolView>
 
         <toolView>
-            <id>org.esa.beam.glob.ui.GlobToolboxManagerToolView</id>
-            <class>org.esa.beam.glob.ui.GlobToolboxManagerToolView</class>
-            <title>GlobToolbox Manager</title>
-            <tabTitle>GlobToolbox</tabTitle>
+            <id>org.esa.beam.glob.ui.TimeSeriesManagerToolView</id>
+            <class>org.esa.beam.glob.ui.TimeSeriesManagerToolView</class>
+            <title>Time Series Manager</title>
+            <tabTitle>Time Series</tabTitle>
             <mnemonic>T</mnemonic>
             <accelerator>ctrl alt T</accelerator>
             <smallIcon>/org/esa/beam/glob/ui/icons/GlobToolbox16.gif</smallIcon>
@@ -56,6 +56,28 @@
             <initIndex>3</initIndex>
             <toolBarId>GlobToolbox</toolBarId>
         </toolView>
+
+    </extension>
+
+    <extension point="beam-ui:actions">
+
+        <action>
+            <id>TimeSeriesGroup</id>
+            <parent>analysis</parent>
+            <class>org.esa.beam.visat.actions.ActionGroup</class>
+            <text>Time Series</text>
+            <mnemonic>T</mnemonic>
+        </action>
+
+        <action>
+            <id>addToTimeSeries</id>
+            <parent>TimeSeriesGroup</parent>
+            <class>org.esa.beam.glob.ui.AddToTimeSeriesAction</class>
+            <text>Add to time series...</text>
+            <shortDescr>Adding a band to an existing time series or creating a new one</shortDescr>
+            <context>band, tiePointGrid</context>
+            <helpId>addToTimeSeries</helpId>
+        </action>
 
     </extension>
 

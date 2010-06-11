@@ -63,7 +63,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-public class TimeSeriesToolView extends AbstractToolView {
+public class TimeSeriesGraphToolView extends AbstractToolView {
 
     private static final String NO_DATA_MESSAGE = "No data to display";
     private static final String DEFAULT_RANGE_LABEL = "Value";
@@ -88,7 +88,7 @@ public class TimeSeriesToolView extends AbstractToolView {
     private boolean somePinIsSelected = false;
     private final JCheckBox showSelectedPinCheckbox = new JCheckBox("Show selected pin");
 
-    public TimeSeriesToolView() {
+    public TimeSeriesGraphToolView() {
         pixelPosListener = new TimeSeriesPPL();
         executorService = Executors.newSingleThreadExecutor();
         timeSeriesCollection = new TimeSeriesCollection();
