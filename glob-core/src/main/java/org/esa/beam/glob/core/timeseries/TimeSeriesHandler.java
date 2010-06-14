@@ -21,7 +21,7 @@ public class TimeSeriesHandler {
 
     private List<Product> products;
 
-    private TimeSeriesHandler() {
+    TimeSeriesHandler() {
         timeSeries = new TimeSeries();
         products = new ArrayList<Product>();
     }

@@ -23,7 +23,7 @@ public class TimeSeriesHandlerTest {
 
     @Before
     public void setUp() {
-        handler = TimeSeriesHandler.getInstance();
+        handler = new TimeSeriesHandler();
     }
 
     @Test
