@@ -1,12 +1,13 @@
 package org.esa.beam.glob.ui;
 
 import com.bc.ceres.swing.TableLayout;
+import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.glob.core.timeseries.TimeSeriesHandler;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeSeries;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesChangeEvent;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesListener;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesProperty;
-import org.esa.beam.glob.core.timeseries.datamodel.TimedRaster;
 
 import javax.swing.AbstractListModel;
 import javax.swing.DefaultListCellRenderer;
@@ -18,6 +19,7 @@ import javax.swing.JScrollPane;
 import javax.swing.ListModel;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.text.SimpleDateFormat;
 
 class TimeSeriesManagerForm extends JPanel {
 
@@ -68,6 +70,8 @@ class TimeSeriesManagerForm extends JPanel {
 
         final TableLayout tableLayout = new TableLayout(1);
         tableLayout.setTableAnchor(TableLayout.Anchor.WEST);
+        tableLayout.setTableWeightX(1.0);
+        tableLayout.setTablePadding(4, 4);
         tableLayout.setTableFill(TableLayout.Fill.HORIZONTAL);
         final JPanel panel = new JPanel(tableLayout);
 
@@ -82,6 +86,7 @@ class TimeSeriesManagerForm extends JPanel {
         tableLayout.setTableFill(TableLayout.Fill.BOTH);
         tableLayout.setRowWeightY(1, 1.0);
         tableLayout.setTableWeightX(1.0);
+        tableLayout.setTablePadding(4, 4);
         final JPanel panel = new JPanel(tableLayout);
         final JLabel label = new JLabel("Raster in time series");
         final JList bandsList = new JList();
@@ -92,7 +97,7 @@ class TimeSeriesManagerForm extends JPanel {
                                                           boolean cellHasFocus) {
                 final JLabel label = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected,
                                                                                  cellHasFocus);
-                label.setText(((TimedRaster) value).getName());
+                label.setText(((RasterDataNode) value).getName());
                 return label;
 
             }
@@ -108,16 +113,28 @@ class TimeSeriesManagerForm extends JPanel {
 
     private JPanel createInfoPanel() {
         final TimeSeries timeSeries = handler.getTimeSeries();
-        JLabel crsLabel = new JLabel("CRS: " + timeSeries.getCRS().getName().getCode());
-        JLabel startTimeLabel = new JLabel("Start time: " + timeSeries.getStartTime());
-        JLabel endTimeLabel = new JLabel("End time: " + timeSeries.getEndTime());
-        final TableLayout tableLayout = new TableLayout(1);
+        JLabel crsLabel = new JLabel("CRS: ");
+        JLabel crsValue = new JLabel(timeSeries.getCRS().getName().getCode());
+        SimpleDateFormat sdf = new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss");
+        final ProductData.UTC startTime = timeSeries.getStartTime();
+        final ProductData.UTC endTime = timeSeries.getEndTime();
+
+        JLabel startTimeLabel = new JLabel("Start time: ");
+        JLabel startTimeValue = new JLabel(sdf.format(startTime.getAsDate()));
+        JLabel endTimeLabel = new JLabel("End time: ");
+        JLabel endTimeValue = new JLabel(sdf.format(endTime.getAsDate()));
+        final TableLayout tableLayout = new TableLayout(2);
         tableLayout.setTableFill(TableLayout.Fill.HORIZONTAL);
         tableLayout.setTableAnchor(TableLayout.Anchor.WEST);
+        tableLayout.setColumnWeightX(1, 1.0);
+        tableLayout.setTablePadding(4, 4);
         final JPanel panel = new JPanel(tableLayout);
         panel.add(crsLabel);
+        panel.add(crsValue);
         panel.add(startTimeLabel);
+        panel.add(startTimeValue);
         panel.add(endTimeLabel);
+        panel.add(endTimeValue);
         return panel;
     }
 

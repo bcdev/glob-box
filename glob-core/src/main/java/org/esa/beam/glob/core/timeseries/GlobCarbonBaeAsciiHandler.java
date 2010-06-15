@@ -3,7 +3,7 @@ package org.esa.beam.glob.core.timeseries;
 import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.RasterDataNode;
-import org.esa.beam.glob.core.timeseries.datamodel.TimeCoding;
+import org.esa.beam.framework.datamodel.TimeCoding;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -23,8 +23,7 @@ public class GlobCarbonBaeAsciiHandler extends TimeHandler {
     @Override
     public TimeCoding generateTimeCoding(final RasterDataNode raster) throws ParseException, IOException {
         final TimeCoding timeCoding = super.generateTimeCoding(raster);
-        timeCoding.setHasTimePerPixel(true);
-        timeCoding.setPixelToDateMap(generateTimePerPixelMap(raster.getProduct().getFileLocation()));
+//        timeCoding.setPixelToDateMap(generateTimePerPixelMap(raster.getProduct().getFileLocation()));
         return timeCoding;
     }
 

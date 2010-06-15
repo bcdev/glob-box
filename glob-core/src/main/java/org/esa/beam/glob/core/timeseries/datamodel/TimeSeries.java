@@ -1,6 +1,7 @@
 package org.esa.beam.glob.core.timeseries.datamodel;
 
 import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
@@ -23,21 +24,21 @@ public class TimeSeries {
 
     private CoordinateReferenceSystem crs;
 
-    private List<TimedRaster> rasterList;
+    private List<RasterDataNode> rasterList;
 
     private boolean showWorldMap;
 
     private boolean syncColor;
 
     //raster currently shown in UI
-    private TimedRaster refRaster;
+    private RasterDataNode refRaster;
     private ArrayList<TimeSeriesListener> listenerList;
 
     public TimeSeries() {
         showWorldMap = false;
         syncColor = false;
         crs = DefaultGeographicCRS.WGS84;
-        rasterList = new ArrayList<TimedRaster>();
+        rasterList = new ArrayList<RasterDataNode>();
         try {
             startTime = ProductData.UTC.parse("01-01-1970", "dd-MM-yyyy");
             endTime = ProductData.UTC.create(new GregorianCalendar().getTime(), 0);
@@ -46,7 +47,8 @@ public class TimeSeries {
         listenerList = new ArrayList<TimeSeriesListener>();
     }
 
-    public TimeSeries(final List<TimedRaster> rasterList, final TimedRaster refRaster, final ProductData.UTC startTime,
+    public TimeSeries(final List<RasterDataNode> rasterList, final RasterDataNode refRaster,
+                      final ProductData.UTC startTime,
                       final ProductData.UTC endTime) {
         this.endTime = endTime;
         this.rasterList = rasterList;
@@ -54,7 +56,7 @@ public class TimeSeries {
         this.startTime = startTime;
     }
 
-    public List<TimedRaster> getRasterList() {
+    public List<RasterDataNode> getRasterList() {
         return Collections.unmodifiableList(rasterList);
     }
 
@@ -78,17 +80,17 @@ public class TimeSeries {
         fireTimeSeriesChanged(TimeSeriesProperty.START_TIME, oldStartTime, startTime);
     }
 
-    public TimedRaster getRefRaster() {
+    public RasterDataNode getRefRaster() {
         return refRaster;
     }
 
-    public void setRefRaster(TimedRaster refRaster) {
-        TimedRaster oldRefRaster = this.refRaster;
+    public void setRefRaster(RasterDataNode refRaster) {
+        RasterDataNode oldRefRaster = this.refRaster;
         this.refRaster = refRaster;
         fireTimeSeriesChanged(TimeSeriesProperty.REF_RASTER, oldRefRaster, refRaster);
     }
 
-    public boolean removeRaster(final TimedRaster raster) {
+    public boolean removeRaster(final RasterDataNode raster) {
         final int index = rasterList.indexOf(raster);
         final boolean removed = rasterList.remove(raster);
         if (removed) {
@@ -97,7 +99,7 @@ public class TimeSeries {
         return removed;
     }
 
-    public boolean addRaster(final TimedRaster timedRaster) {
+    public boolean addRaster(final RasterDataNode timedRaster) {
         if (!rasterList.contains(timedRaster)) {
             final boolean added = rasterList.add(timedRaster);
             fireTimeSeriesChanged(TimeSeriesProperty.RASTER_ADDED, -1, rasterList.size() - 1);
@@ -128,7 +130,7 @@ public class TimeSeries {
         return rasterList.size();
     }
 
-    public TimedRaster getRasterAt(int index) {
+    public RasterDataNode getRasterAt(int index) {
         return rasterList.get(index);
     }
 

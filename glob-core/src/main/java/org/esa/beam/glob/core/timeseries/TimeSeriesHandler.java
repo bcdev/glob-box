@@ -3,9 +3,7 @@ package org.esa.beam.glob.core.timeseries;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.RasterDataNode;
-import org.esa.beam.glob.core.timeseries.datamodel.TimeCoding;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeSeries;
-import org.esa.beam.glob.core.timeseries.datamodel.TimedRaster;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,33 +43,26 @@ public class TimeSeriesHandler {
      * @return true if raster has been successfully added
      */
     public boolean addRasterToTimeSeries(final RasterDataNode raster) {
-        final TimedRaster timedRaster = new TimedRaster(raster, generateTimeCoding(raster));
         if (timeSeries.getRasterList().isEmpty()) {
-            timeSeries.setRefRaster(timedRaster);
+            timeSeries.setRefRaster(raster);
         }
-        final ProductData.UTC startTime = timedRaster.getTimeCoding().getStartTime();
+        final ProductData.UTC startTime = raster.getTimeCoding().getStartTime();
         if (!isWithinTimeSpan(startTime)) {
             timeSeries.setStartTime(startTime);
         }
-        final ProductData.UTC endTime = timedRaster.getTimeCoding().getEndTime();
+        final ProductData.UTC endTime = raster.getTimeCoding().getEndTime();
         if (!isWithinTimeSpan(endTime)) {
             timeSeries.setEndTime(endTime);
         }
-        final boolean added = timeSeries.addRaster(timedRaster);
-        final Product product = timedRaster.getRaster().getProduct();
+        final boolean added = timeSeries.addRaster(raster);
+        final Product product = raster.getProduct();
         if (added && !products.contains(product)) {
             products.add(product);
         }
         return added;
     }
 
-    private TimeCoding generateTimeCoding(RasterDataNode raster) {
-        // TODO dummy implementation, move to RasterDataNode
-        final Product product = raster.getProduct();
-        return new TimeCoding(raster, product.getStartTime(), product.getEndTime(), false);
-    }
-
-    public boolean removeRasterFromTimeSeries(final TimedRaster raster) {
+    public boolean removeRasterFromTimeSeries(final RasterDataNode raster) {
         return timeSeries.removeRaster(raster);
     }
 
