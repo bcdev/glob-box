@@ -8,18 +8,26 @@ import org.esa.beam.glob.core.timeseries.datamodel.TimeSeries;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesChangeEvent;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesListener;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesProperty;
+import org.esa.beam.visat.VisatApp;
 
+import javax.swing.AbstractAction;
+import javax.swing.AbstractButton;
 import javax.swing.AbstractListModel;
 import javax.swing.DefaultListCellRenderer;
+import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JToolBar;
 import javax.swing.ListModel;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.event.ActionEvent;
 import java.text.SimpleDateFormat;
+
+import static org.esa.beam.framework.ui.UIUtils.*;
 
 class TimeSeriesManagerForm extends JPanel {
 
@@ -40,12 +48,12 @@ class TimeSeriesManagerForm extends JPanel {
         tableLayout.setRowWeightY(1, 1.0);
         setLayout(tableLayout);
 
-        JPanel toolbarPanel = createToolbarPanel();
+        JToolBar toolBar = createToolbarPanel();
         JPanel bandListPanel = createBandListPanel();
         JPanel configPanel = createConfigPanel();
         JPanel infoPanel = createInfoPanel();
 
-        this.add(toolbarPanel);
+        this.add(toolBar);
         this.add(bandListPanel);
         this.add(configPanel);
         this.add(infoPanel);
@@ -138,8 +146,46 @@ class TimeSeriesManagerForm extends JPanel {
         return panel;
     }
 
-    private JPanel createToolbarPanel() {
-        return new JPanel();
+    private JToolBar createToolbarPanel() {
+        final JToolBar toolBar = new JToolBar();
+        toolBar.setFloatable(false);
+        toolBar.setRollover(true);
+
+        addButtons(toolBar);
+
+        return toolBar;
+    }
+
+    private void addButtons(JToolBar toolBar) {
+        final AbstractButton importButton = new JButton(loadImageIcon("icons/Import16.gif"));
+        importButton.setAction(new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                VisatApp.getApp().showInfoDialog("In forthcoming versions you will be able to import a time series",
+                                                 "");
+            }
+        });
+        toolBar.add(importButton);
+
+        final AbstractButton exportButton = new JButton(loadImageIcon("icons/Export16.gif"));
+        exportButton.setAction(new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                VisatApp.getApp().showInfoDialog("In forthcoming versions you will be able to export a time series",
+                                                 "");
+            }
+        });
+        toolBar.add(exportButton);
+
+//        final AbstractButton magnifierButton = new JButton(loadImageIcon("icons/ZoomTool16.gif"));
+//        magnifierButton.setAction(new AbstractAction() {
+//            @Override
+//            public void actionPerformed(ActionEvent e) {
+//                VisatApp.getApp().showInfoDialog( "In forthcoming versions you will be able to use a magnifier.",
+//                                                  "");
+//            }
+//        });
+//        toolBar.add( magnifierButton );
     }
 
     private class TimeSeriesRasterListModel extends AbstractListModel {
@@ -182,4 +228,5 @@ class TimeSeriesManagerForm extends JPanel {
             }
         }
     }
+
 }

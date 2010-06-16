@@ -29,22 +29,21 @@ import java.util.List;
  * Date: 14.06.2010
  * Time: 16:07:54
  */
-public class AddBandToTimeSeriesDialog extends JPanel {
+public class AddBandToTimeSeriesPane extends JPanel {
 
     private ProductNode node;
     private List<RasterDataNode> rasterList;
     private JTable table;
-    private AddBandToTimeSeriesDialog.AddBandsTableModel tableModel;
+    private AddBandToTimeSeriesPane.AddBandsTableModel tableModel;
 
-    public AddBandToTimeSeriesDialog(ProductNode node, List<RasterDataNode> rasterList) {
+    public AddBandToTimeSeriesPane(ProductNode node, List<RasterDataNode> rasterList) {
         this.node = node;
         this.rasterList = rasterList;
         createComponents();
     }
 
     private void createComponents() {
-        final TableLayout tableLayout = new TableLayout(1);
-        TableLayout layout = tableLayout;
+        TableLayout layout = new TableLayout(1);
         layout.setTablePadding(8, 8);
         layout.setTableAnchor(TableLayout.Anchor.WEST);
         layout.setTableFill(TableLayout.Fill.HORIZONTAL);
@@ -76,8 +75,10 @@ public class AddBandToTimeSeriesDialog extends JPanel {
         columnModel.getColumn(1).setCellRenderer(checkBoxCellRenderer);
         columnModel.getColumn(2).setCellRenderer(new AddStateRenderer());
 
-        final JScrollPane scrollPane = new JScrollPane(table);
-        initColumnSizes(table);
+        table.getColumnModel().getColumn(1).setMaxWidth(100);
+        table.getColumnModel().getColumn(1).setMinWidth(100);
+        table.getColumnModel().getColumn(2).setMaxWidth(50);
+        table.getColumnModel().getColumn(2).setMinWidth(50);
 
         final JButton selectAllButton = new JButton("Select all");
         final JButton selectNoneButton = new JButton("Select none");
@@ -107,47 +108,10 @@ public class AddBandToTimeSeriesDialog extends JPanel {
 
         setLayout(layout);
         add(textLabel);
+        final JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane.getViewport().setMinimumSize(new Dimension(250, 80));
         add(scrollPane);
         add(buttonPanel);
-    }
-
-    /*
-     * This method picks good column sizes.
-     * If all column heads are wider than the column's cells'
-     * contents, then you can just use column.sizeWidthToFit().
-     */
-
-    private void initColumnSizes(JTable table) {
-//        table.getColumnModel().getColumn(0).setPreferredWidth(70);
-//        table.getColumnModel().getColumn(1).setPreferredWidth(10);
-//        table.getColumnModel().getColumn(2).setPreferredWidth(10);
-        table.getColumnModel().getColumn(1).setMaxWidth(100);
-        table.getColumnModel().getColumn(1).setMinWidth(100);
-//        table.getColumnModel().getColumn(2).setPreferredWidth(100000);
-        table.getColumnModel().getColumn(2).setMaxWidth(50);
-        table.getColumnModel().getColumn(2).setMinWidth(50);
-//
-//        for (int i = 0; i < table.getColumnModel().getColumnCount(); i++) {
-//            int cellWidth = Integer.MIN_VALUE;
-//            TableColumn column = table.getColumnModel().getColumn(i);
-//
-//            TableCellRenderer headerRenderer =
-//                    table.getTableHeader().getDefaultRenderer();
-//            Component comp = headerRenderer.getTableCellRendererComponent(
-//                    null, column.getHeaderValue(),
-//                    false, false, 0, 0);
-//            int headerWidth = comp.getPreferredSize().width;
-//
-//            for (int r = 0; r < tableModel.getRowCount(); r++) {
-//                comp = table.getDefaultRenderer(tableModel.getColumnClass(i)).
-//                        getTableCellRendererComponent(
-//                                table, tableModel.getValueAt(r, i),
-//                                false, false, r, i);
-//                cellWidth = Math.max(cellWidth, comp.getPreferredSize().width);
-//            }
-//
-//            column.setPreferredWidth(Math.max(headerWidth, cellWidth));
-//        }
     }
 
     public List<RasterDataNode> getAddedRasterList() {

@@ -28,21 +28,6 @@
     <extension point="beam-ui:toolViews">
 
         <toolView>
-            <id>org.esa.beam.glob.ui.TimeSeriesGraphToolView</id>
-            <class>org.esa.beam.glob.ui.TimeSeriesGraphToolView</class>
-            <title>Time Series Graph</title>
-            <tabTitle>Time Series Graph</tabTitle>
-            <mnemonic>T</mnemonic>
-            <accelerator>ctrl alt T</accelerator>
-            <smallIcon>/org/esa/beam/glob/ui/icons/TimeSeries16.gif</smallIcon>
-            <largeIcon>/org/esa/beam/glob/ui/icons/TimeSeries24.gif</largeIcon>
-            <initState>FLOATING</initState>
-            <initSide>EAST</initSide>
-            <initIndex>3</initIndex>
-            <toolBarId>GlobToolbox</toolBarId>
-        </toolView>
-
-        <toolView>
             <id>org.esa.beam.glob.ui.TimeSeriesManagerToolView</id>
             <class>org.esa.beam.glob.ui.TimeSeriesManagerToolView</class>
             <title>Time Series Manager</title>
@@ -54,6 +39,36 @@
             <initState>FLOATING</initState>
             <initSide>EAST</initSide>
             <initIndex>3</initIndex>
+            <toolBarId>GlobToolbox</toolBarId>
+        </toolView>
+
+        <toolView>
+            <id>org.esa.beam.glob.ui.TimeSeriesConfigToolView</id>
+            <class>org.esa.beam.glob.ui.TimeSeriesConfigToolView</class>
+            <title>Time Series Configuration</title>
+            <tabTitle>Time Series Config</tabTitle>
+            <mnemonic>C</mnemonic>
+            <accelerator>ctrl alt C</accelerator>
+            <smallIcon>/org/esa/beam/glob/ui/icons/GlobToolbox16.gif</smallIcon>
+            <largeIcon>/org/esa/beam/glob/ui/icons/GlobToolbox24.gif</largeIcon>
+            <initState>FLOATING</initState>
+            <initSide>EAST</initSide>
+            <initIndex>3</initIndex>
+            <toolBarId>GlobToolbox</toolBarId>
+        </toolView>
+
+        <toolView>
+            <id>org.esa.beam.glob.ui.TimeSeriesGraphToolView</id>
+            <class>org.esa.beam.glob.ui.TimeSeriesGraphToolView</class>
+            <title>Time Series Graph</title>
+            <tabTitle>Time Series Graph</tabTitle>
+            <mnemonic>T</mnemonic>
+            <accelerator>ctrl alt T</accelerator>
+            <smallIcon>/org/esa/beam/glob/ui/icons/TimeSeries16.gif</smallIcon>
+            <largeIcon>/org/esa/beam/glob/ui/icons/TimeSeries24.gif</largeIcon>
+            <initState>FLOATING</initState>
+            <initSide>EAST</initSide>
+            <initIndex>4</initIndex>
             <toolBarId>GlobToolbox</toolBarId>
         </toolView>
 
