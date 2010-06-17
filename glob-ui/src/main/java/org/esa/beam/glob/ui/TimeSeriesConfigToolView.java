@@ -177,6 +177,9 @@ public class TimeSeriesConfigToolView extends AbstractToolView {
         final TableLayout layout = new TableLayout(1);
         layout.setRowFill(0, TableLayout.Fill.BOTH);
         layout.setRowFill(1, TableLayout.Fill.HORIZONTAL);
+        layout.setTableWeightX(1.0);
+        layout.setTableWeightY(0.0);
+        layout.setRowWeightY(0, 1.0);
         final JPanel panel = new JPanel(layout);
         panel.setBorder(BorderFactory.createTitledBorder("Product List"));
 
@@ -198,7 +201,6 @@ public class TimeSeriesConfigToolView extends AbstractToolView {
             }
         });
         table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
-//        table.setPreferredScrollableViewportSize(new Dimension(250, 80));
         table.setFillsViewportHeight(true);
 
         final JScrollPane scrollPane = new JScrollPane(table);
