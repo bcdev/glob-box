@@ -4,7 +4,7 @@ import com.bc.ceres.swing.TableLayout;
 import com.jidesoft.grid.BooleanCheckBoxCellRenderer;
 import org.esa.beam.framework.datamodel.ProductNode;
 import org.esa.beam.framework.datamodel.RasterDataNode;
-import org.esa.beam.glob.core.timeseries.TimeSeriesHandler;
+import org.esa.beam.glob.core.timeseries.datamodel.TimeSeries;
 
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -150,12 +150,12 @@ public class AddBandToTimeSeriesPane extends JPanel {
         public Object getValueAt(int rowIndex, int columnIndex) {
             final TableEntry tableEntry = entryList.get(rowIndex);
             final RasterDataNode raster = tableEntry.getRaster();
-            final TimeSeriesHandler timeSeriesHandler = TimeSeriesHandler.getInstance();
+            final TimeSeries timeSeries = TimeSeries.getInstance();
             switch (columnIndex) {
                 case 0:
                     return raster.getProduct().getDisplayName();
                 case 1:
-                    return timeSeriesHandler.isWithinTimeSpan(raster);
+                    return timeSeries.isWithinTimeSpan(raster);
                 case 2:
                     return tableEntry.isAddToTimeSeries();
                 default:

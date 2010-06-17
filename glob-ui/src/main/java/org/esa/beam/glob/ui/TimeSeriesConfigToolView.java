@@ -3,7 +3,7 @@ package org.esa.beam.glob.ui;
 import com.bc.ceres.swing.TableLayout;
 import com.jidesoft.combobox.DateComboBox;
 import org.esa.beam.framework.ui.application.support.AbstractToolView;
-import org.esa.beam.glob.core.timeseries.TimeSeriesHandler;
+import org.esa.beam.glob.core.timeseries.datamodel.TimeSeries;
 import org.esa.beam.visat.VisatApp;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
@@ -18,7 +18,12 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.table.AbstractTableModel;
+import javax.swing.table.JTableHeader;
+import javax.swing.table.TableColumnModel;
 import javax.swing.text.NumberFormatter;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -39,9 +44,10 @@ import java.util.Locale;
  */
 public class TimeSeriesConfigToolView extends AbstractToolView {
 
-    private static final TimeSeriesHandler handler = TimeSeriesHandler.getInstance();
+    private static final TimeSeries timeSeries = TimeSeries.getInstance();
     private DecimalFormat decimalFormat;
     public static final String UNIT_DEGREE = "°";
+    private JButton removeButton;
 
     public TimeSeriesConfigToolView() {
         decimalFormat = new DecimalFormat("###0.0##", new DecimalFormatSymbols(Locale.ENGLISH));
@@ -141,7 +147,7 @@ public class TimeSeriesConfigToolView extends AbstractToolView {
     }
 
     private JPanel createCrsPanel() {
-        final CoordinateReferenceSystem crs = handler.getTimeSeries().getCRS();
+        final CoordinateReferenceSystem crs = timeSeries.getCRS();
         final TableLayout tableLayout = new TableLayout(2);
         tableLayout.setTableFill(TableLayout.Fill.BOTH);
         tableLayout.setCellWeightX(0, 0, 0.0);
@@ -175,24 +181,22 @@ public class TimeSeriesConfigToolView extends AbstractToolView {
         panel.setBorder(BorderFactory.createTitledBorder("Product List"));
 
         final JTable table = new JTable();
-        table.setModel(new AbstractTableModel() {
-            @Override
-            public int getColumnCount() {
-                return 1;
-            }
+        table.setModel(new ProductListTableModel());
+        final TableColumnModel columnModel = table.getColumnModel();
+        columnModel.getColumn(0).setHeaderValue("Product");
+        final JTableHeader tableHeader = new JTableHeader(columnModel);
+        tableHeader.setVisible(true);
+        table.setTableHeader(tableHeader);
 
+        table.setRowSelectionAllowed(true);
+        final ListSelectionModel selectionModel = table.getSelectionModel();
+        selectionModel.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
+        selectionModel.addListSelectionListener(new ListSelectionListener() {
             @Override
-            public int getRowCount() {
-                return handler.getProducts().size();
-            }
-
-            @Override
-            public Object getValueAt(int rowIndex, int columnIndex) {
-                return handler.getProducts().get(rowIndex).getName();
+            public void valueChanged(ListSelectionEvent e) {
+                removeButton.setEnabled(e.getFirstIndex() != -1);
             }
         });
-
-        table.setRowSelectionAllowed(false);
         table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
 //        table.setPreferredScrollableViewportSize(new Dimension(250, 80));
         table.setFillsViewportHeight(true);
@@ -212,11 +216,15 @@ public class TimeSeriesConfigToolView extends AbstractToolView {
             }
         });
         buttonPane.add(addButton);
-        final JButton removeButton = new JButton("Remove");
+        removeButton = new JButton("Remove");
+
         removeButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-
+                final ListSelectionModel selectionModel = table.getSelectionModel();
+                final int minIndex = selectionModel.getMinSelectionIndex();
+                final int maxIndex = selectionModel.getMaxSelectionIndex();
+                timeSeries.removeProductsAt(minIndex, maxIndex);
             }
         });
         buttonPane.add(removeButton);
@@ -234,5 +242,23 @@ public class TimeSeriesConfigToolView extends AbstractToolView {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setVisible(true);
 
+    }
+
+    private static class ProductListTableModel extends AbstractTableModel {
+
+        @Override
+        public int getColumnCount() {
+            return 1;
+        }
+
+        @Override
+        public int getRowCount() {
+            return timeSeries.getProductList().size();
+        }
+
+        @Override
+        public Object getValueAt(int rowIndex, int columnIndex) {
+            return timeSeries.getProductList().get(rowIndex).getName();
+        }
     }
 }

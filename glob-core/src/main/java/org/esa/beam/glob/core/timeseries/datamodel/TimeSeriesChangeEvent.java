@@ -7,12 +7,12 @@ package org.esa.beam.glob.core.timeseries.datamodel;
  */
 public class TimeSeriesChangeEvent {
 
-    private TimeSeriesProperty property;
+    private TimeSeriesEventType eventType;
     private Object newValue;
     private Object oldValue;
 
-    public TimeSeriesChangeEvent(TimeSeriesProperty property, Object oldValue, Object newValue) {
-        this.property = property;
+    public TimeSeriesChangeEvent(TimeSeriesEventType eventType, Object oldValue, Object newValue) {
+        this.eventType = eventType;
         this.newValue = newValue;
         this.oldValue = oldValue;
     }
@@ -25,7 +25,7 @@ public class TimeSeriesChangeEvent {
         return oldValue;
     }
 
-    public TimeSeriesProperty getProperty() {
-        return property;
+    public TimeSeriesEventType getProperty() {
+        return eventType;
     }
 }

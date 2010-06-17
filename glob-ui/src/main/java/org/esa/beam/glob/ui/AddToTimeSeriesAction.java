@@ -5,7 +5,7 @@ import org.esa.beam.framework.datamodel.ProductNode;
 import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.framework.ui.ModalDialog;
 import org.esa.beam.framework.ui.command.CommandEvent;
-import org.esa.beam.glob.core.timeseries.TimeSeriesHandler;
+import org.esa.beam.glob.core.timeseries.datamodel.TimeSeries;
 import org.esa.beam.visat.VisatApp;
 import org.esa.beam.visat.actions.AbstractVisatAction;
 
@@ -25,12 +25,12 @@ public class AddToTimeSeriesAction extends AbstractVisatAction {
         final VisatApp app = VisatApp.getApp();
         final ProductNode node = app.getSelectedProductNode();
         if (node instanceof RasterDataNode) {
-            final TimeSeriesHandler timeSeriesHandler = TimeSeriesHandler.getInstance();
+            final TimeSeries timeSeries = TimeSeries.getInstance();
             final AddBandToTimeSeriesPane timeSeriesPane = createPane(app, node);
 
             if (showDialog(app, timeSeriesPane)) {
                 timeSeriesPane.getAddedRasterList();
-                timeSeriesHandler.addRasterToTimeSeries((RasterDataNode) node);
+                timeSeries.addRaster((RasterDataNode) node);
                 app.getApplicationPage().showToolView("org.esa.beam.glob.ui.TimeSeriesManagerToolView");
             }
         }

@@ -3,11 +3,10 @@ package org.esa.beam.glob.ui;
 import com.bc.ceres.swing.TableLayout;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.RasterDataNode;
-import org.esa.beam.glob.core.timeseries.TimeSeriesHandler;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeSeries;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesChangeEvent;
+import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesEventType;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesListener;
-import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesProperty;
 import org.esa.beam.visat.VisatApp;
 
 import javax.swing.AbstractAction;
@@ -31,10 +30,10 @@ import static org.esa.beam.framework.ui.UIUtils.*;
 
 class TimeSeriesManagerForm extends JPanel {
 
-    private TimeSeriesHandler handler;
+    private TimeSeries timeSeries;
 
     TimeSeriesManagerForm() {
-        this.handler = TimeSeriesHandler.getInstance();
+        this.timeSeries = TimeSeries.getInstance();
         createComponents();
     }
 
@@ -98,7 +97,7 @@ class TimeSeriesManagerForm extends JPanel {
         final JPanel panel = new JPanel(tableLayout);
         final JLabel label = new JLabel("Raster in time series");
         final JList bandsList = new JList();
-        final ListModel listModel = new TimeSeriesRasterListModel(handler.getTimeSeries());
+        final ListModel listModel = new TimeSeriesRasterListModel(timeSeries);
         bandsList.setCellRenderer(new DefaultListCellRenderer() {
             @Override
             public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected,
@@ -120,7 +119,6 @@ class TimeSeriesManagerForm extends JPanel {
     }
 
     private JPanel createInfoPanel() {
-        final TimeSeries timeSeries = handler.getTimeSeries();
         JLabel crsLabel = new JLabel("CRS: ");
         JLabel crsValue = new JLabel(timeSeries.getCRS().getName().getCode());
         SimpleDateFormat sdf = new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss");
@@ -194,34 +192,34 @@ class TimeSeriesManagerForm extends JPanel {
 
         private TimeSeriesRasterListModel(TimeSeries timeSeries) {
             this.timeSeries = timeSeries;
-            timeSeries.addListener(new MyTimeSeriesListener(this));
+            timeSeries.addListener(new ManagerTSL(this));
         }
 
         @Override
         public int getSize() {
-            return timeSeries.getRasterCount();
+            return timeSeries.getRasterList().size();
         }
 
         @Override
         public Object getElementAt(int index) {
-            return timeSeries.getRasterAt(index);
+            return timeSeries.getRasterList().get(index);
         }
 
-        private class MyTimeSeriesListener implements TimeSeriesListener {
+        private class ManagerTSL implements TimeSeriesListener {
 
             private final TimeSeriesManagerForm.TimeSeriesRasterListModel model;
 
-            public MyTimeSeriesListener(TimeSeriesRasterListModel model) {
+            public ManagerTSL(TimeSeriesRasterListModel model) {
                 this.model = model;
             }
 
             @Override
             public void timeSeriesChanged(TimeSeriesChangeEvent timeSeriesChangeEvent) {
-                if (timeSeriesChangeEvent.getProperty() == TimeSeriesProperty.RASTER_ADDED) {
+                if (timeSeriesChangeEvent.getProperty() == TimeSeriesEventType.RASTER_ADDED) {
                     final Integer index = (Integer) timeSeriesChangeEvent.getNewValue();
                     model.fireIntervalAdded(model, index, index);
                 }
-                if (timeSeriesChangeEvent.getProperty() == TimeSeriesProperty.RASTER_REMOVED) {
+                if (timeSeriesChangeEvent.getProperty() == TimeSeriesEventType.RASTER_REMOVED) {
                     final Integer index = (Integer) timeSeriesChangeEvent.getOldValue();
                     model.fireIntervalRemoved(model, index, index);
                 }
