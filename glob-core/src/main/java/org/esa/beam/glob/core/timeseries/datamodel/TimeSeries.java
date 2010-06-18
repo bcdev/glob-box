@@ -113,21 +113,25 @@ public class TimeSeries {
     }
 
     void addProduct(Product product) {
-        List<Product> oldProducts = new ArrayList<Product>(timeSeriesModel.getProductList());
+
         final List<Product> products = timeSeriesModel.getProductList();
         if (!products.contains(product)) {
             products.add(product);
-            fireTimeSeriesChanged(TimeSeriesEventType.PRODUCT_ADDED, oldProducts, products);
+            fireTimeSeriesChanged(TimeSeriesEventType.PRODUCT_ADDED, -1, products.size() - 1);
         }
     }
 
     public void removeProductsAt(int minIndex, int maxIndex) {
-        final List<Product> productList = timeSeriesModel.getProductList();
-        List<Product> oldProducts = new ArrayList<Product>(productList);
         for (int i = minIndex; i <= maxIndex; i++) {
-            timeSeriesModel.removeProductAt(i);
+            final Product product = timeSeriesModel.getProductList().get(i);
+            if (timeSeriesModel.removeProductAt(i)) {
+                fireTimeSeriesChanged(TimeSeriesEventType.PRODUCT_REMOVED, i, -1);
+                updateRasterList(TimeSeriesEventType.PRODUCT_REMOVED);
+            }
         }
-        fireTimeSeriesChanged(TimeSeriesEventType.PRODUCT_REMOVED, oldProducts, productList);
+    }
+
+    private void updateRasterList(TimeSeriesEventType eventType) {
     }
 
     void setRefRaster(RasterDataNode refRaster) {

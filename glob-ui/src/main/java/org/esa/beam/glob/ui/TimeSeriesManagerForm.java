@@ -215,11 +215,11 @@ class TimeSeriesManagerForm extends JPanel {
 
             @Override
             public void timeSeriesChanged(TimeSeriesChangeEvent timeSeriesChangeEvent) {
-                if (timeSeriesChangeEvent.getProperty() == TimeSeriesEventType.RASTER_ADDED) {
+                if (timeSeriesChangeEvent.getEventType() == TimeSeriesEventType.RASTER_ADDED) {
                     final Integer index = (Integer) timeSeriesChangeEvent.getNewValue();
                     model.fireIntervalAdded(model, index, index);
                 }
-                if (timeSeriesChangeEvent.getProperty() == TimeSeriesEventType.RASTER_REMOVED) {
+                if (timeSeriesChangeEvent.getEventType() == TimeSeriesEventType.RASTER_REMOVED) {
                     final Integer index = (Integer) timeSeriesChangeEvent.getOldValue();
                     model.fireIntervalRemoved(model, index, index);
                 }

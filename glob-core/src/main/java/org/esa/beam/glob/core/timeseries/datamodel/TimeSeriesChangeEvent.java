@@ -25,7 +25,7 @@ public class TimeSeriesChangeEvent {
         return oldValue;
     }
 
-    public TimeSeriesEventType getProperty() {
+    public TimeSeriesEventType getEventType() {
         return eventType;
     }
 }

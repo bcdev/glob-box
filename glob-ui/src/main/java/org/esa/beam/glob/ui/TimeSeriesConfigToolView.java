@@ -4,6 +4,9 @@ import com.bc.ceres.swing.TableLayout;
 import com.jidesoft.combobox.DateComboBox;
 import org.esa.beam.framework.ui.application.support.AbstractToolView;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeSeries;
+import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesChangeEvent;
+import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesEventType;
+import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesListener;
 import org.esa.beam.visat.VisatApp;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
@@ -247,6 +250,18 @@ public class TimeSeriesConfigToolView extends AbstractToolView {
     }
 
     private static class ProductListTableModel extends AbstractTableModel {
+
+        private ProductListTableModel() {
+            timeSeries.addListener(new TimeSeriesListener() {
+                @Override
+                public void timeSeriesChanged(TimeSeriesChangeEvent timeSeriesChangeEvent) {
+                    if (TimeSeriesEventType.PRODUCT_REMOVED == timeSeriesChangeEvent.getEventType()) {
+                        int deletionIndex = (Integer) timeSeriesChangeEvent.getOldValue();
+                        fireTableRowsDeleted(deletionIndex, deletionIndex);
+                    }
+                }
+            });
+        }
 
         @Override
         public int getColumnCount() {

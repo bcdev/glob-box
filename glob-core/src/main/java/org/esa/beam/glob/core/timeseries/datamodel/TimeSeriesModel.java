@@ -10,6 +10,8 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.Map;
+import java.util.WeakHashMap;
 
 /**
  * User: Thomas Storm
@@ -28,6 +30,8 @@ class TimeSeriesModel {
 
     private List<Product> productList;
 
+    private Map<RasterDataNode, List<Product>> variableMap;
+
     private boolean showWorldMap;
 
     private boolean syncColor;
@@ -41,6 +45,7 @@ class TimeSeriesModel {
         crs = DefaultGeographicCRS.WGS84;
         rasterList = new ArrayList<RasterDataNode>();
         productList = new ArrayList<Product>();
+        variableMap = new WeakHashMap<RasterDataNode, List<Product>>();
         try {
             startTime = ProductData.UTC.parse("01-01-1970", "dd-MM-yyyy");
             endTime = ProductData.UTC.create(new GregorianCalendar().getTime(), 0);
@@ -103,6 +108,10 @@ class TimeSeriesModel {
 
     boolean removeProductAt(int index) {
         return productList.remove(index) != null;
+    }
+
+    public Map<RasterDataNode, List<Product>> getVariableMap() {
+        return variableMap;
     }
 
     void setCrs(CoordinateReferenceSystem crs) {
