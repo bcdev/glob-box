@@ -74,6 +74,17 @@ class WorldFireReader extends AbstractProductReader {
         final String productName = FileUtils.getFilenameWithoutExtension(inputFile);
         final String productType = getProductType(inputFile);
         final Product product = new Product(productName, productType, 3600, 1800);
+        try {
+            String dateString = productName.substring(0, 6);
+            ProductData.UTC startTime = ProductData.UTC.parse(dateString, "yyyyMM");
+            product.setStartTime(startTime);
+            Calendar calendar = startTime.getAsCalendar();
+            int days = calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
+            String endString = dateString + String.format("%02d", days);
+            ProductData.UTC endTime = ProductData.UTC.parse(endString, "yyyyMMdd");
+            product.setEndTime(endTime);
+        } catch (ParseException ignored) {
+        }
         product.setFileLocation(inputFile);
         final AffineTransform i2m = new AffineTransform();
         i2m.translate(0, 0);
@@ -88,7 +99,7 @@ class WorldFireReader extends AbstractProductReader {
             Debug.trace("Could not create GeoCoding");
             e.printStackTrace();
         }
-        Band fireBand = product.addBand("fire_" + productName, ProductData.TYPE_UINT8);
+        Band fireBand = product.addBand("fire_" + productType, ProductData.TYPE_UINT8);
         fireBand.setNoDataValue(0);
         fireBand.setNoDataValueUsed(true);
         // todo - define final IndexCoding
