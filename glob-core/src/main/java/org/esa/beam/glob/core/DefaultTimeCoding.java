@@ -2,10 +2,9 @@ package org.esa.beam.glob.core;
 
 import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.glob.core.TimeCoding;
 
 /**
- * Default implementation of {@link org.esa.beam.glob.core.TimeCoding}. It simply interpolates line-wise
+ * Default implementation of {@link TimeCoding}. It simply interpolates line-wise
  * between start and end time.
  */
 class DefaultTimeCoding extends TimeCoding {
