@@ -1,5 +1,6 @@
 package org.esa.beam.glob.ui;
 
+import com.bc.ceres.core.ExtensionManager;
 import com.bc.ceres.swing.TableLayout;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
@@ -8,6 +9,7 @@ import org.esa.beam.framework.datamodel.ProductNodeGroup;
 import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.framework.ui.application.support.AbstractToolView;
 import org.esa.beam.framework.ui.product.ProductSceneView;
+import org.esa.beam.glob.core.TimeCoding;
 import org.esa.beam.visat.VisatApp;
 
 import javax.swing.JComponent;
@@ -21,8 +23,6 @@ import javax.swing.event.InternalFrameEvent;
 import java.awt.Container;
 import java.text.SimpleDateFormat;
 import java.util.Hashtable;
-
-import static org.esa.beam.glob.ui.CreateTimeSeriesAction.*;
 
 /**
  * User: Thomas Storm
@@ -88,7 +88,8 @@ public class SliderToolView extends AbstractToolView {
             if (nodeCount > 0) {
                 timeSlider.setEnabled(true);
                 for (int i = 0; i < nodeCount; i++) {
-                    final ProductData.UTC utcStartTime = bandGroup.get(i).getTimeCoding().getStartTime();
+                    TimeCoding timeCoding = ExtensionManager.getInstance().getExtension(bandGroup.get(i), TimeCoding.class);
+                    final ProductData.UTC utcStartTime = timeCoding.getStartTime();
                     SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MMM-yyyy");
                     SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
                     dateFormat.setCalendar(utcStartTime.getAsCalendar());
@@ -139,7 +140,7 @@ public class SliderToolView extends AbstractToolView {
                 ProductSceneView view = (ProductSceneView) contentPane;
                 final RasterDataNode currentRaster = view.getRaster();
                 if (currentRaster.getProduct().getMetadataRoot().containsElement(
-                        TIME_SERIES_METADATA_ELEMENT)) {
+                        "TIME_SERIES")) {
                     setCurrentView(view);
                 }
             }

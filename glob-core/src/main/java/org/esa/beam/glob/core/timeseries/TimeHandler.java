@@ -1,7 +1,8 @@
 package org.esa.beam.glob.core.timeseries;
 
+import com.bc.ceres.core.ExtensionManager;
 import org.esa.beam.framework.datamodel.RasterDataNode;
-import org.esa.beam.framework.datamodel.TimeCoding;
+import org.esa.beam.glob.core.TimeCoding;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -14,8 +15,7 @@ import java.text.ParseException;
 public class TimeHandler {
 
     public TimeCoding generateTimeCoding(RasterDataNode raster) throws ParseException, IOException {
-        // todo might be removed
-        return raster.getTimeCoding();
+        return ExtensionManager.getInstance().getExtension(raster, TimeCoding.class);
     }
 
 }

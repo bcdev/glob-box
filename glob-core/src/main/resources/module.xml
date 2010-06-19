@@ -24,4 +24,7 @@
     <dependency>
         <module>beam-core</module>
     </dependency>
+
+    <activator>org.esa.beam.glob.core.GlobToolBoxActivator</activator>
+
 </module>
