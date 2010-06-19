@@ -88,8 +88,8 @@
             <id>addToTimeSeries</id>
             <parent>TimeSeriesGroup</parent>
             <class>org.esa.beam.glob.ui.CreateTimeSeriesAction</class>
-            <text>Create time series...</text>
-            <shortDescr>Create a new time series based on the chosen raster</shortDescr>
+            <text>Create Time Series...</text>
+            <shortDescr>Create a new time series based on the selected raster</shortDescr>
             <context>band, tiePointGrid</context>
             <helpId>createTimeSeries</helpId>
         </action>

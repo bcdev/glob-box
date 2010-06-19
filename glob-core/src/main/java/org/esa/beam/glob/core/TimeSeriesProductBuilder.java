@@ -15,8 +15,8 @@ import org.esa.beam.util.ProductUtils;
  * Date: 19.06.2010
  */
 public class TimeSeriesProductBuilder {
-    private static final String PRODUCT_TYPE = "TIME_SERIES";
-    private static final String TIME_SERIES_ROOT_NAME = PRODUCT_TYPE;
+    public static final String TIME_SERIES_ROOT_NAME = "TIME_SERIES";
+    private static final String PRODUCT_TYPE = TIME_SERIES_ROOT_NAME;
     private static final String PRODUCT_LIST_ELEM_NAME = "PRODUCT_LIST";
 
     public static Product createTimeSeriesProduct(String timeSeriesName, RasterDataNode refRaster, ProductManager productManager) {

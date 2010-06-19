@@ -3,14 +3,18 @@ package org.esa.beam.glob.ui;
 import com.bc.ceres.core.ExtensionManager;
 import com.bc.ceres.swing.TableLayout;
 import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.MetadataElement;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.ProductNodeGroup;
 import org.esa.beam.framework.datamodel.RasterDataNode;
+import org.esa.beam.framework.ui.application.ToolView;
 import org.esa.beam.framework.ui.application.support.AbstractToolView;
 import org.esa.beam.framework.ui.product.ProductSceneView;
 import org.esa.beam.glob.core.TimeCoding;
+import org.esa.beam.glob.core.TimeSeriesProductBuilder;
 import org.esa.beam.visat.VisatApp;
+import org.esa.beam.visat.VisatApplicationPage;
 
 import javax.swing.JComponent;
 import javax.swing.JLabel;
@@ -24,21 +28,18 @@ import java.awt.Container;
 import java.text.SimpleDateFormat;
 import java.util.Hashtable;
 
-/**
- * User: Thomas Storm
- * Date: 18.06.2010
- * Time: 15:48:31
- */
 public class SliderToolView extends AbstractToolView {
 
-    private SceneViewListener sceneViewListener;
+    public static final String ID = "org.esa.beam.glob.ui.SliderToolView";
 
     private ProductSceneView currentView;
     private JSlider timeSlider;
+    private SceneViewListener sceneViewListener;
 
 
     public SliderToolView() {
         sceneViewListener = new SceneViewListener();
+        VisatApp.getApp().addInternalFrameListener(sceneViewListener);
     }
 
     public void setCurrentView(ProductSceneView currentView) {
@@ -46,6 +47,10 @@ public class SliderToolView extends AbstractToolView {
             this.currentView = currentView;
             configureTimeSlider();
         }
+    }
+
+    public ProductSceneView getCurrentView() {
+        return this.currentView;
     }
 
     @Override
@@ -132,26 +137,55 @@ public class SliderToolView extends AbstractToolView {
     }
 
     private class SceneViewListener extends InternalFrameAdapter {
-
         @Override
-        public void internalFrameActivated(InternalFrameEvent e) {
+        public void internalFrameOpened(InternalFrameEvent e) {
             final Container contentPane = e.getInternalFrame().getContentPane();
             if (contentPane instanceof ProductSceneView) {
-                ProductSceneView view = (ProductSceneView) contentPane;
-                final RasterDataNode currentRaster = view.getRaster();
-                if (currentRaster.getProduct().getMetadataRoot().containsElement(
-                        "TIME_SERIES")) {
-                    setCurrentView(view);
+                ProductSceneView sceneView = (ProductSceneView) contentPane;
+                final RasterDataNode currentRaster = sceneView.getRaster();
+                MetadataElement metadataRoot = currentRaster.getProduct().getMetadataRoot();
+                if (metadataRoot.containsElement(TimeSeriesProductBuilder.TIME_SERIES_ROOT_NAME)) {
+                    SliderToolView sliderToolView = showSliderToolView();
+                    sliderToolView.setCurrentView(sceneView);
                 }
             }
         }
 
         @Override
-        public void internalFrameDeactivated(InternalFrameEvent e) {
+        public void internalFrameActivated(InternalFrameEvent e) {
             final Container contentPane = e.getInternalFrame().getContentPane();
-            if (currentView == contentPane) {
-                setCurrentView(null);
+            if (contentPane instanceof ProductSceneView) {
+                ProductSceneView sceneView = (ProductSceneView) contentPane;
+                final RasterDataNode currentRaster = sceneView.getRaster();
+                MetadataElement metadataRoot = currentRaster.getProduct().getMetadataRoot();
+                if (metadataRoot.containsElement(TimeSeriesProductBuilder.TIME_SERIES_ROOT_NAME)) {
+                    SliderToolView sliderToolView = getSliderToolView();
+                    sliderToolView.setCurrentView(sceneView);
+                }
             }
         }
+
+
+        @Override
+        public void internalFrameDeactivated(InternalFrameEvent e) {
+            final Container contentPane = e.getInternalFrame().getContentPane();
+            SliderToolView sliderToolView = getSliderToolView();
+            if (contentPane == sliderToolView.getCurrentView()) {
+                sliderToolView.setCurrentView(null);
+            }
+        }
+
+        private SliderToolView getSliderToolView() {
+            VisatApplicationPage page = VisatApp.getApp().getApplicationPage();
+            ToolView toolView = page.getToolView(SliderToolView.ID);
+            return (SliderToolView) toolView;
+        }
+
+        private SliderToolView showSliderToolView() {
+            VisatApplicationPage page = VisatApp.getApp().getApplicationPage();
+            ToolView toolView = page.showToolView(SliderToolView.ID);
+            return (SliderToolView) toolView;
+        }
+
     }
 }

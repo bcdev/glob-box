@@ -25,18 +25,17 @@ public class CreateTimeSeriesAction extends AbstractVisatAction {
         final ProductNode node = app.getSelectedProductNode();
         if (node instanceof RasterDataNode) {
             RasterDataNode raster = (RasterDataNode) node;
-            final Model model = new Model("TimeSeries_" + node.getName());
+            final Model model = new Model(raster);
             PropertyContainer propertyContainer = model.createPropertyContainer();
             PropertyPane timeSeriesPane = new PropertyPane(propertyContainer);
             if (showDialog(app, timeSeriesPane)) {
-                app.getApplicationPage().showToolView("org.esa.beam.glob.ui.SliderToolView");
-            }
-            final String timeSeriesName = model.getName();
+                final String timeSeriesName = model.getName();
 
-            final Product tsProduct = TimeSeriesProductBuilder.createTimeSeriesProduct(timeSeriesName,
-                                                                                       raster,
-                                                                                       VisatApp.getApp().getProductManager());
-            app.getProductManager().addProduct(tsProduct);
+                final Product tsProduct = TimeSeriesProductBuilder.createTimeSeriesProduct(timeSeriesName,
+                                                                                           raster,
+                                                                                           VisatApp.getApp().getProductManager());
+                app.getProductManager().addProduct(tsProduct);
+            }
         }
     }
 
@@ -68,8 +67,11 @@ public class CreateTimeSeriesAction extends AbstractVisatAction {
 
         private String name;
 
-        public Model(String name) {
-            this.name = name;
+        private transient RasterDataNode referenceRaster;
+
+        public Model(RasterDataNode raster) {
+            referenceRaster = raster;
+            this.name = "TimeSeries_" + referenceRaster.getName();
         }
 
         public String getName() {
