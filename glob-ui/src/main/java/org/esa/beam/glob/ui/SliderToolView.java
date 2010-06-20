@@ -42,16 +42,6 @@ public class SliderToolView extends AbstractToolView {
         VisatApp.getApp().addInternalFrameListener(sceneViewListener);
     }
 
-    public void setCurrentView(ProductSceneView currentView) {
-        if (this.currentView != currentView) {
-            this.currentView = currentView;
-            configureTimeSlider();
-        }
-    }
-
-    public ProductSceneView getCurrentView() {
-        return this.currentView;
-    }
 
     @Override
     public void componentShown() {
@@ -77,6 +67,17 @@ public class SliderToolView extends AbstractToolView {
         configureTimeSlider();
         panel.add(timeSlider);
         return panel;
+    }
+
+    private void setCurrentView(ProductSceneView currentView) {
+        if (this.currentView != currentView) {
+            this.currentView = currentView;
+            configureTimeSlider();
+        }
+    }
+
+    private ProductSceneView getCurrentView() {
+        return this.currentView;
     }
 
     private void configureTimeSlider() {
