@@ -3,9 +3,9 @@ package org.esa.beam.glob.ui;
 import com.bc.ceres.glayer.support.ImageLayer;
 import com.bc.ceres.grender.Viewport;
 import com.bc.ceres.swing.TableLayout;
+import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Placemark;
-import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.ProductNodeEvent;
 import org.esa.beam.framework.datamodel.ProductNodeListener;
@@ -57,7 +57,6 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.text.DecimalFormat;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -227,7 +226,8 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         final Point2D modelPos = levelZeroToModel.transform(position, null);
         final Point2D currentPos = modelToCurrentLevel.transform(modelPos, null);
 
-        pinTimeSeries = computeTimeSeries("pinTimeSeries", globBox.getRasterList(),
+        Band[] timeSeriesBands = currentView.getProduct().getBands();
+        pinTimeSeries = computeTimeSeries("pinTimeSeries", timeSeriesBands,
                                           (int) currentPos.getX(), (int) currentPos.getY(),
                                           currentLevel);
 
@@ -236,17 +236,16 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         getTimeSeriesPlot().setDataset(timeSeriesCollection);
     }
 
-    private TimeSeries computeTimeSeries(String title, final List<RasterDataNode> rasterList, int pixelX, int pixelY,
+    private TimeSeries computeTimeSeries(String title, final Band[] bandList, int pixelX, int pixelY,
                                          int currentLevel) {
         TimeSeries timeSeries = new TimeSeries(title);
-        for (RasterDataNode raster : rasterList) {
-            final Product product = raster.getProduct();
-            final ProductData.UTC startTime = product.getStartTime();
+        for (Band band : bandList) {
+            final ProductData.UTC startTime = band.getTimeCoding().getStartTime();
             final Millisecond timePeriod = new Millisecond(startTime.getAsDate(),
                                                            ProductData.UTC.UTC_TIME_ZONE,
                                                            Locale.getDefault());
 
-            final double value = getValue(raster, pixelX, pixelY, currentLevel);
+            final double value = getValue(band, pixelX, pixelY, currentLevel);
             timeSeries.add(new TimeSeriesDataItem(timePeriod, value));
         }
         return timeSeries;
@@ -312,20 +311,25 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         if (cursorTimeSeries != null) {
             timeSeriesCollection.removeSeries(cursorTimeSeries);
         }
-        cursorTimeSeries = computeTimeSeries("cursorTimeSeries", globBox.getRasterList(), pixelX, pixelY, currentLevel);
-        timeSeriesCollection.addSeries(cursorTimeSeries);
-        if (timeSeriesCollection.getSeries(0) == cursorTimeSeries) {
-            getTimeSeriesPlot().getRenderer().setSeriesPaint(0, Color.RED);
-            getTimeSeriesPlot().getRenderer().setSeriesPaint(1, Color.BLUE);
-        } else {
-            getTimeSeriesPlot().getRenderer().setSeriesPaint(0, Color.BLUE);
-            getTimeSeriesPlot().getRenderer().setSeriesPaint(1, Color.RED);
-        }
-        getTimeSeriesPlot().setDataset(timeSeriesCollection);
-        getTimeSeriesPlot().setNoDataMessage(NO_DATA_MESSAGE);
+        if (currentView.getProduct().getMetadataRoot().getElement(
+                CreateTimeSeriesAction.TIME_SERIES_METADATA_ELEMENT) != null) {
+            Band[] timeSeriesBands = currentView.getProduct().getBands();
+            cursorTimeSeries = computeTimeSeries("cursorTimeSeries", timeSeriesBands,
+                                                 pixelX, pixelY, currentLevel);
+            timeSeriesCollection.addSeries(cursorTimeSeries);
+            if (timeSeriesCollection.getSeries(0) == cursorTimeSeries) {
+                getTimeSeriesPlot().getRenderer().setSeriesPaint(0, Color.RED);
+                getTimeSeriesPlot().getRenderer().setSeriesPaint(1, Color.BLUE);
+            } else {
+                getTimeSeriesPlot().getRenderer().setSeriesPaint(0, Color.BLUE);
+                getTimeSeriesPlot().getRenderer().setSeriesPaint(1, Color.RED);
+            }
+            getTimeSeriesPlot().setDataset(timeSeriesCollection);
+            getTimeSeriesPlot().setNoDataMessage(NO_DATA_MESSAGE);
 
-        if (autoAdjustBox.isSelected()) {
-            getTimeSeriesPlot().getRangeAxis().configure();
+            if (autoAdjustBox.isSelected()) {
+                getTimeSeriesPlot().getRangeAxis().configure();
+            }
         }
     }
 

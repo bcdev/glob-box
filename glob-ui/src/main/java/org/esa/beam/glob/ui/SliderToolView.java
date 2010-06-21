@@ -21,6 +21,7 @@ import javax.swing.event.InternalFrameEvent;
 import java.awt.Container;
 import java.text.SimpleDateFormat;
 import java.util.Hashtable;
+import java.util.TimeZone;
 
 import static org.esa.beam.glob.ui.CreateTimeSeriesAction.*;
 
@@ -91,9 +92,9 @@ public class SliderToolView extends AbstractToolView {
                     final ProductData.UTC utcStartTime = bandGroup.get(i).getTimeCoding().getStartTime();
                     SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MMM-yyyy");
                     SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
-                    dateFormat.setCalendar(utcStartTime.getAsCalendar());
-                    final String dateText = dateFormat.format(utcStartTime.getAsDate());
-                    final String timeText = timeFormat.format(utcStartTime.getAsDate());
+                    dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+                    final String dateText = dateFormat.format(utcStartTime.getAsCalendar().getTime());
+                    final String timeText = timeFormat.format(utcStartTime.getAsCalendar().getTime());
                     String labelText = String.format("<html><p align=\"center\"> <font size=\"2\">%s<br>%s</font></p>",
                                                      dateText, timeText);
                     labelTable.put(i, new JLabel(labelText));

@@ -2,11 +2,9 @@ package org.esa.beam.glob.ui;
 
 import com.bc.ceres.swing.TableLayout;
 import com.jidesoft.combobox.DateComboBox;
+import org.esa.beam.framework.datamodel.TimeCoding;
 import org.esa.beam.framework.ui.application.support.AbstractToolView;
-import org.esa.beam.glob.core.timeseries.datamodel.TimeSeries;
-import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesChangeEvent;
-import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesEventType;
-import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesListener;
+import org.esa.beam.framework.ui.product.ProductSceneView;
 import org.esa.beam.visat.VisatApp;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
@@ -22,12 +20,15 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
+import javax.swing.event.InternalFrameAdapter;
+import javax.swing.event.InternalFrameEvent;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumnModel;
 import javax.swing.text.NumberFormatter;
+import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Insets;
@@ -47,17 +48,35 @@ import java.util.Locale;
  */
 public class TimeSeriesConfigToolView extends AbstractToolView {
 
-    private static final TimeSeries timeSeries = TimeSeries.getInstance();
     private DecimalFormat decimalFormat;
     public static final String UNIT_DEGREE = "°";
     private JButton removeButton;
+    private ProductSceneView currentView;
+    private TimeCoding productTimeCoding;
+    private TimeSeriesConfigToolView.TimeSeriesIFL internalFrameListener;
 
     public TimeSeriesConfigToolView() {
         decimalFormat = new DecimalFormat("###0.0##", new DecimalFormatSymbols(Locale.ENGLISH));
         decimalFormat.setParseIntegerOnly(false);
         decimalFormat.setParseBigDecimal(false);
         decimalFormat.setDecimalSeparatorAlwaysShown(true);
+        final VisatApp visatApp = VisatApp.getApp();
+        internalFrameListener = new TimeSeriesIFL();
+        visatApp.addInternalFrameListener(internalFrameListener);
+    }
 
+    public void setCurrentView(ProductSceneView currentView) {
+        if (this.currentView != currentView) {
+            this.currentView = currentView;
+            if (currentView != null) {
+                productTimeCoding = currentView.getProduct().getTimeCoding();
+            }
+        }
+    }
+
+    @Override
+    public void dispose() {
+        VisatApp.getApp().removeInternalFrameListener(internalFrameListener);
     }
 
     @Override
@@ -91,14 +110,16 @@ public class TimeSeriesConfigToolView extends AbstractToolView {
         final DateComboBox startTimeBox = new DateComboBox();
         startTimeBox.setShowNoneButton(false);
         startTimeBox.setTimeDisplayed(true);
-        startTimeBox.setFormat(new SimpleDateFormat("dd.MM.yyyy HH:mm:ss"));
+        startTimeBox.setFormat(new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss"));
+        startTimeBox.setDate(productTimeCoding.getStartTime().getAsCalendar().getTime());
         panel.add(startTimeBox);
 
         panel.add(new Label("End time:"));
         DateComboBox endTimeBox = new DateComboBox();
         endTimeBox.setShowNoneButton(false);
         endTimeBox.setTimeDisplayed(true);
-        startTimeBox.setFormat(new SimpleDateFormat("dd.MM.yyyy HH:mm:ss"));
+        endTimeBox.setFormat(new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss"));
+        endTimeBox.setDate(productTimeCoding.getEndTime().getAsCalendar().getTime());
         panel.add(endTimeBox);
 
         return panel;
@@ -150,7 +171,7 @@ public class TimeSeriesConfigToolView extends AbstractToolView {
     }
 
     private JPanel createCrsPanel() {
-        final CoordinateReferenceSystem crs = timeSeries.getCRS();
+        final CoordinateReferenceSystem crs = currentView.getRaster().getGeoCoding().getMapCRS();
         final TableLayout tableLayout = new TableLayout(2);
         tableLayout.setTableFill(TableLayout.Fill.BOTH);
         tableLayout.setCellWeightX(0, 0, 0.0);
@@ -229,7 +250,7 @@ public class TimeSeriesConfigToolView extends AbstractToolView {
                 final ListSelectionModel selectionModel = table.getSelectionModel();
                 final int minIndex = selectionModel.getMinSelectionIndex();
                 final int maxIndex = selectionModel.getMaxSelectionIndex();
-                timeSeries.removeProductsAt(minIndex, maxIndex);
+//                timeSeries.removeProductsAt(minIndex, maxIndex);
             }
         });
         buttonPane.add(removeButton);
@@ -252,15 +273,15 @@ public class TimeSeriesConfigToolView extends AbstractToolView {
     private static class ProductListTableModel extends AbstractTableModel {
 
         private ProductListTableModel() {
-            timeSeries.addListener(new TimeSeriesListener() {
-                @Override
-                public void timeSeriesChanged(TimeSeriesChangeEvent timeSeriesChangeEvent) {
-                    if (TimeSeriesEventType.PRODUCT_REMOVED == timeSeriesChangeEvent.getEventType()) {
-                        int deletionIndex = (Integer) timeSeriesChangeEvent.getOldValue();
-                        fireTableRowsDeleted(deletionIndex, deletionIndex);
-                    }
-                }
-            });
+//            timeSeries.addListener(new TimeSeriesListener() {
+//                @Override
+//                public void timeSeriesChanged(TimeSeriesChangeEvent timeSeriesChangeEvent) {
+//                    if (TimeSeriesEventType.PRODUCT_REMOVED == timeSeriesChangeEvent.getEventType()) {
+//                        int deletionIndex = (Integer) timeSeriesChangeEvent.getOldValue();
+//                        fireTableRowsDeleted(deletionIndex, deletionIndex);
+//                    }
+//                }
+//            });
         }
 
         @Override
@@ -270,12 +291,34 @@ public class TimeSeriesConfigToolView extends AbstractToolView {
 
         @Override
         public int getRowCount() {
-            return timeSeries.getProductList().size();
+//            return timeSeries.getProductList().size();
+            return 0;
         }
 
         @Override
         public Object getValueAt(int rowIndex, int columnIndex) {
-            return timeSeries.getProductList().get(rowIndex).getName();
+//            return timeSeries.getProductList().get(rowIndex).getName();
+            return null;
         }
     }
+
+    private class TimeSeriesIFL extends InternalFrameAdapter {
+
+        @Override
+        public void internalFrameActivated(InternalFrameEvent e) {
+            final Container contentPane = e.getInternalFrame().getContentPane();
+            if (contentPane instanceof ProductSceneView) {
+                setCurrentView((ProductSceneView) contentPane);
+            }
+        }
+
+        @Override
+        public void internalFrameClosed(InternalFrameEvent e) {
+            final Container contentPane = e.getInternalFrame().getContentPane();
+            if (contentPane == currentView) {
+                setCurrentView(null);
+            }
+        }
+    }
+
 }

@@ -1,6 +1,5 @@
 package org.esa.beam.glob.core;
 
-import com.bc.ceres.core.ExtensionManager;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.MetadataAttribute;
 import org.esa.beam.framework.datamodel.MetadataElement;
@@ -10,6 +9,8 @@ import org.esa.beam.framework.datamodel.ProductManager;
 import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.framework.datamodel.TimeCoding;
 import org.esa.beam.util.ProductUtils;
+
+import java.text.SimpleDateFormat;
 
 /**
  * User: Marco
@@ -35,13 +36,14 @@ public class TimeSeriesProductBuilder {
         timeSeriesMetaData.addElement(productListElement);
         tsProduct.getMetadataRoot().addElement(timeSeriesMetaData);
 
-        ExtensionManager extensionManager = ExtensionManager.getInstance();
+        final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd.HHmmss.SSS");
+
         final Product[] products = productManager.getProducts();
         for (Product product : products) {
             final String nodeName = refRaster.getName();
             if (isProductCompatible(product, tsProduct, nodeName)) {
                 final RasterDataNode raster = product.getRasterDataNode(nodeName);
-                TimeCoding rasterTimeCoding = extensionManager.getExtension(raster, TimeCoding.class);
+                TimeCoding rasterTimeCoding = raster.getTimeCoding();
                 if (rasterTimeCoding == null) {
                     continue;
                 }
@@ -50,12 +52,14 @@ public class TimeSeriesProductBuilder {
 
                 final ProductData.UTC rasterStartTime = rasterTimeCoding.getStartTime();
                 final ProductData.UTC rasterEndTime = rasterTimeCoding.getEndTime();
-                final Band band = tsProduct.addBand(nodeName + "_" + rasterStartTime.format(),
+                final Band band = tsProduct.addBand(nodeName + "_" + dateFormat.format(rasterStartTime.getAsDate()),
                                                     raster.getDataType());
                 band.setSourceImage(raster.getSourceImage());
                 ProductUtils.copyRasterDataNodeProperties(raster, band);
-                // todo copy also referenced bandy in valid pixel expression
+                // todo copy also referenced band in valid pixel expression
                 band.setValidPixelExpression(null);
+                band.setTimeCoding(new DefaultTimeCoding(rasterStartTime, rasterEndTime,
+                                                         raster.getSceneRasterHeight()));
                 ProductData.UTC tsStartTime = tsProduct.getStartTime();
                 if (tsStartTime == null || rasterStartTime.getAsDate().before(tsStartTime.getAsDate())) {
                     tsProduct.setStartTime(rasterStartTime);
