@@ -3,7 +3,7 @@ package org.esa.beam.glob.core.timeseries;
 import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.RasterDataNode;
-import org.esa.beam.glob.core.TimeCoding;
+import org.esa.beam.framework.datamodel.TimeCoding;
 import org.esa.beam.util.Debug;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;

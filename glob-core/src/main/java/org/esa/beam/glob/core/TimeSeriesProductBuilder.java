@@ -8,6 +8,7 @@ import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.ProductManager;
 import org.esa.beam.framework.datamodel.RasterDataNode;
+import org.esa.beam.framework.datamodel.TimeCoding;
 import org.esa.beam.util.ProductUtils;
 
 /**
@@ -15,11 +16,13 @@ import org.esa.beam.util.ProductUtils;
  * Date: 19.06.2010
  */
 public class TimeSeriesProductBuilder {
+
     public static final String TIME_SERIES_ROOT_NAME = "TIME_SERIES";
     private static final String PRODUCT_TYPE = TIME_SERIES_ROOT_NAME;
     private static final String PRODUCT_LIST_ELEM_NAME = "PRODUCT_LIST";
 
-    public static Product createTimeSeriesProduct(String timeSeriesName, RasterDataNode refRaster, ProductManager productManager) {
+    public static Product createTimeSeriesProduct(String timeSeriesName, RasterDataNode refRaster,
+                                                  ProductManager productManager) {
         final Product tsProduct = new Product(timeSeriesName, PRODUCT_TYPE,
                                               refRaster.getSceneRasterWidth(),
                                               refRaster.getSceneRasterHeight());
@@ -68,7 +71,7 @@ public class TimeSeriesProductBuilder {
 
     public static boolean isProductCompatible(Product product, Product tsProduct, String rasterName) {
         return product.getFileLocation() != null &&
-                product.containsRasterDataNode(rasterName) &&
-                tsProduct.isCompatibleProduct(product, 0.1e-6f);
+               product.containsRasterDataNode(rasterName) &&
+               tsProduct.isCompatibleProduct(product, 0.1e-6f);
     }
 }

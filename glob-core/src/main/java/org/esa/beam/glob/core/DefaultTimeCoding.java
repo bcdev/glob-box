@@ -2,6 +2,7 @@ package org.esa.beam.glob.core;
 
 import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.datamodel.TimeCoding;
 
 /**
  * Default implementation of {@link TimeCoding}. It simply interpolates line-wise

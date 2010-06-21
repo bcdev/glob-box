@@ -1,10 +1,8 @@
 package org.esa.beam.glob.core.timeseries.datamodel;
 
-import com.bc.ceres.core.ExtensionManager;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.RasterDataNode;
-import org.esa.beam.glob.core.TimeCoding;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import java.util.ArrayList;
@@ -46,12 +44,11 @@ public class TimeSeries {
         if (timeSeriesModel.getRasterList().isEmpty()) {
             timeSeriesModel.setRefRaster(raster);
         }
-        TimeCoding rasterTimeCoding = ExtensionManager.getInstance().getExtension(raster, TimeCoding.class);
-        final ProductData.UTC startTime = rasterTimeCoding.getStartTime();
+        final ProductData.UTC startTime = raster.getTimeCoding().getStartTime();
         if (!isWithinTimeSpan(startTime)) {
             timeSeriesModel.setStartTime(startTime);
         }
-        final ProductData.UTC endTime = rasterTimeCoding.getEndTime();
+        final ProductData.UTC endTime = raster.getTimeCoding().getEndTime();
         if (!isWithinTimeSpan(endTime)) {
             timeSeriesModel.setEndTime(endTime);
         }
