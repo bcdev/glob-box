@@ -1,5 +1,7 @@
 package org.esa.beam.glob.core.timeseries.datamodel;
 
+import org.junit.Test;
+
 /**
  * User: Thomas Storm
  * Date: 11.06.2010
@@ -7,18 +9,9 @@ package org.esa.beam.glob.core.timeseries.datamodel;
  */
 public class TimeSeriesTest {
 
-//    private TimeSeries timeSeries;
-//
-//    @Before
-//    public void setUp() {
-//        timeSeries = new TimeSeries(new Product("prod", "schnurz", 10, 2));
-//    }
-//
-//    @Test
-//    public void testDefaultTimeSeries() throws Exception {
-//        assertEquals(true, timeSeries != null);
-//        assertEquals(0, timeSeries.getRasterList().size());
-//    }
+    @Test
+    public void testDefaultTimeSeries() throws Exception {
+    }
 //
 //    @Test
 //    public void testAddRasterToTimeSeries() throws Exception {
