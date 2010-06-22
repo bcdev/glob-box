@@ -2,11 +2,17 @@ package org.esa.beam.glob.ui;
 
 import com.bc.ceres.swing.TableLayout;
 import com.jidesoft.combobox.DateComboBox;
+import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.TimeCoding;
+import org.esa.beam.framework.ui.GridBagUtils;
 import org.esa.beam.framework.ui.application.support.AbstractToolView;
 import org.esa.beam.framework.ui.product.ProductSceneView;
+import org.esa.beam.glob.core.TimeSeriesMapper;
+import org.esa.beam.glob.core.timeseries.datamodel.TimeSeries;
+import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesChangeEvent;
+import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesEventType;
+import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesListener;
 import org.esa.beam.visat.VisatApp;
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -28,9 +34,12 @@ import javax.swing.table.AbstractTableModel;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumnModel;
 import javax.swing.text.NumberFormatter;
+import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.GridBagConstraints;
 import java.awt.Insets;
 import java.awt.Label;
 import java.awt.event.ActionEvent;
@@ -54,6 +63,12 @@ public class TimeSeriesConfigToolView extends AbstractToolView {
     private ProductSceneView currentView;
     private TimeCoding productTimeCoding;
     private TimeSeriesConfigToolView.TimeSeriesIFL internalFrameListener;
+    private JPanel crsPanel;
+    private JPanel productsPanel;
+    private JPanel toolBar;
+    private TimeSeries timeSeries;
+    private static final String NEW_BUTTON_NAME = "newButtonName";
+    private JTable table;
 
     public TimeSeriesConfigToolView() {
         decimalFormat = new DecimalFormat("###0.0##", new DecimalFormatSymbols(Locale.ENGLISH));
@@ -70,6 +85,10 @@ public class TimeSeriesConfigToolView extends AbstractToolView {
             this.currentView = currentView;
             if (currentView != null) {
                 productTimeCoding = currentView.getProduct().getTimeCoding();
+                timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(currentView.getProduct());
+                if (timeSeries != null) {
+                    createTableModel();
+                }
             }
         }
     }
@@ -89,13 +108,53 @@ public class TimeSeriesConfigToolView extends AbstractToolView {
         tableLayout.setRowFill(3, TableLayout.Fill.BOTH);
         tableLayout.setRowWeightY(3, 1.0);
 
-        JPanel panel = new JPanel(tableLayout);
-        panel.add(createTimeSpanPanel());
-        panel.add(createRegionPanel());
-        panel.add(createCrsPanel());
-        panel.add(createProductsPanel());
+        JPanel panel = new JPanel(new BorderLayout(4, 4));
+        final JPanel contentPanel = new JPanel(tableLayout);
+        crsPanel = createCrsPanel();
+        contentPanel.add(crsPanel);
+        productsPanel = createProductsPanel();
+        contentPanel.add(productsPanel);
 
+//        panel.add(createTimeSpanPanel());
+//        panel.add(createRegionPanel());
+        toolBar = createToolBar();
+        panel.add(toolBar, BorderLayout.EAST);
+        panel.add(contentPanel);
+
+        setEnabled(false);
         return panel;
+    }
+
+    private JPanel createToolBar() {
+        final JButton newButton = new JButton("New TS");
+        newButton.setName(NEW_BUTTON_NAME);
+        final JButton cloneButton = new JButton("Clone TS");
+        final JButton viewButton = new JButton("View TS");
+        final JButton regridButton = new JButton("Regrid TS");
+        final JButton netcdfButton = new JButton("NetCDF TS");
+
+        final JPanel actionBar = GridBagUtils.createPanel();
+        final GridBagConstraints gbc = new GridBagConstraints();
+        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.insets.top = 2;
+        gbc.gridy = 0;
+        actionBar.add(newButton, gbc);
+        gbc.gridy++;
+        actionBar.add(cloneButton, gbc);
+        gbc.gridy++;
+        actionBar.add(viewButton, gbc);
+        gbc.gridy++;
+        actionBar.add(regridButton, gbc);
+        gbc.gridy++;
+        actionBar.add(netcdfButton, gbc);
+        gbc.gridy++;
+        gbc.insets.bottom = 0;
+        gbc.fill = GridBagConstraints.VERTICAL;
+        gbc.weighty = 1.0;
+        gbc.gridwidth = 2;
+        actionBar.add(new JLabel(" "), gbc); // filler
+        return actionBar;
     }
 
     private JPanel createTimeSpanPanel() {
@@ -111,7 +170,9 @@ public class TimeSeriesConfigToolView extends AbstractToolView {
         startTimeBox.setShowNoneButton(false);
         startTimeBox.setTimeDisplayed(true);
         startTimeBox.setFormat(new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss"));
-        startTimeBox.setDate(productTimeCoding.getStartTime().getAsCalendar().getTime());
+        if (productTimeCoding != null) {
+            startTimeBox.setDate(productTimeCoding.getStartTime().getAsCalendar().getTime());
+        }
         panel.add(startTimeBox);
 
         panel.add(new Label("End time:"));
@@ -119,7 +180,9 @@ public class TimeSeriesConfigToolView extends AbstractToolView {
         endTimeBox.setShowNoneButton(false);
         endTimeBox.setTimeDisplayed(true);
         endTimeBox.setFormat(new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss"));
-        endTimeBox.setDate(productTimeCoding.getEndTime().getAsCalendar().getTime());
+        if (productTimeCoding != null) {
+            endTimeBox.setDate(productTimeCoding.getEndTime().getAsCalendar().getTime());
+        }
         panel.add(endTimeBox);
 
         return panel;
@@ -171,7 +234,10 @@ public class TimeSeriesConfigToolView extends AbstractToolView {
     }
 
     private JPanel createCrsPanel() {
-        final CoordinateReferenceSystem crs = currentView.getRaster().getGeoCoding().getMapCRS();
+        String crs = "WGS84(DD)";
+        if (currentView != null && currentView.getRaster() != null && currentView.getRaster().getGeoCoding() != null) {
+            crs = currentView.getRaster().getGeoCoding().getMapCRS().getName().getCode();
+        }
         final TableLayout tableLayout = new TableLayout(2);
         tableLayout.setTableFill(TableLayout.Fill.BOTH);
         tableLayout.setCellWeightX(0, 0, 0.0);
@@ -187,7 +253,7 @@ public class TimeSeriesConfigToolView extends AbstractToolView {
         panel.setBorder(BorderFactory.createTitledBorder("CRS"));
 
         panel.add(new JLabel("CRS:"));
-        final JTextField field = new JTextField(crs.getName().getCode());
+        final JTextField field = new JTextField(crs);
         field.setEditable(false);
         panel.add(field);
 
@@ -207,25 +273,7 @@ public class TimeSeriesConfigToolView extends AbstractToolView {
         final JPanel panel = new JPanel(layout);
         panel.setBorder(BorderFactory.createTitledBorder("Product List"));
 
-        final JTable table = new JTable();
-        table.setModel(new ProductListTableModel());
-        final TableColumnModel columnModel = table.getColumnModel();
-        columnModel.getColumn(0).setHeaderValue("Product");
-        final JTableHeader tableHeader = new JTableHeader(columnModel);
-        tableHeader.setVisible(true);
-        table.setTableHeader(tableHeader);
-
-        table.setRowSelectionAllowed(true);
-        final ListSelectionModel selectionModel = table.getSelectionModel();
-        selectionModel.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
-        selectionModel.addListSelectionListener(new ListSelectionListener() {
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                removeButton.setEnabled(e.getFirstIndex() != -1);
-            }
-        });
-        table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
-        table.setFillsViewportHeight(true);
+        table = new JTable();
 
         final JScrollPane scrollPane = new JScrollPane(table);
         scrollPane.getViewport().setMinimumSize(new Dimension(350, 80));
@@ -250,7 +298,8 @@ public class TimeSeriesConfigToolView extends AbstractToolView {
                 final ListSelectionModel selectionModel = table.getSelectionModel();
                 final int minIndex = selectionModel.getMinSelectionIndex();
                 final int maxIndex = selectionModel.getMaxSelectionIndex();
-//                timeSeries.removeProductsAt(minIndex, maxIndex);
+                final Product removedProduct = (Product) table.getModel().getValueAt(minIndex, 0);
+                timeSeries.removeProduct(removedProduct);
             }
         });
         buttonPane.add(removeButton);
@@ -259,6 +308,53 @@ public class TimeSeriesConfigToolView extends AbstractToolView {
         panel.add(buttonPane);
 
         return panel;
+    }
+
+    private void createTableModel() {
+        table.setModel(new ProductListTableModel());
+        final TableColumnModel columnModel = table.getColumnModel();
+        columnModel.getColumn(0).setHeaderValue("Product");
+        final JTableHeader tableHeader = new JTableHeader(columnModel);
+        tableHeader.setVisible(true);
+        table.setTableHeader(tableHeader);
+
+        table.setRowSelectionAllowed(true);
+        final ListSelectionModel selectionModel = table.getSelectionModel();
+        selectionModel.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
+        selectionModel.addListSelectionListener(new ListSelectionListener() {
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                removeButton.setEnabled(e.getFirstIndex() != -1);
+            }
+        });
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+        table.setFillsViewportHeight(true);
+    }
+
+    public void setEnabled(boolean enabled) {
+        setEnabled(enabled, productsPanel);
+        setEnabled(enabled, crsPanel);
+        Component[] components;
+        components = toolBar.getComponents();
+        for (Component component : components) {
+            if (!NEW_BUTTON_NAME.equals(component.getName())) {
+                component.setEnabled(enabled);
+            }
+        }
+    }
+
+    private void setEnabled(boolean enabled, Component component) {
+        if (component instanceof Container) {
+            final Component[] components = ((Container) component).getComponents();
+            if (components != null) {
+                for (Component comp : components) {
+                    setEnabled(enabled, comp);
+                }
+            }
+        }
+        for (Component comp : ((Container) component).getComponents()) {
+            comp.setEnabled(enabled);
+        }
     }
 
     public static void main(String[] args) {
@@ -270,18 +366,29 @@ public class TimeSeriesConfigToolView extends AbstractToolView {
 
     }
 
-    private static class ProductListTableModel extends AbstractTableModel {
+    private class ProductListTableModel extends AbstractTableModel {
 
         private ProductListTableModel() {
-//            timeSeries.addListener(new TimeSeriesListener() {
-//                @Override
-//                public void timeSeriesChanged(TimeSeriesChangeEvent timeSeriesChangeEvent) {
-//                    if (TimeSeriesEventType.PRODUCT_REMOVED == timeSeriesChangeEvent.getEventType()) {
-//                        int deletionIndex = (Integer) timeSeriesChangeEvent.getOldValue();
-//                        fireTableRowsDeleted(deletionIndex, deletionIndex);
-//                    }
-//                }
-//            });
+            timeSeries.addListener(new TimeSeriesListener() {
+                @Override
+                public void timeSeriesChanged(TimeSeriesChangeEvent event) {
+                    final TimeSeriesEventType eventType = event.getEventType();
+                    switch (eventType) {
+                        case PRODUCT_REMOVED:
+//                            Product removedProduct = (Product)event.getOldValue();
+//                            for( int i = 0; i < getRowCount(); i++ ) {
+//                                if( getValueAt( i, 0 ).toString().equals( removedProduct.getName() ) ) {
+//                                    fireTableRowsDeleted(i, i);
+//                                }
+//                            }
+//                            break;
+                            fireTableDataChanged();
+                        case PRODUCT_ADDED:
+                            fireTableDataChanged();
+                            break;
+                    }
+                }
+            });
         }
 
         @Override
@@ -291,14 +398,14 @@ public class TimeSeriesConfigToolView extends AbstractToolView {
 
         @Override
         public int getRowCount() {
-//            return timeSeries.getProductList().size();
-            return 0;
+            int count = timeSeries.getProducts().size();
+            setEnabled(count > 0);
+            return count;
         }
 
         @Override
         public Object getValueAt(int rowIndex, int columnIndex) {
-//            return timeSeries.getProductList().get(rowIndex).getName();
-            return null;
+            return timeSeries.getProducts().get(rowIndex);
         }
     }
 

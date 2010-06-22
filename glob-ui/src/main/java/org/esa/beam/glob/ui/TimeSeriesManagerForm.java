@@ -33,7 +33,6 @@ class TimeSeriesManagerForm extends JPanel {
     private TimeSeries timeSeries;
 
     TimeSeriesManagerForm() {
-        this.timeSeries = TimeSeries.getInstance();
         createComponents();
     }
 
@@ -120,10 +119,10 @@ class TimeSeriesManagerForm extends JPanel {
 
     private JPanel createInfoPanel() {
         JLabel crsLabel = new JLabel("CRS: ");
-        JLabel crsValue = new JLabel(timeSeries.getCRS().getName().getCode());
+        JLabel crsValue = new JLabel(timeSeries.getProduct().getGeoCoding().getGeoCRS().getName().getCode());
         SimpleDateFormat sdf = new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss");
-        final ProductData.UTC startTime = timeSeries.getStartTime();
-        final ProductData.UTC endTime = timeSeries.getEndTime();
+        final ProductData.UTC startTime = timeSeries.getProduct().getStartTime();
+        final ProductData.UTC endTime = timeSeries.getProduct().getEndTime();
 
         JLabel startTimeLabel = new JLabel("Start time: ");
         JLabel startTimeValue = new JLabel(sdf.format(startTime.getAsDate()));
@@ -192,17 +191,19 @@ class TimeSeriesManagerForm extends JPanel {
 
         private TimeSeriesRasterListModel(TimeSeries timeSeries) {
             this.timeSeries = timeSeries;
-            timeSeries.addListener(new ManagerTSL(this));
+//            timeSeries.addListener(new ManagerTSL(this));
         }
 
         @Override
         public int getSize() {
-            return timeSeries.getRasterList().size();
+//            return timeSeries.getRasterList().size();
+            return 0;
         }
 
         @Override
         public Object getElementAt(int index) {
-            return timeSeries.getRasterList().get(index);
+//            return timeSeries.getRasterList().get(index);
+            return null;
         }
 
         private class ManagerTSL implements TimeSeriesListener {

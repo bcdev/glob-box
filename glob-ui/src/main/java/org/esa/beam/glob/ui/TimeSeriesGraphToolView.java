@@ -312,7 +312,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         if (cursorTimeSeries != null) {
             timeSeriesCollection.removeSeries(cursorTimeSeries);
         }
-        if (currentView.getProduct().getProductType().equals(TimeSeriesProductBuilder.PRODUCT_TYPE)) {
+        if (currentView.getProduct().getProductType().equals(TimeSeriesProductBuilder.TIME_SERIES_PRODUCT_TYPE)) {
             Band[] timeSeriesBands = currentView.getProduct().getBands();
             cursorTimeSeries = computeTimeSeries("cursorTimeSeries", timeSeriesBands,
                                                  pixelX, pixelY, currentLevel);

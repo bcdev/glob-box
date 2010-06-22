@@ -13,6 +13,7 @@ import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.framework.ui.ModalDialog;
 import org.esa.beam.framework.ui.command.CommandEvent;
 import org.esa.beam.glob.core.TimeSeriesProductBuilder;
+import org.esa.beam.glob.core.timeseries.datamodel.TimeSeries;
 import org.esa.beam.visat.VisatApp;
 import org.esa.beam.visat.actions.AbstractVisatAction;
 
@@ -38,10 +39,11 @@ public class CreateTimeSeriesAction extends AbstractVisatAction {
             }
             final String timeSeriesName = model.getName();
             final ProductManager productManager = app.getProductManager();
-            final Product tsProduct = TimeSeriesProductBuilder.createTimeSeriesProduct(timeSeriesName,
-                                                                                       (RasterDataNode) node,
-                                                                                       productManager);
-            productManager.addProduct(tsProduct);
+            final TimeSeries tsProduct = TimeSeriesProductBuilder.createTimeSeriesProductFromProductsView(
+                    timeSeriesName,
+                    (RasterDataNode) node,
+                    productManager);
+            productManager.addProduct(tsProduct.getProduct());
         }
     }
 
