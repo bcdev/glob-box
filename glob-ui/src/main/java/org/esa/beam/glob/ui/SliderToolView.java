@@ -11,6 +11,7 @@ import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.ProductNodeGroup;
 import org.esa.beam.framework.datamodel.RasterDataNode;
+import org.esa.beam.framework.ui.UIUtils;
 import org.esa.beam.framework.ui.application.support.AbstractToolView;
 import org.esa.beam.framework.ui.product.ProductSceneImage;
 import org.esa.beam.framework.ui.product.ProductSceneView;
@@ -20,6 +21,7 @@ import org.esa.beam.glob.core.TimeSeriesProductBuilder;
 import org.esa.beam.visat.VisatApp;
 
 import javax.swing.JComponent;
+import javax.swing.JInternalFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
@@ -143,8 +145,7 @@ public class SliderToolView extends AbstractToolView {
         reconfigureBaseImageLayer(nextRaster, currentView);
         sceneView.setRasters(new RasterDataNode[]{nextRaster});
         sceneView.setImageInfo(imageInfoClone);
-        // should be set but causes exception
-//        VisatApp.getApp().getSelectedInternalFrame().setTitle(nextRaster.getDisplayName());
+        VisatApp.getApp().getSelectedInternalFrame().setTitle(nextRaster.getDisplayName());
     }
 
     private void reconfigureBaseImageLayer(RasterDataNode rasterDataNode, ProductSceneView sceneView) {
