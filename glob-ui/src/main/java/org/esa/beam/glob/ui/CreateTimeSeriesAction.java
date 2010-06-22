@@ -25,8 +25,6 @@ import java.awt.Dimension;
  */
 public class CreateTimeSeriesAction extends AbstractVisatAction {
 
-    public static final String TIME_SERIES_METADATA_ELEMENT = "TIME_SERIES";
-
     @Override
     public void actionPerformed(CommandEvent event) {
         final VisatApp app = VisatApp.getApp();

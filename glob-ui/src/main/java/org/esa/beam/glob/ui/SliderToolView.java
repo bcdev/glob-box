@@ -16,6 +16,7 @@ import org.esa.beam.framework.ui.product.ProductSceneImage;
 import org.esa.beam.framework.ui.product.ProductSceneView;
 import org.esa.beam.glayer.RasterImageLayerType;
 import org.esa.beam.glevel.BandImageMultiLevelSource;
+import org.esa.beam.glob.core.TimeSeriesProductBuilder;
 import org.esa.beam.visat.VisatApp;
 
 import javax.swing.JComponent;
@@ -31,8 +32,6 @@ import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
 import java.util.Hashtable;
 import java.util.TimeZone;
-
-import static org.esa.beam.glob.ui.CreateTimeSeriesAction.*;
 
 /**
  * User: Thomas Storm
@@ -137,7 +136,8 @@ public class SliderToolView extends AbstractToolView {
         reconfigureBaseImageLayer(nextRaster, currentView);
         sceneView.setRasters(new RasterDataNode[]{nextRaster});
         sceneView.setImageInfo(imageInfoClone);
-        VisatApp.getApp().getSelectedInternalFrame().setTitle(nextRaster.getDisplayName());
+        // should be set but causes exception
+//        VisatApp.getApp().getSelectedInternalFrame().setTitle(nextRaster.getDisplayName());
     }
 
     private void reconfigureBaseImageLayer(RasterDataNode rasterDataNode, ProductSceneView sceneView) {
@@ -191,8 +191,7 @@ public class SliderToolView extends AbstractToolView {
             if (contentPane instanceof ProductSceneView) {
                 ProductSceneView view = (ProductSceneView) contentPane;
                 final RasterDataNode currentRaster = view.getRaster();
-                if (currentRaster.getProduct().getMetadataRoot().containsElement(
-                        TIME_SERIES_METADATA_ELEMENT)) {
+                if (currentRaster.getProduct().getProductType().equals(TimeSeriesProductBuilder.PRODUCT_TYPE)) {
                     setCurrentView(view);
                 }
             }

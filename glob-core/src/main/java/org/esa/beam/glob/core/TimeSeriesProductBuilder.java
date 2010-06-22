@@ -18,8 +18,8 @@ import java.text.SimpleDateFormat;
  */
 public class TimeSeriesProductBuilder {
 
-    public static final String TIME_SERIES_ROOT_NAME = "TIME_SERIES";
-    private static final String PRODUCT_TYPE = TIME_SERIES_ROOT_NAME;
+    public static final String PRODUCT_TYPE = "TIME_SERIES";
+    private static final String TIME_SERIES_ROOT_NAME = "TIME_SERIES";
     private static final String PRODUCT_LIST_ELEM_NAME = "PRODUCT_LIST";
 
     public static Product createTimeSeriesProduct(String timeSeriesName, RasterDataNode refRaster,
