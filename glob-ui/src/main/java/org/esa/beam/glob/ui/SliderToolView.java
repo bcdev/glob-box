@@ -1,13 +1,21 @@
 package org.esa.beam.glob.ui;
 
+import com.bc.ceres.core.ProgressMonitor;
+import com.bc.ceres.glayer.Layer;
+import com.bc.ceres.glayer.support.ImageLayer;
+import com.bc.ceres.glayer.support.LayerUtils;
 import com.bc.ceres.swing.TableLayout;
 import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.ImageInfo;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.ProductNodeGroup;
 import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.framework.ui.application.support.AbstractToolView;
+import org.esa.beam.framework.ui.product.ProductSceneImage;
 import org.esa.beam.framework.ui.product.ProductSceneView;
+import org.esa.beam.glayer.RasterImageLayerType;
+import org.esa.beam.glevel.BandImageMultiLevelSource;
 import org.esa.beam.visat.VisatApp;
 
 import javax.swing.JComponent;
@@ -19,6 +27,7 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.InternalFrameAdapter;
 import javax.swing.event.InternalFrameEvent;
 import java.awt.Container;
+import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
 import java.util.Hashtable;
 import java.util.TimeZone;
@@ -119,16 +128,59 @@ public class SliderToolView extends AbstractToolView {
         return null;
     }
 
+    // todo (mp) - The following should be done on ProdsuctSceneView.setRasters()
+    private void exchangeRasterInProductSceneView(Band nextRaster, ProductSceneView sceneView) {
+        // todo use a real ProgressMonitor
+        final RasterDataNode currentRaster = sceneView.getRaster();
+        final ImageInfo imageInfoClone = (ImageInfo) currentRaster.getImageInfo(ProgressMonitor.NULL).clone();
+        nextRaster.setImageInfo(imageInfoClone);
+        reconfigureBaseImageLayer(nextRaster, currentView);
+        sceneView.setRasters(new RasterDataNode[]{nextRaster});
+        sceneView.setImageInfo(imageInfoClone);
+        VisatApp.getApp().getSelectedInternalFrame().setTitle(nextRaster.getDisplayName());
+    }
+
+    private void reconfigureBaseImageLayer(RasterDataNode rasterDataNode, ProductSceneView sceneView) {
+        final Layer rootLayer = sceneView.getRootLayer();
+        final ImageLayer baseImageLayer = (ImageLayer) LayerUtils.getChildLayerById(rootLayer,
+                                                                                    ProductSceneView.BASE_IMAGE_LAYER_ID);
+
+        // todo use a real ProgressMonitor
+        final BandImageMultiLevelSource multiLevelSource = BandImageMultiLevelSource.create(rasterDataNode,
+                                                                                            ProgressMonitor.NULL);
+        baseImageLayer.setMultiLevelSource(multiLevelSource);
+        baseImageLayer.getConfiguration().setValue(RasterImageLayerType.PROPERTY_NAME_RASTER, rasterDataNode);
+        baseImageLayer.getConfiguration().setValue(ImageLayer.PROPERTY_NAME_MULTI_LEVEL_SOURCE, multiLevelSource);
+        baseImageLayer.setName(rasterDataNode.getDisplayName());
+        try {
+            final Field sceneImageField = ProductSceneView.class.getDeclaredField("sceneImage");
+            sceneImageField.setAccessible(true);
+            final Object sceneImage = sceneImageField.get(sceneView);
+            final Field multiLevelSourceField = ProductSceneImage.class.getDeclaredField("bandImageMultiLevelSource");
+            multiLevelSourceField.setAccessible(true);
+            multiLevelSourceField.set(sceneImage, multiLevelSource);
+        } catch (NoSuchFieldException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+
+    }
+
     private class SliderChangeListener implements ChangeListener {
+
+        private int currentBandIndex;
 
         @Override
         public void stateChanged(ChangeEvent e) {
-            final int selectedBandIndex = timeSlider.getValue();
-            System.out.println("selectedBandIndex = " + selectedBandIndex);
-            final Band band = getCurrentProduct().getBandGroup().get(selectedBandIndex);
-            currentView.getRaster().setSourceImage(band.getGeophysicalImage());
-            currentView.updateImage();
+            final int newBandIndex = timeSlider.getValue();
+            if (currentBandIndex != newBandIndex && currentView != null) {
+                final Band newRaster = getCurrentProduct().getBandGroup().get(newBandIndex);
+                exchangeRasterInProductSceneView(newRaster, currentView);
+                currentBandIndex = newBandIndex;
+            }
         }
+
     }
 
     private class SceneViewListener extends InternalFrameAdapter {
