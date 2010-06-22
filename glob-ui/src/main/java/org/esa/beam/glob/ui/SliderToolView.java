@@ -57,6 +57,10 @@ public class SliderToolView extends AbstractToolView {
         }
     }
 
+    public ProductSceneView getCurrentView() {
+        return currentView;
+    }
+
     @Override
     public void componentShown() {
         VisatApp.getApp().addInternalFrameListener(sceneViewListener);
@@ -113,7 +117,9 @@ public class SliderToolView extends AbstractToolView {
                 timeSlider.setEnabled(false);
             }
 
-            timeSlider.setValue(0);
+            final RasterDataNode currentRaster = currentView.getRaster();
+            final int currentIndex = getCurrentProduct().getBandIndex(currentRaster.getName());
+            timeSlider.setValue(currentIndex == -1 ? 0 : currentIndex);
         } else {
             timeSlider.setLabelTable(null);
             timeSlider.setEnabled(false);
@@ -128,6 +134,7 @@ public class SliderToolView extends AbstractToolView {
     }
 
     // todo (mp) - The following should be done on ProdsuctSceneView.setRasters()
+
     private void exchangeRasterInProductSceneView(Band nextRaster, ProductSceneView sceneView) {
         // todo use a real ProgressMonitor
         final RasterDataNode currentRaster = sceneView.getRaster();
@@ -190,8 +197,9 @@ public class SliderToolView extends AbstractToolView {
             final Container contentPane = e.getInternalFrame().getContentPane();
             if (contentPane instanceof ProductSceneView) {
                 ProductSceneView view = (ProductSceneView) contentPane;
-                final RasterDataNode currentRaster = view.getRaster();
-                if (currentRaster.getProduct().getProductType().equals(TimeSeriesProductBuilder.PRODUCT_TYPE)) {
+                final RasterDataNode viewRaster = view.getRaster();
+                final String viewProductType = viewRaster.getProduct().getProductType();
+                if (getCurrentView() != view && viewProductType.equals(TimeSeriesProductBuilder.PRODUCT_TYPE)) {
                     setCurrentView(view);
                 }
             }
