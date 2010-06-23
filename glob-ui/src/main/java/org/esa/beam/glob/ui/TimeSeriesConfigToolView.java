@@ -3,6 +3,7 @@ package org.esa.beam.glob.ui;
 import com.bc.ceres.swing.TableLayout;
 import com.jidesoft.combobox.DateComboBox;
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductManager;
 import org.esa.beam.framework.datamodel.TimeCoding;
 import org.esa.beam.framework.ui.GridBagUtils;
 import org.esa.beam.framework.ui.application.support.AbstractToolView;
@@ -123,6 +124,28 @@ public class TimeSeriesConfigToolView extends AbstractToolView {
         panel.add(contentPanel);
 
         setEnabled(false);
+        final ProductManager productManager = VisatApp.getApp().getProductManager();
+        productManager.addListener( new ProductManager.Listener() {
+            @Override
+            public void productAdded(ProductManager.Event event) {
+                if ( TimeSeriesMapper.getInstance().getTimeSeries( event.getProduct() ) != null ) {
+                    setEnabled(true);
+                }
+            }
+
+            @Override
+            public void productRemoved(ProductManager.Event event) {
+                setEnabled(false);
+                for( Product product :  productManager.getProducts() ) {
+                    if ( TimeSeriesMapper.getInstance().getTimeSeries( product ) != null ) {
+                        setEnabled(true);
+                        break;
+                    }
+                }
+
+            }
+        } );
+
         return panel;
     }
 
@@ -300,9 +323,10 @@ public class TimeSeriesConfigToolView extends AbstractToolView {
             public void actionPerformed(ActionEvent e) {
                 final ListSelectionModel selectionModel = table.getSelectionModel();
                 final int minIndex = selectionModel.getMinSelectionIndex();
-                final int maxIndex = selectionModel.getMaxSelectionIndex();
-                final Product removedProduct = (Product) table.getModel().getValueAt(minIndex, 0);
-                timeSeries.removeProduct(removedProduct);
+                if( minIndex > 0 ) {
+                    final Product removedProduct = (Product) table.getModel().getValueAt(minIndex, 0);
+                    timeSeries.removeProduct(removedProduct);
+                }
             }
         });
         buttonPane.add(removeButton);

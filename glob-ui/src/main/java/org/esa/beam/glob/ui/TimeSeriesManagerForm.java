@@ -119,10 +119,10 @@ class TimeSeriesManagerForm extends JPanel {
 
     private JPanel createInfoPanel() {
         JLabel crsLabel = new JLabel("CRS: ");
-        JLabel crsValue = new JLabel(timeSeries.getProduct().getGeoCoding().getGeoCRS().getName().getCode());
+        JLabel crsValue = new JLabel(timeSeries.getTsProduct().getGeoCoding().getGeoCRS().getName().getCode());
         SimpleDateFormat sdf = new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss");
-        final ProductData.UTC startTime = timeSeries.getProduct().getStartTime();
-        final ProductData.UTC endTime = timeSeries.getProduct().getEndTime();
+        final ProductData.UTC startTime = timeSeries.getTsProduct().getStartTime();
+        final ProductData.UTC endTime = timeSeries.getTsProduct().getEndTime();
 
         JLabel startTimeLabel = new JLabel("Start time: ");
         JLabel startTimeValue = new JLabel(sdf.format(startTime.getAsDate()));
