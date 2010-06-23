@@ -28,6 +28,7 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.InternalFrameAdapter;
 import javax.swing.event.InternalFrameEvent;
 import java.awt.Container;
+import java.beans.PropertyVetoException;
 import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
 import java.util.Hashtable;
@@ -117,9 +118,7 @@ public class SliderToolView extends AbstractToolView {
                 timeSlider.setEnabled(false);
             }
 
-            final RasterDataNode currentRaster = currentView.getRaster();
-            final int currentIndex = getCurrentProduct().getBandIndex(currentRaster.getName());
-            timeSlider.setValue(currentIndex == -1 ? 0 : currentIndex);
+            timeSlider.setValue(0);
         } else {
             timeSlider.setLabelTable(null);
             timeSlider.setEnabled(false);
@@ -142,7 +141,7 @@ public class SliderToolView extends AbstractToolView {
         nextRaster.setImageInfo(imageInfoClone);
         reconfigureBaseImageLayer(nextRaster, currentView);
         sceneView.setRasters(new RasterDataNode[]{nextRaster});
-        sceneView.setImageInfo(imageInfoClone);
+        sceneView.setImageInfo(imageInfoClone.createDeepCopy());
         VisatApp.getApp().getSelectedInternalFrame().setTitle(nextRaster.getDisplayName());
     }
 
