@@ -85,13 +85,23 @@
         </action>
 
         <action>
-            <id>addToTimeSeries</id>
+            <id>createTimeSeriesFromBandAction</id>
             <parent>TimeSeriesGroup</parent>
-            <class>org.esa.beam.glob.ui.CreateTimeSeriesAction</class>
+            <class>org.esa.beam.glob.ui.CreateTimeSeriesFromBandAction</class>
             <text>Create Time Series...</text>
             <shortDescr>Create a new time series based on the selected raster</shortDescr>
             <context>band, tiePointGrid</context>
-            <helpId>createTimeSeries</helpId>
+            <helpId>createTimeSeriesFromBandAction</helpId>
+        </action>
+        <action>
+            <id>newTimeSeriesAction</id>
+            <parent>file</parent>
+            <class>org.esa.beam.glob.ui.NewTimeSeriesAction</class>
+            <text>New Time Series...</text>
+            <shortDescr>Create a new time series</shortDescr>
+            <helpId>newTimeSeriesAction</helpId>
+            <placeAfter>new</placeAfter>
+            <placeBefore>open</placeBefore>
         </action>
 
     </extension>

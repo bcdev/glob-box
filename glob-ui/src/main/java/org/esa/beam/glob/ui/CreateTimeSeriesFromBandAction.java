@@ -24,7 +24,7 @@ import java.awt.Dimension;
  * Date: 11.06.2010
  * Time: 16:17:58
  */
-public class CreateTimeSeriesAction extends AbstractVisatAction {
+public class CreateTimeSeriesFromBandAction extends AbstractVisatAction {
 
     @Override
     public void actionPerformed(CommandEvent event) {

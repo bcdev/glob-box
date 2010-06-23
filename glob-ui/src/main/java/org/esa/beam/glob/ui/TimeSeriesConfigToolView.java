@@ -6,6 +6,7 @@ import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.TimeCoding;
 import org.esa.beam.framework.ui.GridBagUtils;
 import org.esa.beam.framework.ui.application.support.AbstractToolView;
+import org.esa.beam.framework.ui.command.Command;
 import org.esa.beam.framework.ui.product.ProductSceneView;
 import org.esa.beam.glob.core.TimeSeriesMapper;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeSeries;
@@ -86,7 +87,7 @@ public class TimeSeriesConfigToolView extends AbstractToolView {
             if (currentView != null) {
                 productTimeCoding = currentView.getProduct().getTimeCoding();
                 timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(currentView.getProduct());
-                if (timeSeries != null) {
+                if (timeSeries != null && table != null) {
                     createTableModel();
                 }
             }
@@ -127,6 +128,8 @@ public class TimeSeriesConfigToolView extends AbstractToolView {
 
     private JPanel createToolBar() {
         final JButton newButton = new JButton("New TS");
+        final Command newTSCommand = VisatApp.getApp().getCommandManager().getCommand(NewTimeSeriesAction.ID);
+        newButton.setAction(newTSCommand.getAction());
         newButton.setName(NEW_BUTTON_NAME);
         final JButton cloneButton = new JButton("Clone TS");
         final JButton viewButton = new JButton("View TS");
