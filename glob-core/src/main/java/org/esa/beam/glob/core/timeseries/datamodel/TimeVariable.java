@@ -1,21 +1,16 @@
 package org.esa.beam.glob.core.timeseries.datamodel;
 
-/**
- * User: Thomas Storm
- * Date: 22.06.2010
- * Time: 11:26:17
- */
 public class TimeVariable {
 
     private final String name;
     private boolean isSelected;
 
     public TimeVariable(String name) {
-        this.name = name;
+        this(name, false);
     }
 
     public TimeVariable(String name, boolean isSelected) {
-        this(name);
+        this.name = name;
         this.isSelected = isSelected;
     }
 
@@ -28,7 +23,9 @@ public class TimeVariable {
     }
 
     public void setSelected(boolean selected) {
-        isSelected = selected;
+        if (isSelected != selected) {
+            isSelected = selected;
+        }
     }
 
     public boolean fitsToPattern(String name) {
