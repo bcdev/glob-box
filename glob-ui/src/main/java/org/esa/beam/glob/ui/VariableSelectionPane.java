@@ -39,7 +39,8 @@ class VariableSelectionPane extends JPanel {
             @Override
             public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected,
                                                           boolean cellHasFocus) {
-                JLabel label = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                JLabel label = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected,
+                                                                           cellHasFocus);
                 if (value instanceof TimeVariable) {
                     TimeVariable variable = (TimeVariable) value;
                     label.setText(variable.getName());
@@ -57,8 +58,8 @@ class VariableSelectionPane extends JPanel {
 
     private int[] getSelectedIndices(VariableSelectionPaneModel model) {
         final List<Integer> indexList = new ArrayList<Integer>();
-        for( int i = 0; i < model.getSize(); i++) {
-            if(model.getElementAt(i).isSelected()) {
+        for (int i = 0; i < model.getSize(); i++) {
+            if (model.getElementAt(i).isSelected()) {
                 indexList.add(i);
             }
         }
@@ -81,9 +82,8 @@ class VariableSelectionPane extends JPanel {
         public void valueChanged(ListSelectionEvent e) {
             if (!e.getValueIsAdjusting()) {
                 final CheckBoxListSelectionModel selectionModel = variableList.getCheckBoxListSelectionModel();
-                for (int i = e.getFirstIndex(); i <= + e.getLastIndex(); i++) {
-                    final TimeVariable variable = model.getElementAt(i);
-                    variable.setSelected(selectionModel.isSelectedIndex(i));
+                for (int i = e.getFirstIndex(); i <= +e.getLastIndex(); i++) {
+                    model.setSelectedVariableAt(i, selectionModel.isSelectedIndex(i));
                 }
             }
         }
