@@ -12,9 +12,10 @@ import org.esa.beam.framework.datamodel.ProductNode;
 import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.framework.ui.ModalDialog;
 import org.esa.beam.framework.ui.command.CommandEvent;
+import org.esa.beam.glob.core.timeseries.datamodel.ITimeSeries;
 import org.esa.beam.glob.core.timeseries.datamodel.ProductLocation;
 import org.esa.beam.glob.core.timeseries.datamodel.ProductLocationType;
-import org.esa.beam.glob.core.timeseries.datamodel.TimeSeries;
+import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesFactory;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeVariable;
 import org.esa.beam.visat.VisatApp;
 import org.esa.beam.visat.actions.AbstractVisatAction;
@@ -49,7 +50,7 @@ public class CreateTimeSeriesFromBandAction extends AbstractVisatAction {
                 productLocations.add(new ProductLocation(ProductLocationType.FILE, product.getFileLocation().getPath()));
             }
             List<TimeVariable> variables = Arrays.asList(new TimeVariable(node.getName(), true));
-            final TimeSeries tsProduct = TimeSeries.create(
+            final ITimeSeries tsProduct = TimeSeriesFactory.create(
                     timeSeriesName,
                     productLocations,
                     variables);

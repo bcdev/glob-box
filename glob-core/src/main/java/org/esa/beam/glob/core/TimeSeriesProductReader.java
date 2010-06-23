@@ -6,7 +6,9 @@ import org.esa.beam.framework.dataio.ProductReaderPlugIn;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.glob.core.timeseries.datamodel.ITimeSeries;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeSeries;
+import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesFactory;
 
 import java.io.IOException;
 import java.util.Map;
@@ -19,7 +21,7 @@ import java.util.WeakHashMap;
  */
 class TimeSeriesProductReader extends DimapProductReader {
 
-    private TimeSeries timeSeriesProduct;
+    private ITimeSeries timeSeriesProduct;
     private Map<Band, Band> bandMap = new WeakHashMap<Band, Band>();
 
     public TimeSeriesProductReader(ProductReaderPlugIn productReaderPlugIn) {
@@ -30,7 +32,7 @@ class TimeSeriesProductReader extends DimapProductReader {
     protected Product readProductNodesImpl() throws IOException {
         final Product product = super.readProductNodesImpl();
         if (product.getProductType().equals(TimeSeries.TIME_SERIES_PRODUCT_TYPE)) {
-            timeSeriesProduct = TimeSeries.create(product);
+            timeSeriesProduct = TimeSeriesFactory.create(product);
         }
         return product;
     }
