@@ -22,7 +22,7 @@ class ProductSourcePaneModel extends AbstractListModel {
     }
 
     @Override
-    public Object getElementAt(int index) {
+    public ProductLocation getElementAt(int index) {
         return productSourceList.get(index);
     }
 
