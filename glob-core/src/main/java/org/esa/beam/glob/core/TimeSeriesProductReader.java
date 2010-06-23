@@ -9,6 +9,8 @@ import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeSeries;
 
 import java.io.IOException;
+import java.util.Map;
+import java.util.WeakHashMap;
 
 import static org.esa.beam.glob.core.TimeSeriesProductBuilder.*;
 
@@ -20,6 +22,7 @@ import static org.esa.beam.glob.core.TimeSeriesProductBuilder.*;
 class TimeSeriesProductReader extends DimapProductReader {
 
     private TimeSeries timeSeriesProduct;
+    private Map<Band, Band> bandMap = new WeakHashMap<Band, Band>();
 
     public TimeSeriesProductReader(ProductReaderPlugIn productReaderPlugIn) {
         super(productReaderPlugIn);
@@ -29,11 +32,7 @@ class TimeSeriesProductReader extends DimapProductReader {
     protected Product readProductNodesImpl() throws IOException {
         final Product product = super.readProductNodesImpl();
         if (product.getProductType().equals(TIME_SERIES_PRODUCT_TYPE)) {
-            product.getMetadataRoot().getElement(TIME_SERIES_ROOT_NAME);
-
-            // parse metadata
             timeSeriesProduct = new TimeSeries(product);
-//            timeSeriesProduct.addProductLocation();
         }
         return product;
     }
@@ -45,11 +44,20 @@ class TimeSeriesProductReader extends DimapProductReader {
                                           int destOffsetY, int destWidth, int destHeight,
                                           ProductData destBuffer,
                                           ProgressMonitor pm) throws IOException {
-
+        Band srcBand = bandMap.get(destBand);
         // 1) Identify source product   (use metadata index and band timestamp-postfix)
         // 2) Identify band in source prodzct
         // 3) open new / reuse opened product
+        if (srcBand == null) {
+            srcBand = timeSeriesProduct.getBand(destBand.getName());
+            if (srcBand != null) {
+                bandMap.put(destBand, srcBand);
+            }
+        }
         // 4) delegate call to source product's reader
+        if (srcBand != null) { // TODO ????
+            srcBand.readRasterData(sourceOffsetX, sourceOffsetY, sourceWidth, sourceHeight, destBuffer, pm);
+        }
         // 5) manage resources (opt)
     }
 }

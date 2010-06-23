@@ -14,6 +14,11 @@ public class TimeVariable {
         this.name = name;
     }
 
+    public TimeVariable(String name, boolean isSelected) {
+        this(name);
+        this.isSelected = isSelected;
+    }
+
     public String getName() {
         return name;
     }

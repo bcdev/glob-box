@@ -1,7 +1,6 @@
 package org.esa.beam.glob.core;
 
 import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.MetadataAttribute;
 import org.esa.beam.framework.datamodel.MetadataElement;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
@@ -23,13 +22,13 @@ public class TimeSeriesProductBuilder {
 
     public static final String TIME_SERIES_ROOT_NAME = "TIME_SERIES";
     public static final String TIME_SERIES_PRODUCT_TYPE = "org.esa.beam.glob.timeseries";
-    public static final String PRODUCT_LIST_NAME = "PRODUCT_LIST";
-    public static final String VARIABLES_LIST_NAME = "VARIABLES_LIST";
+    public static final String PRODUCT_LOCATIONS = "PRODUCT_LOCATIONS";
+    public static final String VARIABLES = "VARIABLES";
 
     public static TimeSeries createTimeSeriesFromScratch(String timeSeriesName) {
         final Product tsProduct = new Product(timeSeriesName, TIME_SERIES_PRODUCT_TYPE, -1, -1);
         tsProduct.setDescription("A time series product");
-        addTimeSeriesMetadataStructure(tsProduct);
+        createTimeSeriesMetadataStructure(tsProduct);
         final TimeSeries timeSeries = new TimeSeries(tsProduct);
         TimeSeriesMapper.getInstance().put(tsProduct, timeSeries);
         return timeSeries;
@@ -44,8 +43,6 @@ public class TimeSeriesProductBuilder {
         final Product refProduct = refRaster.getProduct();
         ProductUtils.copyGeoCoding(refProduct, tsProduct);
         // todo replace default time coding
-        addTimeSeriesMetadataStructure(tsProduct);
-
 
         final Product[] products = productManager.getProducts();
         final String nodeName = refRaster.getName();
@@ -71,13 +68,15 @@ public class TimeSeriesProductBuilder {
         return timeSeries;
     }
 
-    public static void addTimeSeriesMetadataStructure(Product tsProduct) {
-        final MetadataElement timeSeriesRoot = new MetadataElement(TIME_SERIES_ROOT_NAME);
-        final MetadataElement productListElement = new MetadataElement(PRODUCT_LIST_NAME);
-        final MetadataElement variablesListElement = new MetadataElement(VARIABLES_LIST_NAME);
-        timeSeriesRoot.addElement(productListElement);
-        timeSeriesRoot.addElement(variablesListElement);
-        tsProduct.getMetadataRoot().addElement(timeSeriesRoot);
+    public static void createTimeSeriesMetadataStructure(Product tsProduct) {
+        if (!tsProduct.getMetadataRoot().containsElement(TIME_SERIES_ROOT_NAME)) {
+            final MetadataElement timeSeriesRoot = new MetadataElement(TIME_SERIES_ROOT_NAME);
+            final MetadataElement productListElement = new MetadataElement(PRODUCT_LOCATIONS);
+            final MetadataElement variablesListElement = new MetadataElement(VARIABLES);
+            timeSeriesRoot.addElement(productListElement);
+            timeSeriesRoot.addElement(variablesListElement);
+            tsProduct.getMetadataRoot().addElement(timeSeriesRoot);
+        }
     }
 
     private static boolean addSpecifiedBandOfGivenProductToTimeSeriesProduct(String nodeName, Product tsProduct,
@@ -88,13 +87,6 @@ public class TimeSeriesProductBuilder {
             TimeCoding rasterTimeCoding = raster.getTimeCoding();
             if (rasterTimeCoding == null) {
                 return false;
-            }
-            final ProductData productPath = ProductData.createInstance(product.getFileLocation().getPath());
-            MetadataElement productListElement = tsProduct.getMetadataRoot().
-                    getElement(TIME_SERIES_ROOT_NAME).
-                    getElement(PRODUCT_LIST_NAME);
-            if (!productListElement.containsAttribute(product.getName())) {
-                productListElement.addAttribute(new MetadataAttribute(product.getName(), productPath, true));
             }
 
             final ProductData.UTC rasterStartTime = rasterTimeCoding.getStartTime();
