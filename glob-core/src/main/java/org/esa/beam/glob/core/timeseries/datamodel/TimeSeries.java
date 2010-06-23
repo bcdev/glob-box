@@ -1,11 +1,7 @@
 package org.esa.beam.glob.core.timeseries.datamodel;
 
 import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.MetadataAttribute;
-import org.esa.beam.framework.datamodel.MetadataElement;
 import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.glob.core.TimeSeriesProductBuilder;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -42,6 +38,10 @@ public class TimeSeries {
 
     // ??? needed ???
 
+    public Product getTsProduct() {
+        return product;
+    }
+
     public List<Product> getProducts() {
         return Collections.unmodifiableList(productList);
     }
@@ -50,16 +50,13 @@ public class TimeSeries {
         return Collections.unmodifiableList(productLocationList);
     }
 
-    // add entry
-    // remove entry
-
     public List<TimeVariable> getTimeVariables() {
         return Collections.unmodifiableList(timeVariables);
     }
 
-    public Product getProduct() {
-        return product;
-    }
+    // add entry
+
+    // remove entry
 
     public void addProductLocation(ProductLocationType type, String path) {
         productLocationList.add(new ProductLocation(type, path));
@@ -78,27 +75,20 @@ public class TimeSeries {
         final Band[] bands = product.getBands();
         final ArrayList<TimeVariable> newVariables = new ArrayList<TimeVariable>();
         for (Band band : bands) {
+            final String bandName = band.getName();
+//            if( timeVariables.size() == 0 ) {
+//                newVariables.add(new TimeVariable(bandName));
+//            } else {
+            boolean varExist = false;
             for (TimeVariable variable : timeVariables) {
-                final String bandName = band.getName();
-                if (!variable.fitsToPattern(bandName)) {
-                    newVariables.add(new TimeVariable(bandName));
-                }
+                varExist |= variable.fitsToPattern(bandName);
             }
+            if (!varExist) {
+                newVariables.add(new TimeVariable(bandName));
+            }
+//            }
         }
         timeVariables.addAll(newVariables);
-//        addToMetaDataVariablesList( newVariables );
-    }
-
-    private void addToMetaDataVariablesList(List<TimeVariable> newVariables) {
-        MetadataElement variableListElement = this.product.getMetadataRoot().
-                getElement(TimeSeriesProductBuilder.TIME_SERIES_ROOT_NAME).
-                getElement(TimeSeriesProductBuilder.VARIABLES_LIST_NAME);
-        for (TimeVariable variable : newVariables) {
-            if (!variableListElement.containsAttribute(variable.getName())) {
-                final ProductData isSelected = ProductData.createInstance(Boolean.toString(variable.isSelected()));
-                variableListElement.addAttribute(new MetadataAttribute(variable.getName(), isSelected, false));
-            }
-        }
     }
 
     private List<TimeVariable> getSelectedVariables() {

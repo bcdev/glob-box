@@ -12,7 +12,6 @@ import org.esa.beam.glob.core.timeseries.datamodel.ProductLocation;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeSeries;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeVariable;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
@@ -40,21 +39,12 @@ class TimeSeriesProductWriter extends DimapProductWriter {
 
     @Override
     protected void writeProductNodesImpl() throws IOException {
-        final Object output = getOutput();
-
-        File outputFile = null;
-        if (output instanceof String) {
-            outputFile = new File((String) output);
-        } else if (output instanceof File) {
-            outputFile = (File) output;
-        }
-        initDirs(outputFile);
         final Product tsProduct = getSourceProduct();
         final TimeSeries timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(tsProduct);
         if (timeSeries != null) {
 
             final List<ProductLocation> productLocations = timeSeries.getProductLocations();
-            final MetadataElement metadataRoot = timeSeries.getProduct().getMetadataRoot();
+            final MetadataElement metadataRoot = timeSeries.getTsProduct().getMetadataRoot();
             MetadataElement timeSeriesElement = metadataRoot.getElement(TimeSeriesProductBuilder.TIME_SERIES_ROOT_NAME);
             if (timeSeriesElement != null) {
                 metadataRoot.removeElement(timeSeriesElement);

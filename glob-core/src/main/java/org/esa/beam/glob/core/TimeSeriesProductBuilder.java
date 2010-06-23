@@ -9,9 +9,11 @@ import org.esa.beam.framework.datamodel.ProductManager;
 import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.framework.datamodel.TimeCoding;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeSeries;
+import org.esa.beam.glob.core.timeseries.datamodel.TimeVariable;
 import org.esa.beam.util.ProductUtils;
 
 import java.text.SimpleDateFormat;
+import java.util.List;
 
 /**
  * User: Marco
@@ -47,12 +49,23 @@ public class TimeSeriesProductBuilder {
 
         final Product[] products = productManager.getProducts();
         final String nodeName = refRaster.getName();
+        boolean addedAny = false;
         for (Product product : products) {
-            addSpecifiedBandsOfGivenProductToTimeSeriesProduct(nodeName, tsProduct, product);
+            addedAny |= addSpecifiedBandOfGivenProductToTimeSeriesProduct(nodeName, tsProduct, product);
         }
         final TimeSeries timeSeries = new TimeSeries(tsProduct);
         for (Product product : products) {
-            timeSeries.addProduct(product);
+            if (product.getFileLocation() != null) {
+                timeSeries.addProduct(product);
+            }
+        }
+        if (addedAny) {
+            final List<TimeVariable> list = timeSeries.getTimeVariables();
+            for (TimeVariable timeVariable : list) {
+                if (timeVariable.getName().equals(nodeName)) {
+                    timeVariable.setSelected(true);
+                }
+            }
         }
         TimeSeriesMapper.getInstance().put(tsProduct, timeSeries);
         return timeSeries;
@@ -67,14 +80,14 @@ public class TimeSeriesProductBuilder {
         tsProduct.getMetadataRoot().addElement(timeSeriesRoot);
     }
 
-    private static void addSpecifiedBandsOfGivenProductToTimeSeriesProduct(String nodeName, Product tsProduct,
-                                                                           Product product) {
+    private static boolean addSpecifiedBandOfGivenProductToTimeSeriesProduct(String nodeName, Product tsProduct,
+                                                                             Product product) {
         final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd.HHmmss.SSS");
         if (isProductCompatible(product, tsProduct, nodeName)) {
             final RasterDataNode raster = product.getRasterDataNode(nodeName);
             TimeCoding rasterTimeCoding = raster.getTimeCoding();
             if (rasterTimeCoding == null) {
-                return;
+                return false;
             }
             final ProductData productPath = ProductData.createInstance(product.getFileLocation().getPath());
             MetadataElement productListElement = tsProduct.getMetadataRoot().
@@ -102,7 +115,9 @@ public class TimeSeriesProductBuilder {
             if (tsEndTime == null || rasterEndTime.getAsDate().after(tsEndTime.getAsDate())) {
                 tsProduct.setEndTime(rasterEndTime);
             }
+            return true;
         }
+        return false;
     }
 
     public static boolean isProductCompatible(Product product, Product tsProduct, String rasterName) {

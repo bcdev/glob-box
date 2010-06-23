@@ -43,7 +43,7 @@ public class CreateTimeSeriesFromBandAction extends AbstractVisatAction {
                     timeSeriesName,
                     (RasterDataNode) node,
                     productManager);
-            productManager.addProduct(tsProduct.getProduct());
+            productManager.addProduct(tsProduct.getTsProduct());
         }
     }
 
