@@ -15,7 +15,6 @@ import org.esa.beam.framework.ui.PixelPositionListener;
 import org.esa.beam.framework.ui.application.support.AbstractToolView;
 import org.esa.beam.framework.ui.product.ProductSceneView;
 import org.esa.beam.glob.GlobBox;
-import org.esa.beam.glob.core.TimeSeriesProductBuilder;
 import org.esa.beam.util.StringUtils;
 import org.esa.beam.visat.VisatApp;
 import org.jfree.chart.ChartFactory;
@@ -312,7 +311,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         if (cursorTimeSeries != null) {
             timeSeriesCollection.removeSeries(cursorTimeSeries);
         }
-        if (currentView.getProduct().getProductType().equals(TimeSeriesProductBuilder.TIME_SERIES_PRODUCT_TYPE)) {
+        if (currentView.getProduct().getProductType().equals(org.esa.beam.glob.core.timeseries.datamodel.TimeSeries.TIME_SERIES_PRODUCT_TYPE)) {
             Band[] timeSeriesBands = currentView.getProduct().getBands();
             cursorTimeSeries = computeTimeSeries("cursorTimeSeries", timeSeriesBands,
                                                  pixelX, pixelY, currentLevel);

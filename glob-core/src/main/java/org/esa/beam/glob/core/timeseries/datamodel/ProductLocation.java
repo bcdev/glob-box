@@ -1,5 +1,9 @@
 package org.esa.beam.glob.core.timeseries.datamodel;
 
+import org.esa.beam.framework.datamodel.Product;
+
+import java.util.List;
+
 /**
  * User: Thomas Storm
  * Date: 22.06.2010
@@ -21,5 +25,9 @@ public class ProductLocation {
 
     public ProductLocationType getProductLocationType() {
         return productLocationType;
+    }
+
+    public List<Product> findProducts() {
+        return this.productLocationType.findProducts( path );
     }
 }

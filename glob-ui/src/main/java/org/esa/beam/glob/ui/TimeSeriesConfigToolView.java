@@ -11,9 +11,6 @@ import org.esa.beam.framework.ui.command.Command;
 import org.esa.beam.framework.ui.product.ProductSceneView;
 import org.esa.beam.glob.core.TimeSeriesMapper;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeSeries;
-import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesChangeEvent;
-import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesEventType;
-import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesListener;
 import org.esa.beam.visat.VisatApp;
 
 import javax.swing.BorderFactory;
@@ -325,7 +322,7 @@ public class TimeSeriesConfigToolView extends AbstractToolView {
                 final int minIndex = selectionModel.getMinSelectionIndex();
                 if( minIndex > 0 ) {
                     final Product removedProduct = (Product) table.getModel().getValueAt(minIndex, 0);
-                    timeSeries.removeProduct(removedProduct);
+//                    timeSeries.removeProduct(removedProduct);
                 }
             }
         });
@@ -396,12 +393,12 @@ public class TimeSeriesConfigToolView extends AbstractToolView {
     private class ProductListTableModel extends AbstractTableModel {
 
         private ProductListTableModel() {
-            timeSeries.addListener(new TimeSeriesListener() {
-                @Override
-                public void timeSeriesChanged(TimeSeriesChangeEvent event) {
-                    final TimeSeriesEventType eventType = event.getEventType();
-                    switch (eventType) {
-                        case PRODUCT_REMOVED:
+//            timeSeries.addListener(new TimeSeriesListener() {
+//                @Override
+//                public void timeSeriesChanged(TimeSeriesChangeEvent event) {
+//                    final TimeSeriesEventType eventType = event.getEventType();
+//                    switch (eventType) {
+//                        case PRODUCT_REMOVED:
 //                            Product removedProduct = (Product)event.getOldValue();
 //                            for( int i = 0; i < getRowCount(); i++ ) {
 //                                if( getValueAt( i, 0 ).toString().equals( removedProduct.getName() ) ) {
@@ -409,13 +406,13 @@ public class TimeSeriesConfigToolView extends AbstractToolView {
 //                                }
 //                            }
 //                            break;
-                            fireTableDataChanged();
-                        case PRODUCT_ADDED:
-                            fireTableDataChanged();
-                            break;
-                    }
-                }
-            });
+//                            fireTableDataChanged();
+//                        case PRODUCT_ADDED:
+//                            fireTableDataChanged();
+//                            break;
+//                    }
+//                }
+//            });
         }
 
         @Override

@@ -5,8 +5,8 @@ import org.esa.beam.framework.datamodel.Product;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 /**
  * User: Thomas Storm
@@ -17,7 +17,7 @@ public enum ProductLocationType {
 
     FILE{
         @Override
-        public Collection<Product> findProducts(String path) {
+        public List<Product> findProducts(String path) {
             try {
                 final Product product = ProductIO.readProduct(path);
                 if (product != null) {
@@ -31,7 +31,7 @@ public enum ProductLocationType {
     DIRECTORY,
     DIRECTORY_REC;
 
-    public Collection<Product> findProducts(String path) {
+    public List<Product> findProducts(String path) {
         return Collections.emptyList();
     }
 }

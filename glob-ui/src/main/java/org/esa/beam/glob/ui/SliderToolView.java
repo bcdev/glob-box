@@ -16,7 +16,7 @@ import org.esa.beam.framework.ui.product.ProductSceneImage;
 import org.esa.beam.framework.ui.product.ProductSceneView;
 import org.esa.beam.glayer.RasterImageLayerType;
 import org.esa.beam.glevel.BandImageMultiLevelSource;
-import org.esa.beam.glob.core.TimeSeriesProductBuilder;
+import org.esa.beam.glob.core.timeseries.datamodel.TimeSeries;
 import org.esa.beam.visat.VisatApp;
 
 import javax.swing.JComponent;
@@ -28,7 +28,6 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.InternalFrameAdapter;
 import javax.swing.event.InternalFrameEvent;
 import java.awt.Container;
-import java.beans.PropertyVetoException;
 import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
 import java.util.Hashtable;
@@ -198,7 +197,7 @@ public class SliderToolView extends AbstractToolView {
                 final RasterDataNode viewRaster = view.getRaster();
                 final String viewProductType = viewRaster.getProduct().getProductType();
                 if (getCurrentView() != view && viewProductType.equals(
-                        TimeSeriesProductBuilder.TIME_SERIES_PRODUCT_TYPE)) {
+                        TimeSeries.TIME_SERIES_PRODUCT_TYPE)) {
                     setCurrentView(view);
                 }
             }

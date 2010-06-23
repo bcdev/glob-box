@@ -12,8 +12,6 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.WeakHashMap;
 
-import static org.esa.beam.glob.core.TimeSeriesProductBuilder.*;
-
 /**
  * User: Thomas Storm
  * Date: 22.06.2010
@@ -31,8 +29,8 @@ class TimeSeriesProductReader extends DimapProductReader {
     @Override
     protected Product readProductNodesImpl() throws IOException {
         final Product product = super.readProductNodesImpl();
-        if (product.getProductType().equals(TIME_SERIES_PRODUCT_TYPE)) {
-            timeSeriesProduct = new TimeSeries(product);
+        if (product.getProductType().equals(TimeSeries.TIME_SERIES_PRODUCT_TYPE)) {
+            timeSeriesProduct = TimeSeries.create(product);
         }
         return product;
     }

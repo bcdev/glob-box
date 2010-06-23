@@ -12,12 +12,17 @@ import org.esa.beam.framework.datamodel.ProductNode;
 import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.framework.ui.ModalDialog;
 import org.esa.beam.framework.ui.command.CommandEvent;
-import org.esa.beam.glob.core.TimeSeriesProductBuilder;
+import org.esa.beam.glob.core.timeseries.datamodel.ProductLocation;
+import org.esa.beam.glob.core.timeseries.datamodel.ProductLocationType;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeSeries;
+import org.esa.beam.glob.core.timeseries.datamodel.TimeVariable;
 import org.esa.beam.visat.VisatApp;
 import org.esa.beam.visat.actions.AbstractVisatAction;
 
 import java.awt.Dimension;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * User: Thomas Storm
@@ -39,10 +44,15 @@ public class CreateTimeSeriesFromBandAction extends AbstractVisatAction {
             }
             final String timeSeriesName = model.getName();
             final ProductManager productManager = app.getProductManager();
-            final TimeSeries tsProduct = TimeSeriesProductBuilder.createTimeSeriesProductFromProductsView(
+            List<ProductLocation> productLocations = new ArrayList<ProductLocation>();
+            for (Product product : productManager.getProducts()) {
+                productLocations.add(new ProductLocation(ProductLocationType.FILE, product.getFileLocation().getPath()));
+            }
+            List<TimeVariable> variables = Arrays.asList(new TimeVariable(node.getName(), true));
+            final TimeSeries tsProduct = TimeSeries.create(
                     timeSeriesName,
-                    (RasterDataNode) node,
-                    productManager);
+                    productLocations,
+                    variables);
             productManager.addProduct(tsProduct.getTsProduct());
         }
     }
