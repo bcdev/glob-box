@@ -5,11 +5,15 @@ import com.jidesoft.swing.CheckBoxList;
 import com.jidesoft.swing.CheckBoxListSelectionModel;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeVariable;
 
+import javax.swing.DefaultListCellRenderer;
+import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import java.awt.Component;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,6 +35,19 @@ class VariableSelectionPane extends JPanel {
         tableLayout.setTableWeightX(1.0);
         setLayout(tableLayout);
         final CheckBoxList variableList = new CheckBoxList(model);
+        variableList.setCellRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected,
+                                                          boolean cellHasFocus) {
+                JLabel label = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                if (value instanceof TimeVariable) {
+                    TimeVariable variable = (TimeVariable) value;
+                    label.setText(variable.getName());
+                }
+                return label;
+
+            }
+        });
         variableList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         final CheckBoxListSelectionModel selectionModel = variableList.getCheckBoxListSelectionModel();
         variableList.setCheckBoxListSelectedIndices(getSelectedIndices(model));
