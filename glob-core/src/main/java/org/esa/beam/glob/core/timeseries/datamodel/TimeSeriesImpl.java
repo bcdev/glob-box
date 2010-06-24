@@ -8,6 +8,7 @@ import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.framework.datamodel.TimeCoding;
+import org.esa.beam.util.Guardian;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.StringUtils;
 
@@ -244,10 +245,11 @@ class TimeSeriesImpl implements TimeSeries {
         final SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
         TimeCoding timeCoding = product.getTimeCoding();
         final ProductData.UTC startTime = timeCoding.getStartTime();
-        String timeString = dateFormat.format(startTime.getAsDate());
-
-        productList.add(product);
-        productTimeMap.put(timeString, product);
+        if (startTime != null) {
+            String timeString = dateFormat.format(startTime.getAsDate());
+            productList.add(product);
+            productTimeMap.put(timeString, product);
+        }
     }
 
     private void addToVariableList(Product product) {
@@ -298,23 +300,28 @@ class TimeSeriesImpl implements TimeSeries {
 
             final ProductData.UTC rasterStartTime = rasterTimeCoding.getStartTime();
             final ProductData.UTC rasterEndTime = rasterTimeCoding.getEndTime();
-            final Band band = tsProduct.addBand(nodeName + "_" + dateFormat.format(rasterStartTime.getAsDate()),
-                                                raster.getDataType());
-            band.setSourceImage(raster.getSourceImage());
-            ProductUtils.copyRasterDataNodeProperties(raster, band);
-            // todo copy also referenced band in valid pixel expression
-            band.setValidPixelExpression(null);
-            band.setTimeCoding(new DefaultTimeCoding(rasterStartTime, rasterEndTime,
-                                                     raster.getSceneRasterHeight()));
-            ProductData.UTC tsStartTime = tsProduct.getStartTime();
-            if (tsStartTime == null || rasterStartTime.getAsDate().before(tsStartTime.getAsDate())) {
-                tsProduct.setStartTime(rasterStartTime);
+            Guardian.assertNotNull("rasterStartTime", rasterStartTime);
+            final String bandName = nodeName + "_" + dateFormat.format(rasterStartTime.getAsDate());
+            if (!tsProduct.containsBand(bandName)) {
+                final Band band = tsProduct.addBand(bandName, raster.getDataType());
+                band.setSourceImage(raster.getSourceImage());
+                ProductUtils.copyRasterDataNodeProperties(raster, band);
+                // todo copy also referenced band in valid pixel expression
+                band.setValidPixelExpression(null);
+                band.setTimeCoding(new DefaultTimeCoding(rasterStartTime, rasterEndTime,
+                                                         raster.getSceneRasterHeight()));
+                ProductData.UTC tsStartTime = tsProduct.getStartTime();
+                if (tsStartTime == null || rasterStartTime.getAsDate().before(tsStartTime.getAsDate())) {
+                    tsProduct.setStartTime(rasterStartTime);
+                }
+                ProductData.UTC tsEndTime = tsProduct.getEndTime();
+                if (rasterEndTime != null) {
+                    if (tsEndTime == null || rasterEndTime.getAsDate().after(tsEndTime.getAsDate())) {
+                        tsProduct.setEndTime(rasterEndTime);
+                    }
+                }
+                return true;
             }
-            ProductData.UTC tsEndTime = tsProduct.getEndTime();
-            if (tsEndTime == null || rasterEndTime.getAsDate().after(tsEndTime.getAsDate())) {
-                tsProduct.setEndTime(rasterEndTime);
-            }
-            return true;
         }
         return false;
     }
