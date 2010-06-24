@@ -2,6 +2,7 @@ package org.esa.beam.glob.ui;
 
 import com.bc.ceres.swing.TableLayout;
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductNode;
 import org.esa.beam.framework.ui.assistant.AbstractAssistantPage;
 import org.esa.beam.framework.ui.assistant.AssistantPage;
 import org.esa.beam.framework.ui.assistant.AssistantPane;
@@ -24,24 +25,14 @@ public abstract class AbstractTimeSeriesAssistantAction extends AbstractVisatAct
     @Override
     public void actionPerformed(CommandEvent event) {
         super.actionPerformed(event);
-        final TimeSeriesAssistantModel assistantModel = new TimeSeriesAssistantModel();
-        createModel();
+        final TimeSeriesAssistantModel assistantModel = createModel();
         final AssistantPane assistant = new AssistantPane(getAppContext().getApplicationWindow(), "New Time Series");
         assistant.show(new NewTimeSeriesAssistantPage1(assistantModel));
-
-        final ProductLocationsPaneModel locationsModel = assistantModel.getProductLocationsModel();
-        final VariableSelectionPaneModel variablesModel = assistantModel.getVariableSelectionModel();
-        final TimeSeries timeSeries = TimeSeriesFactory.create(assistantModel.getTimeSeriesName(),
-                                                               locationsModel.getProductLocations(),
-                                                               variablesModel.getSelectedVariableNames());
-        getAppContext().getProductManager().addProduct(timeSeries.getTsProduct());
-
-
     }
 
     protected abstract TimeSeriesAssistantModel createModel();
 
-    private abstract static class AbstractTimeSeriesAssistantPage extends AbstractAssistantPage {
+    private abstract class AbstractTimeSeriesAssistantPage extends AbstractAssistantPage {
 
         private TimeSeriesAssistantModel assistantModel;
 
@@ -59,9 +50,25 @@ public abstract class AbstractTimeSeriesAssistantAction extends AbstractVisatAct
         protected TimeSeriesAssistantModel getAssistantModel() {
             return assistantModel;
         }
+
+        @Override
+        public boolean performFinish() {
+            addTimeSeriesProductToVisat(getAssistantModel());
+            return true;
+
+        }
+
+        private void addTimeSeriesProductToVisat(TimeSeriesAssistantModel assistantModel) {
+            final ProductLocationsPaneModel locationsModel = assistantModel.getProductLocationsModel();
+            final VariableSelectionPaneModel variablesModel = assistantModel.getVariableSelectionModel();
+            final TimeSeries timeSeries = TimeSeriesFactory.create(assistantModel.getTimeSeriesName(),
+                                                                   locationsModel.getProductLocations(),
+                                                                   variablesModel.getSelectedVariableNames());
+            getAppContext().getProductManager().addProduct(timeSeries.getTsProduct());
+        }
     }
 
-    private static class NewTimeSeriesAssistantPage1 extends AbstractTimeSeriesAssistantPage {
+    private class NewTimeSeriesAssistantPage1 extends AbstractTimeSeriesAssistantPage {
 
         protected NewTimeSeriesAssistantPage1(TimeSeriesAssistantModel model) {
             super("Define Time Series Sources", model);
@@ -103,7 +110,7 @@ public abstract class AbstractTimeSeriesAssistantAction extends AbstractVisatAct
 
     }
 
-    private static class NewTimeSeriesAssistantPage2 extends AbstractTimeSeriesAssistantPage {
+    private class NewTimeSeriesAssistantPage2 extends AbstractTimeSeriesAssistantPage {
 
         protected NewTimeSeriesAssistantPage2(TimeSeriesAssistantModel assistantModel) {
             super("Select Variables", assistantModel);
@@ -112,7 +119,9 @@ public abstract class AbstractTimeSeriesAssistantAction extends AbstractVisatAct
         @Override
         protected Component createPageComponent() {
             final VariableSelectionPaneModel variableModel = getAssistantModel().getVariableSelectionModel();
-            variableModel.set(getVariables(getAssistantModel().getProductLocationsModel()));
+            if(variableModel.getSize() == 0) {
+                variableModel.set(getVariables(getAssistantModel().getProductLocationsModel()));
+            }
             return new VariableSelectionPane(variableModel);
         }
 
@@ -144,14 +153,14 @@ public abstract class AbstractTimeSeriesAssistantAction extends AbstractVisatAct
         @Override
         public AssistantPage getNextPage() {
             final TimeSeriesAssistantModel model = getAssistantModel();
-            final VariableSelectionPaneModel variableModel = model.getVariableSelectionModel();
-            for (int i = 0; i < variableModel.getSize(); i++) {
-                final Variable variable = variableModel.getElementAt(i);
-                if (variable.isSelected()) {
-                    model.setTimeSeriesName("TimeSeries_" + variable.getName());
-                    break;
+                final VariableSelectionPaneModel variableModel = model.getVariableSelectionModel();
+                for (int i = 0; i < variableModel.getSize(); i++) {
+                    final Variable variable = variableModel.getElementAt(i);
+                    if (variable.isSelected()) {
+                        model.setTimeSeriesName("TimeSeries_" + variable.getName());
+                        break;
+                    }
                 }
-            }
             return new NewTimeSeriesAssistantPage3(model);
         }
 
@@ -175,7 +184,7 @@ public abstract class AbstractTimeSeriesAssistantAction extends AbstractVisatAct
 
     }
 
-    private static class NewTimeSeriesAssistantPage3 extends AbstractTimeSeriesAssistantPage {
+    private class NewTimeSeriesAssistantPage3 extends AbstractTimeSeriesAssistantPage {
 
         private JTextField field;
 
@@ -202,16 +211,22 @@ public abstract class AbstractTimeSeriesAssistantAction extends AbstractVisatAct
         }
 
         @Override
-        public boolean canFinish() {
-            return !field.getText().isEmpty();
+        public boolean validatePage() {
+            if(super.validatePage()) {
+                final String name = field.getText();
+                if(!name.isEmpty() && ProductNode.isValidNodeName(name)) {
+                    getAssistantModel().setTimeSeriesName(name);
+                    return true;
+                }
+            }
+            return false;
         }
 
         @Override
-        public boolean performFinish() {
-            getAssistantModel().setTimeSeriesName(field.getText());
+        public boolean canFinish() {
             return true;
-
         }
+
     }
 
 }
