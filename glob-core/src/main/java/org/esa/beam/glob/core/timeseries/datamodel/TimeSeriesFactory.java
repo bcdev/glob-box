@@ -29,8 +29,8 @@ public class TimeSeriesFactory {
      *
      * @return a time series wrapping the given product
      */
-    public static ITimeSeries create(Product product) {
-        final TimeSeries timeSeries = new TimeSeries(product);
+    public static TimeSeries create(Product product) {
+        final TimeSeriesImpl timeSeries = new TimeSeriesImpl(product);
         TimeSeriesMapper.getInstance().put(product, timeSeries);
         return timeSeries;
     }
@@ -45,8 +45,8 @@ public class TimeSeriesFactory {
      *
      * @return a time series
      */
-    public static ITimeSeries create(String name, List<ProductLocation> productLocations,
-                                     List<TimeVariable> variables) {
+    public static TimeSeries create(String name, List<ProductLocation> productLocations,
+                                    List<TimeVariable> variables) {
         Guardian.assertNotNull("productLocations", productLocations);
         Guardian.assertGreaterThan("productLocations.size()", productLocations.size(), 0);
         Guardian.assertNotNull("variables", variables);
@@ -62,14 +62,14 @@ public class TimeSeriesFactory {
             return null;
         }
         Product refProduct = productList.get(0);
-        final Product tsProduct = new Product(name, TimeSeries.TIME_SERIES_PRODUCT_TYPE,
+        final Product tsProduct = new Product(name, TimeSeriesImpl.TIME_SERIES_PRODUCT_TYPE,
                                               refProduct.getSceneRasterWidth(),
                                               refProduct.getSceneRasterHeight());
         tsProduct.setDescription("A time series product");
         ProductUtils.copyGeoCoding(refProduct, tsProduct);
 
 
-        final TimeSeries timeSeries = new TimeSeries(tsProduct, productLocations, variables);
+        final TimeSeriesImpl timeSeries = new TimeSeriesImpl(tsProduct, productLocations, variables);
         for (TimeVariable timeVariable : variables) {
             for (Product product : timeSeries.getProducts()) {
                 addSpecifiedBandOfGivenProductToTimeSeriesProduct(timeVariable.getName(), tsProduct, product);
@@ -81,7 +81,7 @@ public class TimeSeriesFactory {
 
     private static boolean addSpecifiedBandOfGivenProductToTimeSeriesProduct(String nodeName, Product tsProduct,
                                                                              Product product) {
-        final SimpleDateFormat dateFormat = new SimpleDateFormat(TimeSeries.DATE_FORMAT);
+        final SimpleDateFormat dateFormat = new SimpleDateFormat(TimeSeriesImpl.DATE_FORMAT);
         if (isProductCompatible(product, tsProduct, nodeName)) {
             final RasterDataNode raster = product.getRasterDataNode(nodeName);
             TimeCoding rasterTimeCoding = raster.getTimeCoding();
