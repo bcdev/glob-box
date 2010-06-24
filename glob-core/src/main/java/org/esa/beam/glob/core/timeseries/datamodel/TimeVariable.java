@@ -3,8 +3,15 @@ package org.esa.beam.glob.core.timeseries.datamodel;
 public class TimeVariable {
 
     private final String name;
-    private boolean isSelected;
+    private final boolean isSelected;
 
+    /**
+     * Constructor setting the name of the time variable and setting the selection state finally (!) to false.
+     * Use <code>ITimeSeries.setVariableSelected( String, boolean )</code> to re-set selection state
+     *
+     * @deprecated do not use, use <code>TimeVariable(String, boolean)</code> instead
+     */
+    @Deprecated
     public TimeVariable(String name) {
         this(name, false);
     }
@@ -22,10 +29,13 @@ public class TimeVariable {
         return isSelected;
     }
 
+    /**
+     * does nothing
+     *
+     * @deprecated do not use, use <code>ITimeSeries.setVariableSelected( String, boolean )</code> to re-set selection state
+     */
+    @Deprecated
     public void setSelected(boolean selected) {
-        if (isSelected != selected) {
-            isSelected = selected;
-        }
     }
 
     public boolean fitsToPattern(String name) {

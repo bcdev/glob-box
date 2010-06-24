@@ -23,13 +23,20 @@ import java.util.Map;
 public class TimeSeries implements ITimeSeries {
 
     public static final String TIME_SERIES_PRODUCT_TYPE = "org.esa.beam.glob.timeseries";
-    
+
     private static final String TIME_SERIES_ROOT_NAME = "TIME_SERIES";
     private static final String PRODUCT_LOCATIONS = "PRODUCT_LOCATIONS";
-    private static final String VARIABLES = "VARIABLES";
+    private static final String VARIABLE_NAME = "name";
+    private static final String VARIABLE_SELECTION = "selection";
+    private static final String PL_PATH = "path";
+    private static final String PL_TYPE = "type";
 
+    static final String DATE_FORMAT = "yyyyMMdd.HHmmss.SSS";
+
+    private static final String VARIABLES = "VARIABLES";
     private Product product;
     private List<Product> productList;
+
     private Map<String, Product> productTimeMap;
 
     TimeSeries(Product product) {
@@ -72,7 +79,7 @@ public class TimeSeries implements ITimeSeries {
         }
         return null;
     }
-    
+
     public Product getTsProduct() {
         return product;
     }
@@ -87,8 +94,8 @@ public class TimeSeries implements ITimeSeries {
         MetadataElement[] productElems = productListElem.getElements();
         List<ProductLocation> productLocations = new ArrayList<ProductLocation>(productElems.length);
         for (MetadataElement productElem : productElems) {
-            String path = productElem.getAttributeString("path");
-            String type = productElem.getAttributeString("type");
+            String path = productElem.getAttributeString(PL_PATH);
+            String type = productElem.getAttributeString(PL_TYPE);
             productLocations.add(new ProductLocation(ProductLocationType.valueOf(type), path));
         }
         return productLocations;
@@ -104,8 +111,8 @@ public class TimeSeries implements ITimeSeries {
         MetadataElement[] variableElems = variablesListElem.getElements();
         List<TimeVariable> variables = new ArrayList<TimeVariable>();
         for (MetadataElement varElem : variableElems) {
-            String name = varElem.getAttributeString("name");
-            String selection = varElem.getAttributeString("selection");
+            String name = varElem.getAttributeString(VARIABLE_NAME);
+            String selection = varElem.getAttributeString(VARIABLE_SELECTION);
             variables.add(new TimeVariable(name, Boolean.parseBoolean(selection)));
         }
         return variables;
@@ -120,7 +127,7 @@ public class TimeSeries implements ITimeSeries {
         }
     }
 
-    public void removeProductLocation( ProductLocation productLocation ) {
+    public void removeProductLocation(ProductLocation productLocation) {
         // remove metadata
         MetadataElement productLocationsElement = product.getMetadataRoot().
                 getElement(TIME_SERIES_ROOT_NAME).
@@ -128,12 +135,12 @@ public class TimeSeries implements ITimeSeries {
         final MetadataElement[] productLocations = productLocationsElement.getElements();
         MetadataElement removeElem = null;
         for (MetadataElement elem : productLocations) {
-            if(elem.getAttributeString( "path" ).equals( productLocation.getPath() )) {
+            if (elem.getAttributeString(PL_PATH).equals(productLocation.getPath())) {
                 removeElem = elem;
                 break;
             }
         }
-        productLocationsElement.removeElement( removeElem );
+        productLocationsElement.removeElement(removeElem);
         // remove variables for this productLocation
         updateAutogrouping();
 
@@ -146,7 +153,7 @@ public class TimeSeries implements ITimeSeries {
     private void handleProductLocations(List<ProductLocation> productLocations, boolean addToMetadata) {
         for (ProductLocation productLocation : productLocations) {
             if (addToMetadata) {
-                addProductLocationMetadata( productLocation );
+                addProductLocationMetadata(productLocation);
             }
             for (Product aProduct : productLocation.findProducts()) {
                 storeProductInternally(aProduct);
@@ -156,15 +163,15 @@ public class TimeSeries implements ITimeSeries {
             }
         }
     }
-    
-    public void setVariableSelected( String variableName, boolean selected ) {
+
+    public void setVariableSelected(String variableName, boolean selected) {
         MetadataElement variableListElement = product.getMetadataRoot().
                 getElement(TIME_SERIES_ROOT_NAME).
                 getElement(VARIABLES);
         final MetadataElement[] variables = variableListElement.getElements();
         for (MetadataElement elem : variables) {
-            if(elem.getAttributeString( "name" ).equals( variableName )) {
-                elem.setAttributeString( "selection", String.valueOf(selected));
+            if (elem.getAttributeString(VARIABLE_NAME).equals(variableName)) {
+                elem.setAttributeString(VARIABLE_SELECTION, String.valueOf(selected));
             }
         }
     }
@@ -199,13 +206,13 @@ public class TimeSeries implements ITimeSeries {
         int length = productLocationsElement.getElements().length + 1;
         MetadataElement elem = new MetadataElement(
                 PRODUCT_LOCATIONS + "." + Integer.toString(length));
-        elem.addAttribute(new MetadataAttribute("path", productPath, true));
-        elem.addAttribute(new MetadataAttribute("type", productType, true));
+        elem.addAttribute(new MetadataAttribute(PL_PATH, productPath, true));
+        elem.addAttribute(new MetadataAttribute(PL_TYPE, productType, true));
         productLocationsElement.addElement(elem);
     }
 
     private void storeProductInternally(Product product) {
-        final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd.HHmmss.SSS");
+        final SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
         TimeCoding timeCoding = product.getTimeCoding();
         final ProductData.UTC startTime = timeCoding.getStartTime();
         String timeString = dateFormat.format(startTime.getAsDate());
@@ -225,7 +232,7 @@ public class TimeSeries implements ITimeSeries {
                 varExist |= variable.fitsToPattern(bandName);
             }
             if (!varExist) {
-                newVariables.add(new TimeVariable(bandName));
+                newVariables.add(new TimeVariable(bandName, false));
             }
         }
         for (TimeVariable variable : newVariables) {
@@ -245,16 +252,9 @@ public class TimeSeries implements ITimeSeries {
         int length = variableListElement.getElements().length + 1;
         MetadataElement elem = new MetadataElement(
                 VARIABLES + "." + Integer.toString(length));
-        elem.addAttribute(new MetadataAttribute("name", variableName, true));
-        elem.addAttribute(new MetadataAttribute("selection", isSelected, true));
+        elem.addAttribute(new MetadataAttribute(VARIABLE_NAME, variableName, true));
+        elem.addAttribute(new MetadataAttribute(VARIABLE_SELECTION, isSelected, true));
         variableListElement.addElement(elem);
     }
 
-    //getVariables                                -- DONE
-    //getProductLocations                         -- DONE
-    //addProductLocation                          --> add metadata, maybe add unselected variables, add to internal model -- DONE
-    //removeProductLocation                       --> remove metadata, remove from internal model -- DONE | maybe remove variables UNDONE
-    //setVariableSelected(variableName, boolean)  --> change metadata -- DONE
-    //create (from reader: product)               --> set variables, set productLocations, add productLocations to internal model
-    //create (from wizard: name, pls, vars)       --> create metadata, set variables, set productLocations, add productLocations to internal model
 }

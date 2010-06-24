@@ -24,8 +24,9 @@ public class TimeSeriesFactory {
     /**
      * Creates a new ITimeSeries from a given time series product. Since this
      * product is already a complete time series, this method should only be called by the reader
-     * 
+     *
      * @param product a time series product
+     *
      * @return a time series wrapping the given product
      */
     public static ITimeSeries create(Product product) {
@@ -38,27 +39,29 @@ public class TimeSeriesFactory {
      * Creates a new TimeSeries with a given name, a list of product locations and a list of variables (which are
      * placeholders for bands)
      *
-     * @param name a name for the time series
+     * @param name             a name for the time series
      * @param productLocations locations where to find the data the time series is based on
-     * @param variables the variables the time series is based on
+     * @param variables        the variables the time series is based on
+     *
      * @return a time series
      */
-    public static ITimeSeries create( String name, List<ProductLocation> productLocations, List<TimeVariable> variables ) {
-        Guardian.assertNotNull( "productLocations", productLocations );
-        Guardian.assertGreaterThan( "productLocations.size()", productLocations.size(), 0 );
-        Guardian.assertNotNull( "variables", variables );
-        Guardian.assertGreaterThan( "variables.size()", variables.size(), 0 );
-        Guardian.assertNotNullOrEmpty( "name", name );
+    public static ITimeSeries create(String name, List<ProductLocation> productLocations,
+                                     List<TimeVariable> variables) {
+        Guardian.assertNotNull("productLocations", productLocations);
+        Guardian.assertGreaterThan("productLocations.size()", productLocations.size(), 0);
+        Guardian.assertNotNull("variables", variables);
+        Guardian.assertGreaterThan("variables.size()", variables.size(), 0);
+        Guardian.assertNotNullOrEmpty("name", name);
 
         // todo get ref product in a smarter way
         final List<Product> productList = new ArrayList<Product>();
         for (ProductLocation productLocation : productLocations) {
             productList.addAll(productLocation.findProducts());
         }
-        if( productList.isEmpty() ) {
+        if (productList.isEmpty()) {
             return null;
         }
-        Product refProduct = productList.get( 0 );
+        Product refProduct = productList.get(0);
         final Product tsProduct = new Product(name, TimeSeries.TIME_SERIES_PRODUCT_TYPE,
                                               refProduct.getSceneRasterWidth(),
                                               refProduct.getSceneRasterHeight());
@@ -78,7 +81,7 @@ public class TimeSeriesFactory {
 
     private static boolean addSpecifiedBandOfGivenProductToTimeSeriesProduct(String nodeName, Product tsProduct,
                                                                              Product product) {
-        final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd.HHmmss.SSS");
+        final SimpleDateFormat dateFormat = new SimpleDateFormat(TimeSeries.DATE_FORMAT);
         if (isProductCompatible(product, tsProduct, nodeName)) {
             final RasterDataNode raster = product.getRasterDataNode(nodeName);
             TimeCoding rasterTimeCoding = raster.getTimeCoding();
