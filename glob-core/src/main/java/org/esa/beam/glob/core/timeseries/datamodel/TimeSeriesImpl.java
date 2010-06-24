@@ -32,27 +32,32 @@ class TimeSeriesImpl implements TimeSeries {
     static final String DATE_FORMAT = "yyyyMMdd.HHmmss.SSS";
 
     private static final String VARIABLES = "VARIABLES";
-    private Product product;
+    private Product tsProduct;
     private List<Product> productList;
 
     private Map<String, Product> productTimeMap;
 
-    TimeSeriesImpl(Product product) {
-        init(product);
+    TimeSeriesImpl(Product tsProduct) {
+        init(tsProduct);
         handleProductLocations(getProductLocations(), false);
         updateAutogrouping();
     }
 
-    TimeSeriesImpl(Product product, List<ProductLocation> productLocations, List<TimeVariable> variables) {
-        init(product);
+    TimeSeriesImpl(Product tsProduct, List<ProductLocation> productLocations, List<String> variableNames) {
+        init(tsProduct);
         handleProductLocations(productLocations, true);
-        for (TimeVariable variable : variables) {
-            setVariableSelected(variable.getName(), variable.isSelected());
+        for (String variable : variableNames) {
+            setVariableSelected(variable, true);
+            for (Product product : productList) {
+                TimeSeriesFactory.addSpecifiedBandOfGivenProductToTimeSeriesProduct(variable,
+                                                                                    tsProduct,
+                                                                                    product);
+            }
         }
     }
 
     private void init(Product product) {
-        this.product = product;
+        this.tsProduct = product;
         productList = new ArrayList<Product>();
         productTimeMap = new HashMap<String, Product>();
         createTimeSeriesMetadataStructure(product);
@@ -80,11 +85,11 @@ class TimeSeriesImpl implements TimeSeries {
     }
 
     public Product getTsProduct() {
-        return product;
+        return tsProduct;
     }
 
     public List<ProductLocation> getProductLocations() {
-        return getProductLocations(product);
+        return getProductLocations(tsProduct);
     }
 
     private static List<ProductLocation> getProductLocations(Product tsProduct) {
@@ -101,7 +106,7 @@ class TimeSeriesImpl implements TimeSeries {
     }
 
     public List<TimeVariable> getTimeVariables() {
-        return getTimeVariables(product);
+        return getTimeVariables(tsProduct);
     }
 
     private static List<TimeVariable> getTimeVariables(Product tsProduct) {
@@ -128,7 +133,7 @@ class TimeSeriesImpl implements TimeSeries {
 
     public void removeProductLocation(ProductLocation productLocation) {
         // remove metadata
-        MetadataElement productLocationsElement = product.getMetadataRoot().
+        MetadataElement productLocationsElement = tsProduct.getMetadataRoot().
                 getElement(TIME_SERIES_ROOT_NAME).
                 getElement(PRODUCT_LOCATIONS);
         final MetadataElement[] productLocations = productLocationsElement.getElements();
@@ -164,7 +169,7 @@ class TimeSeriesImpl implements TimeSeries {
     }
 
     public void setVariableSelected(String variableName, boolean selected) {
-        MetadataElement variableListElement = product.getMetadataRoot().
+        MetadataElement variableListElement = tsProduct.getMetadataRoot().
                 getElement(TIME_SERIES_ROOT_NAME).
                 getElement(VARIABLES);
         final MetadataElement[] variables = variableListElement.getElements();
@@ -181,7 +186,7 @@ class TimeSeriesImpl implements TimeSeries {
         for (int i = 0; i < autoGroupings.length; i++) {
             autoGroupings[i] = variables.get(i).getName();
         }
-        product.setAutoGrouping(StringUtils.join(autoGroupings, ":"));
+        tsProduct.setAutoGrouping(StringUtils.join(autoGroupings, ":"));
 
     }
 
@@ -197,7 +202,7 @@ class TimeSeriesImpl implements TimeSeries {
     }
 
     private void addProductLocationMetadata(ProductLocation productLocation) {
-        MetadataElement productLocationsElement = product.getMetadataRoot().
+        MetadataElement productLocationsElement = tsProduct.getMetadataRoot().
                 getElement(TIME_SERIES_ROOT_NAME).
                 getElement(PRODUCT_LOCATIONS);
         ProductData productPath = ProductData.createInstance(productLocation.getPath());
@@ -243,7 +248,7 @@ class TimeSeriesImpl implements TimeSeries {
     }
 
     private void addVariableToMetadata(TimeVariable variable) {
-        MetadataElement variableListElement = product.getMetadataRoot().
+        MetadataElement variableListElement = tsProduct.getMetadataRoot().
                 getElement(TIME_SERIES_ROOT_NAME).
                 getElement(VARIABLES);
         final ProductData variableName = ProductData.createInstance(variable.getName());

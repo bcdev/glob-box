@@ -41,16 +41,16 @@ public class TimeSeriesFactory {
      *
      * @param name             a name for the time series
      * @param productLocations locations where to find the data the time series is based on
-     * @param variables        the variables the time series is based on
+     * @param variableNames    the variables the time series is based on
      *
      * @return a time series
      */
     public static TimeSeries create(String name, List<ProductLocation> productLocations,
-                                    List<TimeVariable> variables) {
+                                    List<String> variableNames) {
         Guardian.assertNotNull("productLocations", productLocations);
         Guardian.assertGreaterThan("productLocations.size()", productLocations.size(), 0);
-        Guardian.assertNotNull("variables", variables);
-        Guardian.assertGreaterThan("variables.size()", variables.size(), 0);
+        Guardian.assertNotNull("variables", variableNames);
+        Guardian.assertGreaterThan("variables.size()", variableNames.size(), 0);
         Guardian.assertNotNullOrEmpty("name", name);
 
         // todo get ref product in a smarter way
@@ -69,18 +69,18 @@ public class TimeSeriesFactory {
         ProductUtils.copyGeoCoding(refProduct, tsProduct);
 
 
-        final TimeSeriesImpl timeSeries = new TimeSeriesImpl(tsProduct, productLocations, variables);
-        for (TimeVariable timeVariable : variables) {
-            for (Product product : timeSeries.getProducts()) {
-                addSpecifiedBandOfGivenProductToTimeSeriesProduct(timeVariable.getName(), tsProduct, product);
-            }
-        }
+        final TimeSeries timeSeries = new TimeSeriesImpl(tsProduct, productLocations, variableNames);
+//        for (TimeVariable timeVariable : variables) {
+//            for (Product product : timeSeries.getProducts()) {
+//                addSpecifiedBandOfGivenProductToTimeSeriesProduct(timeVariable.getName(), tsProduct, product);
+//            }
+//        }
         TimeSeriesMapper.getInstance().put(tsProduct, timeSeries);
         return timeSeries;
     }
 
-    private static boolean addSpecifiedBandOfGivenProductToTimeSeriesProduct(String nodeName, Product tsProduct,
-                                                                             Product product) {
+    static boolean addSpecifiedBandOfGivenProductToTimeSeriesProduct(String nodeName, Product tsProduct,
+                                                                     Product product) {
         final SimpleDateFormat dateFormat = new SimpleDateFormat(TimeSeriesImpl.DATE_FORMAT);
         if (isProductCompatible(product, tsProduct, nodeName)) {
             final RasterDataNode raster = product.getRasterDataNode(nodeName);
