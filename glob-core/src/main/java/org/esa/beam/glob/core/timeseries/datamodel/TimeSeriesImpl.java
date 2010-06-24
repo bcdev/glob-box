@@ -1,11 +1,14 @@
 package org.esa.beam.glob.core.timeseries.datamodel;
 
 import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.DefaultTimeCoding;
 import org.esa.beam.framework.datamodel.MetadataAttribute;
 import org.esa.beam.framework.datamodel.MetadataElement;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.framework.datamodel.TimeCoding;
+import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.StringUtils;
 
 import java.text.SimpleDateFormat;
@@ -40,7 +43,20 @@ class TimeSeriesImpl implements TimeSeries {
     TimeSeriesImpl(Product tsProduct) {
         init(tsProduct);
         handleProductLocations(getProductLocations(), false);
+        fixBandTimeCodings();
         updateAutogrouping();
+    }
+
+    private void fixBandTimeCodings() {
+        for (Band destBand : tsProduct.getBands()) {
+            final Band raster = getBand(destBand.getName());
+            TimeCoding rasterTimeCoding = raster.getTimeCoding();
+            final ProductData.UTC rasterStartTime = rasterTimeCoding.getStartTime();
+            final ProductData.UTC rasterEndTime = rasterTimeCoding.getEndTime();
+            destBand.setTimeCoding(new DefaultTimeCoding(rasterStartTime, rasterEndTime,
+                                                         raster.getSceneRasterHeight()));
+
+        }
     }
 
     TimeSeriesImpl(Product tsProduct, List<ProductLocation> productLocations, List<String> variableNames) {
@@ -48,11 +64,6 @@ class TimeSeriesImpl implements TimeSeries {
         handleProductLocations(productLocations, true);
         for (String variable : variableNames) {
             setVariableSelected(variable, true);
-            for (Product product : productList) {
-                TimeSeriesFactory.addSpecifiedBandOfGivenProductToTimeSeriesProduct(variable,
-                                                                                    tsProduct,
-                                                                                    product);
-            }
         }
     }
 
@@ -178,6 +189,20 @@ class TimeSeriesImpl implements TimeSeries {
                 elem.setAttributeString(VARIABLE_SELECTION, String.valueOf(selected));
             }
         }
+        if (selected) {
+            for (Product product : productList) {
+                addSpecifiedBandOfGivenProductToTimeSeriesProduct(variableName,
+                                                                  tsProduct,
+                                                                  product);
+            }
+        } else {
+            final Band[] bands = tsProduct.getBands();
+            for (Band band : bands) {
+                if (band.getName().startsWith(variableName)) {
+                    tsProduct.removeBand(band);
+                }
+            }
+        }
     }
 
     private void updateAutogrouping() {
@@ -261,4 +286,42 @@ class TimeSeriesImpl implements TimeSeries {
         variableListElement.addElement(elem);
     }
 
+    private static boolean addSpecifiedBandOfGivenProductToTimeSeriesProduct(String nodeName, Product tsProduct,
+                                                                             Product product) {
+        final SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
+        if (isProductCompatible(product, tsProduct, nodeName)) {
+            final RasterDataNode raster = product.getRasterDataNode(nodeName);
+            TimeCoding rasterTimeCoding = raster.getTimeCoding();
+            if (rasterTimeCoding == null) {
+                return false;
+            }
+
+            final ProductData.UTC rasterStartTime = rasterTimeCoding.getStartTime();
+            final ProductData.UTC rasterEndTime = rasterTimeCoding.getEndTime();
+            final Band band = tsProduct.addBand(nodeName + "_" + dateFormat.format(rasterStartTime.getAsDate()),
+                                                raster.getDataType());
+            band.setSourceImage(raster.getSourceImage());
+            ProductUtils.copyRasterDataNodeProperties(raster, band);
+            // todo copy also referenced band in valid pixel expression
+            band.setValidPixelExpression(null);
+            band.setTimeCoding(new DefaultTimeCoding(rasterStartTime, rasterEndTime,
+                                                     raster.getSceneRasterHeight()));
+            ProductData.UTC tsStartTime = tsProduct.getStartTime();
+            if (tsStartTime == null || rasterStartTime.getAsDate().before(tsStartTime.getAsDate())) {
+                tsProduct.setStartTime(rasterStartTime);
+            }
+            ProductData.UTC tsEndTime = tsProduct.getEndTime();
+            if (tsEndTime == null || rasterEndTime.getAsDate().after(tsEndTime.getAsDate())) {
+                tsProduct.setEndTime(rasterEndTime);
+            }
+            return true;
+        }
+        return false;
+    }
+
+    private static boolean isProductCompatible(Product product, Product tsProduct, String rasterName) {
+        return product.getFileLocation() != null &&
+               product.containsRasterDataNode(rasterName) &&
+               tsProduct.isCompatibleProduct(product, 0.1e-6f);
+    }
 }

@@ -1,16 +1,10 @@
 package org.esa.beam.glob.core.timeseries.datamodel;
 
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.DefaultTimeCoding;
 import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.framework.datamodel.RasterDataNode;
-import org.esa.beam.framework.datamodel.TimeCoding;
 import org.esa.beam.glob.core.TimeSeriesMapper;
 import org.esa.beam.util.Guardian;
 import org.esa.beam.util.ProductUtils;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -70,52 +64,8 @@ public class TimeSeriesFactory {
 
 
         final TimeSeries timeSeries = new TimeSeriesImpl(tsProduct, productLocations, variableNames);
-//        for (TimeVariable timeVariable : variables) {
-//            for (Product product : timeSeries.getProducts()) {
-//                addSpecifiedBandOfGivenProductToTimeSeriesProduct(timeVariable.getName(), tsProduct, product);
-//            }
-//        }
         TimeSeriesMapper.getInstance().put(tsProduct, timeSeries);
         return timeSeries;
-    }
-
-    static boolean addSpecifiedBandOfGivenProductToTimeSeriesProduct(String nodeName, Product tsProduct,
-                                                                     Product product) {
-        final SimpleDateFormat dateFormat = new SimpleDateFormat(TimeSeriesImpl.DATE_FORMAT);
-        if (isProductCompatible(product, tsProduct, nodeName)) {
-            final RasterDataNode raster = product.getRasterDataNode(nodeName);
-            TimeCoding rasterTimeCoding = raster.getTimeCoding();
-            if (rasterTimeCoding == null) {
-                return false;
-            }
-
-            final ProductData.UTC rasterStartTime = rasterTimeCoding.getStartTime();
-            final ProductData.UTC rasterEndTime = rasterTimeCoding.getEndTime();
-            final Band band = tsProduct.addBand(nodeName + "_" + dateFormat.format(rasterStartTime.getAsDate()),
-                                                raster.getDataType());
-            band.setSourceImage(raster.getSourceImage());
-            ProductUtils.copyRasterDataNodeProperties(raster, band);
-            // todo copy also referenced band in valid pixel expression
-            band.setValidPixelExpression(null);
-            band.setTimeCoding(new DefaultTimeCoding(rasterStartTime, rasterEndTime,
-                                                     raster.getSceneRasterHeight()));
-            ProductData.UTC tsStartTime = tsProduct.getStartTime();
-            if (tsStartTime == null || rasterStartTime.getAsDate().before(tsStartTime.getAsDate())) {
-                tsProduct.setStartTime(rasterStartTime);
-            }
-            ProductData.UTC tsEndTime = tsProduct.getEndTime();
-            if (tsEndTime == null || rasterEndTime.getAsDate().after(tsEndTime.getAsDate())) {
-                tsProduct.setEndTime(rasterEndTime);
-            }
-            return true;
-        }
-        return false;
-    }
-
-    private static boolean isProductCompatible(Product product, Product tsProduct, String rasterName) {
-        return product.getFileLocation() != null &&
-               product.containsRasterDataNode(rasterName) &&
-               tsProduct.isCompatibleProduct(product, 0.1e-6f);
     }
 
 }
