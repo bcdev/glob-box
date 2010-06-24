@@ -14,7 +14,7 @@ public interface TimeSeries {
 
     public static final String TIME_SERIES_PRODUCT_TYPE = "org.esa.beam.glob.timeseries";
 
-    public List<TimeVariable> getTimeVariables();
+    public List<String> getTimeVariables();
 
     public List<ProductLocation> getProductLocations();
 
@@ -24,9 +24,13 @@ public interface TimeSeries {
 
     public void setVariableSelected(String variableName, boolean selected);
 
+    public boolean isVariableSelected(String variableName);
+
     public Band getBand(String destBandName);
 
     public Product getTsProduct();
 
-    List<Product> getProducts();
+    public List<Product> getProducts();
+
+    public Band[] getBandsForVariable(String variableName);
 }

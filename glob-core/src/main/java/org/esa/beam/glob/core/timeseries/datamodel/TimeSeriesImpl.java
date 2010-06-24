@@ -101,10 +101,6 @@ class TimeSeriesImpl implements TimeSeries {
     }
 
     public List<ProductLocation> getProductLocations() {
-        return getProductLocations(tsProduct);
-    }
-
-    private static List<ProductLocation> getProductLocations(Product tsProduct) {
         MetadataElement tsElem = tsProduct.getMetadataRoot().getElement(TIME_SERIES_ROOT_NAME);
         MetadataElement productListElem = tsElem.getElement(PRODUCT_LOCATIONS);
         MetadataElement[] productElems = productListElem.getElements();
@@ -117,19 +113,13 @@ class TimeSeriesImpl implements TimeSeries {
         return productLocations;
     }
 
-    public List<TimeVariable> getTimeVariables() {
-        return getTimeVariables(tsProduct);
-    }
-
-    private static List<TimeVariable> getTimeVariables(Product tsProduct) {
+    public List<String> getTimeVariables() {
         MetadataElement tsElem = tsProduct.getMetadataRoot().getElement(TIME_SERIES_ROOT_NAME);
         MetadataElement variablesListElem = tsElem.getElement(VARIABLES);
         MetadataElement[] variableElems = variablesListElem.getElements();
-        List<TimeVariable> variables = new ArrayList<TimeVariable>();
+        List<String> variables = new ArrayList<String>();
         for (MetadataElement varElem : variableElems) {
-            String name = varElem.getAttributeString(VARIABLE_NAME);
-            String selection = varElem.getAttributeString(VARIABLE_SELECTION);
-            variables.add(new TimeVariable(name, Boolean.parseBoolean(selection)));
+            variables.add(varElem.getAttributeString(VARIABLE_NAME));
         }
         return variables;
     }
@@ -206,14 +196,34 @@ class TimeSeriesImpl implements TimeSeries {
         }
     }
 
-    private void updateAutogrouping() {
-        final List<TimeVariable> variables = getTimeVariables();
-        String[] autoGroupings = new String[variables.size()];
-        for (int i = 0; i < autoGroupings.length; i++) {
-            autoGroupings[i] = variables.get(i).getName();
+    @Override
+    public boolean isVariableSelected(String variableName) {
+        MetadataElement variableListElement = tsProduct.getMetadataRoot().
+                getElement(TIME_SERIES_ROOT_NAME).
+                getElement(VARIABLES);
+        final MetadataElement[] variables = variableListElement.getElements();
+        for (MetadataElement elem : variables) {
+            if (elem.getAttributeString(VARIABLE_NAME).equals(variableName)) {
+                return Boolean.parseBoolean(elem.getAttributeString(VARIABLE_SELECTION));
+            }
         }
-        tsProduct.setAutoGrouping(StringUtils.join(autoGroupings, ":"));
+        return false;
+    }
 
+    @Override
+    public Band[] getBandsForVariable(String variableName) {
+        final ArrayList<Band> bands = new ArrayList<Band>();
+        for (Band band : tsProduct.getBands()) {
+            if (band.getName().startsWith(variableName + "_")) {
+                bands.add(band);
+            }
+        }
+
+        return bands.toArray(new Band[bands.size()]);
+    }
+
+    private void updateAutogrouping() {
+        tsProduct.setAutoGrouping(StringUtils.join(getTimeVariables(), ":"));
     }
 
     private static void createTimeSeriesMetadataStructure(Product tsProduct) {
@@ -253,20 +263,20 @@ class TimeSeriesImpl implements TimeSeries {
     }
 
     private void addToVariableList(Product product) {
-        final ArrayList<TimeVariable> newVariables = new ArrayList<TimeVariable>();
-        final List<TimeVariable> timeVariables = getTimeVariables();
+        final ArrayList<String> newVariables = new ArrayList<String>();
+        final List<String> timeVariables = getTimeVariables();
         final Band[] bands = product.getBands();
         for (Band band : bands) {
             final String bandName = band.getName();
             boolean varExist = false;
-            for (TimeVariable variable : timeVariables) {
-                varExist |= variable.fitsToPattern(bandName);
+            for (String variable : timeVariables) {
+                varExist |= variable.equals(bandName);
             }
             if (!varExist) {
-                newVariables.add(new TimeVariable(bandName, false));
+                newVariables.add(bandName);
             }
         }
-        for (TimeVariable variable : newVariables) {
+        for (String variable : newVariables) {
             addVariableToMetadata(variable);
         }
         if (!newVariables.isEmpty()) {
@@ -274,34 +284,31 @@ class TimeSeriesImpl implements TimeSeries {
         }
     }
 
-    private void addVariableToMetadata(TimeVariable variable) {
+    private void addVariableToMetadata(String variable) {
         MetadataElement variableListElement = tsProduct.getMetadataRoot().
                 getElement(TIME_SERIES_ROOT_NAME).
                 getElement(VARIABLES);
-        final ProductData variableName = ProductData.createInstance(variable.getName());
-        final ProductData isSelected = ProductData.createInstance(Boolean.toString(variable.isSelected()));
+        final ProductData variableName = ProductData.createInstance(variable);
+        final ProductData isSelected = ProductData.createInstance(Boolean.toString(false));
         int length = variableListElement.getElements().length + 1;
-        MetadataElement elem = new MetadataElement(
-                VARIABLES + "." + Integer.toString(length));
+        MetadataElement elem = new MetadataElement(VARIABLES + "." + Integer.toString(length));
         elem.addAttribute(new MetadataAttribute(VARIABLE_NAME, variableName, true));
         elem.addAttribute(new MetadataAttribute(VARIABLE_SELECTION, isSelected, true));
         variableListElement.addElement(elem);
     }
 
-    private static boolean addSpecifiedBandOfGivenProductToTimeSeriesProduct(String nodeName, Product tsProduct,
-                                                                             Product product) {
-        final SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
+    private static void addSpecifiedBandOfGivenProductToTimeSeriesProduct(String nodeName, Product tsProduct,
+                                                                          Product product) {
         if (isProductCompatible(product, tsProduct, nodeName)) {
             final RasterDataNode raster = product.getRasterDataNode(nodeName);
             TimeCoding rasterTimeCoding = raster.getTimeCoding();
             if (rasterTimeCoding == null) {
-                return false;
+                return;
             }
-
             final ProductData.UTC rasterStartTime = rasterTimeCoding.getStartTime();
             final ProductData.UTC rasterEndTime = rasterTimeCoding.getEndTime();
             Guardian.assertNotNull("rasterStartTime", rasterStartTime);
-            final String bandName = nodeName + "_" + dateFormat.format(rasterStartTime.getAsDate());
+            final String bandName = variableToRasterName(nodeName, rasterTimeCoding);
             if (!tsProduct.containsBand(bandName)) {
                 final Band band = tsProduct.addBand(bandName, raster.getDataType());
                 band.setSourceImage(raster.getSourceImage());
@@ -320,10 +327,8 @@ class TimeSeriesImpl implements TimeSeries {
                         tsProduct.setEndTime(rasterEndTime);
                     }
                 }
-                return true;
             }
         }
-        return false;
     }
 
     private static boolean isProductCompatible(Product product, Product tsProduct, String rasterName) {
@@ -331,4 +336,18 @@ class TimeSeriesImpl implements TimeSeries {
                product.containsRasterDataNode(rasterName) &&
                tsProduct.isCompatibleProduct(product, 0.1e-6f);
     }
+
+    private static String variableToRasterName(String variable, TimeCoding timeCoding) {
+        final ProductData.UTC rasterStartTime = timeCoding.getStartTime();
+        final ProductData.UTC rasterEndTime = timeCoding.getEndTime();
+        Guardian.assertNotNull("rasterStartTime", rasterStartTime);
+        final SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
+        return variable + "_" + dateFormat.format(rasterStartTime.getAsDate());
+    }
+
+    private static String rasterToVariableName(RasterDataNode raster) {
+
+        return "";
+    }
+
 }
