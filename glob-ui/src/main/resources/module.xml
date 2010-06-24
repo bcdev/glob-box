@@ -23,6 +23,7 @@
 
     <dependency>
         <module>beam-visat-rcp</module>
+        <module>glob-core</module>
     </dependency>
 
     <extension point="beam-ui:toolViews">
