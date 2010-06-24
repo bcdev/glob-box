@@ -30,7 +30,6 @@ import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 import org.jfree.data.time.TimeSeriesDataItem;
 
-import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
@@ -46,7 +45,6 @@ import java.awt.Dimension;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.InputEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
@@ -78,11 +76,9 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
     private ProductSceneView currentView;
     private ChartPanel chartPanel;
     private ExecutorService executorService;
-    private static final String AUTO_MIN_MAX = "Auto min/max";
 
     private final JTextField minInput = new JTextField(8);
     private final JTextField maxInput = new JTextField(8);
-    private JCheckBox autoAdjustBox;
     private TimeSeriesCollection timeSeriesCollection;
     private TimeSeries cursorTimeSeries;
     private TimeSeries pinTimeSeries;
@@ -141,12 +137,10 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         tableLayout.setCellColspan(3, 0, 2);
 
         final JPanel controlPanel = new JPanel(tableLayout);
-        autoAdjustBox = new JCheckBox(AUTO_MIN_MAX);
         final JLabel minLabel = new JLabel("Min:");
         minInput.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         final JLabel maxLabel = new JLabel("Max:");
         maxInput.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-        controlPanel.add(autoAdjustBox);
         controlPanel.add(minLabel);
         controlPanel.add(minInput);
         controlPanel.add(maxLabel);
@@ -155,26 +149,6 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         controlPanel.add(tableLayout.createVerticalSpacer());
 
         mainPanel.add(BorderLayout.EAST, controlPanel);
-
-        autoAdjustBox.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                final boolean isSelected = ((AbstractButton) e.getSource()).isSelected();
-                minLabel.setEnabled(!isSelected);
-                maxLabel.setEnabled(!isSelected);
-                minInput.setEnabled(!isSelected);
-                maxInput.setEnabled(!isSelected);
-                if (isSelected) {
-                    minInput.setBorder(BorderFactory.createLineBorder(Color.gray));
-                    maxInput.setBorder(BorderFactory.createLineBorder(Color.gray));
-                } else {
-                    minInput.setBorder(BorderFactory.createLineBorder(Color.black));
-                    maxInput.setBorder(BorderFactory.createLineBorder(Color.black));
-                }
-                timeSeriesPlot.getRangeAxis().setAutoRange(isSelected);
-            }
-        });
-
 
         minInput.addKeyListener(new KeyAdapter() {
             @Override
@@ -257,7 +231,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
     private void updateUIState() {
         if (currentView != null) {
             final RasterDataNode raster = currentView.getRaster();
-            final String rasterName = raster.getName();
+            String rasterName = rasterToVariableName(raster.getName());
             setTitle(String.format("%s - %s", titleBase, rasterName));
 
             final String unit = raster.getUnit();
@@ -286,7 +260,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
 
     private void setCurrentView(ProductSceneView view) {
 
-        if (view != null) {
+        if (view != null && !view.isRGB() && view.getProduct().getProductType().equals(TIME_SERIES_PRODUCT_TYPE)) {
             view.addPixelPositionListener(pixelPosListener);
             final boolean isViewPinSelectionListening = Arrays.asList(
                     view.getListeners(PropertyChangeListener.class)).contains(pinSelectionListener);
@@ -298,22 +272,6 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
                 somePinIsSelected = true;
                 showSelectedPinCheckbox.setEnabled(true);
             }
-            view.addKeyListener(new KeyAdapter() {
-                @Override
-                public void keyPressed(KeyEvent e) {
-                    System.out.println("e.getKeyChar() = " + e.getKeyChar());
-                    if (e.getKeyChar() == InputEvent.SHIFT_DOWN_MASK) {
-
-                    }
-                }
-
-                public void keyReleased(KeyEvent e) {
-                    System.out.println("e.getKeyChar() = " + e.getKeyChar());
-                    if (e.getKeyChar() == InputEvent.SHIFT_DOWN_MASK) {
-                        getTimeSeriesPlot().getRangeAxis().setAutoRange(false);
-                    }
-                }
-            });
         } else {
             somePinIsSelected = false;
             showSelectedPinCheckbox.setEnabled(false);
@@ -330,21 +288,25 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         if (cursorTimeSeries != null) {
             timeSeriesCollection.removeSeries(cursorTimeSeries);
         }
-        if (currentView.getProduct().getProductType().equals(TIME_SERIES_PRODUCT_TYPE)) {
+        if (currentView != null && !currentView.isRGB() &&
+            currentView.getProduct().getProductType().equals(TIME_SERIES_PRODUCT_TYPE)) {
+
             org.esa.beam.glob.core.timeseries.datamodel.TimeSeries timeSeries;
             timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(currentView.getProduct());
             Band[] bands = timeSeries.getBandsForVariable(rasterToVariableName(currentView.getRaster().getName()));
-            cursorTimeSeries = computeTimeSeries("cursorTimeSeries", bands,
-                                                 pixelX, pixelY, currentLevel);
-            timeSeriesCollection.addSeries(cursorTimeSeries);
-            if (timeSeriesCollection.getSeries(0) == cursorTimeSeries) {
-                getTimeSeriesPlot().getRenderer().setSeriesPaint(0, Color.RED);
-                getTimeSeriesPlot().getRenderer().setSeriesPaint(1, Color.BLUE);
-            } else {
-                getTimeSeriesPlot().getRenderer().setSeriesPaint(0, Color.BLUE);
-                getTimeSeriesPlot().getRenderer().setSeriesPaint(1, Color.RED);
+            if (bands.length > 1) {
+                cursorTimeSeries = computeTimeSeries("cursorTimeSeries", bands,
+                                                     pixelX, pixelY, currentLevel);
+                timeSeriesCollection.addSeries(cursorTimeSeries);
+                if (timeSeriesCollection.getSeries(0) == cursorTimeSeries) {
+                    getTimeSeriesPlot().getRenderer().setSeriesPaint(0, Color.RED);
+                    getTimeSeriesPlot().getRenderer().setSeriesPaint(1, Color.BLUE);
+                } else {
+                    getTimeSeriesPlot().getRenderer().setSeriesPaint(0, Color.BLUE);
+                    getTimeSeriesPlot().getRenderer().setSeriesPaint(1, Color.RED);
+                }
+                getTimeSeriesPlot().setDataset(timeSeriesCollection);
             }
-            getTimeSeriesPlot().setDataset(timeSeriesCollection);
             getTimeSeriesPlot().setNoDataMessage(NO_DATA_MESSAGE);
         }
     }
@@ -406,6 +368,11 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
 
             minInput.setText(df.format(lowerBound));
             maxInput.setText(df.format(upperBound));
+            if (e.isShiftDown()) {
+                getTimeSeriesPlot().getRangeAxis().setAutoRange(true);
+            } else {
+                getTimeSeriesPlot().getRangeAxis().setAutoRange(false);
+            }
         }
 
         @Override

@@ -116,7 +116,7 @@ public class SliderToolView extends AbstractToolView {
             timeSlider.setSnapToTicks(true);
 
             final Hashtable<Integer, JLabel> labelTable = new Hashtable<Integer, JLabel>();
-            if (nodeCount > 0) {
+            if (nodeCount > 1) {
                 timeSlider.setEnabled(true);
                 for (int i = 0; i < nodeCount; i++) {
                     final ProductData.UTC utcStartTime = bands[i].getTimeCoding().getStartTime();
@@ -210,7 +210,7 @@ public class SliderToolView extends AbstractToolView {
                 ProductSceneView view = (ProductSceneView) contentPane;
                 final RasterDataNode viewRaster = view.getRaster();
                 final String viewProductType = viewRaster.getProduct().getProductType();
-                if (currentView != view && viewProductType.equals(
+                if (currentView != view && !view.isRGB() && viewProductType.equals(
                         TimeSeries.TIME_SERIES_PRODUCT_TYPE)) {
                     setCurrentView(view);
                 }
