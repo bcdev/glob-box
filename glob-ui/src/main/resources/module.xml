@@ -23,6 +23,8 @@
 
     <dependency>
         <module>beam-visat-rcp</module>
+    </dependency>
+    <dependency>
         <module>glob-core</module>
     </dependency>
 
