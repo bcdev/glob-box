@@ -64,6 +64,7 @@ import java.util.concurrent.Future;
 import static org.esa.beam.glob.core.timeseries.datamodel.TimeSeries.*;
 
 public class TimeSeriesGraphToolView extends AbstractToolView {
+    public static final String ID = "timeSeriesGraphToolView";
 
     private static final String NO_DATA_MESSAGE = "No data to display";
     private static final String DEFAULT_RANGE_LABEL = "Value";
