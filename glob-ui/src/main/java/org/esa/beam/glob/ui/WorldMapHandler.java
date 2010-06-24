@@ -10,6 +10,7 @@ import java.beans.PropertyChangeListener;
  * Date: 11.06.2010
  * Time: 15:12:09
  */
+@Deprecated
 class WorldMapHandler implements PropertyChangeListener {
 
     private Layer layer;

@@ -25,6 +25,7 @@ import java.util.List;
  * Date: 11.06.2010
  * Time: 15:12:44
  */
+@Deprecated
 class ColorSynchronizer implements PropertyChangeListener {
 
     private ImageInfoListener listener;

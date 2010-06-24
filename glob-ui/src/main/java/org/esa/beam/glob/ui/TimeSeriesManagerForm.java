@@ -28,6 +28,7 @@ import java.text.SimpleDateFormat;
 
 import static org.esa.beam.framework.ui.UIUtils.*;
 
+@Deprecated
 class TimeSeriesManagerForm extends JPanel {
 
     private TimeSeries timeSeries;
@@ -206,6 +207,7 @@ class TimeSeriesManagerForm extends JPanel {
             return null;
         }
 
+        @Deprecated
         private class ManagerTSL implements TimeSeriesListener {
 
             private final TimeSeriesManagerForm.TimeSeriesRasterListModel model;
