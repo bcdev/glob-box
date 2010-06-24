@@ -16,7 +16,6 @@ import org.esa.beam.glob.core.timeseries.datamodel.ProductLocation;
 import org.esa.beam.glob.core.timeseries.datamodel.ProductLocationType;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeSeries;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesFactory;
-import org.esa.beam.glob.core.timeseries.datamodel.TimeVariable;
 import org.esa.beam.visat.VisatApp;
 import org.esa.beam.visat.actions.AbstractVisatAction;
 
@@ -50,11 +49,11 @@ public class CreateTimeSeriesFromBandAction extends AbstractVisatAction {
                 productLocations.add(
                         new ProductLocation(ProductLocationType.FILE, product.getFileLocation().getPath()));
             }
-            List<TimeVariable> variables = Arrays.asList(new TimeVariable(node.getName(), true));
+            List<String> variableNames = Arrays.asList(node.getName());
             final TimeSeries tsProduct = TimeSeriesFactory.create(
                     timeSeriesName,
                     productLocations,
-                    variables);
+                    variableNames);
             productManager.addProduct(tsProduct.getTsProduct());
         }
     }
