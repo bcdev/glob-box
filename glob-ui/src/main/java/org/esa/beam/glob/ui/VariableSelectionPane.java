@@ -3,7 +3,6 @@ package org.esa.beam.glob.ui;
 import com.bc.ceres.swing.TableLayout;
 import com.jidesoft.swing.CheckBoxList;
 import com.jidesoft.swing.CheckBoxListSelectionModel;
-import org.esa.beam.glob.core.timeseries.datamodel.TimeVariable;
 
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.JLabel;
@@ -41,8 +40,8 @@ class VariableSelectionPane extends JPanel {
                                                           boolean cellHasFocus) {
                 JLabel label = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected,
                                                                            cellHasFocus);
-                if (value instanceof TimeVariable) {
-                    TimeVariable variable = (TimeVariable) value;
+                if (value instanceof Variable) {
+                    Variable variable = (Variable) value;
                     label.setText(variable.getName());
                 }
                 return label;
@@ -56,10 +55,10 @@ class VariableSelectionPane extends JPanel {
         add(new JScrollPane(variableList));
     }
 
-    private int[] getSelectedIndices(VariableSelectionPaneModel model) {
+    private int[] getSelectedIndices(VariableSelectionPaneModel variableModel) {
         final List<Integer> indexList = new ArrayList<Integer>();
-        for (int i = 0; i < model.getSize(); i++) {
-            if (model.getElementAt(i).isSelected()) {
+        for (int i = 0; i < variableModel.getSize(); i++) {
+            if (variableModel.getElementAt(i).isSelected()) {
                 indexList.add(i);
             }
         }

@@ -31,9 +31,9 @@ import java.util.Iterator;
 
 class ProductSourcePane extends JPanel {
 
-    private ProductSourcePaneModel model;
+    private ProductLocationsPaneModel model;
 
-    ProductSourcePane(ProductSourcePaneModel model) {
+    ProductSourcePane(ProductLocationsPaneModel model) {
         this.model = model;
         createUI();
     }

@@ -148,7 +148,7 @@ public class TimeSeriesConfigToolView extends AbstractToolView {
 
     private JPanel createToolBar() {
         final JButton newButton = new JButton("New TS");
-        final Command newTSCommand = VisatApp.getApp().getCommandManager().getCommand(NewTimeSeriesAction.ID);
+        final Command newTSCommand = VisatApp.getApp().getCommandManager().getCommand(NewTimeSeriesAssistantAction.ID);
         newButton.setAction(newTSCommand.getAction());
         newButton.setName(NEW_BUTTON_NAME);
         final JButton cloneButton = new JButton("Clone TS");

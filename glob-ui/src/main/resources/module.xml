@@ -94,12 +94,12 @@
             <helpId>createTimeSeriesFromBandAction</helpId>
         </action>
         <action>
-            <id>newTimeSeriesAction</id>
+            <id>newTimeSeriesAssistantAction</id>
             <parent>file</parent>
-            <class>org.esa.beam.glob.ui.NewTimeSeriesAction</class>
+            <class>org.esa.beam.glob.ui.NewTimeSeriesAssistantAction</class>
             <text>New Time Series...</text>
             <shortDescr>Create a new time series</shortDescr>
-            <helpId>newTimeSeriesAction</helpId>
+            <helpId>newTimeSeriesAssistantAction</helpId>
             <placeAfter>new</placeAfter>
             <placeBefore>open</placeBefore>
         </action>

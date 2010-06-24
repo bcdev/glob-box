@@ -8,37 +8,37 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-class ProductSourcePaneModel extends AbstractListModel {
+class ProductLocationsPaneModel extends AbstractListModel {
 
-    private List<ProductLocation> productSourceList;
+    private List<ProductLocation> productLocationList;
 
-    ProductSourcePaneModel() {
-        productSourceList = new ArrayList<ProductLocation>();
+    ProductLocationsPaneModel() {
+        productLocationList = new ArrayList<ProductLocation>();
     }
 
     @Override
     public int getSize() {
-        return productSourceList.size();
+        return productLocationList.size();
     }
 
     @Override
     public ProductLocation getElementAt(int index) {
-        return productSourceList.get(index);
+        return productLocationList.get(index);
     }
 
     public void addFiles(File... files) {
-        final int startIndex = productSourceList.size();
+        final int startIndex = productLocationList.size();
         for (File file : files) {
-            productSourceList.add(new ProductLocation(ProductLocationType.FILE, file.getAbsolutePath()));
+            productLocationList.add(new ProductLocation(ProductLocationType.FILE, file.getAbsolutePath()));
         }
-        final int stopIndex = productSourceList.size() - 1;
+        final int stopIndex = productLocationList.size() - 1;
         fireIntervalAdded(this, startIndex, stopIndex);
     }
 
     public void addDirectory(File currentDir, boolean recursive) {
         final ProductLocationType locationType = recursive ? ProductLocationType.DIRECTORY_REC : ProductLocationType.DIRECTORY;
-        productSourceList.add(new ProductLocation(locationType,currentDir.getPath()));
-        final int index = productSourceList.size() - 1;
+        productLocationList.add(new ProductLocation(locationType,currentDir.getPath()));
+        final int index = productLocationList.size() - 1;
         fireIntervalAdded(this, index, index);
     }
 
@@ -46,10 +46,14 @@ class ProductSourcePaneModel extends AbstractListModel {
         if (indices.length > 0) {
             final List<ProductLocation> toRemoveList = new ArrayList<ProductLocation>();
             for (int index : indices) {
-                toRemoveList.add(productSourceList.get(index));
+                toRemoveList.add(productLocationList.get(index));
             }
-            productSourceList.removeAll(toRemoveList);
+            productLocationList.removeAll(toRemoveList);
             fireContentsChanged(this, indices[0], indices[indices.length - 1]);
         }
+    }
+
+    public List<ProductLocation> getProductLocations() {
+        return new ArrayList<ProductLocation>(productLocationList); 
     }
 }

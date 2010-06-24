@@ -9,31 +9,31 @@ import java.util.List;
 
 class TimeSeriesAssistantModel {
 
-    private ProductSourcePaneModel productSourcePaneModel;
+    private ProductLocationsPaneModel productLocationsModel;
     private VariableSelectionPaneModel variableSelectionPaneModel;
     private String timeSeriesName;
     private List<ChangeListener> changeListenerList;
 
     TimeSeriesAssistantModel() {
-        this("TimeSeries", new ProductSourcePaneModel(), new VariableSelectionPaneModel());
+        this("TimeSeries", new ProductLocationsPaneModel(), new VariableSelectionPaneModel());
     }
 
-    private TimeSeriesAssistantModel(String timeSeriesName, ProductSourcePaneModel productSourcePaneModel,
+    private TimeSeriesAssistantModel(String timeSeriesName, ProductLocationsPaneModel productLocationsModel,
                                      VariableSelectionPaneModel variableSelectionPaneModel) {
-        this.productSourcePaneModel = productSourcePaneModel;
+        this.productLocationsModel = productLocationsModel;
         this.variableSelectionPaneModel = variableSelectionPaneModel;
         this.timeSeriesName = timeSeriesName;
         final ListDataListenerDelegate dataListenerDelegate = new ListDataListenerDelegate();
-        productSourcePaneModel.addListDataListener(dataListenerDelegate);
+        productLocationsModel.addListDataListener(dataListenerDelegate);
         variableSelectionPaneModel.addListDataListener(dataListenerDelegate);
 
     }
 
-    public ProductSourcePaneModel getProductSourcePaneModel() {
-        return productSourcePaneModel;
+    public ProductLocationsPaneModel getProductLocationsModel() {
+        return productLocationsModel;
     }
 
-    public VariableSelectionPaneModel getVariableSelectionPaneModel() {
+    public VariableSelectionPaneModel getVariableSelectionModel() {
         return variableSelectionPaneModel;
     }
 
