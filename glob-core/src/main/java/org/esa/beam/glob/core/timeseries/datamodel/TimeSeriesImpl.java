@@ -24,7 +24,7 @@ import java.util.Map;
  * Date: 31.03.2010
  * Time: 10:26:15
  */
-class TimeSeriesImpl implements TimeSeries {
+class TimeSeriesImpl extends TimeSeries {
 
     private static final String TIME_SERIES_ROOT_NAME = "TIME_SERIES";
     private static final String PRODUCT_LOCATIONS = "PRODUCT_LOCATIONS";
@@ -33,12 +33,10 @@ class TimeSeriesImpl implements TimeSeries {
     private static final String PL_PATH = "path";
     private static final String PL_TYPE = "type";
 
-    static final String DATE_FORMAT = "yyyyMMdd.HHmmss.SSS";
-
     private static final String VARIABLES = "VARIABLES";
     private Product tsProduct;
-    private List<Product> productList;
 
+    private List<Product> productList;
     private Map<String, Product> productTimeMap;
 
     TimeSeriesImpl(Product tsProduct) {
@@ -81,7 +79,7 @@ class TimeSeriesImpl implements TimeSeries {
     }
 
     public Band getBand(String destBandName) {
-        final int lastUnderscore = destBandName.lastIndexOf("_");
+        final int lastUnderscore = destBandName.lastIndexOf(SEPARATOR);
         String normalizedBandName = destBandName.substring(0, lastUnderscore);
         String timePart = destBandName.substring(lastUnderscore + 1);
         Product srcProduct = productTimeMap.get(timePart);
@@ -212,13 +210,12 @@ class TimeSeriesImpl implements TimeSeries {
 
     @Override
     public Band[] getBandsForVariable(String variableName) {
-        final ArrayList<Band> bands = new ArrayList<Band>();
+        final List<Band> bands = new ArrayList<Band>();
         for (Band band : tsProduct.getBands()) {
-            if (band.getName().startsWith(variableName + "_")) {
+            if (variableName.equals(rasterToVariableName(band.getName()))) {
                 bands.add(band);
             }
         }
-
         return bands.toArray(new Band[bands.size()]);
     }
 
@@ -335,19 +332,6 @@ class TimeSeriesImpl implements TimeSeries {
         return product.getFileLocation() != null &&
                product.containsRasterDataNode(rasterName) &&
                tsProduct.isCompatibleProduct(product, 0.1e-6f);
-    }
-
-    private static String variableToRasterName(String variable, TimeCoding timeCoding) {
-        final ProductData.UTC rasterStartTime = timeCoding.getStartTime();
-        final ProductData.UTC rasterEndTime = timeCoding.getEndTime();
-        Guardian.assertNotNull("rasterStartTime", rasterStartTime);
-        final SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
-        return variable + "_" + dateFormat.format(rasterStartTime.getAsDate());
-    }
-
-    private static String rasterToVariableName(RasterDataNode raster) {
-
-        return "";
     }
 
 }

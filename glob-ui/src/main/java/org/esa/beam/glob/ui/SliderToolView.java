@@ -7,18 +7,20 @@ import com.bc.ceres.glayer.support.LayerUtils;
 import com.bc.ceres.swing.TableLayout;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.ImageInfo;
-import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.framework.datamodel.ProductNodeGroup;
 import org.esa.beam.framework.datamodel.RasterDataNode;
+import org.esa.beam.framework.ui.UIUtils;
 import org.esa.beam.framework.ui.application.support.AbstractToolView;
 import org.esa.beam.framework.ui.product.ProductSceneImage;
 import org.esa.beam.framework.ui.product.ProductSceneView;
+import org.esa.beam.framework.ui.tool.ToolButtonFactory;
 import org.esa.beam.glayer.RasterImageLayerType;
 import org.esa.beam.glevel.BandImageMultiLevelSource;
+import org.esa.beam.glob.core.TimeSeriesMapper;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeSeries;
 import org.esa.beam.visat.VisatApp;
 
+import javax.swing.AbstractButton;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -28,6 +30,7 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.InternalFrameAdapter;
 import javax.swing.event.InternalFrameEvent;
 import java.awt.Container;
+import java.awt.FlowLayout;
 import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
 import java.util.Hashtable;
@@ -40,25 +43,26 @@ import java.util.TimeZone;
  */
 public class SliderToolView extends AbstractToolView {
 
-    private SceneViewListener sceneViewListener;
+    private final SceneViewListener sceneViewListener;
 
     private ProductSceneView currentView;
     private JSlider timeSlider;
-
+    private TimeSeries timeSeries;
 
     public SliderToolView() {
         sceneViewListener = new SceneViewListener();
     }
 
-    public void setCurrentView(ProductSceneView currentView) {
-        if (this.currentView != currentView) {
-            this.currentView = currentView;
+    private void setCurrentView(ProductSceneView newView) {
+        if (currentView != newView) {
+            currentView = newView;
+            if (currentView != null) {
+                timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(currentView.getProduct());
+            } else {
+                timeSeries = null;
+            }
             configureTimeSlider();
         }
-    }
-
-    public ProductSceneView getCurrentView() {
-        return currentView;
     }
 
     @Override
@@ -75,7 +79,9 @@ public class SliderToolView extends AbstractToolView {
     protected JComponent createControl() {
         final TableLayout tableLayout = new TableLayout(1);
         tableLayout.setColumnWeightX(0, 1.0);
-        tableLayout.setRowFill(0, TableLayout.Fill.HORIZONTAL);
+        tableLayout.setRowWeightY(0, 1.0);
+        tableLayout.setTableFill(TableLayout.Fill.HORIZONTAL);
+        tableLayout.setRowFill(0, TableLayout.Fill.BOTH);
         final JPanel panel = new JPanel(tableLayout);
         timeSlider = new JSlider(JSlider.HORIZONTAL);
         timeSlider.setPaintLabels(true);
@@ -84,16 +90,28 @@ public class SliderToolView extends AbstractToolView {
         timeSlider.addChangeListener(new SliderChangeListener());
         configureTimeSlider();
         panel.add(timeSlider);
+        final JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        AbstractButton playButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/Right24.gif"),
+                                                                   false);
+        AbstractButton pauseButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/Clock24.gif"),
+                                                                    false);
+        AbstractButton stopButton = ToolButtonFactory.createButton(
+                UIUtils.loadImageIcon("icons/DrawRectangleTool24.gif"),
+                false);
+        buttonsPanel.add(playButton);
+        buttonsPanel.add(pauseButton);
+        buttonsPanel.add(stopButton);
+        panel.add(buttonsPanel);
         return panel;
     }
 
     private void configureTimeSlider() {
-        final Product currentProduct = getCurrentProduct();
-        if (currentProduct != null) {
-            final ProductNodeGroup<Band> bandGroup = currentProduct.getBandGroup();
+        if (timeSeries != null) {
+            Band[] bands = timeSeries.getBandsForVariable(
+                    TimeSeries.rasterToVariableName(currentView.getRaster().getName()));
 
             timeSlider.setMinimum(0);
-            final int nodeCount = bandGroup.getNodeCount();
+            final int nodeCount = bands.length;
             timeSlider.setMaximum(nodeCount - 1);
             timeSlider.setSnapToTicks(true);
 
@@ -101,7 +119,7 @@ public class SliderToolView extends AbstractToolView {
             if (nodeCount > 0) {
                 timeSlider.setEnabled(true);
                 for (int i = 0; i < nodeCount; i++) {
-                    final ProductData.UTC utcStartTime = bandGroup.get(i).getTimeCoding().getStartTime();
+                    final ProductData.UTC utcStartTime = bands[i].getTimeCoding().getStartTime();
                     SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MMM-yyyy");
                     SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
                     dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -122,13 +140,6 @@ public class SliderToolView extends AbstractToolView {
             timeSlider.setLabelTable(null);
             timeSlider.setEnabled(false);
         }
-    }
-
-    private Product getCurrentProduct() {
-        if (currentView != null && currentView.getRaster() != null) {
-            return currentView.getRaster().getProduct();
-        }
-        return null;
     }
 
     // todo (mp) - The following should be done on ProdsuctSceneView.setRasters()
@@ -179,7 +190,10 @@ public class SliderToolView extends AbstractToolView {
         public void stateChanged(ChangeEvent e) {
             final int newBandIndex = timeSlider.getValue();
             if (currentBandIndex != newBandIndex && currentView != null) {
-                final Band newRaster = getCurrentProduct().getBandGroup().get(newBandIndex);
+                Band[] bands = timeSeries.getBandsForVariable(
+                        TimeSeries.rasterToVariableName(currentView.getRaster().getName()));
+//                final Band newRaster = getCurrentProduct().getBandGroup().get(newBandIndex);
+                final Band newRaster = bands[newBandIndex];
                 exchangeRasterInProductSceneView(newRaster, currentView);
                 currentBandIndex = newBandIndex;
             }
@@ -196,7 +210,7 @@ public class SliderToolView extends AbstractToolView {
                 ProductSceneView view = (ProductSceneView) contentPane;
                 final RasterDataNode viewRaster = view.getRaster();
                 final String viewProductType = viewRaster.getProduct().getProductType();
-                if (getCurrentView() != view && viewProductType.equals(
+                if (currentView != view && viewProductType.equals(
                         TimeSeries.TIME_SERIES_PRODUCT_TYPE)) {
                     setCurrentView(view);
                 }

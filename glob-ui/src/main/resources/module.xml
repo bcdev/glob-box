@@ -33,7 +33,7 @@
         <toolView>
             <id>org.esa.beam.glob.ui.SliderToolView</id>
             <class>org.esa.beam.glob.ui.SliderToolView</class>
-            <title>Time Series Slider</title>
+            <title>Time Series Player</title>
             <tabTitle>Time Series</tabTitle>
             <mnemonic>T</mnemonic>
             <accelerator>ctrl alt T</accelerator>

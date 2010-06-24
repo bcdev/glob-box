@@ -20,7 +20,6 @@ import java.util.WeakHashMap;
  */
 class TimeSeriesProductReader extends DimapProductReader {
 
-    private TimeSeries timeSeriesProduct;
     private Map<Band, Band> bandMap = new WeakHashMap<Band, Band>();
 
     public TimeSeriesProductReader(ProductReaderPlugIn productReaderPlugIn) {
@@ -31,7 +30,7 @@ class TimeSeriesProductReader extends DimapProductReader {
     protected Product readProductNodesImpl() throws IOException {
         final Product product = super.readProductNodesImpl();
         if (product.getProductType().equals(TimeSeries.TIME_SERIES_PRODUCT_TYPE)) {
-            timeSeriesProduct = TimeSeriesFactory.create(product);
+            TimeSeriesFactory.create(product);
         }
         return product;
     }
@@ -48,7 +47,8 @@ class TimeSeriesProductReader extends DimapProductReader {
         // 2) Identify band in source prodzct
         // 3) open new / reuse opened product
         if (srcBand == null) {
-            srcBand = timeSeriesProduct.getBand(destBand.getName());
+            final TimeSeries timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(getProduct());
+            srcBand = timeSeries.getBand(destBand.getName());
             if (srcBand != null) {
                 bandMap.put(destBand, srcBand);
             }

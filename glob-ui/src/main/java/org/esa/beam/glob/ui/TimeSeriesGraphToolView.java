@@ -14,7 +14,7 @@ import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.framework.ui.PixelPositionListener;
 import org.esa.beam.framework.ui.application.support.AbstractToolView;
 import org.esa.beam.framework.ui.product.ProductSceneView;
-import org.esa.beam.glob.GlobBox;
+import org.esa.beam.glob.core.TimeSeriesMapper;
 import org.esa.beam.util.StringUtils;
 import org.esa.beam.visat.VisatApp;
 import org.jfree.chart.ChartFactory;
@@ -46,6 +46,7 @@ import java.awt.Dimension;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.InputEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
@@ -61,6 +62,8 @@ import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+
+import static org.esa.beam.glob.core.timeseries.datamodel.TimeSeries.*;
 
 public class TimeSeriesGraphToolView extends AbstractToolView {
 
@@ -79,7 +82,6 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
 
     private final JTextField minInput = new JTextField(8);
     private final JTextField maxInput = new JTextField(8);
-    private GlobBox globBox;
     private JCheckBox autoAdjustBox;
     private TimeSeriesCollection timeSeriesCollection;
     private TimeSeries cursorTimeSeries;
@@ -95,7 +97,6 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
 
     @Override
     protected JComponent createControl() {
-        globBox = GlobBox.getInstance();
         titleBase = getDescriptor().getTitle();
         JPanel mainPanel = new JPanel(new BorderLayout(4, 4));
         final JFreeChart chart = ChartFactory.createTimeSeriesChart(null,
@@ -126,7 +127,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         }
         timeSeriesPlot.setDataset(timeSeriesCollection);
 
-        setCurrentView(globBox.getCurrentView());
+        setCurrentView(visatApp.getSelectedProductSceneView());
         showSelectedPinCheckbox.setEnabled(somePinIsSelected);
 
         updateUIState();
@@ -226,8 +227,10 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         final Point2D modelPos = levelZeroToModel.transform(position, null);
         final Point2D currentPos = modelToCurrentLevel.transform(modelPos, null);
 
-        Band[] timeSeriesBands = currentView.getProduct().getBands();
-        pinTimeSeries = computeTimeSeries("pinTimeSeries", timeSeriesBands,
+        org.esa.beam.glob.core.timeseries.datamodel.TimeSeries timeSeries;
+        timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(currentView.getProduct());
+        Band[] bands = timeSeries.getBandsForVariable(rasterToVariableName(currentView.getRaster().getName()));
+        pinTimeSeries = computeTimeSeries("pinTimeSeries", bands,
                                           (int) currentPos.getX(), (int) currentPos.getY(),
                                           currentLevel);
 
@@ -295,6 +298,22 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
                 somePinIsSelected = true;
                 showSelectedPinCheckbox.setEnabled(true);
             }
+            view.addKeyListener(new KeyAdapter() {
+                @Override
+                public void keyPressed(KeyEvent e) {
+                    System.out.println("e.getKeyChar() = " + e.getKeyChar());
+                    if (e.getKeyChar() == InputEvent.SHIFT_DOWN_MASK) {
+
+                    }
+                }
+
+                public void keyReleased(KeyEvent e) {
+                    System.out.println("e.getKeyChar() = " + e.getKeyChar());
+                    if (e.getKeyChar() == InputEvent.SHIFT_DOWN_MASK) {
+                        getTimeSeriesPlot().getRangeAxis().setAutoRange(false);
+                    }
+                }
+            });
         } else {
             somePinIsSelected = false;
             showSelectedPinCheckbox.setEnabled(false);
@@ -311,9 +330,11 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         if (cursorTimeSeries != null) {
             timeSeriesCollection.removeSeries(cursorTimeSeries);
         }
-        if (currentView.getProduct().getProductType().equals(org.esa.beam.glob.core.timeseries.datamodel.TimeSeries.TIME_SERIES_PRODUCT_TYPE)) {
-            Band[] timeSeriesBands = currentView.getProduct().getBands();
-            cursorTimeSeries = computeTimeSeries("cursorTimeSeries", timeSeriesBands,
+        if (currentView.getProduct().getProductType().equals(TIME_SERIES_PRODUCT_TYPE)) {
+            org.esa.beam.glob.core.timeseries.datamodel.TimeSeries timeSeries;
+            timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(currentView.getProduct());
+            Band[] bands = timeSeries.getBandsForVariable(rasterToVariableName(currentView.getRaster().getName()));
+            cursorTimeSeries = computeTimeSeries("cursorTimeSeries", bands,
                                                  pixelX, pixelY, currentLevel);
             timeSeriesCollection.addSeries(cursorTimeSeries);
             if (timeSeriesCollection.getSeries(0) == cursorTimeSeries) {
@@ -325,10 +346,6 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
             }
             getTimeSeriesPlot().setDataset(timeSeriesCollection);
             getTimeSeriesPlot().setNoDataMessage(NO_DATA_MESSAGE);
-
-            if (autoAdjustBox.isSelected()) {
-                getTimeSeriesPlot().getRangeAxis().configure();
-            }
         }
     }
 
