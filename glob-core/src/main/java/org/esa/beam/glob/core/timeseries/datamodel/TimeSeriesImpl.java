@@ -324,13 +324,15 @@ class TimeSeriesImpl extends TimeSeries {
             Guardian.assertNotNull("rasterStartTime", rasterStartTime);
             final String bandName = variableToRasterName(nodeName, rasterTimeCoding);
             if (!tsProduct.containsBand(bandName)) {
-                final Band band = tsProduct.addBand(bandName, raster.getDataType());
+                final Band band = new Band(bandName, raster.getDataType(), tsProduct.getSceneRasterWidth(),
+                                           tsProduct.getSceneRasterHeight());
                 band.setSourceImage(raster.getSourceImage());
                 ProductUtils.copyRasterDataNodeProperties(raster, band);
                 // todo copy also referenced band in valid pixel expression
                 band.setValidPixelExpression(null);
                 band.setTimeCoding(new DefaultTimeCoding(rasterStartTime, rasterEndTime,
                                                          raster.getSceneRasterHeight()));
+                tsProduct.addBand(band);
                 ProductData.UTC tsStartTime = tsProduct.getStartTime();
                 if (tsStartTime == null || rasterStartTime.getAsDate().before(tsStartTime.getAsDate())) {
                     tsProduct.setStartTime(rasterStartTime);

@@ -32,7 +32,7 @@
 
         <toolView>
             <id>sliderToolView</id>
-            <class>org.esa.beam.glob.ui.SliderToolView</class>
+            <class>org.esa.beam.glob.ui.TimeSeriesPlayerToolView</class>
             <title>Time Series Player</title>
             <tabTitle>Time Series</tabTitle>
             <mnemonic>T</mnemonic>

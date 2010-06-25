@@ -8,6 +8,9 @@ import com.bc.ceres.swing.TableLayout;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.ImageInfo;
 import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.datamodel.ProductNodeEvent;
+import org.esa.beam.framework.datamodel.ProductNodeListener;
+import org.esa.beam.framework.datamodel.ProductNodeListenerAdapter;
 import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.framework.ui.UIUtils;
 import org.esa.beam.framework.ui.application.support.AbstractToolView;
@@ -42,25 +45,29 @@ import java.util.TimeZone;
  * Date: 18.06.2010
  * Time: 15:48:31
  */
-public class SliderToolView extends AbstractToolView {
-
-    public static final String ID = "sliderToolView";
+public class TimeSeriesPlayerToolView extends AbstractToolView {
 
     private final SceneViewListener sceneViewListener;
+    private final ProductNodeListener productNodeListener;
 
     private ProductSceneView currentView;
     private JSlider timeSlider;
     private TimeSeries timeSeries;
 
-    public SliderToolView() {
+    public TimeSeriesPlayerToolView() {
         sceneViewListener = new SceneViewListener();
+        productNodeListener = new TimeSeriesProductNodeListener();
     }
 
     private void setCurrentView(ProductSceneView newView) {
         if (currentView != newView) {
+            if (currentView != null) {
+                currentView.getProduct().removeProductNodeListener(productNodeListener);
+            }
             currentView = newView;
             if (currentView != null) {
                 timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(currentView.getProduct());
+                currentView.getProduct().addProductNodeListener(productNodeListener);
             } else {
                 timeSeries = null;
             }
@@ -236,6 +243,23 @@ public class SliderToolView extends AbstractToolView {
             final Container contentPane = e.getInternalFrame().getContentPane();
             if (currentView == contentPane) {
                 setCurrentView(null);
+            }
+        }
+    }
+
+    private class TimeSeriesProductNodeListener extends ProductNodeListenerAdapter {
+
+        @Override
+        public void nodeAdded(ProductNodeEvent event) {
+            if (event.getSourceNode() instanceof Band) {
+                configureTimeSlider();
+            }
+        }
+
+        @Override
+        public void nodeRemoved(ProductNodeEvent event) {
+            if (event.getSourceNode() instanceof Band) {
+                configureTimeSlider();
             }
         }
     }

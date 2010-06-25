@@ -80,6 +80,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
     private TimeSeriesPPL pixelPosListener;
     private final PinSelectionListener pinSelectionListener = new PinSelectionListener();
     private final ProductNodeListener pinMovedListener = new PinMovedListener();
+    private final ProductNodeListener productNodeListener;
     private ProductSceneView currentView;
     private ChartPanel chartPanel;
     private ExecutorService executorService;
@@ -97,6 +98,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         pixelPosListener = new TimeSeriesPPL();
         executorService = Executors.newSingleThreadExecutor();
         timeSeriesCollection = new TimeSeriesCollection();
+        productNodeListener = new TimeSeriesProductNodeListener();
     }
 
     @Override
@@ -347,14 +349,23 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
 
 
     private void setCurrentView(ProductSceneView view) {
+        if (currentView != null) {
+            currentView.getProduct().removeProductNodeListener(productNodeListener);
+            view.removePixelPositionListener(pixelPosListener);
+            view.addPropertyChangeListener(ProductSceneView.PROPERTY_NAME_SELECTED_PIN, pinSelectionListener);
+        }
         if (view != null) {
+            view.getProduct().addProductNodeListener(productNodeListener);
             view.addPixelPositionListener(pixelPosListener);
-            final boolean isViewPinSelectionListening = Arrays.asList(
-                    view.getListeners(PropertyChangeListener.class)).contains(pinSelectionListener);
-            if (!isViewPinSelectionListening) {
-                view.addPropertyChangeListener(ProductSceneView.PROPERTY_NAME_SELECTED_PIN,
-                                               pinSelectionListener);
-            }
+            view.addPropertyChangeListener(ProductSceneView.PROPERTY_NAME_SELECTED_PIN, pinSelectionListener);
+
+//            final boolean isViewPinSelectionListening = Arrays.asList(
+//                    view.getListeners(PropertyChangeListener.class)).contains(pinSelectionListener);
+//            if (!isViewPinSelectionListening) {
+//                view.addPropertyChangeListener(ProductSceneView.PROPERTY_NAME_SELECTED_PIN,
+//                                               pinSelectionListener);
+//            }
+
             if (view.getSelectedPin() != null) {
                 somePinIsSelected = true;
                 showTimeSeriesForSelectedPinButton.setEnabled(true);
@@ -559,6 +570,25 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
                 if (showTimeSeriesForSelectedPinButton.isSelected() && somePinIsSelected) {
                     addSelectedPinSeries(currentView.getSelectedPin());
                 }
+            }
+        }
+    }
+
+    private class TimeSeriesProductNodeListener extends ProductNodeListenerAdapter {
+
+        @Override
+        public void nodeAdded(ProductNodeEvent event) {
+            if (event.getSourceNode() instanceof Band) {
+                if ((currentView.getSelectedPin() != null) && (somePinIsSelected)) {
+                    removePinTimeSeries();
+                    addSelectedPinSeries(currentView.getSelectedPin());
+                }
+            }
+        }
+
+        @Override
+        public void nodeRemoved(ProductNodeEvent event) {
+            if (event.getSourceNode() instanceof Band) {
             }
         }
     }
