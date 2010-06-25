@@ -17,8 +17,6 @@ import java.awt.BorderLayout;
 import java.util.WeakHashMap;
 
 
-// todo (mp 20100624) If variable is removed view must be closed
-
 public class TimeSeriesConfigToolView extends AbstractToolView {
 
     private AppContext appContext;
