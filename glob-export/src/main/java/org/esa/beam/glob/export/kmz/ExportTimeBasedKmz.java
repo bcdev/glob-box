@@ -2,6 +2,7 @@ package org.esa.beam.glob.export.kmz;
 
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.swing.progress.ProgressMonitorSwingWorker;
+import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.CrsGeoCoding;
 import org.esa.beam.framework.datamodel.GeoCoding;
 import org.esa.beam.framework.datamodel.GeoPos;
@@ -16,7 +17,8 @@ import org.esa.beam.framework.help.HelpSys;
 import org.esa.beam.framework.ui.command.CommandEvent;
 import org.esa.beam.framework.ui.command.ExecCommand;
 import org.esa.beam.framework.ui.product.ProductSceneView;
-import org.esa.beam.glob.GlobBox;
+import org.esa.beam.glob.core.TimeSeriesMapper;
+import org.esa.beam.glob.core.timeseries.datamodel.TimeSeries;
 import org.esa.beam.jai.ImageManager;
 import org.esa.beam.util.SystemUtils;
 import org.esa.beam.util.io.BeamFileChooser;
@@ -161,14 +163,20 @@ public class ExportTimeBasedKmz extends ExecCommand {
     }
 
     private KmlFeature createKmlFeature() {
-        final GlobBox globBox = GlobBox.getInstance();
-        final List<RasterDataNode> rasterList = globBox.getRasterList();
-        if (rasterList.isEmpty()) {
+        if (view.isRGB()) {
             return null;
         }
-        final RasterDataNode refRaster = globBox.getCurrentView().getRaster();
+        TimeSeriesMapper timeSeriesMapper = TimeSeriesMapper.getInstance();
+        TimeSeries timeSeries = timeSeriesMapper.getTimeSeries(view.getProduct());
+        List<Band> bands = timeSeries.getBandsForVariable(
+                    TimeSeries.rasterToVariableName(view.getRaster().getName()));
+        
+        if (bands.size() == 0) {
+            return null;
+        }
+        RasterDataNode refRaster = bands.get(0);
         final KmlFolder folder = new KmlFolder(refRaster.getName(), refRaster.getDescription());
-        for (RasterDataNode raster : rasterList) {
+        for (RasterDataNode raster : bands) {
             final GeoCoding geoCoding = raster.getGeoCoding();
             final PixelPos upperLeftPP = new PixelPos(0.5f, 0.5f);
             final PixelPos lowerRightPP = new PixelPos(raster.getSceneRasterWidth() - 0.5f,
@@ -186,8 +194,8 @@ public class ExportTimeBasedKmz extends ExecCommand {
             final BoundingBox referencedEnvelope = new ReferencedEnvelope(west, east, north, south,
                                                                           DefaultGeographicCRS.WGS84);
 
-            final ProductData.UTC startTime = raster.getProduct().getStartTime();
-            final ProductData.UTC endTime = raster.getProduct().getEndTime();
+            final ProductData.UTC startTime = raster.getTimeCoding().getStartTime();
+            final ProductData.UTC endTime = raster.getTimeCoding().getEndTime();
 
             final ImageManager imageManager = ImageManager.getInstance();
             final ImageInfo imageInfo = raster.getImageInfo(ProgressMonitor.NULL);
