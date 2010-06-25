@@ -37,6 +37,10 @@ class TimeSeriesConfigForm {
     private JLabel dimensionField;
     private VariableSelectionPane variablePane;
     private ProductLocationsPane locationsPane;
+    private JButton cloneButton;
+    private JButton viewButton;
+    private JButton regridButton;
+    private JButton exportButton;
 
     TimeSeriesConfigForm() {
         dateFormat = new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss", Locale.ENGLISH);
@@ -78,6 +82,7 @@ class TimeSeriesConfigForm {
     public void updateFormControl(Product product) {
         TimeSeries timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(product);
         updateInfoPanel(timeSeries);
+        updateButtonPanel(timeSeries);
         updateVariablePanel(timeSeries);
         updateProductsPanel(timeSeries);
     }
@@ -151,10 +156,10 @@ class TimeSeriesConfigForm {
         final JButton newButton = new JButton("New TS");
         final Command newTSCommand = VisatApp.getApp().getCommandManager().getCommand(NewTimeSeriesAssistantAction.ID);
         newButton.setAction(newTSCommand.getAction());
-        final JButton cloneButton = new JButton("Clone TS");
-        final JButton viewButton = new JButton("View TS");
-        final JButton regridButton = new JButton("Regrid TS");
-        final JButton exportButton = new JButton("Export TS");
+        cloneButton = new JButton("Clone TS");
+        viewButton = new JButton("View TS");
+        regridButton = new JButton("Regrid TS");
+        exportButton = new JButton("Export TS");
 
         final JPanel panel = new JPanel(layout);
         panel.add(newButton);
@@ -163,6 +168,14 @@ class TimeSeriesConfigForm {
         panel.add(regridButton);
         panel.add(exportButton);
         return panel;
+    }
+
+    private void updateButtonPanel(TimeSeries timeSeries) {
+        boolean enabled = timeSeries != null;
+        cloneButton.setEnabled(enabled);
+        viewButton.setEnabled(enabled);
+        regridButton.setEnabled(enabled);
+        exportButton.setEnabled(enabled);
     }
 
     private JPanel createVariablePanel() {
@@ -202,7 +215,6 @@ class TimeSeriesConfigForm {
         layout.setRowWeightY(1, 1.0);
         layout.setRowFill(1, TableLayout.Fill.BOTH);
 
-
         final JPanel panel = new JPanel(layout);
         panel.add(new TitledSeparator("Product Sources"));
         locationsPane = new ProductLocationsPane();
@@ -218,7 +230,7 @@ class TimeSeriesConfigForm {
         } else {
             locationsModel = new DefaultProductLocationsPaneModel();
         }
-        locationsPane.setModel(locationsModel);
+        locationsPane.setModel(locationsModel, (timeSeries != null));
     }
 
     private static class TimeSeriesVariableSelectionPaneModel extends AbstractListModel

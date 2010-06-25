@@ -33,6 +33,8 @@ class ProductLocationsPane extends JPanel {
 
     private ProductLocationsPaneModel model;
     private JList sourceList;
+    private JButton addButton;
+    private JButton removeButton;
 
     ProductLocationsPane() {
         this(new DefaultProductLocationsPaneModel());
@@ -43,9 +45,9 @@ class ProductLocationsPane extends JPanel {
         createPane();
     }
 
-    public void setModel(ProductLocationsPaneModel model) {
+    public void setModel(ProductLocationsPaneModel model, boolean enabled) {
         this.model = model;
-        updatePane();
+        updatePane(enabled);
     }
 
     private void createPane() {
@@ -66,11 +68,11 @@ class ProductLocationsPane extends JPanel {
             public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected,
                                                           boolean cellHasFocus) {
                 final JLabel label = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected,
-                                                                                       cellHasFocus);
+                                                                                 cellHasFocus);
                 if (value instanceof ProductLocation) {
                     final ProductLocation location = (ProductLocation) value;
                     String path = location.getPath();
-                    if(location.getProductLocationType() != ProductLocationType.FILE) {
+                    if (location.getProductLocationType() != ProductLocationType.FILE) {
                         if (!path.endsWith(File.separator)) {
                             path += File.separator;
                         }
@@ -90,7 +92,7 @@ class ProductLocationsPane extends JPanel {
         });
 
 
-        final JButton addButton = new JButton("Add");
+        addButton = new JButton("Add");
         addButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -103,7 +105,7 @@ class ProductLocationsPane extends JPanel {
             }
         });
 
-        final JButton removeButton = new JButton("Remove");
+        removeButton = new JButton("Remove");
         removeButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -112,11 +114,13 @@ class ProductLocationsPane extends JPanel {
         });
         add(new JScrollPane(sourceList));
         add(addButton);
-        add(removeButton, new TableLayout.Cell(1,1));
+        add(removeButton, new TableLayout.Cell(1, 1));
     }
 
-    private void updatePane() {
+    private void updatePane(boolean enabled) {
         sourceList.setModel(model);
+        addButton.setEnabled(enabled);
+        removeButton.setEnabled(enabled);
     }
 
     private class AddDirectoryAction extends AbstractAction {
@@ -124,7 +128,7 @@ class ProductLocationsPane extends JPanel {
         private boolean recursive;
 
         private AddDirectoryAction(boolean recursive) {
-            this("Add Directory" + (recursive ? " Recursive": ""));
+            this("Add Directory" + (recursive ? " Recursive" : ""));
             this.recursive = recursive;
         }
 
@@ -138,12 +142,12 @@ class ProductLocationsPane extends JPanel {
             final VisatApp visatApp = VisatApp.getApp();
             final PropertyMap preferences = visatApp.getPreferences();
             String lastDir = preferences.getPropertyString(VisatApp.PROPERTY_KEY_APP_LAST_OPEN_DIR,
-                                                                SystemUtils.getUserHomeDir().getPath());
+                                                           SystemUtils.getUserHomeDir().getPath());
 
             folderChooser.setCurrentDirectory(new File(lastDir));
 
             final int result = folderChooser.showOpenDialog(ProductLocationsPane.this);
-            if(result != JFileChooser.APPROVE_OPTION) {
+            if (result != JFileChooser.APPROVE_OPTION) {
                 return;
             }
 
@@ -167,9 +171,9 @@ class ProductLocationsPane extends JPanel {
             final VisatApp visatApp = VisatApp.getApp();
             final PropertyMap preferences = visatApp.getPreferences();
             String lastDir = preferences.getPropertyString(VisatApp.PROPERTY_KEY_APP_LAST_OPEN_DIR,
-                                                                SystemUtils.getUserHomeDir().getPath());
+                                                           SystemUtils.getUserHomeDir().getPath());
             String lastFormat = preferences.getPropertyString(VisatApp.PROPERTY_KEY_APP_LAST_OPEN_FORMAT,
-                                                                   VisatApp.ALL_FILES_IDENTIFIER);
+                                                              VisatApp.ALL_FILES_IDENTIFIER);
             BeamFileChooser fileChooser = new BeamFileChooser();
             fileChooser.setCurrentDirectory(new File(lastDir));
             fileChooser.setAcceptAllFileFilterUsed(true);
@@ -205,7 +209,8 @@ class ProductLocationsPane extends JPanel {
                     preferences.setPropertyString(VisatApp.PROPERTY_KEY_APP_LAST_OPEN_FORMAT, currentFormat);
                 }
             } else {
-                preferences.setPropertyString(VisatApp.PROPERTY_KEY_APP_LAST_OPEN_FORMAT, VisatApp.ALL_FILES_IDENTIFIER);
+                preferences.setPropertyString(VisatApp.PROPERTY_KEY_APP_LAST_OPEN_FORMAT,
+                                              VisatApp.ALL_FILES_IDENTIFIER);
             }
             final File[] selectedFiles = fileChooser.getSelectedFiles();
             model.addFiles(selectedFiles);
