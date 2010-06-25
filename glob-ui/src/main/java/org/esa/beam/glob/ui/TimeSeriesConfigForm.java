@@ -2,20 +2,24 @@ package org.esa.beam.glob.ui;
 
 import com.bc.ceres.swing.TableLayout;
 import com.jidesoft.swing.TitledSeparator;
+import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.ui.command.Command;
 import org.esa.beam.glob.core.TimeSeriesMapper;
 import org.esa.beam.glob.core.timeseries.datamodel.ProductLocation;
 import org.esa.beam.glob.core.timeseries.datamodel.ProductLocationType;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeSeries;
+import org.esa.beam.util.Debug;
 import org.esa.beam.visat.VisatApp;
 
 import javax.swing.AbstractListModel;
 import javax.swing.JButton;
 import javax.swing.JComponent;
+import javax.swing.JInternalFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import java.awt.Dimension;
+import java.beans.PropertyVetoException;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -51,7 +55,6 @@ class TimeSeriesConfigForm {
         layout.setColumnWeightY(1, 0.0);
         layout.setCellFill(0, 0, TableLayout.Fill.HORIZONTAL);
         layout.setCellWeightY(0, 0, 0.0);
-//        layout.setCellRowspan(0, 1, 3);
         layout.setCellColspan(1, 0, 2);
         layout.setCellColspan(2, 0, 2);
 
@@ -63,8 +66,8 @@ class TimeSeriesConfigForm {
         final JPanel control = new JPanel(layout);
         control.add(infoPanel);
         control.add(buttonPanel);
-        control.add(variablePanel, new TableLayout.Cell(1,0));
-        control.add(productsPanel, new TableLayout.Cell(2,0));
+        control.add(variablePanel, new TableLayout.Cell(1, 0));
+        control.add(productsPanel, new TableLayout.Cell(2, 0));
         return control;
     }
 
@@ -181,16 +184,9 @@ class TimeSeriesConfigForm {
 
     private void updateVariablePanel(TimeSeries timeSeries) {
         final VariableSelectionPaneModel model;
-        if(timeSeries != null) {
+        if (timeSeries != null) {
             model = new TimeSeriesVariableSelectionPaneModel(timeSeries);
-            final List<String> variableList = timeSeries.getTimeVariables();
-            final Variable[] variables = new Variable[variableList.size()];
-            for (int i = 0; i < variables.length; i++) {
-                final String name = variableList.get(i);
-                variables[i] = new Variable(name, timeSeries.isVariableSelected(name));
-            }
-            model.set(variables);
-        }else {
+        } else {
             model = new DefaultVariableSelectionPaneModel();
         }
 
@@ -205,7 +201,7 @@ class TimeSeriesConfigForm {
         layout.setRowWeightY(0, 0.0);
         layout.setRowWeightY(1, 1.0);
         layout.setRowFill(1, TableLayout.Fill.BOTH);
-        
+
 
         final JPanel panel = new JPanel(layout);
         panel.add(new TitledSeparator("Product Sources"));
@@ -217,15 +213,16 @@ class TimeSeriesConfigForm {
 
     private void updateProductsPanel(TimeSeries timeSeries) {
         final ProductLocationsPaneModel locationsModel;
-        if(timeSeries != null) {
+        if (timeSeries != null) {
             locationsModel = new TimeSeriesProductLocationsPaneModel(timeSeries);
-        }else {
+        } else {
             locationsModel = new DefaultProductLocationsPaneModel();
         }
         locationsPane.setModel(locationsModel);
     }
 
-    private static class TimeSeriesVariableSelectionPaneModel extends AbstractListModel implements VariableSelectionPaneModel {
+    private static class TimeSeriesVariableSelectionPaneModel extends AbstractListModel
+            implements VariableSelectionPaneModel {
 
         private final TimeSeries timeSeries;
 
@@ -255,10 +252,26 @@ class TimeSeriesConfigForm {
         @Override
         public void setSelectedVariableAt(int index, boolean selected) {
             final String varName = timeSeries.getTimeVariables().get(index);
-            if(timeSeries.isVariableSelected(varName) != selected) {
+            if (timeSeries.isVariableSelected(varName) != selected) {
+                closeAssociatedViews(varName);
                 timeSeries.setVariableSelected(varName, selected);
                 fireContentsChanged(this, index, index);
             }
+        }
+
+        private void closeAssociatedViews(String varName) {
+            final Band[] bands = timeSeries.getBandsForVariable(varName);
+            for (Band band : bands) {
+                final JInternalFrame[] internalFrames = VisatApp.getApp().findInternalFrames(band);
+                for (final JInternalFrame internalFrame : internalFrames) {
+                    try {
+                        internalFrame.setClosed(true);
+                    } catch (PropertyVetoException e) {
+                        Debug.trace(e);
+                    }
+                }
+            }
+
         }
 
         @Override
@@ -266,7 +279,7 @@ class TimeSeriesConfigForm {
             final List<String> allVars = timeSeries.getTimeVariables();
             final List<String> selectedVars = new ArrayList<String>(allVars.size());
             for (String varName : allVars) {
-                if(timeSeries.isVariableSelected(varName)) {
+                if (timeSeries.isVariableSelected(varName)) {
                     selectedVars.add(varName);
                 }
             }
@@ -274,7 +287,8 @@ class TimeSeriesConfigForm {
         }
     }
 
-    private static class TimeSeriesProductLocationsPaneModel extends AbstractListModel implements ProductLocationsPaneModel {
+    private static class TimeSeriesProductLocationsPaneModel extends AbstractListModel
+            implements ProductLocationsPaneModel {
 
         private final TimeSeries timeSeries;
 

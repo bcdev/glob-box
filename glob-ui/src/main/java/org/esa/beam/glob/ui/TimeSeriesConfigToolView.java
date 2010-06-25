@@ -2,7 +2,9 @@ package org.esa.beam.glob.ui;
 
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductNode;
+import org.esa.beam.framework.datamodel.ProductNodeEvent;
 import org.esa.beam.framework.datamodel.ProductNodeGroup;
+import org.esa.beam.framework.datamodel.ProductNodeListenerAdapter;
 import org.esa.beam.framework.ui.AppContext;
 import org.esa.beam.framework.ui.application.support.AbstractToolView;
 import org.esa.beam.framework.ui.product.ProductTreeListenerAdapter;
@@ -26,10 +28,12 @@ public class TimeSeriesConfigToolView extends AbstractToolView {
 
     private WeakHashMap<Product, TimeSeriesConfigForm> formMap;
     private TimeSeriesConfigForm activeForm;
+    private TimeSeriesConfigToolView.TSConfigPNL tsConfigPNL;
 
     public TimeSeriesConfigToolView() {
         formMap = new WeakHashMap<Product, TimeSeriesConfigForm>();
         appContext = VisatApp.getApp();
+        tsConfigPNL = new TSConfigPNL();
     }
 
     protected JPanel getControlPanel() {
@@ -46,7 +50,6 @@ public class TimeSeriesConfigToolView extends AbstractToolView {
         setSelectedProduct(appContext.getSelectedProduct());
 
         VisatApp.getApp().addProductTreeListener(new TSConfigPTL());
-
         realizeActiveForm();
         updateTitle();
         return controlPanel;
@@ -70,9 +73,17 @@ public class TimeSeriesConfigToolView extends AbstractToolView {
     private void setSelectedProduct(Product newProduct) {
         Product oldProduct = selectedProduct;
         if (newProduct != oldProduct) {
+            if(oldProduct != null) {
+                oldProduct.removeProductNodeListener(tsConfigPNL);
+            }
+            
             selectedProduct = newProduct;
             realizeActiveForm();
             updateTitle();
+
+            if(newProduct != null) {
+                selectedProduct.addProductNodeListener(tsConfigPNL);
+            }
         }
     }
 
@@ -129,6 +140,14 @@ public class TimeSeriesConfigToolView extends AbstractToolView {
                 }
                 return productNode.getProduct();
             }
+        }
+    }
+
+    private class TSConfigPNL extends ProductNodeListenerAdapter {
+
+        @Override
+        public void nodeChanged(ProductNodeEvent event) {
+            activeForm.updateFormControl(getSelectedProduct());
         }
     }
 }
