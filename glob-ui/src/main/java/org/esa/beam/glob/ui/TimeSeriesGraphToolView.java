@@ -60,6 +60,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.text.DecimalFormat;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -279,7 +280,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
 
         org.esa.beam.glob.core.timeseries.datamodel.TimeSeries timeSeries;
         timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(currentView.getProduct());
-        Band[] bands = timeSeries.getBandsForVariable(rasterToVariableName(currentView.getRaster().getName()));
+        List<Band> bands = timeSeries.getBandsForVariable(rasterToVariableName(currentView.getRaster().getName()));
         pinTimeSeries = computeTimeSeries("pinTimeSeries", bands,
                                           (int) currentPos.getX(), (int) currentPos.getY(),
                                           currentLevel);
@@ -295,7 +296,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         getTimeSeriesPlot().setDataset(timeSeriesCollection);
     }
 
-    private TimeSeries computeTimeSeries(String title, final Band[] bandList, int pixelX, int pixelY,
+    private TimeSeries computeTimeSeries(String title, final List<Band> bandList, int pixelX, int pixelY,
                                          int currentLevel) {
         TimeSeries timeSeries = new TimeSeries(title);
         for (Band band : bandList) {
@@ -377,8 +378,9 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         if (currentView != null) {
             org.esa.beam.glob.core.timeseries.datamodel.TimeSeries timeSeries;
             timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(currentView.getProduct());
-            Band[] bands = timeSeries.getBandsForVariable(rasterToVariableName(currentView.getRaster().getName()));
-            if (bands.length > 1) {
+            final List<Band> bands = timeSeries.getBandsForVariable(
+                    rasterToVariableName(currentView.getRaster().getName()));
+            if (bands.size() > 1) {
                 cursorTimeSeries = computeTimeSeries("cursorTimeSeries", bands,
                                                      pixelX, pixelY, currentLevel);
                 timeSeriesCollection.addSeries(cursorTimeSeries);
@@ -396,7 +398,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         }
     }
 
-    private Range computeYAxisRange(Band[] bands) {
+    private Range computeYAxisRange(List<Band> bands) {
         Range result = null;
         for (Band band : bands) {
             Stx stx = band.getStx();

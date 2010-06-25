@@ -260,7 +260,7 @@ class TimeSeriesConfigForm {
         }
 
         private void closeAssociatedViews(String varName) {
-            final Band[] bands = timeSeries.getBandsForVariable(varName);
+            final List<Band> bands = timeSeries.getBandsForVariable(varName);
             for (Band band : bands) {
                 final JInternalFrame[] internalFrames = VisatApp.getApp().findInternalFrames(band);
                 for (final JInternalFrame internalFrame : internalFrames) {

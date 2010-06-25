@@ -223,14 +223,14 @@ class TimeSeriesImpl extends TimeSeries {
     }
 
     @Override
-    public Band[] getBandsForVariable(String variableName) {
+    public List<Band> getBandsForVariable(String variableName) {
         final List<Band> bands = new ArrayList<Band>();
         for (Band band : tsProduct.getBands()) {
             if (variableName.equals(rasterToVariableName(band.getName()))) {
                 bands.add(band);
             }
         }
-        return bands.toArray(new Band[bands.size()]);
+        return bands;
     }
 
     private void updateAutogrouping() {

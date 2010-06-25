@@ -43,7 +43,7 @@ public abstract class TimeSeries {
 
     public abstract List<Product> getProducts();
 
-    public abstract Band[] getBandsForVariable(String variableName);
+    public abstract List<Band> getBandsForVariable(String variableName);
 
 
     public static String variableToRasterName(String variableName, TimeCoding timeCoding) {

@@ -33,7 +33,6 @@ import java.awt.Container;
 import java.awt.FlowLayout;
 import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.TimeZone;
@@ -121,10 +120,10 @@ public class SliderToolView extends AbstractToolView {
         if (timeSeries != null) {
             final RasterDataNode currentRaster = currentView.getRaster();
             final String variableName = TimeSeries.rasterToVariableName(currentRaster.getName());
-            Band[] bands = timeSeries.getBandsForVariable(variableName);
+            final List<Band> bands = timeSeries.getBandsForVariable(variableName);
 
             timeSlider.setMinimum(0);
-            final int nodeCount = bands.length;
+            final int nodeCount = bands.size();
             timeSlider.setMaximum(nodeCount - 1);
             timeSlider.setSnapToTicks(true);
 
@@ -132,7 +131,7 @@ public class SliderToolView extends AbstractToolView {
             if (nodeCount > 1) {
                 timeSlider.setEnabled(true);
                 for (int i = 0; i < nodeCount; i++) {
-                    final ProductData.UTC utcStartTime = bands[i].getTimeCoding().getStartTime();
+                    final ProductData.UTC utcStartTime = bands.get(i).getTimeCoding().getStartTime();
                     SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MMM-yyyy");
                     SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
                     dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -147,8 +146,10 @@ public class SliderToolView extends AbstractToolView {
                 timeSlider.setLabelTable(null);
                 timeSlider.setEnabled(false);
             }
-            final List<Band> bandList = Arrays.asList(bands);
-            timeSlider.setValue(bandList.indexOf(currentRaster));
+            final int index = bands.indexOf(currentRaster);
+            if (index != -1) {
+                timeSlider.setValue(index);
+            }
         } else {
             timeSlider.setLabelTable(null);
             timeSlider.setEnabled(false);
@@ -203,10 +204,10 @@ public class SliderToolView extends AbstractToolView {
         public void stateChanged(ChangeEvent e) {
             final int newBandIndex = timeSlider.getValue();
             if (currentBandIndex != newBandIndex && currentView != null) {
-                Band[] bands = timeSeries.getBandsForVariable(
+                final List<Band> bands = timeSeries.getBandsForVariable(
                         TimeSeries.rasterToVariableName(currentView.getRaster().getName()));
 //                final Band newRaster = getCurrentProduct().getBandGroup().get(newBandIndex);
-                final Band newRaster = bands[newBandIndex];
+                final Band newRaster = bands.get(newBandIndex);
                 exchangeRasterInProductSceneView(newRaster, currentView);
                 currentBandIndex = newBandIndex;
             }
