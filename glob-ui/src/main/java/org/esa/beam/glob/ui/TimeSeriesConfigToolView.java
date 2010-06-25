@@ -2,6 +2,7 @@ package org.esa.beam.glob.ui;
 
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductNode;
+import org.esa.beam.framework.datamodel.ProductNodeGroup;
 import org.esa.beam.framework.ui.AppContext;
 import org.esa.beam.framework.ui.application.support.AbstractToolView;
 import org.esa.beam.framework.ui.product.ProductTreeListenerAdapter;
@@ -114,7 +115,20 @@ public class TimeSeriesConfigToolView extends AbstractToolView {
 
         @Override
         public void productNodeSelected(ProductNode productNode, int clickCount) {
-            setSelectedProduct(productNode.getProduct());
+            setSelectedProduct(getProduct(productNode));
+        }
+
+        private Product getProduct(ProductNode productNode) {
+            while (true) {
+                if (productNode instanceof ProductNodeGroup<?>) {
+                    ProductNodeGroup<?> productNodeGroup = (ProductNodeGroup<?>) productNode;
+                    if (productNodeGroup.getNodeCount() > 0) {
+                        productNode = productNodeGroup.get(0);
+                        continue;
+                    }
+                }
+                return productNode.getProduct();
+            }
         }
     }
 }
