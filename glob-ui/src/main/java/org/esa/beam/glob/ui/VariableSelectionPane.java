@@ -20,10 +20,12 @@ class VariableSelectionPane extends JPanel {
 
     private VariableSelectionPaneModel model;
     private CheckBoxList variableList;
+    private VariableSelectionPane.CheckBoxSelectionListener checkBoxSelectionListener;
 
     VariableSelectionPane() {
         this(new DefaultVariableSelectionPaneModel());
     }
+
     VariableSelectionPane(VariableSelectionPaneModel variableSelectionPaneModel) {
         model = variableSelectionPaneModel;
         createPane();
@@ -58,14 +60,17 @@ class VariableSelectionPane extends JPanel {
             }
         });
         variableList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        final CheckBoxListSelectionModel selectionModel = variableList.getCheckBoxListSelectionModel();
-        selectionModel.addListSelectionListener(new CheckBoxSelectionListener(variableList));
+        checkBoxSelectionListener = new CheckBoxSelectionListener(variableList);
+        variableList.getCheckBoxListSelectionModel().addListSelectionListener(checkBoxSelectionListener);
         add(new JScrollPane(variableList));
     }
 
     private void updatePane() {
+        variableList.getCheckBoxListSelectionModel().removeListSelectionListener(checkBoxSelectionListener);
         variableList.setModel(model);
         variableList.setCheckBoxListSelectedIndices(getSelectedIndices(model));
+        final CheckBoxListSelectionModel selectionModel = variableList.getCheckBoxListSelectionModel();
+        selectionModel.addListSelectionListener(checkBoxSelectionListener);
     }
 
 
