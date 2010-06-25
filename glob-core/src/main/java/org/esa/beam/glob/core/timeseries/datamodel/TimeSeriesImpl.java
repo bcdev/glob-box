@@ -129,12 +129,18 @@ class TimeSeriesImpl extends TimeSeries {
     }
 
     public void addProductLocation(ProductLocationType type, String path) {
-        final ProductLocation location = new ProductLocation(type, path);
+        ProductLocation location = new ProductLocation(type, path);
         addProductLocationMetadata(location);
+        List<String> variables = getTimeVariables();
         for (Product product : location.findProducts()) {
             if (product.getTimeCoding() != null) {
                 addToVariableList(product);
                 storeProductInternally(product);
+                for (String variable : variables) {
+                    if (isVariableSelected(variable)) {
+                        addSpecifiedBandOfGivenProduct(variable, product);
+                    }
+                }
             } else {
                 // todo log in gui as well as in console
             }
@@ -194,9 +200,7 @@ class TimeSeriesImpl extends TimeSeries {
         }
         if (selected) {
             for (Product product : productList) {
-                addSpecifiedBandOfGivenProductToTimeSeriesProduct(variableName,
-                                                                  tsProduct,
-                                                                  product);
+                addSpecifiedBandOfGivenProduct(variableName, product);
             }
         } else {
             final Band[] bands = tsProduct.getBands();
@@ -308,8 +312,7 @@ class TimeSeriesImpl extends TimeSeries {
         variableListElement.addElement(elem);
     }
 
-    private static void addSpecifiedBandOfGivenProductToTimeSeriesProduct(String nodeName, Product tsProduct,
-                                                                          Product product) {
+    private void addSpecifiedBandOfGivenProduct(String nodeName, Product product) {
         if (isProductCompatible(product, tsProduct, nodeName)) {
             final RasterDataNode raster = product.getRasterDataNode(nodeName);
             TimeCoding rasterTimeCoding = raster.getTimeCoding();
