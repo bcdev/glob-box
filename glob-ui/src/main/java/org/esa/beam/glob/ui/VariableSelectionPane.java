@@ -19,13 +19,22 @@ import java.util.List;
 class VariableSelectionPane extends JPanel {
 
     private VariableSelectionPaneModel model;
+    private CheckBoxList variableList;
 
+    VariableSelectionPane() {
+        this(new DefaultVariableSelectionPaneModel());
+    }
     VariableSelectionPane(VariableSelectionPaneModel variableSelectionPaneModel) {
         model = variableSelectionPaneModel;
-        createUI();
+        createPane();
     }
 
-    private void createUI() {
+    public void setModel(VariableSelectionPaneModel model) {
+        this.model = model;
+        updatePane();
+    }
+
+    private void createPane() {
         final TableLayout tableLayout = new TableLayout(1);
         tableLayout.setTableAnchor(TableLayout.Anchor.NORTHWEST);
         tableLayout.setTableFill(TableLayout.Fill.BOTH);
@@ -33,7 +42,7 @@ class VariableSelectionPane extends JPanel {
         tableLayout.setTableWeightY(1.0);
         tableLayout.setTableWeightX(1.0);
         setLayout(tableLayout);
-        final CheckBoxList variableList = new CheckBoxList(model);
+        variableList = new CheckBoxList(model);
         variableList.setCellRenderer(new DefaultListCellRenderer() {
             @Override
             public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected,
@@ -50,10 +59,15 @@ class VariableSelectionPane extends JPanel {
         });
         variableList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         final CheckBoxListSelectionModel selectionModel = variableList.getCheckBoxListSelectionModel();
-        variableList.setCheckBoxListSelectedIndices(getSelectedIndices(model));
         selectionModel.addListSelectionListener(new CheckBoxSelectionListener(variableList));
         add(new JScrollPane(variableList));
     }
+
+    private void updatePane() {
+        variableList.setModel(model);
+        variableList.setCheckBoxListSelectedIndices(getSelectedIndices(model));
+    }
+
 
     private int[] getSelectedIndices(VariableSelectionPaneModel variableModel) {
         final List<Integer> indexList = new ArrayList<Integer>();
@@ -81,7 +95,7 @@ class VariableSelectionPane extends JPanel {
         public void valueChanged(ListSelectionEvent e) {
             if (!e.getValueIsAdjusting()) {
                 final CheckBoxListSelectionModel selectionModel = variableList.getCheckBoxListSelectionModel();
-                for (int i = e.getFirstIndex(); i <= +e.getLastIndex(); i++) {
+                for (int i = e.getFirstIndex(); i <= e.getLastIndex(); i++) {
                     model.setSelectedVariableAt(i, selectionModel.isSelectedIndex(i));
                 }
             }

@@ -29,16 +29,26 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.Iterator;
 
-class ProductSourcePane extends JPanel {
+class ProductLocationsPane extends JPanel {
 
     private ProductLocationsPaneModel model;
+    private JList sourceList;
 
-    ProductSourcePane(ProductLocationsPaneModel model) {
-        this.model = model;
-        createUI();
+    ProductLocationsPane() {
+        this(new DefaultProductLocationsPaneModel());
     }
 
-    private void createUI() {
+    ProductLocationsPane(ProductLocationsPaneModel model) {
+        this.model = model;
+        createPane();
+    }
+
+    public void setModel(ProductLocationsPaneModel model) {
+        this.model = model;
+        updatePane();
+    }
+
+    private void createPane() {
         final TableLayout tableLayout = new TableLayout(2);
         tableLayout.setTableAnchor(TableLayout.Anchor.NORTHWEST);
         tableLayout.setColumnFill(0, TableLayout.Fill.BOTH);
@@ -50,7 +60,7 @@ class ProductSourcePane extends JPanel {
         tableLayout.setColumnWeightY(1, 0.0);
         tableLayout.setCellRowspan(0, 0, 2);
         setLayout(tableLayout);
-        final JList sourceList = new JList(model);
+        sourceList = new JList(model);
         sourceList.setCellRenderer(new DefaultListCellRenderer() {
             @Override
             public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected,
@@ -103,7 +113,10 @@ class ProductSourcePane extends JPanel {
         add(new JScrollPane(sourceList));
         add(addButton);
         add(removeButton, new TableLayout.Cell(1,1));
+    }
 
+    private void updatePane() {
+        sourceList.setModel(model);
     }
 
     private class AddDirectoryAction extends AbstractAction {
@@ -129,7 +142,7 @@ class ProductSourcePane extends JPanel {
 
             folderChooser.setCurrentDirectory(new File(lastDir));
 
-            final int result = folderChooser.showOpenDialog(ProductSourcePane.this);
+            final int result = folderChooser.showOpenDialog(ProductLocationsPane.this);
             if(result != JFileChooser.APPROVE_OPTION) {
                 return;
             }

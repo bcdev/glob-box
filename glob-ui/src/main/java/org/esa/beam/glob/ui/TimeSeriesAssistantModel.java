@@ -15,7 +15,7 @@ class TimeSeriesAssistantModel {
     private List<ChangeListener> changeListenerList;
 
     TimeSeriesAssistantModel() {
-        this("TimeSeries", new ProductLocationsPaneModel(), new VariableSelectionPaneModel());
+        this("TimeSeries", new DefaultProductLocationsPaneModel(), new DefaultVariableSelectionPaneModel());
     }
 
     private TimeSeriesAssistantModel(String timeSeriesName, ProductLocationsPaneModel productLocationsModel,

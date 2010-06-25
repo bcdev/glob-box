@@ -31,7 +31,7 @@
     <extension point="beam-ui:toolViews">
 
         <toolView>
-            <id>org.esa.beam.glob.ui.SliderToolView</id>
+            <id>sliderToolView</id>
             <class>org.esa.beam.glob.ui.SliderToolView</class>
             <title>Time Series Player</title>
             <tabTitle>Time Series</tabTitle>
@@ -46,7 +46,7 @@
         </toolView>
 
         <toolView>
-            <id>org.esa.beam.glob.ui.TimeSeriesConfigToolView</id>
+            <id>timeSeriesConfigToolView</id>
             <class>org.esa.beam.glob.ui.TimeSeriesConfigToolView</class>
             <title>Time Series Configuration</title>
             <tabTitle>Time Series Config</tabTitle>
@@ -61,7 +61,7 @@
         </toolView>
 
         <toolView>
-            <id>org.esa.beam.glob.ui.TimeSeriesGraphToolView</id>
+            <id>timeSeriesGraphToolView</id>
             <class>org.esa.beam.glob.ui.TimeSeriesGraphToolView</class>
             <title>Time Series Graph</title>
             <tabTitle>Time Series Graph</tabTitle>

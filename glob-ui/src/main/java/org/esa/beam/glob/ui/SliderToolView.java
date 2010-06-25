@@ -42,6 +42,7 @@ import java.util.TimeZone;
  * Time: 15:48:31
  */
 public class SliderToolView extends AbstractToolView {
+    public static final String ID = "sliderToolView";
 
     private final SceneViewListener sceneViewListener;
 

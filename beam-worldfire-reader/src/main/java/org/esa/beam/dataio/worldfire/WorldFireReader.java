@@ -234,7 +234,7 @@ class WorldFireReader extends AbstractProductReader {
             final GeoPos geoPos = new GeoPos(lat, lon);
             final PixelPos pixelPos = geoCoding.getPixelPos(geoPos, null);
             return new Placemark(name, String.format("%1$tF", calendar), "Fire", pixelPos, geoPos,
-                                 PinDescriptor.INSTANCE.createDefaultSymbol(),
+                                 PinDescriptor.INSTANCE,
                                  geoCoding);
         } else if (columns.length == 6) { // ATSR2
             // todo - implement

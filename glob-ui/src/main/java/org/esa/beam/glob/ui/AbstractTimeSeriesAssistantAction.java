@@ -77,7 +77,7 @@ public abstract class AbstractTimeSeriesAssistantAction extends AbstractVisatAct
         @Override
         protected Component createPageComponent() {
             final ProductLocationsPaneModel locationsModel = getAssistantModel().getProductLocationsModel();
-            return new ProductSourcePane(locationsModel);
+            return new ProductLocationsPane(locationsModel);
         }
 
         @Override
@@ -215,7 +215,6 @@ public abstract class AbstractTimeSeriesAssistantAction extends AbstractVisatAct
             if(super.validatePage()) {
                 final String name = field.getText();
                 if(!name.isEmpty() && ProductNode.isValidNodeName(name)) {
-                    getAssistantModel().setTimeSeriesName(name);
                     return true;
                 }
             }
@@ -227,6 +226,12 @@ public abstract class AbstractTimeSeriesAssistantAction extends AbstractVisatAct
             return true;
         }
 
+        @Override
+        public boolean performFinish() {
+            getAssistantModel().setTimeSeriesName(field.getText());
+            return super.performFinish();
+
+        }
     }
 
 }
