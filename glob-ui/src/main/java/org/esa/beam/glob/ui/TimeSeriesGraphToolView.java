@@ -351,20 +351,13 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
     private void setCurrentView(ProductSceneView view) {
         if (currentView != null) {
             currentView.getProduct().removeProductNodeListener(productNodeListener);
-            view.removePixelPositionListener(pixelPosListener);
-            view.addPropertyChangeListener(ProductSceneView.PROPERTY_NAME_SELECTED_PIN, pinSelectionListener);
+            currentView.removePixelPositionListener(pixelPosListener);
+            currentView.addPropertyChangeListener(ProductSceneView.PROPERTY_NAME_SELECTED_PIN, pinSelectionListener);
         }
         if (view != null) {
             view.getProduct().addProductNodeListener(productNodeListener);
             view.addPixelPositionListener(pixelPosListener);
             view.addPropertyChangeListener(ProductSceneView.PROPERTY_NAME_SELECTED_PIN, pinSelectionListener);
-
-//            final boolean isViewPinSelectionListening = Arrays.asList(
-//                    view.getListeners(PropertyChangeListener.class)).contains(pinSelectionListener);
-//            if (!isViewPinSelectionListening) {
-//                view.addPropertyChangeListener(ProductSceneView.PROPERTY_NAME_SELECTED_PIN,
-//                                               pinSelectionListener);
-//            }
 
             if (view.getSelectedPin() != null) {
                 somePinIsSelected = true;
@@ -415,7 +408,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
             Stx stx = band.getStx();
             Histogram histogram = new Histogram(stx.getHistogramBins(), stx.getMin(), stx.getMax());
             org.esa.beam.util.math.Range rangeFor95Percent = histogram.findRangeFor95Percent();
-            Range range = new Range(rangeFor95Percent.getMin(), rangeFor95Percent.getMax());
+            Range range = new Range(band.scale(rangeFor95Percent.getMin()), band.scale(rangeFor95Percent.getMax()));
             if (result == null) {
                 result = range;
             } else {
