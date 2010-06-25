@@ -36,6 +36,7 @@
             <title>Time Series Player</title>
             <tabTitle>Time Series</tabTitle>
             <mnemonic>T</mnemonic>
+            <description>Time Series Player</description>
             <accelerator>ctrl alt T</accelerator>
             <smallIcon>/org/esa/beam/glob/ui/icons/GlobToolbox16.gif</smallIcon>
             <largeIcon>/org/esa/beam/glob/ui/icons/GlobToolbox24.gif</largeIcon>
@@ -50,6 +51,7 @@
             <class>org.esa.beam.glob.ui.TimeSeriesConfigToolView</class>
             <title>Time Series Configuration</title>
             <tabTitle>Time Series Config</tabTitle>
+            <description>Time Series Configuration</description>
             <mnemonic>C</mnemonic>
             <accelerator>ctrl alt C</accelerator>
             <smallIcon>/org/esa/beam/glob/ui/icons/GlobToolbox16.gif</smallIcon>
@@ -65,6 +67,7 @@
             <class>org.esa.beam.glob.ui.TimeSeriesGraphToolView</class>
             <title>Time Series Graph</title>
             <tabTitle>Time Series Graph</tabTitle>
+            <description>Time Series Graph</description>
             <mnemonic>T</mnemonic>
             <accelerator>ctrl alt T</accelerator>
             <smallIcon>/org/esa/beam/glob/ui/icons/TimeSeries16.gif</smallIcon>
