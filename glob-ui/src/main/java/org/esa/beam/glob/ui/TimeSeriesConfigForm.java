@@ -253,7 +253,9 @@ class TimeSeriesConfigForm {
         public void setSelectedVariableAt(int index, boolean selected) {
             final String varName = timeSeries.getTimeVariables().get(index);
             if (timeSeries.isVariableSelected(varName) != selected) {
-                closeAssociatedViews(varName);
+                if (!selected) {
+                    closeAssociatedViews(varName);
+                }
                 timeSeries.setVariableSelected(varName, selected);
                 fireContentsChanged(this, index, index);
             }
