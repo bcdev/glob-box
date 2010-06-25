@@ -26,8 +26,8 @@ import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.framework.datamodel.Mask;
 import org.esa.beam.framework.datamodel.MetadataAttribute;
 import org.esa.beam.framework.datamodel.MetadataElement;
+import org.esa.beam.framework.datamodel.PinDescriptor;
 import org.esa.beam.framework.datamodel.Placemark;
-import org.esa.beam.framework.datamodel.PlacemarkSymbol;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.ProductNodeGroup;
@@ -125,7 +125,7 @@ public class ProductUtilities {
         final String pinLabel = pa.getAttributeString(ProductAttributes.SITE_NAME, pinName);
         product.getPinGroup().add(new Placemark(pinName, pinLabel, "GlobColour diagnostic site",
                                           null, new GeoPos(siteLat, siteLon),
-                                          PlacemarkSymbol.createDefaultPinSymbol(), product.getGeoCoding()));
+                                          PinDescriptor.INSTANCE, product.getGeoCoding()));
         return true;
     }
 
