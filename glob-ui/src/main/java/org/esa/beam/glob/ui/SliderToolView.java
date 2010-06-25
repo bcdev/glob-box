@@ -33,7 +33,9 @@ import java.awt.Container;
 import java.awt.FlowLayout;
 import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.TimeZone;
 
 /**
@@ -117,8 +119,9 @@ public class SliderToolView extends AbstractToolView {
 
     private void configureTimeSlider() {
         if (timeSeries != null) {
-            Band[] bands = timeSeries.getBandsForVariable(
-                    TimeSeries.rasterToVariableName(currentView.getRaster().getName()));
+            final RasterDataNode currentRaster = currentView.getRaster();
+            final String variableName = TimeSeries.rasterToVariableName(currentRaster.getName());
+            Band[] bands = timeSeries.getBandsForVariable(variableName);
 
             timeSlider.setMinimum(0);
             final int nodeCount = bands.length;
@@ -144,8 +147,8 @@ public class SliderToolView extends AbstractToolView {
                 timeSlider.setLabelTable(null);
                 timeSlider.setEnabled(false);
             }
-
-            timeSlider.setValue(0);
+            final List<Band> bandList = Arrays.asList(bands);
+            timeSlider.setValue(bandList.indexOf(currentRaster));
         } else {
             timeSlider.setLabelTable(null);
             timeSlider.setEnabled(false);

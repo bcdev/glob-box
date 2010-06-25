@@ -119,7 +119,6 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         final XYPlot timeSeriesPlot = getTimeSeriesPlot();
         final ValueAxis domainAxis = timeSeriesPlot.getDomainAxis();
         domainAxis.setAutoRange(true);
-//        timeSeriesPlot.setFixedDomainAxisSpace();
         final ValueAxis rangeAxis = timeSeriesPlot.getRangeAxis();
         rangeAxis.setAutoRange(false);
         rangeAxis.setUpperBound(1.0);
