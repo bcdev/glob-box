@@ -42,19 +42,25 @@ class TimeSeriesImpl extends TimeSeries {
     TimeSeriesImpl(Product tsProduct) {
         init(tsProduct);
         handleProductLocations(getProductLocations(), false);
+        setSourceImages();
         fixBandTimeCodings();
         updateAutogrouping();
+    }
+
+    private void setSourceImages() {
+        for (Band destBand : tsProduct.getBands()) {
+            final Band raster = getBand(destBand.getName());
+            destBand.setSourceImage(raster.getSourceImage());
+        }
     }
 
     private void fixBandTimeCodings() {
         for (Band destBand : tsProduct.getBands()) {
             final Band raster = getBand(destBand.getName());
             TimeCoding rasterTimeCoding = raster.getTimeCoding();
-            final ProductData.UTC rasterStartTime = rasterTimeCoding.getStartTime();
-            final ProductData.UTC rasterEndTime = rasterTimeCoding.getEndTime();
-            destBand.setTimeCoding(new DefaultTimeCoding(rasterStartTime, rasterEndTime,
-                                                         raster.getSceneRasterHeight()));
-
+            final ProductData.UTC startTime = rasterTimeCoding.getStartTime();
+            final ProductData.UTC endTime = rasterTimeCoding.getEndTime();
+            destBand.setTimeCoding(new DefaultTimeCoding(startTime, endTime, raster.getSceneRasterHeight()));
         }
     }
 
@@ -126,8 +132,12 @@ class TimeSeriesImpl extends TimeSeries {
         final ProductLocation location = new ProductLocation(type, path);
         addProductLocationMetadata(location);
         for (Product product : location.findProducts()) {
-            addToVariableList(product);
-            storeProductInternally(product);
+            if (product.getTimeCoding() != null) {
+                addToVariableList(product);
+                storeProductInternally(product);
+            } else {
+                // todo log in gui as well as in console
+            }
         }
     }
 
@@ -159,10 +169,14 @@ class TimeSeriesImpl extends TimeSeries {
             if (addToMetadata) {
                 addProductLocationMetadata(productLocation);
             }
-            for (Product aProduct : productLocation.findProducts()) {
-                storeProductInternally(aProduct);
-                if (addToMetadata) {
-                    addToVariableList(aProduct);
+            for (Product product : productLocation.findProducts()) {
+                if (product.getTimeCoding() != null) {
+                    storeProductInternally(product);
+                    if (addToMetadata) {
+                        addToVariableList(product);
+                    }
+                } else {
+                    // todo log in gui as well as in console
                 }
             }
         }

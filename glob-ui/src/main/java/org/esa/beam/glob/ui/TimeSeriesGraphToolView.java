@@ -10,6 +10,8 @@ import org.esa.beam.framework.datamodel.ProductNodeEvent;
 import org.esa.beam.framework.datamodel.ProductNodeListener;
 import org.esa.beam.framework.datamodel.ProductNodeListenerAdapter;
 import org.esa.beam.framework.datamodel.RasterDataNode;
+import org.esa.beam.framework.datamodel.Stx;
+import org.esa.beam.framework.ui.GridBagUtils;
 import org.esa.beam.framework.ui.PixelPositionListener;
 import org.esa.beam.framework.ui.UIUtils;
 import org.esa.beam.framework.ui.application.support.AbstractToolView;
@@ -17,6 +19,7 @@ import org.esa.beam.framework.ui.product.ProductSceneView;
 import org.esa.beam.framework.ui.tool.ToolButtonFactory;
 import org.esa.beam.glob.core.TimeSeriesMapper;
 import org.esa.beam.util.StringUtils;
+import org.esa.beam.util.math.Histogram;
 import org.esa.beam.visat.VisatApp;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
@@ -33,17 +36,21 @@ import org.jfree.data.time.TimeSeriesDataItem;
 
 import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
-import javax.swing.JCheckBox;
 import javax.swing.JComponent;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.event.InternalFrameAdapter;
 import javax.swing.event.InternalFrameEvent;
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.GridBagConstraints;
 import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
@@ -82,7 +89,8 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
     private TimeSeries cursorTimeSeries;
     private TimeSeries pinTimeSeries;
     private boolean somePinIsSelected = false;
-    private final JCheckBox showSelectedPinCheckbox = new JCheckBox("Show selected pin");
+    private JPanel buttonPanel;
+    private AbstractButton showTimeSeriesForSelectedPinButton;
 
     public TimeSeriesGraphToolView() {
         pixelPosListener = new TimeSeriesPPL();
@@ -111,6 +119,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         final XYPlot timeSeriesPlot = getTimeSeriesPlot();
         final ValueAxis domainAxis = timeSeriesPlot.getDomainAxis();
         domainAxis.setAutoRange(true);
+//        timeSeriesPlot.setFixedDomainAxisSpace();
         final ValueAxis rangeAxis = timeSeriesPlot.getRangeAxis();
         rangeAxis.setAutoRange(false);
         rangeAxis.setUpperBound(1.0);
@@ -122,113 +131,94 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         }
         timeSeriesPlot.setDataset(timeSeriesCollection);
 
-        setCurrentView(visatApp.getSelectedProductSceneView());
-        showSelectedPinCheckbox.setEnabled(somePinIsSelected);
-
-        updateUIState();
-
-        AbstractButton filterButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/Filter24.gif"),
-                                                                     false);
+        ProductSceneView view = visatApp.getSelectedProductSceneView();
+        if (view != null) {
+            final String viewProductType = view.getProduct().getProductType();
+            if (!view.isRGB() && viewProductType.equals(
+                    org.esa.beam.glob.core.timeseries.datamodel.TimeSeries.TIME_SERIES_PRODUCT_TYPE)) {
+                setCurrentView(view);
+            }
+        }
+        final AbstractButton filterButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/Filter24.gif"),
+                                                                           false);
         filterButton.setName("filterButton");
+        filterButton.setToolTipText("Choose which variables to display");
         filterButton.setEnabled(true);
-//        filterButton.addActionListener(new ActionListener() {
-//            @Override
-//            public void actionPerformed(ActionEvent e) {
-//                // choose variables to display
-//            }
-//        });
+        filterButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // choose variables to display
+            }
+        });
 //
-//        AbstractButton showSpectraForSelectedPinButton = ToolButtonFactory.createButton(
-//                UIUtils.loadImageIcon("icons/SelectedPinSpectra24.gif"), true);
-//        showSpectraForSelectedPinButton.addActionListener(new ActionListener() {
-//            @Override
-//            public void actionPerformed(ActionEvent e) {
-//            }
-//        });
-//        showSpectraForSelectedPinButton.setName("showSpectraForSelectedPinsButton");
-//        showSpectraForSelectedPinButton.setToolTipText("Show spectra for selected pins.");
-//
-//        showGridButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/SpectrumGrid24.gif"), true);
-//        showGridButton.addActionListener(new ActionListener() {
-//            @Override
-//            public void actionPerformed(ActionEvent e) {
-//                if (diagramCanvas.getDiagram() != null) {
-//                    diagramCanvas.getDiagram().setDrawGrid(showGridButton.isSelected());
-//                }
-//            }
-//        });
-//        showGridButton.setName("showGridButton");
-//        showGridButton.setToolTipText("Show diagram grid.");
-//
-//// todo - not yet implemented for 4.1 but planned for 4.2 (mp - 31.10.2007)
-////        showGraphPointsButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/GraphPoints24.gif"), true);
-////        showGraphPointsButton.addActionListener(new ActionListener() {
-////            public void actionPerformed(ActionEvent e) {
-////                // todo - implement
-////                JOptionPane.showMessageDialog(null, "Not implemented");
-////            }
-////        });
-////        showGraphPointsButton.setName("showGraphPointsButton");
-////        showGraphPointsButton.setToolTipText("Show graph points grid.");
-//
-//        AbstractButton exportSpectraButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/Export24.gif"),
-//                                                                            false);
-//        exportSpectraButton.addActionListener(new SpectraExportAction(this));
-//        exportSpectraButton.setToolTipText("Export spectra to text file.");
-//        exportSpectraButton.setName("exportSpectraButton");
-//
-//        AbstractButton helpButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/Help24.gif"), false);
-//        helpButton.setName("helpButton");
-//        helpButton.setToolTipText("Help."); /*I18N*/
-//
-//        final JPanel buttonPane = GridBagUtils.createPanel();
-//        final GridBagConstraints gbc = new GridBagConstraints();
-//        gbc.anchor = GridBagConstraints.CENTER;
-//        gbc.fill = GridBagConstraints.NONE;
-//        gbc.insets.top = 2;
-//        gbc.gridy = 0;
-//        buttonPane.add(filterButton, gbc);
-//        gbc.gridy++;
-//        buttonPane.add(showSpectrumForCursorButton, gbc);
-//        gbc.gridy++;
-//        buttonPane.add(showSpectraForSelectedPinButton, gbc);
-//        gbc.gridy++;
-//        buttonPane.add(showSpectraForAllPinsButton, gbc);
-//        gbc.gridy++;
-//// todo - not yet implemented for 4.1 but planned for 4.2 (mp - 31.10.2007)
-////        buttonPane.add(showAveragePinSpectrumButton, gbc);
-////        gbc.gridy++;
-//        buttonPane.add(showGridButton, gbc);
-//        gbc.gridy++;
-//// todo - not yet implemented for 4.1 but planned for 4.2 (mp - 31.10.2007)
-////        buttonPane.add(showGraphPointsButton, gbc);
-////        gbc.gridy++;
-//        buttonPane.add(exportSpectraButton, gbc);
-//
-//        gbc.gridy++;
-//        gbc.insets.bottom = 0;
-//        gbc.fill = GridBagConstraints.VERTICAL;
-//        gbc.weighty = 1.0;
-//        gbc.gridwidth = 2;
-//        buttonPane.add(new JLabel(" "), gbc); // filler
-//        gbc.fill = GridBagConstraints.NONE;
-//        gbc.weighty = 0.0;
-//        gbc.gridy = 10;
-//        gbc.anchor = GridBagConstraints.EAST;
-//        buttonPane.add(helpButton, gbc);
-//
-//        diagramCanvas = new DiagramCanvas();
-//        diagramCanvas.setPreferredSize(new Dimension(300, 200));
-//        diagramCanvas.setMessageText("No product selected."); /*I18N*/
-//        diagramCanvas.setBackground(Color.white);
-//        diagramCanvas.setBorder(BorderFactory.createCompoundBorder(
-//                BorderFactory.createBevelBorder(BevelBorder.LOWERED),
-//                BorderFactory.createEmptyBorder(2, 2, 2, 2)));
-//
-//        JPanel mainPane = new JPanel(new BorderLayout(4, 4));
-//        mainPane.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
-//        mainPane.add(BorderLayout.CENTER, diagramCanvas);
-//        mainPane.add(BorderLayout.EAST, buttonPane);
+        showTimeSeriesForSelectedPinButton = ToolButtonFactory.createButton(
+                UIUtils.loadImageIcon("icons/SelectedPinSpectra24.gif"), true);
+        showTimeSeriesForSelectedPinButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (currentView != null) {
+                    Placemark pin = currentView.getSelectedPin();
+                    final boolean pinCheckboxSelected = showTimeSeriesForSelectedPinButton.isSelected();
+                    if (pinCheckboxSelected && pin != null && somePinIsSelected) {
+                        addSelectedPinSeries(pin);
+                    }
+                    if (!pinCheckboxSelected) {
+                        removePinTimeSeries();
+                    }
+                }
+            }
+        });
+        showTimeSeriesForSelectedPinButton.setName("showTimeSeriesForSelectedPinButton");
+        showTimeSeriesForSelectedPinButton.setToolTipText("Show time series for selected pin");
+
+        final AbstractButton showTimeSeriesForAllPinsButton = ToolButtonFactory.createButton(
+                UIUtils.loadImageIcon("icons/PinSpectra24.gif"), false);
+        showTimeSeriesForAllPinsButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // show time series for all pins
+//                showTimeSeriesForSelectedPinButton.isSelected();
+            }
+        });
+        showTimeSeriesForAllPinsButton.setName("showTimeSeriesForAllPinsButton");
+        showTimeSeriesForAllPinsButton.setToolTipText("Show time series for all pins");
+
+        AbstractButton exportTimeSeriesButton = ToolButtonFactory.createButton(
+                UIUtils.loadImageIcon("icons/Export24.gif"),
+                false);
+        exportTimeSeriesButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // export values of graph to csv
+            }
+        });
+        exportTimeSeriesButton.setToolTipText("Export time series graph to csv file");
+        exportTimeSeriesButton.setName("exportTimeSeriesButton");
+
+        buttonPanel = GridBagUtils.createPanel();
+        final GridBagConstraints gbc = new GridBagConstraints();
+        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.insets.top = 2;
+        gbc.gridy = 0;
+        buttonPanel.add(filterButton, gbc);
+        gbc.gridy++;
+        buttonPanel.add(showTimeSeriesForSelectedPinButton, gbc);
+        gbc.gridy++;
+        buttonPanel.add(showTimeSeriesForAllPinsButton, gbc);
+        gbc.gridy++;
+        buttonPanel.add(exportTimeSeriesButton, gbc);
+        gbc.gridy++;
+
+        gbc.insets.bottom = 0;
+        gbc.fill = GridBagConstraints.VERTICAL;
+        gbc.weighty = 1.0;
+        gbc.gridwidth = 2;
+        buttonPanel.add(new JLabel(" "), gbc); // filler
+        gbc.fill = GridBagConstraints.NONE;
+
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
+        mainPanel.add(BorderLayout.EAST, buttonPanel);
 
 //        final TableLayout tableLayout = new TableLayout(2);
 //        tableLayout.setTableFill(TableLayout.Fill.BOTH);
@@ -273,22 +263,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
 //
 //        });
 //
-//        showSelectedPinCheckbox.addActionListener(new ActionListener() {
-//            @Override
-//            public void actionPerformed(ActionEvent e) {
-//                if (currentView != null) {
-//                    Placemark pin = currentView.getSelectedPin();
-//                    final boolean pinCheckboxSelected = showSelectedPinCheckbox.isSelected();
-//                    if (pinCheckboxSelected && pin != null && somePinIsSelected) {
-//                        addSelectedPinSeries(pin);
-//                    }
-//                    if (!pinCheckboxSelected) {
-//                        removePinTimeSeries();
-//                    }
-//                }
-//            }
-//        });
-
+        updateUIState();
         return mainPanel;
     }
 
@@ -337,22 +312,27 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
     }
 
     private void updateUIState() {
-        if (currentView != null) {
+        final boolean isTimeSeriesView = currentView != null;
+
+        if (isTimeSeriesView) {
             final RasterDataNode raster = currentView.getRaster();
-            String rasterName = rasterToVariableName(raster.getName());
-            setTitle(String.format("%s - %s", titleBase, rasterName));
+            String variableName = rasterToVariableName(raster.getName());
+            setTitle(String.format("%s - %s", titleBase, variableName));
 
             final String unit = raster.getUnit();
             final String rangeAxisLabel;
             if (StringUtils.isNotNullAndNotEmpty(unit)) {
-                rangeAxisLabel = String.format("%s (%s)", rasterName, unit);
+                rangeAxisLabel = String.format("%s (%s)", variableName, unit);
             } else {
-                rangeAxisLabel = rasterName;
+                rangeAxisLabel = variableName;
             }
             getTimeSeriesPlot().getRangeAxis().setLabel(rangeAxisLabel);
         } else {
             setTitle(titleBase);
             getTimeSeriesPlot().getRangeAxis().setLabel(DEFAULT_RANGE_LABEL);
+        }
+        for (Component child : buttonPanel.getComponents()) {
+            child.setEnabled(isTimeSeriesView);
         }
     }
 
@@ -367,8 +347,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
 
 
     private void setCurrentView(ProductSceneView view) {
-
-        if (view != null && !view.isRGB() && view.getProduct().getProductType().equals(TIME_SERIES_PRODUCT_TYPE)) {
+        if (view != null) {
             view.addPixelPositionListener(pixelPosListener);
             final boolean isViewPinSelectionListening = Arrays.asList(
                     view.getListeners(PropertyChangeListener.class)).contains(pinSelectionListener);
@@ -378,11 +357,11 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
             }
             if (view.getSelectedPin() != null) {
                 somePinIsSelected = true;
-                showSelectedPinCheckbox.setEnabled(true);
+                showTimeSeriesForSelectedPinButton.setEnabled(true);
             }
         } else {
             somePinIsSelected = false;
-            showSelectedPinCheckbox.setEnabled(false);
+            showTimeSeriesForSelectedPinButton.setEnabled(false);
             removePinTimeSeries();
         }
         currentView = view;
@@ -396,9 +375,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         if (cursorTimeSeries != null) {
             timeSeriesCollection.removeSeries(cursorTimeSeries);
         }
-        if (currentView != null && !currentView.isRGB() &&
-            currentView.getProduct().getProductType().equals(TIME_SERIES_PRODUCT_TYPE)) {
-
+        if (currentView != null) {
             org.esa.beam.glob.core.timeseries.datamodel.TimeSeries timeSeries;
             timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(currentView.getProduct());
             Band[] bands = timeSeries.getBandsForVariable(rasterToVariableName(currentView.getRaster().getName()));
@@ -414,9 +391,26 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
                     getTimeSeriesPlot().getRenderer().setSeriesPaint(1, Color.RED);
                 }
                 getTimeSeriesPlot().setDataset(timeSeriesCollection);
+                getTimeSeriesPlot().getRangeAxis().setRange(computeYAxisRange(bands));
             }
             getTimeSeriesPlot().setNoDataMessage(NO_DATA_MESSAGE);
         }
+    }
+
+    private Range computeYAxisRange(Band[] bands) {
+        Range result = null;
+        for (Band band : bands) {
+            Stx stx = band.getStx();
+            Histogram histogram = new Histogram(stx.getHistogramBins(), stx.getMin(), stx.getMax());
+            org.esa.beam.util.math.Range rangeFor95Percent = histogram.findRangeFor95Percent();
+            Range range = new Range(rangeFor95Percent.getMin(), rangeFor95Percent.getMax());
+            if (result == null) {
+                result = range;
+            } else {
+                result = Range.combine(result, range);
+            }
+        }
+        return result;
     }
 
     private void removePinTimeSeries() {
@@ -447,12 +441,17 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         public void internalFrameActivated(InternalFrameEvent e) {
             final Container contentPane = e.getInternalFrame().getContentPane();
             if (contentPane instanceof ProductSceneView) {
-                setCurrentView((ProductSceneView) contentPane);
+                ProductSceneView view = (ProductSceneView) contentPane;
+                final String viewProductType = view.getProduct().getProductType();
+                if (currentView != view && !view.isRGB() && viewProductType.equals(
+                        org.esa.beam.glob.core.timeseries.datamodel.TimeSeries.TIME_SERIES_PRODUCT_TYPE)) {
+                    setCurrentView(view);
+                }
             }
         }
 
         @Override
-        public void internalFrameClosed(InternalFrameEvent e) {
+        public void internalFrameDeactivated(InternalFrameEvent e) {
             final Container contentPane = e.getInternalFrame().getContentPane();
             if (contentPane == currentView) {
                 setCurrentView(null);
@@ -538,14 +537,14 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
                     !Arrays.asList(pin.getProduct().getProductNodeListeners()).contains(pinMovedListener)) {
                     pin.getProduct().addProductNodeListener(pinMovedListener);
                 }
-                if (showSelectedPinCheckbox.isSelected() && somePinIsSelected) {
+                if (showTimeSeriesForSelectedPinButton.isSelected() && somePinIsSelected) {
                     addSelectedPinSeries(pin);
                 } else {
                     removePinTimeSeries();
                 }
-                showSelectedPinCheckbox.setEnabled(somePinIsSelected);
+                showTimeSeriesForSelectedPinButton.setEnabled(somePinIsSelected);
             } else {
-                showSelectedPinCheckbox.setEnabled(false);
+                showTimeSeriesForSelectedPinButton.setEnabled(false);
             }
         }
     }
@@ -556,7 +555,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         public void nodeChanged(ProductNodeEvent event) {
             if (event.getPropertyName().equals(Placemark.PROPERTY_NAME_PIXELPOS)) {
                 removePinTimeSeries();
-                if (showSelectedPinCheckbox.isSelected() && somePinIsSelected) {
+                if (showTimeSeriesForSelectedPinButton.isSelected() && somePinIsSelected) {
                     addSelectedPinSeries(currentView.getSelectedPin());
                 }
             }

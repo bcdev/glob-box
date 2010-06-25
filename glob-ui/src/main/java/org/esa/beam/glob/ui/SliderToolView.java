@@ -42,6 +42,7 @@ import java.util.TimeZone;
  * Time: 15:48:31
  */
 public class SliderToolView extends AbstractToolView {
+
     public static final String ID = "sliderToolView";
 
     private final SceneViewListener sceneViewListener;
@@ -92,17 +93,25 @@ public class SliderToolView extends AbstractToolView {
         configureTimeSlider();
         panel.add(timeSlider);
         final JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        AbstractButton playButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/Right24.gif"),
+        AbstractButton playButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/Play24.gif"),
                                                                    false);
-        AbstractButton pauseButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/Clock24.gif"),
+        AbstractButton pauseButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/Pause24.gif"),
                                                                     false);
-        AbstractButton stopButton = ToolButtonFactory.createButton(
-                UIUtils.loadImageIcon("icons/DrawRectangleTool24.gif"),
-                false);
+        AbstractButton stopButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/PlayerStop24.gif"),
+                                                                   false);
         buttonsPanel.add(playButton);
         buttonsPanel.add(pauseButton);
         buttonsPanel.add(stopButton);
         panel.add(buttonsPanel);
+
+        ProductSceneView view = VisatApp.getApp().getSelectedProductSceneView();
+        if (view != null) {
+            final String viewProductType = view.getProduct().getProductType();
+            if (!view.isRGB() && viewProductType.equals(
+                    org.esa.beam.glob.core.timeseries.datamodel.TimeSeries.TIME_SERIES_PRODUCT_TYPE)) {
+                setCurrentView(view);
+            }
+        }
         return panel;
     }
 
