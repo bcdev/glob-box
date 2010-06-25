@@ -209,7 +209,13 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
                                           currentLevel);
 
         timeSeriesCollection.addSeries(pinTimeSeries);
-
+        if (timeSeriesCollection.getSeries(0) == cursorTimeSeries) {
+            getTimeSeriesPlot().getRenderer().setSeriesPaint(0, Color.RED);
+            getTimeSeriesPlot().getRenderer().setSeriesPaint(1, Color.BLUE);
+        } else {
+            getTimeSeriesPlot().getRenderer().setSeriesPaint(0, Color.BLUE);
+            getTimeSeriesPlot().getRenderer().setSeriesPaint(1, Color.RED);
+        }
         getTimeSeriesPlot().setDataset(timeSeriesCollection);
     }
 
@@ -326,6 +332,12 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         return value;
     }
 
+    private void removePinTimeSeries() {
+        if (pinTimeSeries != null) {
+            timeSeriesCollection.removeSeries(pinTimeSeries);
+            getTimeSeriesPlot().getRenderer().setSeriesPaint(0, Color.RED);
+        }
+    }
 
     private class TimeSeriesIFL extends InternalFrameAdapter {
 
@@ -377,7 +389,10 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
 
         @Override
         public void pixelPosNotAvailable() {
-            getTimeSeriesPlot().setDataset(null);
+            if (cursorTimeSeries != null) {
+                timeSeriesCollection.removeSeries(cursorTimeSeries);
+            }
+            updateUIState();
             if (isActive()) {
                 chartPanel.updateUI();
             }
@@ -408,13 +423,6 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
 
         }
 
-    }
-
-    private void removePinTimeSeries() {
-        if (pinTimeSeries != null) {
-            timeSeriesCollection.removeSeries(pinTimeSeries);
-            getTimeSeriesPlot().getRenderer().setSeriesPaint(0, Color.RED);
-        }
     }
 
     private class PinSelectionListener implements PropertyChangeListener {
