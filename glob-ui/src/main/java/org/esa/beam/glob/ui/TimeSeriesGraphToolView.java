@@ -2,7 +2,6 @@ package org.esa.beam.glob.ui;
 
 import com.bc.ceres.glayer.support.ImageLayer;
 import com.bc.ceres.grender.Viewport;
-import com.bc.ceres.swing.TableLayout;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Placemark;
@@ -12,8 +11,10 @@ import org.esa.beam.framework.datamodel.ProductNodeListener;
 import org.esa.beam.framework.datamodel.ProductNodeListenerAdapter;
 import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.framework.ui.PixelPositionListener;
+import org.esa.beam.framework.ui.UIUtils;
 import org.esa.beam.framework.ui.application.support.AbstractToolView;
 import org.esa.beam.framework.ui.product.ProductSceneView;
+import org.esa.beam.framework.ui.tool.ToolButtonFactory;
 import org.esa.beam.glob.core.TimeSeriesMapper;
 import org.esa.beam.util.StringUtils;
 import org.esa.beam.visat.VisatApp;
@@ -30,10 +31,10 @@ import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 import org.jfree.data.time.TimeSeriesDataItem;
 
+import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.event.InternalFrameAdapter;
@@ -43,10 +44,6 @@ import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Rectangle;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
@@ -64,6 +61,7 @@ import java.util.concurrent.Future;
 import static org.esa.beam.glob.core.timeseries.datamodel.TimeSeries.*;
 
 public class TimeSeriesGraphToolView extends AbstractToolView {
+
     public static final String ID = "timeSeriesGraphToolView";
 
     private static final String NO_DATA_MESSAGE = "No data to display";
@@ -129,64 +127,167 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
 
         updateUIState();
 
-        final TableLayout tableLayout = new TableLayout(2);
-        tableLayout.setTableFill(TableLayout.Fill.BOTH);
-        tableLayout.setTablePadding(4, 4);
-        tableLayout.setTableWeightX(1.0);
-        tableLayout.setTableWeightY(0.0);
-        tableLayout.setCellColspan(0, 0, 2);
-        tableLayout.setCellColspan(3, 0, 2);
+        AbstractButton filterButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/Filter24.gif"),
+                                                                     false);
+        filterButton.setName("filterButton");
+        filterButton.setEnabled(true);
+//        filterButton.addActionListener(new ActionListener() {
+//            @Override
+//            public void actionPerformed(ActionEvent e) {
+//                // choose variables to display
+//            }
+//        });
+//
+//        AbstractButton showSpectraForSelectedPinButton = ToolButtonFactory.createButton(
+//                UIUtils.loadImageIcon("icons/SelectedPinSpectra24.gif"), true);
+//        showSpectraForSelectedPinButton.addActionListener(new ActionListener() {
+//            @Override
+//            public void actionPerformed(ActionEvent e) {
+//            }
+//        });
+//        showSpectraForSelectedPinButton.setName("showSpectraForSelectedPinsButton");
+//        showSpectraForSelectedPinButton.setToolTipText("Show spectra for selected pins.");
+//
+//        showGridButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/SpectrumGrid24.gif"), true);
+//        showGridButton.addActionListener(new ActionListener() {
+//            @Override
+//            public void actionPerformed(ActionEvent e) {
+//                if (diagramCanvas.getDiagram() != null) {
+//                    diagramCanvas.getDiagram().setDrawGrid(showGridButton.isSelected());
+//                }
+//            }
+//        });
+//        showGridButton.setName("showGridButton");
+//        showGridButton.setToolTipText("Show diagram grid.");
+//
+//// todo - not yet implemented for 4.1 but planned for 4.2 (mp - 31.10.2007)
+////        showGraphPointsButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/GraphPoints24.gif"), true);
+////        showGraphPointsButton.addActionListener(new ActionListener() {
+////            public void actionPerformed(ActionEvent e) {
+////                // todo - implement
+////                JOptionPane.showMessageDialog(null, "Not implemented");
+////            }
+////        });
+////        showGraphPointsButton.setName("showGraphPointsButton");
+////        showGraphPointsButton.setToolTipText("Show graph points grid.");
+//
+//        AbstractButton exportSpectraButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/Export24.gif"),
+//                                                                            false);
+//        exportSpectraButton.addActionListener(new SpectraExportAction(this));
+//        exportSpectraButton.setToolTipText("Export spectra to text file.");
+//        exportSpectraButton.setName("exportSpectraButton");
+//
+//        AbstractButton helpButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/Help24.gif"), false);
+//        helpButton.setName("helpButton");
+//        helpButton.setToolTipText("Help."); /*I18N*/
+//
+//        final JPanel buttonPane = GridBagUtils.createPanel();
+//        final GridBagConstraints gbc = new GridBagConstraints();
+//        gbc.anchor = GridBagConstraints.CENTER;
+//        gbc.fill = GridBagConstraints.NONE;
+//        gbc.insets.top = 2;
+//        gbc.gridy = 0;
+//        buttonPane.add(filterButton, gbc);
+//        gbc.gridy++;
+//        buttonPane.add(showSpectrumForCursorButton, gbc);
+//        gbc.gridy++;
+//        buttonPane.add(showSpectraForSelectedPinButton, gbc);
+//        gbc.gridy++;
+//        buttonPane.add(showSpectraForAllPinsButton, gbc);
+//        gbc.gridy++;
+//// todo - not yet implemented for 4.1 but planned for 4.2 (mp - 31.10.2007)
+////        buttonPane.add(showAveragePinSpectrumButton, gbc);
+////        gbc.gridy++;
+//        buttonPane.add(showGridButton, gbc);
+//        gbc.gridy++;
+//// todo - not yet implemented for 4.1 but planned for 4.2 (mp - 31.10.2007)
+////        buttonPane.add(showGraphPointsButton, gbc);
+////        gbc.gridy++;
+//        buttonPane.add(exportSpectraButton, gbc);
+//
+//        gbc.gridy++;
+//        gbc.insets.bottom = 0;
+//        gbc.fill = GridBagConstraints.VERTICAL;
+//        gbc.weighty = 1.0;
+//        gbc.gridwidth = 2;
+//        buttonPane.add(new JLabel(" "), gbc); // filler
+//        gbc.fill = GridBagConstraints.NONE;
+//        gbc.weighty = 0.0;
+//        gbc.gridy = 10;
+//        gbc.anchor = GridBagConstraints.EAST;
+//        buttonPane.add(helpButton, gbc);
+//
+//        diagramCanvas = new DiagramCanvas();
+//        diagramCanvas.setPreferredSize(new Dimension(300, 200));
+//        diagramCanvas.setMessageText("No product selected."); /*I18N*/
+//        diagramCanvas.setBackground(Color.white);
+//        diagramCanvas.setBorder(BorderFactory.createCompoundBorder(
+//                BorderFactory.createBevelBorder(BevelBorder.LOWERED),
+//                BorderFactory.createEmptyBorder(2, 2, 2, 2)));
+//
+//        JPanel mainPane = new JPanel(new BorderLayout(4, 4));
+//        mainPane.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
+//        mainPane.add(BorderLayout.CENTER, diagramCanvas);
+//        mainPane.add(BorderLayout.EAST, buttonPane);
 
-        final JPanel controlPanel = new JPanel(tableLayout);
-        final JLabel minLabel = new JLabel("Min:");
-        minInput.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-        final JLabel maxLabel = new JLabel("Max:");
-        maxInput.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-        controlPanel.add(minLabel);
-        controlPanel.add(minInput);
-        controlPanel.add(maxLabel);
-        controlPanel.add(maxInput);
-        controlPanel.add(showSelectedPinCheckbox);
-        controlPanel.add(tableLayout.createVerticalSpacer());
-
-        mainPanel.add(BorderLayout.EAST, controlPanel);
-
-        minInput.addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyReleased(final KeyEvent e) {
-                try {
-                    getTimeSeriesPlot().getRangeAxis().setLowerBound(Double.parseDouble(minInput.getText()));
-                } catch (final NumberFormatException ignore) {
-                }
-            }
-        });
-
-        maxInput.addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyReleased(final KeyEvent e) {
-                try {
-                    getTimeSeriesPlot().getRangeAxis().setUpperBound(Double.parseDouble(maxInput.getText()));
-                } catch (final NumberFormatException ignore) {
-                }
-            }
-
-        });
-
-        showSelectedPinCheckbox.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (currentView != null) {
-                    Placemark pin = currentView.getSelectedPin();
-                    final boolean pinCheckboxSelected = showSelectedPinCheckbox.isSelected();
-                    if (pinCheckboxSelected && pin != null && somePinIsSelected) {
-                        addSelectedPinSeries(pin);
-                    }
-                    if (!pinCheckboxSelected) {
-                        removePinTimeSeries();
-                    }
-                }
-            }
-        });
+//        final TableLayout tableLayout = new TableLayout(2);
+//        tableLayout.setTableFill(TableLayout.Fill.BOTH);
+//        tableLayout.setTablePadding(4, 4);
+//        tableLayout.setTableWeightX(1.0);
+//        tableLayout.setTableWeightY(0.0);
+//        tableLayout.setCellColspan(0, 0, 2);
+//        tableLayout.setCellColspan(3, 0, 2);
+//
+//        final JPanel controlPanel = new JPanel(tableLayout);
+//        final JLabel minLabel = new JLabel("Min:");
+//        minInput.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+//        final JLabel maxLabel = new JLabel("Max:");
+//        maxInput.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+//        controlPanel.add(minLabel);
+//        controlPanel.add(minInput);
+//        controlPanel.add(maxLabel);
+//        controlPanel.add(maxInput);
+//        controlPanel.add(showSelectedPinCheckbox);
+//        controlPanel.add(tableLayout.createVerticalSpacer());
+//
+//        mainPanel.add(BorderLayout.EAST, controlPanel);
+//
+//        minInput.addKeyListener(new KeyAdapter() {
+//            @Override
+//            public void keyReleased(final KeyEvent e) {
+//                try {
+//                    getTimeSeriesPlot().getRangeAxis().setLowerBound(Double.parseDouble(minInput.getText()));
+//                } catch (final NumberFormatException ignore) {
+//                }
+//            }
+//        });
+//
+//        maxInput.addKeyListener(new KeyAdapter() {
+//            @Override
+//            public void keyReleased(final KeyEvent e) {
+//                try {
+//                    getTimeSeriesPlot().getRangeAxis().setUpperBound(Double.parseDouble(maxInput.getText()));
+//                } catch (final NumberFormatException ignore) {
+//                }
+//            }
+//
+//        });
+//
+//        showSelectedPinCheckbox.addActionListener(new ActionListener() {
+//            @Override
+//            public void actionPerformed(ActionEvent e) {
+//                if (currentView != null) {
+//                    Placemark pin = currentView.getSelectedPin();
+//                    final boolean pinCheckboxSelected = showSelectedPinCheckbox.isSelected();
+//                    if (pinCheckboxSelected && pin != null && somePinIsSelected) {
+//                        addSelectedPinSeries(pin);
+//                    }
+//                    if (!pinCheckboxSelected) {
+//                        removePinTimeSeries();
+//                    }
+//                }
+//            }
+//        });
 
         return mainPanel;
     }
@@ -318,6 +419,13 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         }
     }
 
+    private void removePinTimeSeries() {
+        if (pinTimeSeries != null) {
+            timeSeriesCollection.removeSeries(pinTimeSeries);
+            getTimeSeriesPlot().getRenderer().setSeriesPaint(0, Color.RED);
+        }
+    }
+
     private double getValue(RasterDataNode raster, int pixelX, int pixelY, int currentLevel) {
         final RenderedImage image = raster.getGeophysicalImage().getImage(currentLevel);
         final Rectangle pixelRect = new Rectangle(pixelX, pixelY, 1, 1);
@@ -331,13 +439,6 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
             value = Double.NaN;
         }
         return value;
-    }
-
-    private void removePinTimeSeries() {
-        if (pinTimeSeries != null) {
-            timeSeriesCollection.removeSeries(pinTimeSeries);
-            getTimeSeriesPlot().getRenderer().setSeriesPaint(0, Color.RED);
-        }
     }
 
     private class TimeSeriesIFL extends InternalFrameAdapter {
