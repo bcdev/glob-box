@@ -24,16 +24,25 @@ import org.esa.beam.glob.core.timeseries.datamodel.TimeSeries;
 import org.esa.beam.visat.VisatApp;
 
 import javax.swing.AbstractButton;
+import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
+import javax.swing.Timer;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.InternalFrameAdapter;
 import javax.swing.event.InternalFrameEvent;
 import java.awt.Container;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.geom.AffineTransform;
 import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
 import java.util.Hashtable;
@@ -53,6 +62,11 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
     private ProductSceneView currentView;
     private JSlider timeSlider;
     private TimeSeries timeSeries;
+    private AbstractButton playButton;
+    private AbstractButton stopButton;
+    private final ImageIcon playIcon = UIUtils.loadImageIcon("icons/Play24.gif");
+    private final ImageIcon stopIcon = UIUtils.loadImageIcon("icons/PlayerStop24.gif");
+    private final ImageIcon pauseIcon = UIUtils.loadImageIcon("icons/Pause24.gif");
 
     public TimeSeriesPlayerToolView() {
         sceneViewListener = new SceneViewListener();
@@ -94,21 +108,55 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
         tableLayout.setRowFill(0, TableLayout.Fill.BOTH);
         final JPanel panel = new JPanel(tableLayout);
         timeSlider = new JSlider(JSlider.HORIZONTAL);
-        timeSlider.setPaintLabels(true);
-        timeSlider.setPaintTicks(true);
+        timeSlider.setMajorTickSpacing(1);
         timeSlider.setPaintTrack(true);
+        timeSlider.setSnapToTicks(true);
         timeSlider.addChangeListener(new SliderChangeListener());
-        configureTimeSlider();
         panel.add(timeSlider);
         final JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        AbstractButton playButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/Play24.gif"),
-                                                                   false);
-        AbstractButton pauseButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/Pause24.gif"),
-                                                                    false);
-        AbstractButton stopButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/PlayerStop24.gif"),
-                                                                   false);
+        playButton = ToolButtonFactory.createButton(playIcon, true);
+        stopButton = ToolButtonFactory.createButton(stopIcon, false);
+        setSliderEnabled(false);
+
+        final ActionListener playAction = new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int currentValue = timeSlider.getValue();
+                // if slider is on maximum value, start from beginning
+                if (currentValue == timeSlider.getMaximum()) {
+                    currentValue = 0;
+                } else {
+                    currentValue++;
+                }
+                timeSlider.setValue(currentValue);
+            }
+        };
+        final Timer timer = new Timer(1000, playAction);
+
+        playButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (playButton.isSelected()) {
+                    timer.start();
+                    playButton.setIcon(pauseIcon);
+                } else { // pause
+                    timer.stop();
+                    playButton.setIcon(playIcon);
+                }
+            }
+        });
+
+        stopButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                timer.stop();
+                timeSlider.setValue(0);
+                playButton.setIcon(playIcon);
+                playButton.setSelected(false);
+            }
+        });
         buttonsPanel.add(playButton);
-        buttonsPanel.add(pauseButton);
         buttonsPanel.add(stopButton);
         panel.add(buttonsPanel);
 
@@ -132,11 +180,11 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
             timeSlider.setMinimum(0);
             final int nodeCount = bands.size();
             timeSlider.setMaximum(nodeCount - 1);
-            timeSlider.setSnapToTicks(true);
+
 
             final Hashtable<Integer, JLabel> labelTable = new Hashtable<Integer, JLabel>();
             if (nodeCount > 1) {
-                timeSlider.setEnabled(true);
+                setSliderEnabled(true);
                 for (int i = 0; i < nodeCount; i++) {
                     final ProductData.UTC utcStartTime = bands.get(i).getTimeCoding().getStartTime();
                     SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MMM-yyyy");
@@ -146,12 +194,13 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
                     final String timeText = timeFormat.format(utcStartTime.getAsCalendar().getTime());
                     String labelText = String.format("<html><p align=\"center\"> <font size=\"2\">%s<br>%s</font></p>",
                                                      dateText, timeText);
-                    labelTable.put(i, new JLabel(labelText));
+                    final JVertLabel label = new JVertLabel(labelText);
+                    labelTable.put(i, label);
                 }
                 timeSlider.setLabelTable(labelTable);
             } else {
                 timeSlider.setLabelTable(null);
-                timeSlider.setEnabled(false);
+                setSliderEnabled(false);
             }
             final int index = bands.indexOf(currentRaster);
             if (index != -1) {
@@ -159,8 +208,16 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
             }
         } else {
             timeSlider.setLabelTable(null);
-            timeSlider.setEnabled(false);
+            setSliderEnabled(false);
         }
+    }
+
+    private void setSliderEnabled(boolean enable) {
+        timeSlider.setPaintLabels(enable);
+        timeSlider.setPaintTicks(enable);
+        timeSlider.setEnabled(enable);
+        playButton.setEnabled(enable);
+        stopButton.setEnabled(enable);
     }
 
     // todo (mp) - The following should be done on ProdsuctSceneView.setRasters()
@@ -213,7 +270,6 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
             if (currentBandIndex != newBandIndex && currentView != null) {
                 final List<Band> bands = timeSeries.getBandsForVariable(
                         TimeSeries.rasterToVariableName(currentView.getRaster().getName()));
-//                final Band newRaster = getCurrentProduct().getBandGroup().get(newBandIndex);
                 final Band newRaster = bands.get(newBandIndex);
                 exchangeRasterInProductSceneView(newRaster, currentView);
                 currentBandIndex = newBandIndex;
@@ -263,4 +319,39 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
             }
         }
     }
+
+    private static class JVertLabel extends JLabel {
+
+        private static final double THETA_PLUS_90 = Math.toRadians(90.0);
+
+        public JVertLabel(String s) {
+            super(s);
+        }
+
+        @Override
+        public Dimension getPreferredSize() {
+            Dimension dim = super.getPreferredSize();
+            //noinspection SuspiciousNameCombination
+            return new Dimension(dim.height, dim.width);
+        }
+
+        @Override
+        public void paintComponent(Graphics g) {
+            Graphics2D g2d = (Graphics2D) g;
+            final Object oldValue = g2d.getRenderingHint(RenderingHints.KEY_ANTIALIASING);
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            AffineTransform oldTransform = g2d.getTransform();
+            g2d.rotate(THETA_PLUS_90);
+            final int w = getWidth();
+            final int h = getHeight();
+            g2d.translate(h / 2 - w / 2, -h + w / 2);
+
+            super.paintComponent(g2d);
+
+            g2d.setTransform(oldTransform);
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, oldValue);
+        }
+    }
+
+
 }
