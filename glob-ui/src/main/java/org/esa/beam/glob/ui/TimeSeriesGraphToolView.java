@@ -133,14 +133,6 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         }
         timeSeriesPlot.setDataset(timeSeriesCollection);
 
-        ProductSceneView view = visatApp.getSelectedProductSceneView();
-        if (view != null) {
-            final String viewProductType = view.getProduct().getProductType();
-            if (!view.isRGB() && viewProductType.equals(
-                    org.esa.beam.glob.core.timeseries.datamodel.TimeSeries.TIME_SERIES_PRODUCT_TYPE)) {
-                setCurrentView(view);
-            }
-        }
         final AbstractButton filterButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/Filter24.gif"),
                                                                            false);
         filterButton.setName("filterButton");
@@ -265,7 +257,15 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
 //
 //        });
 //
-        updateUIState();
+        ProductSceneView view = visatApp.getSelectedProductSceneView();
+        if (view != null) {
+            final String viewProductType = view.getProduct().getProductType();
+            if (!view.isRGB() && viewProductType.equals(
+                    org.esa.beam.glob.core.timeseries.datamodel.TimeSeries.TIME_SERIES_PRODUCT_TYPE)) {
+                setCurrentView(view);
+            }
+        }
+
         return mainPanel;
     }
 
