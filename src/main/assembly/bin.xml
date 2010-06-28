@@ -27,14 +27,41 @@
         <moduleSet>
             <excludes>
                 <exclude>org.esa.beam.glob:glob-bootstrap</exclude>
+                <exclude>org.esa.beam:beam-arcbingrid-reader</exclude>
             </excludes>
 
             <binaries>
                 <includeDependencies>false</includeDependencies>
                 <unpack>false</unpack>
                 <outputDirectory>modules</outputDirectory>
-                <outputFileNameMapping>${artifact.artifactId}-${artifact.version}.${artifact.extension}</outputFileNameMapping>
+                <outputFileNameMapping>${artifact.artifactId}-${artifact.version}.${artifact.extension}
+                </outputFileNameMapping>
                 <fileMode>0444</fileMode>
+            </binaries>
+        </moduleSet>
+        <moduleSet>
+            <includes>
+                <include>org.esa.beam:beam-arcbingrid-reader</include>
+            </includes>
+
+            <binaries>
+                <includeDependencies>false</includeDependencies>
+                <unpack>false</unpack>
+                <outputDirectory>modules</outputDirectory>
+                <outputFileNameMapping>${artifact.artifactId}-${artifact.version}.${artifact.extension}
+                </outputFileNameMapping>
+                <fileMode>0444</fileMode>
+                <dependencySets>
+                    <dependencySet>
+                        <outputDirectory>modules</outputDirectory>
+                        <outputFileNameMapping>${artifact.artifactId}-${artifact.version}.${artifact.extension}
+                        </outputFileNameMapping>
+                        <includes>
+                            <include>com.bc.ceres:ceres-binio</include>
+                        </includes>
+                    </dependencySet>
+                </dependencySets>
+
             </binaries>
         </moduleSet>
     </moduleSets>
