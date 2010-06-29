@@ -34,12 +34,7 @@ import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 import org.jfree.data.time.TimeSeriesDataItem;
 
-import javax.swing.AbstractButton;
-import javax.swing.BorderFactory;
-import javax.swing.JComponent;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
+import javax.swing.*;
 import javax.swing.event.InternalFrameAdapter;
 import javax.swing.event.InternalFrameEvent;
 import java.awt.BorderLayout;
@@ -58,10 +53,10 @@ import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -85,14 +80,13 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
     private ChartPanel chartPanel;
     private ExecutorService executorService;
 
-    private final JTextField minInput = new JTextField(8);
-    private final JTextField maxInput = new JTextField(8);
     private TimeSeriesCollection timeSeriesCollection;
     private TimeSeries cursorTimeSeries;
     private TimeSeries pinTimeSeries;
     private boolean somePinIsSelected = false;
     private JPanel buttonPanel;
     private AbstractButton showTimeSeriesForSelectedPinButton;
+    private List<Band> bandList;
 
     public TimeSeriesGraphToolView() {
         pixelPosListener = new TimeSeriesPPL();
@@ -131,7 +125,6 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
             xyRenderer.setBaseShapesVisible(true);
             xyRenderer.setBaseShapesFilled(true);
         }
-        timeSeriesPlot.setDataset(timeSeriesCollection);
 
         final AbstractButton filterButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/Filter24.gif"),
                                                                            false);
@@ -280,12 +273,8 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         final Point2D modelPos = levelZeroToModel.transform(position, null);
         final Point2D currentPos = modelToCurrentLevel.transform(modelPos, null);
 
-        org.esa.beam.glob.core.timeseries.datamodel.TimeSeries timeSeries;
-        timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(currentView.getProduct());
-        List<Band> bands = timeSeries.getBandsForVariable(rasterToVariableName(currentView.getRaster().getName()));
-        pinTimeSeries = computeTimeSeries("pinTimeSeries", bands,
-                                          (int) currentPos.getX(), (int) currentPos.getY(),
-                                          currentLevel);
+        pinTimeSeries = computeTimeSeries("pinTimeSeries", bandList,
+                                          (int) currentPos.getX(), (int) currentPos.getY(), currentLevel);
 
         timeSeriesCollection.addSeries(pinTimeSeries);
         if (timeSeriesCollection.getSeries(0) == cursorTimeSeries) {
@@ -298,8 +287,8 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         getTimeSeriesPlot().setDataset(timeSeriesCollection);
     }
 
-    private TimeSeries computeTimeSeries(String title, final List<Band> bandList, int pixelX, int pixelY,
-                                         int currentLevel) {
+    private static TimeSeries computeTimeSeries(String title, final List<Band> bandList, int pixelX, int pixelY,
+                                                int currentLevel) {
         TimeSeries timeSeries = new TimeSeries(title);
         for (Band band : bandList) {
             final ProductData.UTC startTime = band.getTimeCoding().getStartTime();
@@ -329,15 +318,16 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
                 rangeAxisLabel = variableName;
             }
             getTimeSeriesPlot().getRangeAxis().setLabel(rangeAxisLabel);
+            getTimeSeriesPlot().getRangeAxis().setRange(computeYAxisRange(bandList));
         } else {
             setTitle(titleBase);
             getTimeSeriesPlot().getRangeAxis().setLabel(DEFAULT_RANGE_LABEL);
+            getTimeSeriesPlot().setDataset(null);
         }
         for (Component child : buttonPanel.getComponents()) {
             child.setEnabled(isTimeSeriesView);
         }
     }
-
 
     private JFreeChart getTimeSeriesChart() {
         return chartPanel.getChart();
@@ -346,7 +336,6 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
     private XYPlot getTimeSeriesPlot() {
         return getTimeSeriesChart().getXYPlot();
     }
-
 
     private void setCurrentView(ProductSceneView view) {
         if (currentView != null) {
@@ -363,46 +352,21 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
                 somePinIsSelected = true;
                 showTimeSeriesForSelectedPinButton.setEnabled(true);
             }
+            org.esa.beam.glob.core.timeseries.datamodel.TimeSeries timeSeries;
+            timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(view.getProduct());
+            String variableName = rasterToVariableName(view.getRaster().getName());
+            bandList = timeSeries.getBandsForVariable(variableName);
         } else {
             somePinIsSelected = false;
             showTimeSeriesForSelectedPinButton.setEnabled(false);
             removePinTimeSeries();
+            bandList = null;
         }
         currentView = view;
         updateUIState();
     }
 
-
-    private void updateCursorTimeSeries(int pixelX, int pixelY, int currentLevel) {
-        getTimeSeriesPlot().setDataset(null);
-        getTimeSeriesPlot().setNoDataMessage("Loading data...");
-        if (cursorTimeSeries != null) {
-            timeSeriesCollection.removeSeries(cursorTimeSeries);
-        }
-        if (currentView != null) {
-            org.esa.beam.glob.core.timeseries.datamodel.TimeSeries timeSeries;
-            timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(currentView.getProduct());
-            final List<Band> bands = timeSeries.getBandsForVariable(
-                    rasterToVariableName(currentView.getRaster().getName()));
-            if (bands.size() > 1) {
-                cursorTimeSeries = computeTimeSeries("cursorTimeSeries", bands,
-                                                     pixelX, pixelY, currentLevel);
-                timeSeriesCollection.addSeries(cursorTimeSeries);
-                if (timeSeriesCollection.getSeries(0) == cursorTimeSeries) {
-                    getTimeSeriesPlot().getRenderer().setSeriesPaint(0, Color.RED);
-                    getTimeSeriesPlot().getRenderer().setSeriesPaint(1, Color.BLUE);
-                } else {
-                    getTimeSeriesPlot().getRenderer().setSeriesPaint(0, Color.BLUE);
-                    getTimeSeriesPlot().getRenderer().setSeriesPaint(1, Color.RED);
-                }
-                getTimeSeriesPlot().setDataset(timeSeriesCollection);
-                getTimeSeriesPlot().getRangeAxis().setRange(computeYAxisRange(bands));
-            }
-            getTimeSeriesPlot().setNoDataMessage(NO_DATA_MESSAGE);
-        }
-    }
-
-    private Range computeYAxisRange(List<Band> bands) {
+    private static Range computeYAxisRange(List<Band> bands) {
         Range result = null;
         for (Band band : bands) {
             Stx stx = band.getStx();
@@ -425,7 +389,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         }
     }
 
-    private double getValue(RasterDataNode raster, int pixelX, int pixelY, int currentLevel) {
+    private static double getValue(RasterDataNode raster, int pixelX, int pixelY, int currentLevel) {
         final RenderedImage image = raster.getGeophysicalImage().getImage(currentLevel);
         final Rectangle pixelRect = new Rectangle(pixelX, pixelY, 1, 1);
         final Raster data = image.getData(pixelRect);
@@ -469,27 +433,10 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         private Future<?> future;
 
         @Override
-        public void pixelPosChanged(ImageLayer imageLayer,
-                                    final int pixelX,
-                                    final int pixelY,
-                                    final int currentLevel,
-                                    boolean pixelPosValid,
-                                    MouseEvent e) {
-            if (pixelPosValid && isActive() && (future == null || future.isDone())) {
-                future = executorService.submit(new TimeSeriesUpdater(pixelX, pixelY, currentLevel));
-            }
-            final Range range = getTimeSeriesPlot().getRangeAxis().getRange();
-            double lowerBound = range.getLowerBound();
-            double upperBound = range.getUpperBound();
-
-            DecimalFormat df = new DecimalFormat("0.000000");
-
-            minInput.setText(df.format(lowerBound));
-            maxInput.setText(df.format(upperBound));
-            if (e.isShiftDown()) {
-                getTimeSeriesPlot().getRangeAxis().setAutoRange(true);
-            } else {
-                getTimeSeriesPlot().getRangeAxis().setAutoRange(false);
+        public void pixelPosChanged(ImageLayer imageLayer, int pixelX, int pixelY,
+                                    int currentLevel, boolean pixelPosValid, MouseEvent e) {
+            if (pixelPosValid && isActive() && (future == null || future.isDone()) && bandList != null && bandList.size() > 1) {
+                future = executorService.submit(new TimeSeriesUpdater(pixelX, pixelY, currentLevel, bandList));
             }
         }
 
@@ -508,25 +455,45 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
             return isVisible() && getTimeSeriesChart() != null;
         }
 
-        private class TimeSeriesUpdater implements Runnable {
+        private class TimeSeriesUpdater extends SwingWorker<TimeSeries, Void> {
 
             private final int pixelX;
-
             private final int pixelY;
-
             private final int currentLevel;
+            private final List<Band> bandList;
 
-            TimeSeriesUpdater(int pixelX, int pixelY, int currentLevel) {
+            TimeSeriesUpdater(int pixelX, int pixelY, int currentLevel, List<Band> bandList) {
                 this.pixelX = pixelX;
                 this.pixelY = pixelY;
                 this.currentLevel = currentLevel;
+                this.bandList = bandList;
             }
 
             @Override
-            public void run() {
-                updateCursorTimeSeries(pixelX, pixelY, currentLevel);
+            protected TimeSeries doInBackground() throws Exception {
+                return computeTimeSeries("cursorTimeSeries", bandList, pixelX, pixelY, currentLevel);
             }
 
+            @Override
+            protected void done() {
+                if (cursorTimeSeries != null) {
+                    timeSeriesCollection.removeSeries(cursorTimeSeries);
+                }
+                try {
+                    cursorTimeSeries = get();
+                } catch (InterruptedException ignore) {
+                } catch (ExecutionException ignore) {
+                }
+                timeSeriesCollection.addSeries(cursorTimeSeries);
+                if (timeSeriesCollection.getSeries(0) == cursorTimeSeries) {
+                    getTimeSeriesPlot().getRenderer().setSeriesPaint(0, Color.RED);
+                    getTimeSeriesPlot().getRenderer().setSeriesPaint(1, Color.BLUE);
+                } else {
+                    getTimeSeriesPlot().getRenderer().setSeriesPaint(0, Color.BLUE);
+                    getTimeSeriesPlot().getRenderer().setSeriesPaint(1, Color.RED);
+                }
+                getTimeSeriesPlot().setDataset(timeSeriesCollection);
+            }
         }
 
     }
