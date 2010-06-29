@@ -75,6 +75,9 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
     private JSlider speedSlider;
     private JLabel speedLabel;
     private AbstractButton blendButton;
+    private JLabel minusLabel;
+    private JLabel plusLabel;
+    private Timer timer;
 
     public TimeSeriesPlayerToolView() {
         sceneViewListener = new SceneViewListener();
@@ -92,6 +95,7 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
                 currentView.getProduct().addProductNodeListener(productNodeListener);
             } else {
                 timeSeries = null;
+                timer.stop();
             }
             configureTimeSlider();
         }
@@ -127,6 +131,7 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
         stopButton = ToolButtonFactory.createButton(stopIcon, false);
         blendButton = new JCheckBox("Show blending");
         speedLabel = new JLabel("Player speed:");
+        minusLabel = new JLabel("-");
         speedSlider = new JSlider(1, 10);
         speedSlider.setSnapToTicks(true);
         speedSlider.setPaintTrack(true);
@@ -134,6 +139,7 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
         speedSlider.setPaintLabels(true);
         speedSlider.setValue(5);
         speedSlider.setPreferredSize(new Dimension(80, speedSlider.getPreferredSize().height));
+        plusLabel = new JLabel("+");
         setSliderEnabled(false);
 
         final ActionListener playAction = new ActionListener() {
@@ -150,7 +156,7 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
                 timeSlider.setValue(currentValue);
             }
         };
-        final Timer timer = new Timer(calculateTimerDelay(), playAction);
+        timer = new Timer(calculateTimerDelay(), playAction);
 
         playButton.addActionListener(new ActionListener() {
             @Override
@@ -204,9 +210,9 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
         buttonsPanel.add(blendButton);
         buttonsPanel.add(new JLabel("       "));
         buttonsPanel.add(speedLabel);
-        buttonsPanel.add(new JLabel("-"));
+        buttonsPanel.add(minusLabel);
         buttonsPanel.add(speedSlider);
-        buttonsPanel.add(new JLabel("+"));
+        buttonsPanel.add(plusLabel);
         panel.add(buttonsPanel);
 
         ProductSceneView view = VisatApp.getApp().getSelectedProductSceneView();
@@ -270,6 +276,8 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
         blendButton.setEnabled(enable);
         speedLabel.setEnabled(enable);
         speedSlider.setEnabled(enable);
+        minusLabel.setEnabled(enable);
+        plusLabel.setEnabled(enable);
     }
 
     // todo (mp) - The following should be done on ProdsuctSceneView.setRasters()
