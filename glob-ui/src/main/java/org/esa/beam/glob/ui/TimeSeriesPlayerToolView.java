@@ -4,6 +4,7 @@ import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.glayer.Layer;
 import com.bc.ceres.glayer.support.ImageLayer;
 import com.bc.ceres.glayer.support.LayerUtils;
+import com.bc.ceres.glevel.MultiLevelSource;
 import com.bc.ceres.swing.TableLayout;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.ImageInfo;
@@ -14,13 +15,12 @@ import org.esa.beam.framework.datamodel.ProductNodeListenerAdapter;
 import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.framework.ui.UIUtils;
 import org.esa.beam.framework.ui.application.support.AbstractToolView;
-import org.esa.beam.framework.ui.product.ProductSceneImage;
 import org.esa.beam.framework.ui.product.ProductSceneView;
 import org.esa.beam.framework.ui.tool.ToolButtonFactory;
-import org.esa.beam.glayer.RasterImageLayerType;
 import org.esa.beam.glevel.BandImageMultiLevelSource;
 import org.esa.beam.glob.core.TimeSeriesMapper;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeSeries;
+import org.esa.beam.util.math.MathUtils;
 import org.esa.beam.visat.VisatApp;
 
 import javax.swing.AbstractButton;
@@ -43,7 +43,6 @@ import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.geom.AffineTransform;
-import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
 import java.util.Hashtable;
 import java.util.List;
@@ -56,6 +55,14 @@ import java.util.TimeZone;
  */
 public class TimeSeriesPlayerToolView extends AbstractToolView {
 
+    private static final int STEPS_PER_TIMESPAN = 10;
+    private static final int DELAY = 100;
+    private static final String NEXT_IMAGE_LAYER = "nextImageLayer";
+
+    private final ImageIcon playIcon = UIUtils.loadImageIcon("icons/Play24.gif");
+    private final ImageIcon stopIcon = UIUtils.loadImageIcon("icons/PlayerStop24.gif");
+    private final ImageIcon pauseIcon = UIUtils.loadImageIcon("icons/Pause24.gif");
+
     private final SceneViewListener sceneViewListener;
     private final ProductNodeListener productNodeListener;
 
@@ -64,9 +71,7 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
     private TimeSeries timeSeries;
     private AbstractButton playButton;
     private AbstractButton stopButton;
-    private final ImageIcon playIcon = UIUtils.loadImageIcon("icons/Play24.gif");
-    private final ImageIcon stopIcon = UIUtils.loadImageIcon("icons/PlayerStop24.gif");
-    private final ImageIcon pauseIcon = UIUtils.loadImageIcon("icons/Pause24.gif");
+    private List<Band> bandList;
 
     public TimeSeriesPlayerToolView() {
         sceneViewListener = new SceneViewListener();
@@ -107,8 +112,9 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
         tableLayout.setTableFill(TableLayout.Fill.HORIZONTAL);
         tableLayout.setRowFill(0, TableLayout.Fill.BOTH);
         final JPanel panel = new JPanel(tableLayout);
-        timeSlider = new JSlider(JSlider.HORIZONTAL);
-        timeSlider.setMajorTickSpacing(1);
+        timeSlider = new JSlider(JSlider.HORIZONTAL, 0, 0, 0);
+        timeSlider.setMajorTickSpacing(STEPS_PER_TIMESPAN);
+        timeSlider.setMinorTickSpacing(1);
         timeSlider.setPaintTrack(true);
         timeSlider.setSnapToTicks(true);
         timeSlider.addChangeListener(new SliderChangeListener());
@@ -132,7 +138,7 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
                 timeSlider.setValue(currentValue);
             }
         };
-        final Timer timer = new Timer(1000, playAction);
+        final Timer timer = new Timer(DELAY, playAction);
 
         playButton.addActionListener(new ActionListener() {
             @Override
@@ -142,6 +148,8 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
                     playButton.setIcon(pauseIcon);
                 } else { // pause
                     timer.stop();
+                    int newValue = timeSlider.getValue() / STEPS_PER_TIMESPAN * STEPS_PER_TIMESPAN;
+                    timeSlider.setValue(newValue);
                     playButton.setIcon(playIcon);
                 }
             }
@@ -175,18 +183,18 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
         if (timeSeries != null) {
             final RasterDataNode currentRaster = currentView.getRaster();
             final String variableName = TimeSeries.rasterToVariableName(currentRaster.getName());
-            final List<Band> bands = timeSeries.getBandsForVariable(variableName);
+            bandList = timeSeries.getBandsForVariable(variableName);
 
             timeSlider.setMinimum(0);
-            final int nodeCount = bands.size();
-            timeSlider.setMaximum(nodeCount - 1);
+            final int nodeCount = bandList.size();
+            timeSlider.setMaximum((nodeCount - 1) * STEPS_PER_TIMESPAN);
 
 
             final Hashtable<Integer, JLabel> labelTable = new Hashtable<Integer, JLabel>();
             if (nodeCount > 1) {
                 setSliderEnabled(true);
                 for (int i = 0; i < nodeCount; i++) {
-                    final ProductData.UTC utcStartTime = bands.get(i).getTimeCoding().getStartTime();
+                    final ProductData.UTC utcStartTime = bandList.get(i).getTimeCoding().getStartTime();
                     SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MMM-yyyy");
                     SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
                     dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -195,16 +203,16 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
                     String labelText = String.format("<html><p align=\"center\"> <font size=\"2\">%s<br>%s</font></p>",
                                                      dateText, timeText);
                     final JVertLabel label = new JVertLabel(labelText);
-                    labelTable.put(i, label);
+                    labelTable.put(i * STEPS_PER_TIMESPAN, label);
                 }
                 timeSlider.setLabelTable(labelTable);
             } else {
                 timeSlider.setLabelTable(null);
                 setSliderEnabled(false);
             }
-            final int index = bands.indexOf(currentRaster);
+            final int index = bandList.indexOf(currentRaster);
             if (index != -1) {
-                timeSlider.setValue(index);
+                timeSlider.setValue(index * STEPS_PER_TIMESPAN);
             }
         } else {
             timeSlider.setLabelTable(null);
@@ -237,45 +245,90 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
         final Layer rootLayer = sceneView.getRootLayer();
         final ImageLayer baseImageLayer = (ImageLayer) LayerUtils.getChildLayerById(rootLayer,
                                                                                     ProductSceneView.BASE_IMAGE_LAYER_ID);
+        MultiLevelSource multiLevelSource;
+        final ImageLayer nextLayer = (ImageLayer) LayerUtils.getChildLayerById(rootLayer, NEXT_IMAGE_LAYER);
+        if (nextLayer != null) {
+            multiLevelSource = nextLayer.getMultiLevelSource();
 
-        // todo use a real ProgressMonitor
-        final BandImageMultiLevelSource multiLevelSource = BandImageMultiLevelSource.create(rasterDataNode,
-                                                                                            ProgressMonitor.NULL);
-        baseImageLayer.setMultiLevelSource(multiLevelSource);
-        baseImageLayer.getConfiguration().setValue(RasterImageLayerType.PROPERTY_NAME_RASTER, rasterDataNode);
-        baseImageLayer.getConfiguration().setValue(ImageLayer.PROPERTY_NAME_MULTI_LEVEL_SOURCE, multiLevelSource);
-        baseImageLayer.setName(rasterDataNode.getDisplayName());
-        try {
-            final Field sceneImageField = ProductSceneView.class.getDeclaredField("sceneImage");
-            sceneImageField.setAccessible(true);
-            final Object sceneImage = sceneImageField.get(sceneView);
-            final Field multiLevelSourceField = ProductSceneImage.class.getDeclaredField("bandImageMultiLevelSource");
-            multiLevelSourceField.setAccessible(true);
-            multiLevelSourceField.set(sceneImage, multiLevelSource);
-        } catch (NoSuchFieldException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
+            final List<Layer> children = rootLayer.getChildren();
+            final int baseIndex = children.indexOf(baseImageLayer);
+            children.remove(baseIndex);
+            children.remove(nextLayer);
+            nextLayer.setId(ProductSceneView.BASE_IMAGE_LAYER_ID);
+            nextLayer.setName(rasterDataNode.getDisplayName());
+            children.add(baseIndex, nextLayer);
+            nextLayer.setTransparency(0);
+        } else {
+            // todo use a real ProgressMonitor
+            multiLevelSource = BandImageMultiLevelSource.create(rasterDataNode, ProgressMonitor.NULL);
+
+            baseImageLayer.setMultiLevelSource(multiLevelSource);
+            baseImageLayer.setTransparency(0);
         }
 
+        // TODO why this code  ????
+//        baseImageLayer.getConfiguration().setValue(RasterImageLayerType.PROPERTY_NAME_RASTER, rasterDataNode);
+//        baseImageLayer.getConfiguration().setValue(ImageLayer.PROPERTY_NAME_MULTI_LEVEL_SOURCE, multiLevelSource);
+//        baseImageLayer.setName(rasterDataNode.getDisplayName());
+//        try {
+//            // todo add comment: what does this code do?
+//            final Field sceneImageField = ProductSceneView.class.getDeclaredField("sceneImage");
+//            sceneImageField.setAccessible(true);
+//            final Object sceneImage = sceneImageField.get(sceneView);
+//            final Field multiLevelSourceField = ProductSceneImage.class.getDeclaredField("bandImageMultiLevelSource");
+//            multiLevelSourceField.setAccessible(true);
+//            multiLevelSourceField.set(sceneImage, multiLevelSource);
+//        } catch (NoSuchFieldException e) {
+//            e.printStackTrace();
+//        } catch (IllegalAccessException e) {
+//            e.printStackTrace();
+//        }
     }
 
     private class SliderChangeListener implements ChangeListener {
 
-        private int currentBandIndex;
 
         @Override
         public void stateChanged(ChangeEvent e) {
-            final int newBandIndex = timeSlider.getValue();
-            if (currentBandIndex != newBandIndex && currentView != null) {
-                final List<Band> bands = timeSeries.getBandsForVariable(
-                        TimeSeries.rasterToVariableName(currentView.getRaster().getName()));
-                final Band newRaster = bands.get(newBandIndex);
+            if (currentView == null) {
+                return;
+            }
+            final int currentValue = timeSlider.getValue();
+            final float transparency = (currentValue % STEPS_PER_TIMESPAN) / (float) STEPS_PER_TIMESPAN;
+            final int currentBandIndex = currentValue / STEPS_PER_TIMESPAN;
+            final int newBandIndex = MathUtils.ceilInt(currentValue / (float) STEPS_PER_TIMESPAN);
+
+            if (currentBandIndex == newBandIndex) {
+                final Band newRaster = bandList.get(newBandIndex);
                 exchangeRasterInProductSceneView(newRaster, currentView);
-                currentBandIndex = newBandIndex;
+            } else {
+                if (bandList.size() > currentBandIndex + 1) {
+                    changeTransparency(bandList.get(currentBandIndex + 1), transparency);
+                }
             }
         }
+    }
 
+    private void changeTransparency(RasterDataNode nextRaster, float transparency) {
+        final Layer rootLayer = currentView.getRootLayer();
+
+        ImageLayer nextImageLayer = (ImageLayer) LayerUtils.getChildLayerById(rootLayer, NEXT_IMAGE_LAYER);
+        if (nextImageLayer == null) {
+            RasterDataNode currentRaster = currentView.getRaster();
+            final ImageInfo imageInfoClone = (ImageInfo) currentRaster.getImageInfo(ProgressMonitor.NULL).clone();
+            nextRaster.setImageInfo(imageInfoClone);
+
+            final BandImageMultiLevelSource multiLevelSource = BandImageMultiLevelSource.create(nextRaster,
+                                                                                                ProgressMonitor.NULL);
+            nextImageLayer = new ImageLayer(multiLevelSource);
+            nextImageLayer.setId(NEXT_IMAGE_LAYER);
+            rootLayer.getChildren().add(nextImageLayer);
+        }
+
+        final ImageLayer baseImageLayer = (ImageLayer) LayerUtils.getChildLayerById(rootLayer,
+                                                                                    ProductSceneView.BASE_IMAGE_LAYER_ID);
+        nextImageLayer.setTransparency(1 - transparency);
+        baseImageLayer.setTransparency(transparency);
     }
 
     private class SceneViewListener extends InternalFrameAdapter {
