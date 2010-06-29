@@ -25,6 +25,7 @@ import org.esa.beam.visat.VisatApp;
 
 import javax.swing.AbstractButton;
 import javax.swing.ImageIcon;
+import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -55,23 +56,25 @@ import java.util.TimeZone;
  */
 public class TimeSeriesPlayerToolView extends AbstractToolView {
 
-    private static final int STEPS_PER_TIMESPAN = 10;
-    private static final int DELAY = 100;
     private static final String NEXT_IMAGE_LAYER = "nextImageLayer";
-
     private final ImageIcon playIcon = UIUtils.loadImageIcon("icons/Play24.gif");
     private final ImageIcon stopIcon = UIUtils.loadImageIcon("icons/PlayerStop24.gif");
-    private final ImageIcon pauseIcon = UIUtils.loadImageIcon("icons/Pause24.gif");
 
+    private final ImageIcon pauseIcon = UIUtils.loadImageIcon("icons/Pause24.gif");
     private final SceneViewListener sceneViewListener;
     private final ProductNodeListener productNodeListener;
 
     private ProductSceneView currentView;
     private JSlider timeSlider;
+
     private TimeSeries timeSeries;
     private AbstractButton playButton;
     private AbstractButton stopButton;
     private List<Band> bandList;
+    private int stepsPerTimespan = 1;
+    private JSlider speedSlider;
+    private JLabel speedLabel;
+    private AbstractButton blendButton;
 
     public TimeSeriesPlayerToolView() {
         sceneViewListener = new SceneViewListener();
@@ -113,7 +116,7 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
         tableLayout.setRowFill(0, TableLayout.Fill.BOTH);
         final JPanel panel = new JPanel(tableLayout);
         timeSlider = new JSlider(JSlider.HORIZONTAL, 0, 0, 0);
-        timeSlider.setMajorTickSpacing(STEPS_PER_TIMESPAN);
+        timeSlider.setMajorTickSpacing(stepsPerTimespan);
         timeSlider.setMinorTickSpacing(1);
         timeSlider.setPaintTrack(true);
         timeSlider.setSnapToTicks(true);
@@ -122,6 +125,15 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
         final JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         playButton = ToolButtonFactory.createButton(playIcon, true);
         stopButton = ToolButtonFactory.createButton(stopIcon, false);
+        blendButton = new JCheckBox("Show blending");
+        speedLabel = new JLabel("Player speed:");
+        speedSlider = new JSlider(1, 10);
+        speedSlider.setSnapToTicks(true);
+        speedSlider.setPaintTrack(true);
+        speedSlider.setPaintTicks(true);
+        speedSlider.setPaintLabels(true);
+        speedSlider.setValue(5);
+        speedSlider.setPreferredSize(new Dimension(80, speedSlider.getPreferredSize().height));
         setSliderEnabled(false);
 
         final ActionListener playAction = new ActionListener() {
@@ -138,7 +150,7 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
                 timeSlider.setValue(currentValue);
             }
         };
-        final Timer timer = new Timer(DELAY, playAction);
+        final Timer timer = new Timer(calculateTimerDelay(), playAction);
 
         playButton.addActionListener(new ActionListener() {
             @Override
@@ -148,7 +160,7 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
                     playButton.setIcon(pauseIcon);
                 } else { // pause
                     timer.stop();
-                    int newValue = timeSlider.getValue() / STEPS_PER_TIMESPAN * STEPS_PER_TIMESPAN;
+                    int newValue = timeSlider.getValue() / stepsPerTimespan * stepsPerTimespan;
                     timeSlider.setValue(newValue);
                     playButton.setIcon(playIcon);
                 }
@@ -164,8 +176,37 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
                 playButton.setSelected(false);
             }
         });
+
+        blendButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (blendButton.isSelected()) {
+                    stepsPerTimespan = 8;
+                    timer.setDelay(calculateTimerDelay());
+                    configureTimeSlider();
+                } else {
+                    stepsPerTimespan = 1;
+                    timer.setDelay(calculateTimerDelay());
+                    configureTimeSlider();
+                }
+            }
+        });
+
+        speedSlider.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                timer.setDelay(calculateTimerDelay());
+            }
+        });
+
         buttonsPanel.add(playButton);
         buttonsPanel.add(stopButton);
+        buttonsPanel.add(blendButton);
+        buttonsPanel.add(new JLabel("       "));
+        buttonsPanel.add(speedLabel);
+        buttonsPanel.add(new JLabel("-"));
+        buttonsPanel.add(speedSlider);
+        buttonsPanel.add(new JLabel("+"));
         panel.add(buttonsPanel);
 
         ProductSceneView view = VisatApp.getApp().getSelectedProductSceneView();
@@ -187,7 +228,7 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
 
             timeSlider.setMinimum(0);
             final int nodeCount = bandList.size();
-            timeSlider.setMaximum((nodeCount - 1) * STEPS_PER_TIMESPAN);
+            timeSlider.setMaximum((nodeCount - 1) * stepsPerTimespan);
 
 
             final Hashtable<Integer, JLabel> labelTable = new Hashtable<Integer, JLabel>();
@@ -203,7 +244,7 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
                     String labelText = String.format("<html><p align=\"center\"> <font size=\"2\">%s<br>%s</font></p>",
                                                      dateText, timeText);
                     final JVertLabel label = new JVertLabel(labelText);
-                    labelTable.put(i * STEPS_PER_TIMESPAN, label);
+                    labelTable.put(i * stepsPerTimespan, label);
                 }
                 timeSlider.setLabelTable(labelTable);
             } else {
@@ -212,7 +253,7 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
             }
             final int index = bandList.indexOf(currentRaster);
             if (index != -1) {
-                timeSlider.setValue(index * STEPS_PER_TIMESPAN);
+                timeSlider.setValue(index * stepsPerTimespan);
             }
         } else {
             timeSlider.setLabelTable(null);
@@ -226,6 +267,9 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
         timeSlider.setEnabled(enable);
         playButton.setEnabled(enable);
         stopButton.setEnabled(enable);
+        blendButton.setEnabled(enable);
+        speedLabel.setEnabled(enable);
+        speedSlider.setEnabled(enable);
     }
 
     // todo (mp) - The following should be done on ProdsuctSceneView.setRasters()
@@ -294,9 +338,9 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
                 return;
             }
             final int currentValue = timeSlider.getValue();
-            final float transparency = (currentValue % STEPS_PER_TIMESPAN) / (float) STEPS_PER_TIMESPAN;
-            final int currentBandIndex = currentValue / STEPS_PER_TIMESPAN;
-            final int newBandIndex = MathUtils.ceilInt(currentValue / (float) STEPS_PER_TIMESPAN);
+            final float transparency = (currentValue % stepsPerTimespan) / (float) stepsPerTimespan;
+            final int currentBandIndex = currentValue / stepsPerTimespan;
+            final int newBandIndex = MathUtils.ceilInt(currentValue / (float) stepsPerTimespan);
 
             if (currentBandIndex == newBandIndex) {
                 final Band newRaster = bandList.get(newBandIndex);
@@ -329,6 +373,10 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
                                                                                     ProductSceneView.BASE_IMAGE_LAYER_ID);
         nextImageLayer.setTransparency(1 - transparency);
         baseImageLayer.setTransparency(transparency);
+    }
+
+    private int calculateTimerDelay() {
+        return 250 / stepsPerTimespan * (11 - speedSlider.getValue());
     }
 
     private class SceneViewListener extends InternalFrameAdapter {
