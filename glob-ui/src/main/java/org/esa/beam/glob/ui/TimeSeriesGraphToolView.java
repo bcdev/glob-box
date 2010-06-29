@@ -24,6 +24,7 @@ import org.esa.beam.visat.VisatApp;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.annotations.XYLineAnnotation;
 import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
@@ -34,7 +35,12 @@ import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 import org.jfree.data.time.TimeSeriesDataItem;
 
-import javax.swing.*;
+import javax.swing.AbstractButton;
+import javax.swing.BorderFactory;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.SwingWorker;
 import javax.swing.event.InternalFrameAdapter;
 import javax.swing.event.InternalFrameEvent;
 import java.awt.BorderLayout;
@@ -65,22 +71,21 @@ import static org.esa.beam.glob.core.timeseries.datamodel.TimeSeries.*;
 
 public class TimeSeriesGraphToolView extends AbstractToolView {
 
-    public static final String ID = "timeSeriesGraphToolView";
-
     private static final String NO_DATA_MESSAGE = "No data to display";
     private static final String DEFAULT_RANGE_LABEL = "Value";
     private static final String DEFAULT_DOMAIN_LABEL = "Time";
 
-    private String titleBase;
-    private TimeSeriesPPL pixelPosListener;
-    private final PinSelectionListener pinSelectionListener = new PinSelectionListener();
-    private final ProductNodeListener pinMovedListener = new PinMovedListener();
+    private final TimeSeriesPPL pixelPosListener;
+    private final PropertyChangeListener pinSelectionListener;
+    private final PropertyChangeListener sliderListener;
+    private final ProductNodeListener pinMovedListener;
     private final ProductNodeListener productNodeListener;
+    private final ExecutorService executorService;
+    private final TimeSeriesCollection timeSeriesCollection;
+
+    private String titleBase;
     private ProductSceneView currentView;
     private ChartPanel chartPanel;
-    private ExecutorService executorService;
-
-    private TimeSeriesCollection timeSeriesCollection;
     private TimeSeries cursorTimeSeries;
     private TimeSeries pinTimeSeries;
     private boolean somePinIsSelected = false;
@@ -90,9 +95,12 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
 
     public TimeSeriesGraphToolView() {
         pixelPosListener = new TimeSeriesPPL();
+        pinSelectionListener = new PinSelectionListener();
+        sliderListener = new SliderListener();
+        pinMovedListener = new PinMovedListener();
+        productNodeListener = new TimeSeriesProductNodeListener();
         executorService = Executors.newSingleThreadExecutor();
         timeSeriesCollection = new TimeSeriesCollection();
-        productNodeListener = new TimeSeriesProductNodeListener();
     }
 
     @Override
@@ -207,49 +215,6 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         mainPanel.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
         mainPanel.add(BorderLayout.EAST, buttonPanel);
 
-//        final TableLayout tableLayout = new TableLayout(2);
-//        tableLayout.setTableFill(TableLayout.Fill.BOTH);
-//        tableLayout.setTablePadding(4, 4);
-//        tableLayout.setTableWeightX(1.0);
-//        tableLayout.setTableWeightY(0.0);
-//        tableLayout.setCellColspan(0, 0, 2);
-//        tableLayout.setCellColspan(3, 0, 2);
-//
-//        final JPanel controlPanel = new JPanel(tableLayout);
-//        final JLabel minLabel = new JLabel("Min:");
-//        minInput.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-//        final JLabel maxLabel = new JLabel("Max:");
-//        maxInput.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-//        controlPanel.add(minLabel);
-//        controlPanel.add(minInput);
-//        controlPanel.add(maxLabel);
-//        controlPanel.add(maxInput);
-//        controlPanel.add(showSelectedPinCheckbox);
-//        controlPanel.add(tableLayout.createVerticalSpacer());
-//
-//        mainPanel.add(BorderLayout.EAST, controlPanel);
-//
-//        minInput.addKeyListener(new KeyAdapter() {
-//            @Override
-//            public void keyReleased(final KeyEvent e) {
-//                try {
-//                    getTimeSeriesPlot().getRangeAxis().setLowerBound(Double.parseDouble(minInput.getText()));
-//                } catch (final NumberFormatException ignore) {
-//                }
-//            }
-//        });
-//
-//        maxInput.addKeyListener(new KeyAdapter() {
-//            @Override
-//            public void keyReleased(final KeyEvent e) {
-//                try {
-//                    getTimeSeriesPlot().getRangeAxis().setUpperBound(Double.parseDouble(maxInput.getText()));
-//                } catch (final NumberFormatException ignore) {
-//                }
-//            }
-//
-//        });
-//
         ProductSceneView view = visatApp.getSelectedProductSceneView();
         if (view != null) {
             final String viewProductType = view.getProduct().getProductType();
@@ -285,6 +250,13 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
             getTimeSeriesPlot().getRenderer().setSeriesPaint(1, Color.RED);
         }
         getTimeSeriesPlot().setDataset(timeSeriesCollection);
+    }
+
+    private void removePinTimeSeries() {
+        if (pinTimeSeries != null) {
+            timeSeriesCollection.removeSeries(pinTimeSeries);
+            getTimeSeriesPlot().getRenderer().setSeriesPaint(0, Color.RED);
+        }
     }
 
     private static TimeSeries computeTimeSeries(String title, final List<Band> bandList, int pixelX, int pixelY,
@@ -329,33 +301,24 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         }
     }
 
-    private JFreeChart getTimeSeriesChart() {
-        return chartPanel.getChart();
-    }
-
-    private XYPlot getTimeSeriesPlot() {
-        return getTimeSeriesChart().getXYPlot();
-    }
-
     private void setCurrentView(ProductSceneView view) {
         if (currentView != null) {
             currentView.getProduct().removeProductNodeListener(productNodeListener);
             currentView.removePixelPositionListener(pixelPosListener);
-            currentView.addPropertyChangeListener(ProductSceneView.PROPERTY_NAME_SELECTED_PIN, pinSelectionListener);
+            currentView.removePropertyChangeListener(ProductSceneView.PROPERTY_NAME_SELECTED_PIN, pinSelectionListener);
+            currentView.removePropertyChangeListener(TimeSeriesPlayerToolView.TIME_PROPERTY, sliderListener);
         }
         if (view != null) {
             view.getProduct().addProductNodeListener(productNodeListener);
             view.addPixelPositionListener(pixelPosListener);
             view.addPropertyChangeListener(ProductSceneView.PROPERTY_NAME_SELECTED_PIN, pinSelectionListener);
+            view.addPropertyChangeListener(TimeSeriesPlayerToolView.TIME_PROPERTY, sliderListener);
 
             if (view.getSelectedPin() != null) {
                 somePinIsSelected = true;
                 showTimeSeriesForSelectedPinButton.setEnabled(true);
             }
-            org.esa.beam.glob.core.timeseries.datamodel.TimeSeries timeSeries;
-            timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(view.getProduct());
-            String variableName = rasterToVariableName(view.getRaster().getName());
-            bandList = timeSeries.getBandsForVariable(variableName);
+            bandList = getBandList(view);
         } else {
             somePinIsSelected = false;
             showTimeSeriesForSelectedPinButton.setEnabled(false);
@@ -364,6 +327,17 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         }
         currentView = view;
         updateUIState();
+    }
+
+    private static List<Band> getBandList(ProductSceneView view) {
+        if (view != null) {
+            org.esa.beam.glob.core.timeseries.datamodel.TimeSeries timeSeries;
+            timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(view.getProduct());
+            String variableName = rasterToVariableName(view.getRaster().getName());
+            return timeSeries.getBandsForVariable(variableName);
+        } else {
+            return null;
+        }
     }
 
     private static Range computeYAxisRange(List<Band> bands) {
@@ -382,13 +356,6 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         return result;
     }
 
-    private void removePinTimeSeries() {
-        if (pinTimeSeries != null) {
-            timeSeriesCollection.removeSeries(pinTimeSeries);
-            getTimeSeriesPlot().getRenderer().setSeriesPaint(0, Color.RED);
-        }
-    }
-
     private static double getValue(RasterDataNode raster, int pixelX, int pixelY, int currentLevel) {
         final RenderedImage image = raster.getGeophysicalImage().getImage(currentLevel);
         final Rectangle pixelRect = new Rectangle(pixelX, pixelY, 1, 1);
@@ -402,6 +369,14 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
             value = Double.NaN;
         }
         return value;
+    }
+
+    private JFreeChart getTimeSeriesChart() {
+        return chartPanel.getChart();
+    }
+
+    private XYPlot getTimeSeriesPlot() {
+        return getTimeSeriesChart().getXYPlot();
     }
 
     private class TimeSeriesIFL extends InternalFrameAdapter {
@@ -431,12 +406,25 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
     private class TimeSeriesPPL implements PixelPositionListener {
 
         private Future<?> future;
+//        private XYTextAnnotation loadingMessage;
 
         @Override
         public void pixelPosChanged(ImageLayer imageLayer, int pixelX, int pixelY,
                                     int currentLevel, boolean pixelPosValid, MouseEvent e) {
             if (pixelPosValid && isActive() && (future == null || future.isDone()) && bandList != null && bandList.size() > 1) {
                 future = executorService.submit(new TimeSeriesUpdater(pixelX, pixelY, currentLevel, bandList));
+            }
+//            loadingMessage = new XYTextAnnotation("Loading data...",
+//                                                  getTimeSeriesPlot().getDomainAxis().getRange().getCentralValue(),
+//                                                  getTimeSeriesPlot().getRangeAxis().getRange().getCentralValue());
+//            getTimeSeriesPlot().addAnnotation(loadingMessage);
+            final ValueAxis rangeAxis = getTimeSeriesPlot().getRangeAxis();
+            if (e.isShiftDown()) {
+                rangeAxis.setAutoRange(true);
+            } else {
+                if (rangeAxis.isAutoRange()) {
+                    rangeAxis.setRange(computeYAxisRange(bandList));
+                }
             }
         }
 
@@ -476,6 +464,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
 
             @Override
             protected void done() {
+//                getTimeSeriesPlot().removeAnnotation(loadingMessage);
                 if (cursorTimeSeries != null) {
                     timeSeriesCollection.removeSeries(cursorTimeSeries);
                 }
@@ -539,18 +528,42 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         @Override
         public void nodeAdded(ProductNodeEvent event) {
             if (event.getSourceNode() instanceof Band) {
-                if ((currentView.getSelectedPin() != null) && (somePinIsSelected)) {
-                    removePinTimeSeries();
-                    addSelectedPinSeries(currentView.getSelectedPin());
-                }
+                updatePinTimeSeries();
             }
         }
 
         @Override
         public void nodeRemoved(ProductNodeEvent event) {
             if (event.getSourceNode() instanceof Band) {
+                updatePinTimeSeries();
+            }
+        }
+
+        private void updatePinTimeSeries() {
+            bandList = getBandList(currentView);
+            if ((currentView.getSelectedPin() != null) && (somePinIsSelected)) {
+                removePinTimeSeries();
+                addSelectedPinSeries(currentView.getSelectedPin());
+            }
+        }
+
+    }
+
+    private class SliderListener implements PropertyChangeListener {
+
+        private XYLineAnnotation xyla;
+
+        @Override
+        public void propertyChange(PropertyChangeEvent evt) {
+            if (xyla != null) {
+                getTimeSeriesPlot().removeAnnotation(xyla, true);
+            }
+            int timePeriodIndex = (Integer) evt.getNewValue();
+            if (cursorTimeSeries != null) {
+                double coord = cursorTimeSeries.getTimePeriod(timePeriodIndex).getFirstMillisecond();
+                xyla = new XYLineAnnotation(coord, 0, coord, chartPanel.getHeight());
+                getTimeSeriesPlot().addAnnotation(xyla, true);
             }
         }
     }
-
 }

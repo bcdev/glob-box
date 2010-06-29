@@ -31,7 +31,7 @@
     <extension point="beam-ui:toolViews">
 
         <toolView>
-            <id>sliderToolView</id>
+            <id>timeSeriesPlayerToolView</id>
             <class>org.esa.beam.glob.ui.TimeSeriesPlayerToolView</class>
             <title>Time Series Player</title>
             <tabTitle>Time Series</tabTitle>

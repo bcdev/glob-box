@@ -56,17 +56,20 @@ import java.util.TimeZone;
  */
 public class TimeSeriesPlayerToolView extends AbstractToolView {
 
+    public static final String TIME_PROPERTY = "timeProperty";
+    public static final String ID = "timeSeriesPlayerToolView";
+
     private static final String NEXT_IMAGE_LAYER = "nextImageLayer";
     private final ImageIcon playIcon = UIUtils.loadImageIcon("icons/Play24.gif");
-    private final ImageIcon stopIcon = UIUtils.loadImageIcon("icons/PlayerStop24.gif");
 
+    private final ImageIcon stopIcon = UIUtils.loadImageIcon("icons/PlayerStop24.gif");
     private final ImageIcon pauseIcon = UIUtils.loadImageIcon("icons/Pause24.gif");
     private final SceneViewListener sceneViewListener;
+
     private final ProductNodeListener productNodeListener;
-
     private ProductSceneView currentView;
-    private JSlider timeSlider;
 
+    private JSlider timeSlider;
     private TimeSeries timeSeries;
     private AbstractButton playButton;
     private AbstractButton stopButton;
@@ -353,6 +356,7 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
             if (currentBandIndex == newBandIndex) {
                 final Band newRaster = bandList.get(newBandIndex);
                 exchangeRasterInProductSceneView(newRaster, currentView);
+                currentView.firePropertyChange(TIME_PROPERTY, -1, newBandIndex);
             } else {
                 if (bandList.size() > currentBandIndex + 1) {
                     changeTransparency(bandList.get(currentBandIndex + 1), transparency);
