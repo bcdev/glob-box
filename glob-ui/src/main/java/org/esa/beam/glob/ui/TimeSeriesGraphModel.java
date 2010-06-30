@@ -29,7 +29,6 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
-import java.beans.PropertyChangeSupport;
 import java.util.List;
 import java.util.Locale;
 
@@ -37,23 +36,18 @@ import static org.esa.beam.glob.core.timeseries.datamodel.TimeSeries.rasterToVar
 
 
 class TimeSeriesGraphModel {
-    static final String IS_PIN_SELECTED = "isPinSelected";
-
     private static final String NO_DATA_MESSAGE = "No data to display";
 
-    private final PropertyChangeSupport propertyChangeSupport;
     private final TimeSeriesCollection timeSeriesCollection;
     private final XYPlot timeSeriesPlot;
 
     private TimeSeries cursorTimeSeries;
     private TimeSeries pinTimeSeries;
     private XYLineAnnotation xyla;
-    private boolean isPinSelected;
     private List<Band> variableBandList;
 
     TimeSeriesGraphModel(XYPlot timeSeriesPlot) {
         this.timeSeriesPlot = timeSeriesPlot;
-        this.propertyChangeSupport = new PropertyChangeSupport(this);
         initPlot();
         timeSeriesCollection = new TimeSeriesCollection();
     }
@@ -147,22 +141,6 @@ class TimeSeriesGraphModel {
             variableBandList = createVariableBandList(raster);
         } else {
             variableBandList = null;
-        }
-    }
-
-    PropertyChangeSupport getPropertyChangeSupport() {
-        return propertyChangeSupport;
-    }
-
-    boolean isPinSelected() {
-        return isPinSelected;
-    }
-
-    void setIsPinSelected(boolean isPinSelected) {
-        boolean oldValue = this.isPinSelected;
-        if (oldValue != isPinSelected) {
-            this.isPinSelected = isPinSelected;
-            propertyChangeSupport.firePropertyChange(IS_PIN_SELECTED, oldValue, isPinSelected);
         }
     }
 

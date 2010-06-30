@@ -10,25 +10,17 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 
 
-class TimeSeriesGraphForm implements PropertyChangeListener {
-
-    private final TimeSeriesGraphModel graphModel;
+class TimeSeriesGraphForm {
 
     private final JComponent mainPanel;
     private final JPanel buttonPanel;
-    private final ChartPanel chartPanel;
     private final AbstractButton showTimeSeriesForSelectedPinButton;
 
-    TimeSeriesGraphForm(JFreeChart chart, TimeSeriesGraphModel graphModel, Action showPinAction) {
-        this.graphModel = graphModel;
-        graphModel.getPropertyChangeSupport().addPropertyChangeListener(this);
-
+    TimeSeriesGraphForm(JFreeChart chart, Action showPinAction) {
         mainPanel = new JPanel(new BorderLayout(4, 4));
-        chartPanel = new ChartPanel(chart);
+        ChartPanel chartPanel = new ChartPanel(chart);
         chartPanel.setPreferredSize(new Dimension(300, 200));
 
         mainPanel.setBorder(BorderFactory.createEmptyBorder(6, 6, 6, 6));
@@ -110,17 +102,6 @@ class TimeSeriesGraphForm implements PropertyChangeListener {
     void setButtonsEnabled(boolean enabled) {
         for (Component child : buttonPanel.getComponents()) {
             child.setEnabled(enabled);
-        }
-    }
-
-    void updateChart() {
-        chartPanel.updateUI();
-    }
-
-    @Override
-    public void propertyChange(PropertyChangeEvent evt) {
-        if (evt.getPropertyName().equals(TimeSeriesGraphModel.IS_PIN_SELECTED)) {
-            showTimeSeriesForSelectedPinButton.setEnabled(graphModel.isPinSelected());
         }
     }
 

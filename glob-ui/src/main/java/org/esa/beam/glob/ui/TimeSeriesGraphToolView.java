@@ -40,14 +40,14 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
     private final PropertyChangeListener sliderListener;
     private final ProductNodeListener pinMovedListener;
     private final ProductNodeListener productNodeListener;
+    private final Action showPinAction;
 
     private String titleBase;
-    private ProductSceneView currentView;
-
     private JFreeChart chart;
     private TimeSeriesGraphForm graphForm;
     private TimeSeriesGraphModel graphModel;
-    private Action showPinAction;
+
+    private ProductSceneView currentView;
 
 
     public TimeSeriesGraphToolView() {
@@ -68,7 +68,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
                 DEFAULT_RANGE_LABEL,
                 null, false, true, false);
         graphModel = new TimeSeriesGraphModel(chart.getXYPlot());
-        graphForm = new TimeSeriesGraphForm(chart, graphModel, showPinAction);
+        graphForm = new TimeSeriesGraphForm(chart, showPinAction);
 
         final VisatApp visatApp = VisatApp.getApp();
         visatApp.addInternalFrameListener(new TimeSeriesIFL());
@@ -85,11 +85,25 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         return graphForm.getControl();
     }
 
-    private void updateUIState() {
-        final boolean isTimeSeriesView = currentView != null;
+    private void setCurrentView(ProductSceneView newView) {
+        if (currentView != null) {
+            currentView.getProduct().removeProductNodeListener(productNodeListener);
+            currentView.getProduct().removeProductNodeListener(pinMovedListener);
+            currentView.removePixelPositionListener(pixelPosListener);
+            currentView.removePropertyChangeListener(ProductSceneView.PROPERTY_NAME_SELECTED_PIN, pinSelectionListener);
+            currentView.removePropertyChangeListener(TimeSeriesPlayerToolView.TIME_PROPERTY, sliderListener);
+        }
+        if (newView != null) {
+            newView.getProduct().addProductNodeListener(productNodeListener);
+            newView.getProduct().addProductNodeListener(pinMovedListener);
+            newView.addPixelPositionListener(pixelPosListener);
+            newView.addPropertyChangeListener(ProductSceneView.PROPERTY_NAME_SELECTED_PIN, pinSelectionListener);
+            newView.addPropertyChangeListener(TimeSeriesPlayerToolView.TIME_PROPERTY, sliderListener);
 
-        if (isTimeSeriesView) {
-            final RasterDataNode raster = currentView.getRaster();
+            final RasterDataNode raster = newView.getRaster();
+            graphModel.adaptToVariable(raster);
+            graphModel.updateTimeAnnotation(raster);
+
             String variableName = rasterToVariableName(raster.getName());
             setTitle(String.format("%s - %s", titleBase, variableName));
 
@@ -102,39 +116,17 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
             }
             graphModel.updatePlot(rangeAxisLabel, true);
         } else {
+            graphModel.removePinTimeSeries();
+            graphModel.adaptToVariable(null);
+
             setTitle(titleBase);
             graphModel.updatePlot(DEFAULT_RANGE_LABEL, false);
         }
-        graphForm.setButtonsEnabled(isTimeSeriesView);
-    }
-
-    private void setCurrentView(ProductSceneView view) {
+        currentView = newView;
+        graphForm.setButtonsEnabled(currentView != null);
         if (currentView != null) {
-            currentView.getProduct().removeProductNodeListener(productNodeListener);
-            currentView.getProduct().removeProductNodeListener(pinMovedListener);
-            currentView.removePixelPositionListener(pixelPosListener);
-            currentView.removePropertyChangeListener(ProductSceneView.PROPERTY_NAME_SELECTED_PIN, pinSelectionListener);
-            currentView.removePropertyChangeListener(TimeSeriesPlayerToolView.TIME_PROPERTY, sliderListener);
+            showPinAction.setEnabled(currentView.getSelectedPin() != null);
         }
-        if (view != null) {
-            view.getProduct().addProductNodeListener(productNodeListener);
-            view.getProduct().addProductNodeListener(pinMovedListener);
-            view.addPixelPositionListener(pixelPosListener);
-            view.addPropertyChangeListener(ProductSceneView.PROPERTY_NAME_SELECTED_PIN, pinSelectionListener);
-            view.addPropertyChangeListener(TimeSeriesPlayerToolView.TIME_PROPERTY, sliderListener);
-
-            if (view.getSelectedPin() != null) {
-                graphModel.setIsPinSelected(true);
-            }
-            graphModel.adaptToVariable(view.getRaster());
-            graphModel.updateTimeAnnotation(view.getRaster());
-        } else {
-            graphModel.setIsPinSelected(false);
-            graphModel.removePinTimeSeries();
-            graphModel.adaptToVariable(null);
-        }
-        currentView = view;
-        updateUIState();
     }
 
     private class ShowPinAction extends AbstractAction {
@@ -208,10 +200,6 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         @Override
         public void pixelPosNotAvailable() {
             graphModel.removeCursorTimeSeries();
-            updateUIState();
-            if (isVisible()) {
-                graphForm.updateChart();
-            }
         }
 
         private class TimeSeriesUpdater extends SwingWorker<TimeSeries, Void> {
@@ -253,7 +241,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
             if (currentView != null && currentView.getSelectedPins().length <= 1) {
                 Placemark pin = (Placemark) evt.getNewValue();
                 boolean pinSelected = pin != null;
-                graphModel.setIsPinSelected(pinSelected);
+                showPinAction.setEnabled(pinSelected);
                 
                 if (graphForm.isShowPinSeries() && pinSelected) {
                     graphModel.addSelectedPinSeries(pin, currentView);
@@ -261,7 +249,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
                     graphModel.removePinTimeSeries();
                 }
             } else {
-                graphModel.setIsPinSelected(false);
+                showPinAction.setEnabled(false);
             }
         }
     }
@@ -272,8 +260,9 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         public void nodeChanged(ProductNodeEvent event) {
             if (event.getPropertyName().equals(Placemark.PROPERTY_NAME_PIXELPOS)) {
                 graphModel.removePinTimeSeries();
-                if (graphForm.isShowPinSeries() && graphModel.isPinSelected()) {
-                    graphModel.addSelectedPinSeries(currentView.getSelectedPin(), currentView);
+                Placemark selectedPin = currentView.getSelectedPin();
+                if (graphForm.isShowPinSeries() && selectedPin != null) {
+                    graphModel.addSelectedPinSeries(selectedPin, currentView);
                 }
             }
         }
