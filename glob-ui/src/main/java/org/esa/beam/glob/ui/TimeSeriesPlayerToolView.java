@@ -29,6 +29,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JSeparator;
 import javax.swing.JSlider;
 import javax.swing.Timer;
 import javax.swing.event.ChangeEvent;
@@ -57,13 +58,16 @@ import java.util.TimeZone;
 public class TimeSeriesPlayerToolView extends AbstractToolView {
 
     public static final String TIME_PROPERTY = "timeProperty";
-    public static final String ID = "timeSeriesPlayerToolView";
 
     private static final String NEXT_IMAGE_LAYER = "nextImageLayer";
-    private final ImageIcon playIcon = UIUtils.loadImageIcon("icons/Play24.gif");
 
+    private final ImageIcon playIcon = UIUtils.loadImageIcon("icons/Play24.gif");
     private final ImageIcon stopIcon = UIUtils.loadImageIcon("icons/PlayerStop24.gif");
     private final ImageIcon pauseIcon = UIUtils.loadImageIcon("icons/Pause24.gif");
+    private final ImageIcon repeatIcon = UIUtils.loadImageIcon("icons/Repeat24.gif");
+    private final ImageIcon minusIcon = UIUtils.loadImageIcon("icons/PlayerMinus16.gif");
+    private final ImageIcon plusIcon = UIUtils.loadImageIcon("icons/PlayerPlus16.gif");
+
     private final SceneViewListener sceneViewListener;
 
     private final ProductNodeListener productNodeListener;
@@ -78,9 +82,10 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
     private JSlider speedSlider;
     private JLabel speedLabel;
     private AbstractButton blendButton;
-    private JLabel minusLabel;
-    private JLabel plusLabel;
     private Timer timer;
+    private AbstractButton repeatButton;
+    private AbstractButton minusButton;
+    private AbstractButton plusButton;
 
     public TimeSeriesPlayerToolView() {
         sceneViewListener = new SceneViewListener();
@@ -131,29 +136,45 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
         panel.add(timeSlider);
         final JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         playButton = ToolButtonFactory.createButton(playIcon, true);
+        playButton.setToolTipText( "Play the time series" );
         stopButton = ToolButtonFactory.createButton(stopIcon, false);
+        stopButton.setToolTipText( "Stop playing the time series" );
+        repeatButton = ToolButtonFactory.createButton(repeatIcon, true);
+        repeatButton.setToolTipText( "Toggle repeat" );
         blendButton = new JCheckBox("Show blending");
+        blendButton.setToolTipText( "Toggle blending mode" );
         speedLabel = new JLabel("Player speed:");
-        minusLabel = new JLabel("-");
+        minusButton = ToolButtonFactory.createButton( minusIcon, false );
+        minusButton.setToolTipText( "Decrease playing speed" );
         speedSlider = new JSlider(1, 10);
+        speedSlider.setToolTipText( "Choose the playing speed" );
         speedSlider.setSnapToTicks(true);
         speedSlider.setPaintTrack(true);
         speedSlider.setPaintTicks(true);
         speedSlider.setPaintLabels(true);
         speedSlider.setValue(5);
         speedSlider.setPreferredSize(new Dimension(80, speedSlider.getPreferredSize().height));
-        plusLabel = new JLabel("+");
-        setSliderEnabled(false);
+        plusButton = ToolButtonFactory.createButton( plusIcon, false );
+        plusButton.setToolTipText( "Increase playing speed" );
+
+        setUIEnabled(false);
 
         final ActionListener playAction = new ActionListener() {
 
             @Override
             public void actionPerformed(ActionEvent e) {
                 int currentValue = timeSlider.getValue();
-                // if slider is on maximum value, start from beginning
-                if (currentValue == timeSlider.getMaximum()) {
+                // if slider is on maximum value and repeat button is selected, start from beginning
+                if (currentValue == timeSlider.getMaximum() && repeatButton.isSelected()) {
+                    currentValue = 0;
+                } else if (currentValue == timeSlider.getMaximum() && !repeatButton.isSelected()) {
+                    // if slider is on maximum value and repeat button is not selected, stop
+                    playButton.setSelected(false);
+                    timer.stop();
+                    playButton.setIcon(playIcon);
                     currentValue = 0;
                 } else {
+                    // if slider is not on maximum value, go on
                     currentValue++;
                 }
                 timeSlider.setValue(currentValue);
@@ -201,6 +222,15 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
             }
         });
 
+        minusButton.addActionListener( new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if( speedSlider.getValue() > speedSlider.getMinimum() ) {
+                    speedSlider.setValue( speedSlider.getValue() - 1 );
+                }
+            }
+        } );
+
         speedSlider.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent e) {
@@ -208,14 +238,25 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
             }
         });
 
+        plusButton.addActionListener( new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if( speedSlider.getValue() < speedSlider.getMaximum() ) {
+                    speedSlider.setValue( speedSlider.getValue() + 1 );
+                }
+            }
+        } );
+
         buttonsPanel.add(playButton);
         buttonsPanel.add(stopButton);
+        buttonsPanel.add(repeatButton);
+        buttonsPanel.add(new JSeparator( JSeparator.VERTICAL ));
         buttonsPanel.add(blendButton);
-        buttonsPanel.add(new JLabel("       "));
+        buttonsPanel.add(new JSeparator( JSeparator.VERTICAL ));
         buttonsPanel.add(speedLabel);
-        buttonsPanel.add(minusLabel);
+        buttonsPanel.add(minusButton);
         buttonsPanel.add(speedSlider);
-        buttonsPanel.add(plusLabel);
+        buttonsPanel.add(plusButton);
         panel.add(buttonsPanel);
 
         ProductSceneView view = VisatApp.getApp().getSelectedProductSceneView();
@@ -242,7 +283,7 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
 
             final Hashtable<Integer, JLabel> labelTable = new Hashtable<Integer, JLabel>();
             if (nodeCount > 1) {
-                setSliderEnabled(true);
+                setUIEnabled(true);
                 for (int i = 0; i < nodeCount; i++) {
                     final ProductData.UTC utcStartTime = bandList.get(i).getTimeCoding().getStartTime();
                     SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MMM-yyyy");
@@ -258,7 +299,7 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
                 timeSlider.setLabelTable(labelTable);
             } else {
                 timeSlider.setLabelTable(null);
-                setSliderEnabled(false);
+                setUIEnabled(false);
             }
             final int index = bandList.indexOf(currentRaster);
             if (index != -1) {
@@ -266,21 +307,22 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
             }
         } else {
             timeSlider.setLabelTable(null);
-            setSliderEnabled(false);
+            setUIEnabled(false);
         }
     }
 
-    private void setSliderEnabled(boolean enable) {
+    private void setUIEnabled(boolean enable) {
         timeSlider.setPaintLabels(enable);
         timeSlider.setPaintTicks(enable);
         timeSlider.setEnabled(enable);
         playButton.setEnabled(enable);
         stopButton.setEnabled(enable);
+        repeatButton.setEnabled( enable );
         blendButton.setEnabled(enable);
         speedLabel.setEnabled(enable);
+        minusButton.setEnabled(enable);
         speedSlider.setEnabled(enable);
-        minusLabel.setEnabled(enable);
-        plusLabel.setEnabled(enable);
+        plusButton.setEnabled(enable);
     }
 
     // todo (mp) - The following should be done on ProdsuctSceneView.setRasters()
