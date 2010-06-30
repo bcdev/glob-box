@@ -14,11 +14,6 @@ import java.beans.PropertyChangeListener;
 class WorldMapHandler implements PropertyChangeListener {
 
     private Layer layer;
-    private TimeSeriesManagerForm timeSeriesManagerForm;
-
-    public WorldMapHandler(TimeSeriesManagerForm timeSeriesManagerForm) {
-        this.timeSeriesManagerForm = timeSeriesManagerForm;
-    }
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {

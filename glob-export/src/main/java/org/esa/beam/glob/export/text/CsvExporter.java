@@ -4,7 +4,6 @@ import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.RasterDataNode;
-import org.esa.beam.glob.GlobBox;
 import org.esa.beam.util.Debug;
 import org.esa.beam.visat.VisatApp;
 
@@ -107,7 +106,7 @@ public class CsvExporter {
     }
 
     private void setUpRows() {
-        final RasterDataNode refRaster = GlobBox.getInstance().getCurrentView().getRaster();
+        final RasterDataNode refRaster = VisatApp.getApp().getSelectedProductSceneView().getRaster();
         final RenderedImage image = refRaster.getGeophysicalImage().getImage(level);
         final int width = image.getWidth();
         final int height = image.getHeight();

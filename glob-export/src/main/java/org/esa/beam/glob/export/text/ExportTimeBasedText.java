@@ -5,7 +5,7 @@ import org.esa.beam.framework.help.HelpSys;
 import org.esa.beam.framework.ui.command.CommandEvent;
 import org.esa.beam.framework.ui.command.ExecCommand;
 import org.esa.beam.framework.ui.product.ProductSceneView;
-import org.esa.beam.glob.GlobBox;
+import org.esa.beam.glob.core.timeseries.datamodel.TimeSeries;
 import org.esa.beam.util.SystemUtils;
 import org.esa.beam.util.io.BeamFileChooser;
 import org.esa.beam.util.io.BeamFileFilter;
@@ -14,15 +14,14 @@ import org.esa.beam.visat.VisatApp;
 import javax.swing.JFileChooser;
 import java.awt.Dimension;
 import java.io.File;
-import java.util.List;
+import java.util.Arrays;
 
 /**
  * User: Thomas Storm
  * Date: 18.03.2010
  * Time: 16:51:49
  */
-public class
-        ExportTimeBasedText extends ExecCommand {
+public class ExportTimeBasedText extends ExecCommand {
 
     private static final String EXPORT_DIR_PREFERENCES_KEY = "user.export.dir";
     BeamFileFilter kmzFileFilter = new BeamFileFilter("CSV", "csv", "Comma separated values");
@@ -30,9 +29,14 @@ public class
     @Override
     public void actionPerformed(CommandEvent event) {
         File outputFile = fetchOutputFile();
-        List<RasterDataNode> rasterList = GlobBox.getInstance().getModel().getCurrentRasterList();
-        CsvExporter exporter = new CsvExporter(rasterList, outputFile, 2);
-        exporter.exportCsv();
+
+        final ProductSceneView view = VisatApp.getApp().getSelectedProductSceneView();
+        if (view != null && view.getProduct() != null &&
+            view.getProduct().getProductType().equals(TimeSeries.TIME_SERIES_PRODUCT_TYPE)) {
+            RasterDataNode[] rasterList = view.getProduct().getBands();
+            CsvExporter exporter = new CsvExporter(Arrays.asList(rasterList), outputFile, 2);
+            exporter.exportCsv();
+        }
     }
 
     private File fetchOutputFile() {

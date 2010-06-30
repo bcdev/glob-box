@@ -1,8 +1,5 @@
 package org.esa.beam.glob.ui;
 
-import com.bc.ceres.core.ProgressMonitor;
-import com.bc.ceres.core.SubProgressMonitor;
-import com.bc.ceres.swing.progress.ProgressMonitorSwingWorker;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.ColorPaletteDef;
 import org.esa.beam.framework.datamodel.ImageInfo;
@@ -30,11 +27,6 @@ class ColorSynchronizer implements PropertyChangeListener {
 
     private ImageInfoListener listener;
     private RasterDataNode currentRaster;
-    private TimeSeriesManagerForm timeSeriesManagerForm;
-
-    public ColorSynchronizer(TimeSeriesManagerForm timeSeriesManagerForm) {
-        this.timeSeriesManagerForm = timeSeriesManagerForm;
-    }
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
@@ -61,44 +53,34 @@ class ColorSynchronizer implements PropertyChangeListener {
     }
 
     private void transferImageInfo(final RasterDataNode referenceRaster, final List<RasterDataNode> rasterList) {
-        ProgressMonitorSwingWorker pmsw = new ProgressMonitorSwingWorker<Void, RasterDataNode>(
-                timeSeriesManagerForm,
-                "Synchronising colour information") {
-            @Override
-            protected Void doInBackground(ProgressMonitor pm) throws Exception {
-                pm.beginTask("Synchronising...", (rasterList.size() - 1) * 2);
-                try {
-                    for (RasterDataNode raster : rasterList) {
-                        if (raster != referenceRaster) {
-                            // just to trigger computation
-                            raster.getImageInfo(new SubProgressMonitor(pm, 1));
-                            raster.getStx(false, new SubProgressMonitor(pm, 1));
-                            publish(raster);
-                        }
-                    }
-                } finally {
-                    pm.done();
-                }
-                return null;
-            }
-
-            @Override
-            protected void process(List<RasterDataNode> chunks) {
-                final ColorPaletteDef colorDef = referenceRaster.getImageInfo().getColorPaletteDef();
-                for (RasterDataNode raster : chunks) {
-                    if (raster != referenceRaster) {
-                        applyColorPaletteDef(raster, colorDef);
-                    }
-                }
-
-            }
-
-            @Override
-            protected void done() {
-                updateLayerCollection(referenceRaster);
-            }
-        };
-        pmsw.executeWithBlocking();
+//            @Override
+//            protected Void doInBackground(ProgressMonitor pm) throws Exception {
+//                    for (RasterDataNode raster : rasterList) {
+//                        if (raster != referenceRaster) {
+//                            // just to trigger computation
+//                            raster.getImageInfo(new SubProgressMonitor(pm, 1));
+//                            raster.getStx(false, new SubProgressMonitor(pm, 1));
+//                            publish(raster);
+//                        }
+//                    }
+//            }
+//
+//            @Override
+//            protected void process(List<RasterDataNode> chunks) {
+//                final ColorPaletteDef colorDef = referenceRaster.getImageInfo().getColorPaletteDef();
+//                for (RasterDataNode raster : chunks) {
+//                    if (raster != referenceRaster) {
+//                        applyColorPaletteDef(raster, colorDef);
+//                    }
+//                }
+//
+//            }
+//
+//            @Override
+//            protected void done() {
+//                updateLayerCollection(referenceRaster);
+//            }
+//        };
     }
 
     private void updateLayerCollection(RasterDataNode referenceRaster) {

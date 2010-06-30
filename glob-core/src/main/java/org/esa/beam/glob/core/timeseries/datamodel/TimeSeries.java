@@ -3,10 +3,14 @@ package org.esa.beam.glob.core.timeseries.datamodel;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.framework.datamodel.TimeCoding;
 import org.esa.beam.util.Guardian;
 
 import java.text.SimpleDateFormat;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -45,7 +49,6 @@ public abstract class TimeSeries {
 
     public abstract List<Band> getBandsForVariable(String variableName);
 
-
     public static String variableToRasterName(String variableName, TimeCoding timeCoding) {
         final ProductData.UTC rasterStartTime = timeCoding.getStartTime();
         Guardian.assertNotNull("rasterStartTime", rasterStartTime);
@@ -56,5 +59,16 @@ public abstract class TimeSeries {
     public static String rasterToVariableName(String rasterName) {
         final int lastUnderscore = rasterName.lastIndexOf(SEPARATOR);
         return rasterName.substring(0, lastUnderscore);
+    }
+
+    public static void sortBands(List<RasterDataNode> rasterList) {
+        Collections.sort(rasterList, new Comparator<RasterDataNode>() {
+            @Override
+            public int compare(RasterDataNode raster1, RasterDataNode raster2) {
+                final Date raster1Date = raster1.getProduct().getStartTime().getAsDate();
+                final Date raster2Date = raster2.getProduct().getStartTime().getAsDate();
+                return raster1Date.compareTo(raster2Date) * -1;
+            }
+        });
     }
 }
