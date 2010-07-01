@@ -15,10 +15,12 @@ import java.awt.event.ActionListener;
 class TimeSeriesGraphForm {
 
     private final JComponent mainPanel;
-    private final JPanel buttonPanel;
-    private final AbstractButton showTimeSeriesForSelectedPinButton;
+    private final AbstractButton showTimeSeriesForSelectedPinsButton;
+    private final AbstractButton showTimeSeriesForAllPinsButton;
+    private final AbstractButton exportTimeSeriesButton;
+    private final AbstractButton filterButton;
 
-    TimeSeriesGraphForm(JFreeChart chart, Action showPinAction) {
+    TimeSeriesGraphForm(JFreeChart chart, Action showSelectedPinsAction, Action showAllPinsAction) {
         mainPanel = new JPanel(new BorderLayout(4, 4));
         ChartPanel chartPanel = new ChartPanel(chart);
         chartPanel.setPreferredSize(new Dimension(300, 200));
@@ -27,7 +29,7 @@ class TimeSeriesGraphForm {
         mainPanel.add(BorderLayout.CENTER, chartPanel);
         mainPanel.setPreferredSize(new Dimension(320, 200));
 
-        final AbstractButton filterButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/Filter24.gif"),
+        filterButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/Filter24.gif"),
                                                                            false);
         filterButton.setName("filterButton");
         filterButton.setToolTipText("Choose which variables to display");
@@ -38,26 +40,36 @@ class TimeSeriesGraphForm {
                 // choose variables to display
             }
         });
-//
-        showTimeSeriesForSelectedPinButton = ToolButtonFactory.createButton(
+        //////////////////////////////////////////
+        showTimeSeriesForSelectedPinsButton = ToolButtonFactory.createButton(
                 UIUtils.loadImageIcon("icons/SelectedPinSpectra24.gif"), true);
-        showTimeSeriesForSelectedPinButton.addActionListener(showPinAction);
-        showTimeSeriesForSelectedPinButton.setName("showTimeSeriesForSelectedPinButton");
-        showTimeSeriesForSelectedPinButton.setToolTipText("Show time series for selected pin");
-
-        final AbstractButton showTimeSeriesForAllPinsButton = ToolButtonFactory.createButton(
-                UIUtils.loadImageIcon("icons/PinSpectra24.gif"), false);
+        showTimeSeriesForSelectedPinsButton.addActionListener(showSelectedPinsAction);
+        showTimeSeriesForSelectedPinsButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (isShowingAllPins()) {
+                    showTimeSeriesForAllPinsButton.setSelected(false);
+                }
+            }
+        });
+        showTimeSeriesForSelectedPinsButton.setName("showTimeSeriesForSelectedPinsButton");
+        showTimeSeriesForSelectedPinsButton.setToolTipText("Show time series for selected pin");
+        //////////////////////////////////////////
+        showTimeSeriesForAllPinsButton = ToolButtonFactory.createButton(
+                UIUtils.loadImageIcon("icons/PinSpectra24.gif"), true);
+        showTimeSeriesForAllPinsButton.addActionListener(showAllPinsAction);
         showTimeSeriesForAllPinsButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // show time series for all pins
-//                showTimeSeriesForSelectedPinButton.isSelected();
+                if (isShowingSelectedPins()) {
+                    showTimeSeriesForSelectedPinsButton.setSelected(false);
+                }
             }
         });
         showTimeSeriesForAllPinsButton.setName("showTimeSeriesForAllPinsButton");
         showTimeSeriesForAllPinsButton.setToolTipText("Show time series for all pins");
-
-        AbstractButton exportTimeSeriesButton = ToolButtonFactory.createButton(
+        //////////////////////////////////////////
+        exportTimeSeriesButton = ToolButtonFactory.createButton(
                 UIUtils.loadImageIcon("icons/Export24.gif"),
                 false);
         exportTimeSeriesButton.addActionListener(new ActionListener() {
@@ -69,7 +81,7 @@ class TimeSeriesGraphForm {
         exportTimeSeriesButton.setToolTipText("Export time series graph to csv file");
         exportTimeSeriesButton.setName("exportTimeSeriesButton");
 
-        buttonPanel = GridBagUtils.createPanel();
+        JPanel buttonPanel = GridBagUtils.createPanel();
         final GridBagConstraints gbc = new GridBagConstraints();
         gbc.anchor = GridBagConstraints.CENTER;
         gbc.fill = GridBagConstraints.NONE;
@@ -77,7 +89,7 @@ class TimeSeriesGraphForm {
         gbc.gridy = 0;
         buttonPanel.add(filterButton, gbc);
         gbc.gridy++;
-        buttonPanel.add(showTimeSeriesForSelectedPinButton, gbc);
+        buttonPanel.add(showTimeSeriesForSelectedPinsButton, gbc);
         gbc.gridy++;
         buttonPanel.add(showTimeSeriesForAllPinsButton, gbc);
         gbc.gridy++;
@@ -100,16 +112,18 @@ class TimeSeriesGraphForm {
     }
 
     void setButtonsEnabled(boolean enabled) {
-        for (Component child : buttonPanel.getComponents()) {
-            child.setEnabled(enabled);
-        }
+        filterButton.setEnabled(enabled);
+        showTimeSeriesForSelectedPinsButton.setEnabled(enabled);
+        showTimeSeriesForAllPinsButton.setEnabled(enabled);
+        exportTimeSeriesButton.setEnabled(enabled);
     }
 
     boolean isShowingSelectedPins() {
-        return showTimeSeriesForSelectedPinButton.isSelected();
+        return showTimeSeriesForSelectedPinsButton.isSelected();
     }
 
-    public void setShowingSelectPinSelected(boolean enabled) {
-        showTimeSeriesForSelectedPinButton.setSelected(enabled);
+    boolean isShowingAllPins() {
+        return showTimeSeriesForAllPinsButton.isSelected();
     }
+
 }

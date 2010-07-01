@@ -4,6 +4,7 @@ import com.bc.ceres.glayer.support.ImageLayer;
 import com.bc.ceres.grender.Viewport;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Placemark;
+import org.esa.beam.framework.datamodel.PlacemarkGroup;
 import org.esa.beam.framework.datamodel.ProductNodeEvent;
 import org.esa.beam.framework.datamodel.ProductNodeListener;
 import org.esa.beam.framework.datamodel.ProductNodeListenerAdapter;
@@ -40,7 +41,8 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
     private final PropertyChangeListener sliderListener;
     private final ProductNodeListener pinMovedListener;
     private final ProductNodeListener productNodeListener;
-    private final Action showPinAction;
+    private final Action showSelectedPinAction;
+    private final Action showAllPinAction;
 
     private String titleBase;
     private JFreeChart chart;
@@ -56,7 +58,8 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         sliderListener = new SliderListener();
         pinMovedListener = new PinMovedListener();
         productNodeListener = new TimeSeriesProductNodeListener();
-        showPinAction = new ShowPinAction();
+        showSelectedPinAction = new ShowPinAction(true);
+        showAllPinAction = new ShowPinAction(false);
     }
 
     @Override
@@ -68,7 +71,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
                 DEFAULT_RANGE_LABEL,
                 null, false, true, false);
         graphModel = new TimeSeriesGraphModel(chart.getXYPlot());
-        graphForm = new TimeSeriesGraphForm(chart, showPinAction);
+        graphForm = new TimeSeriesGraphForm(chart, showSelectedPinAction, showAllPinAction);
 
         final VisatApp visatApp = VisatApp.getApp();
         visatApp.addInternalFrameListener(new TimeSeriesIFL());
@@ -107,7 +110,8 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
             setTitle(String.format("%s - %s", titleBase, variableName));
 
             graphModel.updateTimeAnnotation(raster);
-            showPinAction.setEnabled(newView.getSelectedPin() != null);
+            showSelectedPinAction.setEnabled(newView.getSelectedPin() != null);
+            showAllPinAction.setEnabled(newView.getProduct().getPinGroup().getNodeCount() > 0);
         } else {
             graphModel.removeCursorTimeSeries();
             graphModel.removePinTimeSeries();
@@ -115,17 +119,25 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
             graphModel.adaptToTimeSeries(null);
 
             setTitle(titleBase);
-            showPinAction.setEnabled(false);
-            graphForm.setShowingSelectPinSelected(false);
         }
         currentView = newView;
         graphForm.setButtonsEnabled(currentView != null);
     }
 
-    private void updatePins() {
+    private void updatePins(boolean selected) {
         graphModel.removePinTimeSeries();
-        if (graphForm.isShowingSelectedPins()) {
-            for (Placemark pin : currentView.getSelectedPins()) {
+        boolean showing;
+        Placemark[] pins;
+        if (selected) {
+            showing = graphForm.isShowingSelectedPins();
+            pins = currentView.getSelectedPins();
+        } else {
+            showing = graphForm.isShowingAllPins();
+            PlacemarkGroup pinGroup = currentView.getProduct().getPinGroup();
+            pins = pinGroup.toArray(new Placemark[pinGroup.getNodeCount()]);
+        }
+        if (showing) {
+            for (Placemark pin : pins) {
                 final Viewport viewport = currentView.getViewport();
                 final ImageLayer baseLayer = currentView.getBaseImageLayer();
                 final int currentLevel = baseLayer.getLevel(viewport);
@@ -140,9 +152,15 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
 
     private class ShowPinAction extends AbstractAction {
 
+        private final boolean selected;
+
+        private ShowPinAction(boolean selected) {
+            this.selected = selected;
+        }
+
         @Override
         public void actionPerformed(ActionEvent e) {
-            updatePins();
+            updatePins(selected);
         }
     }
 
@@ -207,8 +225,8 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         @Override
         public void propertyChange(PropertyChangeEvent evt) {
             Placemark pin = (Placemark) evt.getNewValue();
-            showPinAction.setEnabled(pin != null);
-            updatePins();
+            showSelectedPinAction.setEnabled(pin != null);
+            updatePins(graphForm.isShowingSelectedPins());
         }
     }
 
@@ -217,7 +235,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         @Override
         public void nodeChanged(ProductNodeEvent event) {
             if (event.getPropertyName().equals(Placemark.PROPERTY_NAME_PIXELPOS)) {
-                updatePins();
+                updatePins(graphForm.isShowingSelectedPins());
             }
         }
     }
@@ -227,22 +245,31 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         @Override
         public void nodeAdded(ProductNodeEvent event) {
             if (event.getSourceNode() instanceof Band) {
-                timeSeriesProductChanged();
+                handleBandsChanged();
+            } else if (event.getSourceNode() instanceof Placemark) {
+                handlePlacemarkChanged();
             }
         }
 
         @Override
         public void nodeRemoved(ProductNodeEvent event) {
             if (event.getSourceNode() instanceof Band) {
-                timeSeriesProductChanged();
+                handleBandsChanged();
+            } else if (event.getSourceNode() instanceof Placemark) {
+                handlePlacemarkChanged();
             }
         }
 
-        private void timeSeriesProductChanged() {
+        private void handlePlacemarkChanged() {
+            showSelectedPinAction.setEnabled(currentView.getSelectedPin() != null);
+            showAllPinAction.setEnabled(currentView.getProduct().getPinGroup().getNodeCount() > 0);
+        }
+
+        private void handleBandsChanged() {
             AbstractTimeSeries timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(currentView.getProduct());
             graphModel.adaptToTimeSeries(timeSeries);
             graphModel.updateTimeAnnotation(currentView.getRaster());
-            updatePins();
+            updatePins(graphForm.isShowingSelectedPins());
         }
     }
 
