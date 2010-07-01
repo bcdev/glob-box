@@ -5,7 +5,7 @@ import org.esa.beam.framework.help.HelpSys;
 import org.esa.beam.framework.ui.command.CommandEvent;
 import org.esa.beam.framework.ui.command.ExecCommand;
 import org.esa.beam.framework.ui.product.ProductSceneView;
-import org.esa.beam.glob.core.timeseries.datamodel.TimeSeries;
+import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
 import org.esa.beam.util.SystemUtils;
 import org.esa.beam.util.io.BeamFileChooser;
 import org.esa.beam.util.io.BeamFileFilter;
@@ -32,7 +32,7 @@ public class ExportTimeBasedText extends ExecCommand {
 
         final ProductSceneView view = VisatApp.getApp().getSelectedProductSceneView();
         if (view != null && view.getProduct() != null &&
-            view.getProduct().getProductType().equals(TimeSeries.TIME_SERIES_PRODUCT_TYPE)) {
+            view.getProduct().getProductType().equals(AbstractTimeSeries.TIME_SERIES_PRODUCT_TYPE)) {
             RasterDataNode[] rasterList = view.getProduct().getBands();
             CsvExporter exporter = new CsvExporter(Arrays.asList(rasterList), outputFile, 2);
             exporter.exportCsv();

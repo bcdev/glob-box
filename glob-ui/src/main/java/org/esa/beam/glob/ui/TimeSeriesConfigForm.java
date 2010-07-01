@@ -6,9 +6,9 @@ import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.ui.command.Command;
 import org.esa.beam.glob.core.TimeSeriesMapper;
+import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
 import org.esa.beam.glob.core.timeseries.datamodel.ProductLocation;
 import org.esa.beam.glob.core.timeseries.datamodel.ProductLocationType;
-import org.esa.beam.glob.core.timeseries.datamodel.TimeSeries;
 import org.esa.beam.util.Debug;
 import org.esa.beam.visat.VisatApp;
 
@@ -80,7 +80,7 @@ class TimeSeriesConfigForm {
     }
 
     public void updateFormControl(Product product) {
-        TimeSeries timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(product);
+        AbstractTimeSeries timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(product);
         updateInfoPanel(timeSeries);
         updateButtonPanel(timeSeries);
         updateVariablePanel(timeSeries);
@@ -124,7 +124,7 @@ class TimeSeriesConfigForm {
         return panel;
     }
 
-    private void updateInfoPanel(TimeSeries timeSeries) {
+    private void updateInfoPanel(AbstractTimeSeries timeSeries) {
         if (timeSeries == null) {
             nameField.setVisible(false);
             crsField.setVisible(false);
@@ -170,7 +170,7 @@ class TimeSeriesConfigForm {
         return panel;
     }
 
-    private void updateButtonPanel(TimeSeries timeSeries) {
+    private void updateButtonPanel(AbstractTimeSeries timeSeries) {
         boolean enabled = timeSeries != null;
         cloneButton.setEnabled(enabled);
         viewButton.setEnabled(enabled);
@@ -195,7 +195,7 @@ class TimeSeriesConfigForm {
         return panel;
     }
 
-    private void updateVariablePanel(TimeSeries timeSeries) {
+    private void updateVariablePanel(AbstractTimeSeries timeSeries) {
         final VariableSelectionPaneModel model;
         if (timeSeries != null) {
             model = new TimeSeriesVariableSelectionPaneModel(timeSeries);
@@ -223,7 +223,7 @@ class TimeSeriesConfigForm {
         return panel;
     }
 
-    private void updateProductsPanel(TimeSeries timeSeries) {
+    private void updateProductsPanel(AbstractTimeSeries timeSeries) {
         final ProductLocationsPaneModel locationsModel;
         if (timeSeries != null) {
             locationsModel = new TimeSeriesProductLocationsPaneModel(timeSeries);
@@ -236,9 +236,9 @@ class TimeSeriesConfigForm {
     private static class TimeSeriesVariableSelectionPaneModel extends AbstractListModel
             implements VariableSelectionPaneModel {
 
-        private final TimeSeries timeSeries;
+        private final AbstractTimeSeries timeSeries;
 
-        private TimeSeriesVariableSelectionPaneModel(TimeSeries timeSeries) {
+        private TimeSeriesVariableSelectionPaneModel(AbstractTimeSeries timeSeries) {
             this.timeSeries = timeSeries;
         }
 
@@ -304,9 +304,9 @@ class TimeSeriesConfigForm {
     private static class TimeSeriesProductLocationsPaneModel extends AbstractListModel
             implements ProductLocationsPaneModel {
 
-        private final TimeSeries timeSeries;
+        private final AbstractTimeSeries timeSeries;
 
-        private TimeSeriesProductLocationsPaneModel(TimeSeries timeSeries) {
+        private TimeSeriesProductLocationsPaneModel(AbstractTimeSeries timeSeries) {
             this.timeSeries = timeSeries;
         }
 

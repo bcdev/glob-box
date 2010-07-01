@@ -23,7 +23,7 @@ public class TimeSeriesFactory {
      *
      * @return a time series wrapping the given product
      */
-    public static TimeSeries create(Product product) {
+    public static AbstractTimeSeries create(Product product) {
         final TimeSeriesImpl timeSeries = new TimeSeriesImpl(product);
         TimeSeriesMapper.getInstance().put(product, timeSeries);
         return timeSeries;
@@ -39,7 +39,7 @@ public class TimeSeriesFactory {
      *
      * @return a time series
      */
-    public static TimeSeries create(String name, List<ProductLocation> productLocations,
+    public static AbstractTimeSeries create(String name, List<ProductLocation> productLocations,
                                     List<String> variableNames) {
         Guardian.assertNotNull("productLocations", productLocations);
         Guardian.assertGreaterThan("productLocations.size()", productLocations.size(), 0);
@@ -63,7 +63,7 @@ public class TimeSeriesFactory {
         ProductUtils.copyGeoCoding(refProduct, tsProduct);
 
 
-        final TimeSeries timeSeries = new TimeSeriesImpl(tsProduct, productLocations, variableNames);
+        final AbstractTimeSeries timeSeries = new TimeSeriesImpl(tsProduct, productLocations, variableNames);
         TimeSeriesMapper.getInstance().put(tsProduct, timeSeries);
         return timeSeries;
     }

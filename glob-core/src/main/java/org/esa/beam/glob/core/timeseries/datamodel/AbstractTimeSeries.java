@@ -18,7 +18,7 @@ import java.util.List;
  * Date: 23.06.2010
  * Time: 18:12:03
  */
-public abstract class TimeSeries {
+public abstract class AbstractTimeSeries {
 
     /**
      * may NOT contain underscore character '_'

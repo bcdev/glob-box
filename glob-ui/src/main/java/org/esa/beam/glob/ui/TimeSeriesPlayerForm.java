@@ -7,7 +7,7 @@ import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.framework.ui.UIUtils;
 import org.esa.beam.framework.ui.product.ProductSceneView;
 import org.esa.beam.framework.ui.tool.ToolButtonFactory;
-import org.esa.beam.glob.core.timeseries.datamodel.TimeSeries;
+import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
 
 import javax.swing.AbstractButton;
 import javax.swing.ImageIcon;
@@ -54,7 +54,7 @@ class TimeSeriesPlayerForm extends JPanel {
     private AbstractButton plusButton;
 
     private int stepsPerTimespan = 1;
-    private TimeSeries timeSeries;
+    private AbstractTimeSeries timeSeries;
     private ProductSceneView currentView;
 
     TimeSeriesPlayerForm() {
@@ -88,12 +88,12 @@ class TimeSeriesPlayerForm extends JPanel {
         this.add(buttonsPanel);
     }
 
-    List<Band> getBandList(TimeSeries timeSeries, RasterDataNode raster) {
-        final String variableName = TimeSeries.rasterToVariableName(raster.getName());
+    List<Band> getBandList(RasterDataNode raster) {
+        final String variableName = AbstractTimeSeries.rasterToVariableName(raster.getName());
         return timeSeries.getBandsForVariable(variableName);
     }
 
-    void setTimeSeries(TimeSeries timeSeries) {
+    void setTimeSeries(AbstractTimeSeries timeSeries) {
         this.timeSeries = timeSeries;
     }
 
@@ -109,27 +109,14 @@ class TimeSeriesPlayerForm extends JPanel {
         return stepsPerTimespan;
     }
 
-    void setUIEnabled(boolean enable) {
-        timeSlider.setPaintLabels(enable);
-        timeSlider.setPaintTicks(enable);
-        timeSlider.setEnabled(enable);
-        playButton.setEnabled(enable);
-        stopButton.setEnabled(enable);
-        repeatButton.setEnabled(enable);
-        blendButton.setEnabled(enable);
-        speedLabel.setEnabled(enable);
-        minusButton.setEnabled(enable);
-        speedSlider.setEnabled(enable);
-        plusButton.setEnabled(enable);
-    }
 
     JSlider getTimeSlider() {
         return timeSlider;
     }
 
-    void configureTimeSlider(TimeSeries timeSeries, RasterDataNode raster) {
+    void configureTimeSlider(RasterDataNode raster) {
         if (timeSeries != null) {
-            List<Band> bandList = getBandList(timeSeries, raster);
+            List<Band> bandList = getBandList(raster);
 
             timeSlider.setMinimum(0);
             final int nodeCount = bandList.size();
@@ -252,11 +239,11 @@ class TimeSeriesPlayerForm extends JPanel {
                 if (blendButton.isSelected()) {
                     stepsPerTimespan = 8;
                     timer.setDelay(calculateTimerDelay());
-                    configureTimeSlider(timeSeries, currentView.getRaster());
+                    configureTimeSlider(currentView.getRaster());
                 } else {
                     stepsPerTimespan = 1;
                     timer.setDelay(calculateTimerDelay());
-                    configureTimeSlider(timeSeries, currentView.getRaster());
+                    configureTimeSlider(currentView.getRaster());
                 }
             }
         });
@@ -309,6 +296,20 @@ class TimeSeriesPlayerForm extends JPanel {
         return plusButton;
     }
 
+    private void setUIEnabled(boolean enable) {
+        timeSlider.setPaintLabels(enable);
+        timeSlider.setPaintTicks(enable);
+        timeSlider.setEnabled(enable);
+        playButton.setEnabled(enable);
+        stopButton.setEnabled(enable);
+        repeatButton.setEnabled(enable);
+        blendButton.setEnabled(enable);
+        speedLabel.setEnabled(enable);
+        minusButton.setEnabled(enable);
+        speedSlider.setEnabled(enable);
+        plusButton.setEnabled(enable);
+    }
+
     private int calculateTimerDelay() {
         return 250 / stepsPerTimespan * (11 - speedSlider.getValue());
     }
@@ -321,4 +322,5 @@ class TimeSeriesPlayerForm extends JPanel {
         tableLayout.setRowFill(0, TableLayout.Fill.BOTH);
         return tableLayout;
     }
+    
 }

@@ -18,7 +18,7 @@ import org.esa.beam.framework.ui.command.CommandEvent;
 import org.esa.beam.framework.ui.command.ExecCommand;
 import org.esa.beam.framework.ui.product.ProductSceneView;
 import org.esa.beam.glob.core.TimeSeriesMapper;
-import org.esa.beam.glob.core.timeseries.datamodel.TimeSeries;
+import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
 import org.esa.beam.jai.ImageManager;
 import org.esa.beam.util.SystemUtils;
 import org.esa.beam.util.io.BeamFileChooser;
@@ -167,9 +167,9 @@ public class ExportTimeBasedKmz extends ExecCommand {
             return null;
         }
         TimeSeriesMapper timeSeriesMapper = TimeSeriesMapper.getInstance();
-        TimeSeries timeSeries = timeSeriesMapper.getTimeSeries(view.getProduct());
+        AbstractTimeSeries timeSeries = timeSeriesMapper.getTimeSeries(view.getProduct());
         List<Band> bands = timeSeries.getBandsForVariable(
-                    TimeSeries.rasterToVariableName(view.getRaster().getName()));
+                    AbstractTimeSeries.rasterToVariableName(view.getRaster().getName()));
         
         if (bands.size() == 0) {
             return null;

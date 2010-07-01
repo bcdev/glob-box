@@ -8,7 +8,7 @@ import org.esa.beam.framework.ui.assistant.AssistantPage;
 import org.esa.beam.framework.ui.assistant.AssistantPane;
 import org.esa.beam.framework.ui.command.CommandEvent;
 import org.esa.beam.glob.core.timeseries.datamodel.ProductLocation;
-import org.esa.beam.glob.core.timeseries.datamodel.TimeSeries;
+import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesFactory;
 import org.esa.beam.visat.actions.AbstractVisatAction;
 
@@ -61,7 +61,7 @@ public abstract class AbstractTimeSeriesAssistantAction extends AbstractVisatAct
         private void addTimeSeriesProductToVisat(TimeSeriesAssistantModel assistantModel) {
             final ProductLocationsPaneModel locationsModel = assistantModel.getProductLocationsModel();
             final VariableSelectionPaneModel variablesModel = assistantModel.getVariableSelectionModel();
-            final TimeSeries timeSeries = TimeSeriesFactory.create(assistantModel.getTimeSeriesName(),
+            final AbstractTimeSeries timeSeries = TimeSeriesFactory.create(assistantModel.getTimeSeriesName(),
                                                                    locationsModel.getProductLocations(),
                                                                    variablesModel.getSelectedVariableNames());
             getAppContext().getProductManager().addProduct(timeSeries.getTsProduct());

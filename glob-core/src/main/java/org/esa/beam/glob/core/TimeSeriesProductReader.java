@@ -7,7 +7,7 @@ import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesFactory;
 
 import java.io.IOException;
 
-import static org.esa.beam.glob.core.timeseries.datamodel.TimeSeries.*;
+import static org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries.*;
 
 /**
  * User: Thomas Storm

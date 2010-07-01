@@ -10,11 +10,11 @@ import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.framework.ui.PixelPositionListener;
 import org.esa.beam.framework.ui.application.support.AbstractToolView;
 import org.esa.beam.framework.ui.product.ProductSceneView;
-import org.esa.beam.util.StringUtils;
+import org.esa.beam.glob.core.TimeSeriesMapper;
+import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
 import org.esa.beam.visat.VisatApp;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
-import org.jfree.chart.axis.ValueAxis;
 import org.jfree.data.time.TimeSeries;
 
 import javax.swing.*;
@@ -26,9 +26,8 @@ import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
-import static org.esa.beam.glob.core.timeseries.datamodel.TimeSeries.*;
+import static org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries.*;
 
 public class TimeSeriesGraphToolView extends AbstractToolView {
 
@@ -77,11 +76,10 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         if (view != null) {
             final String viewProductType = view.getProduct().getProductType();
             if (!view.isRGB() && viewProductType.equals(
-                    org.esa.beam.glob.core.timeseries.datamodel.TimeSeries.TIME_SERIES_PRODUCT_TYPE)) {
+                    AbstractTimeSeries.TIME_SERIES_PRODUCT_TYPE)) {
                 setCurrentView(view);
             }
         }
-
         return graphForm.getControl();
     }
 
@@ -101,26 +99,20 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
             newView.addPropertyChangeListener(TimeSeriesPlayerToolView.TIME_PROPERTY, sliderListener);
 
             final RasterDataNode raster = newView.getRaster();
-            graphModel.adaptToVariable(raster);
-            graphModel.updateTimeAnnotation(raster);
+            AbstractTimeSeries timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(newView.getProduct());
+            graphModel.adaptToTimeSeries(timeSeries);
 
             String variableName = rasterToVariableName(raster.getName());
             setTitle(String.format("%s - %s", titleBase, variableName));
 
-            final String unit = raster.getUnit();
-            final String rangeAxisLabel;
-            if (StringUtils.isNotNullAndNotEmpty(unit)) {
-                rangeAxisLabel = String.format("%s (%s)", variableName, unit);
-            } else {
-                rangeAxisLabel = variableName;
-            }
-            graphModel.updatePlot(rangeAxisLabel, true);
+            graphModel.updateTimeAnnotation(raster);
         } else {
-            graphModel.removePinTimeSeries();
-            graphModel.adaptToVariable(null);
+            graphModel.removeTimeSeries(true);
+            graphModel.removeTimeSeries(false);
+            graphModel.removeTimeAnnotation();
+            graphModel.adaptToTimeSeries(null);
 
             setTitle(titleBase);
-            graphModel.updatePlot(DEFAULT_RANGE_LABEL, false);
         }
         currentView = newView;
         graphForm.setButtonsEnabled(currentView != null);
@@ -141,7 +133,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
                     graphModel.addSelectedPinSeries(selectedPin, currentView);
                 }
                 if (!showPinSeries) {
-                    graphModel.removePinTimeSeries();
+                    graphModel.removeTimeSeries(false);
                 }
             }
         }
@@ -156,7 +148,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
                 ProductSceneView view = (ProductSceneView) contentPane;
                 final String viewProductType = view.getProduct().getProductType();
                 if (currentView != view && !view.isRGB() && viewProductType.equals(
-                        org.esa.beam.glob.core.timeseries.datamodel.TimeSeries.TIME_SERIES_PRODUCT_TYPE)) {
+                        AbstractTimeSeries.TIME_SERIES_PRODUCT_TYPE)) {
                     setCurrentView(view);
                 }
             }
@@ -173,64 +165,33 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
 
     private class TimeSeriesPPL implements PixelPositionListener {
 
-        private SwingWorker<TimeSeries, Void> updater;
 //        private XYTextAnnotation loadingMessage;
 
         @Override
         public void pixelPosChanged(ImageLayer imageLayer, int pixelX, int pixelY,
                                     int currentLevel, boolean pixelPosValid, MouseEvent e) {
-            if (pixelPosValid && isVisible() && (updater == null || updater.isDone()) && currentView != null) {
-                updater = new TimeSeriesUpdater(pixelX, pixelY, currentLevel, graphModel.getVariableBandList());
-                updater.execute();
+            if (pixelPosValid && isVisible() && currentView != null) {
+                graphModel.doit(pixelX, pixelY, currentLevel, true);
             }
 //            loadingMessage = new XYTextAnnotation("Loading data...",
 //                                                  getTimeSeriesPlot().getDomainAxis().getRange().getCentralValue(),
 //                                                  getTimeSeriesPlot().getRangeAxis().getRange().getCentralValue());
 //            getTimeSeriesPlot().addAnnotation(loadingMessage);
-            final ValueAxis rangeAxis = chart.getXYPlot().getRangeAxis();
-            if (e.isShiftDown()) {
-                rangeAxis.setAutoRange(true);
-            } else {
-                if (rangeAxis.isAutoRange()) {
-                    rangeAxis.setRange(TimeSeriesGraphModel.computeYAxisRange(graphModel.getVariableBandList()));
-                }
-            }
+
+
+//            final ValueAxis rangeAxis = chart.getXYPlot().getRangeAxis();
+//            if (e.isShiftDown()) {
+//                rangeAxis.setAutoRange(true);
+//            } else {
+//                if (rangeAxis.isAutoRange()) {
+//                    rangeAxis.setRange(TimeSeriesGraphModel.computeYAxisRange(graphModel.getVariableBandList()));
+//                }
+//            }
         }
 
         @Override
         public void pixelPosNotAvailable() {
-            graphModel.removeCursorTimeSeries();
-        }
-
-        private class TimeSeriesUpdater extends SwingWorker<TimeSeries, Void> {
-
-            private final int pixelX;
-            private final int pixelY;
-            private final int currentLevel;
-            private final List<Band> bandList;
-
-            TimeSeriesUpdater(int pixelX, int pixelY, int currentLevel, List<Band> bandList) {
-                this.pixelX = pixelX;
-                this.pixelY = pixelY;
-                this.currentLevel = currentLevel;
-                this.bandList = bandList;
-            }
-
-            @Override
-            protected TimeSeries doInBackground() throws Exception {
-                return TimeSeriesGraphModel.computeTimeSeries("cursorTimeSeries", bandList, pixelX, pixelY, currentLevel);
-            }
-
-            @Override
-            protected void done() {
-//                getTimeSeriesPlot().removeAnnotation(loadingMessage);
-                graphModel.removeCursorTimeSeries();
-                try {
-                    graphModel.addCursortimeSeries(get());
-                } catch (InterruptedException ignore) {
-                } catch (ExecutionException ignore) {
-                }
-            }
+            graphModel.removeTimeSeries(true);
         }
     }
 
@@ -246,7 +207,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
                 if (graphForm.isShowPinSeries() && pinSelected) {
                     graphModel.addSelectedPinSeries(pin, currentView);
                 } else {
-                    graphModel.removePinTimeSeries();
+                    graphModel.removeTimeSeries(false);
                 }
             } else {
                 showPinAction.setEnabled(false);
@@ -259,7 +220,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         @Override
         public void nodeChanged(ProductNodeEvent event) {
             if (event.getPropertyName().equals(Placemark.PROPERTY_NAME_PIXELPOS)) {
-                graphModel.removePinTimeSeries();
+                graphModel.removeTimeSeries(false);
                 Placemark selectedPin = currentView.getSelectedPin();
                 if (graphForm.isShowPinSeries() && selectedPin != null) {
                     graphModel.addSelectedPinSeries(selectedPin, currentView);
@@ -273,23 +234,25 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         @Override
         public void nodeAdded(ProductNodeEvent event) {
             if (event.getSourceNode() instanceof Band) {
-                updatePinTimeSeries();
+                timeSeriesProductChanged();
             }
         }
 
         @Override
         public void nodeRemoved(ProductNodeEvent event) {
             if (event.getSourceNode() instanceof Band) {
-                updatePinTimeSeries();
+                timeSeriesProductChanged();
             }
         }
 
-        private void updatePinTimeSeries() {
+        private void timeSeriesProductChanged() {
             if (currentView != null) {
-                graphModel.adaptToVariable(currentView.getRaster());
+                AbstractTimeSeries timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(currentView.getProduct());
+                graphModel.adaptToTimeSeries(timeSeries);
+                graphModel.updateTimeAnnotation(currentView.getRaster());
                 Placemark selectedPin = currentView.getSelectedPin();
                 if ((selectedPin != null) && (graphForm.isShowPinSeries())) {
-                    graphModel.removePinTimeSeries();
+                    graphModel.removeTimeSeries(false);
                     graphModel.addSelectedPinSeries(selectedPin, currentView);
                 }
             }
@@ -300,8 +263,9 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
 
         @Override
         public void propertyChange(PropertyChangeEvent evt) {
-            int timePeriodIndex = (Integer) evt.getNewValue();
-            graphModel.updateTimeAnnotation(timePeriodIndex);
+            if (currentView != null) {
+                graphModel.updateTimeAnnotation(currentView.getRaster());
+            }
         }
     }
 }

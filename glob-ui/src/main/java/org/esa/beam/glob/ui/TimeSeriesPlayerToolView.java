@@ -15,7 +15,7 @@ import org.esa.beam.framework.ui.application.support.AbstractToolView;
 import org.esa.beam.framework.ui.product.ProductSceneView;
 import org.esa.beam.glevel.BandImageMultiLevelSource;
 import org.esa.beam.glob.core.TimeSeriesMapper;
-import org.esa.beam.glob.core.timeseries.datamodel.TimeSeries;
+import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
 import org.esa.beam.util.math.MathUtils;
 import org.esa.beam.visat.VisatApp;
 
@@ -42,7 +42,6 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
     private final ProductNodeListener productNodeListener;
 
     private ProductSceneView currentView;
-    private TimeSeries timeSeries;
     private TimeSeriesPlayerForm form;
 
     public TimeSeriesPlayerToolView() {
@@ -68,7 +67,7 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
         if (view != null) {
             final String viewProductType = view.getProduct().getProductType();
             if (!view.isRGB() && viewProductType.equals(
-                    org.esa.beam.glob.core.timeseries.datamodel.TimeSeries.TIME_SERIES_PRODUCT_TYPE)) {
+                    AbstractTimeSeries.TIME_SERIES_PRODUCT_TYPE)) {
                 setCurrentView(view);
             }
         }
@@ -83,14 +82,14 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
             currentView = newView;
             form.setView(currentView);
             if (currentView != null) {
-                timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(currentView.getProduct());
+                form.setTimeSeries(TimeSeriesMapper.getInstance().getTimeSeries(currentView.getProduct()));
                 currentView.getProduct().addProductNodeListener(productNodeListener);
+                form.configureTimeSlider(currentView.getRaster());
             } else {
-                timeSeries = null;
+                form.setTimeSeries(null);
+                form.configureTimeSlider(null);
                 form.getTimer().stop();
             }
-            form.setTimeSeries(timeSeries);
-            form.configureTimeSlider(timeSeries, currentView.getRaster());
         }
     }
 
@@ -183,7 +182,7 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
                 final RasterDataNode viewRaster = view.getRaster();
                 final String viewProductType = viewRaster.getProduct().getProductType();
                 if (currentView != view && !view.isRGB() && viewProductType.equals(
-                        TimeSeries.TIME_SERIES_PRODUCT_TYPE)) {
+                        AbstractTimeSeries.TIME_SERIES_PRODUCT_TYPE)) {
                     setCurrentView(view);
                 }
             }
@@ -211,7 +210,7 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
             final int currentBandIndex = currentValue / stepsPerTimespan;
             final int newBandIndex = MathUtils.ceilInt(currentValue / (float) stepsPerTimespan);
 
-            final List<Band> bandList = form.getBandList(timeSeries, currentView.getRaster());
+            final List<Band> bandList = form.getBandList(currentView.getRaster());
             if (currentBandIndex == newBandIndex) {
                 final Band newRaster = bandList.get(newBandIndex);
                 exchangeRasterInProductSceneView(newRaster, currentView);
@@ -229,14 +228,14 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
         @Override
         public void nodeAdded(ProductNodeEvent event) {
             if (event.getSourceNode() instanceof Band) {
-                form.configureTimeSlider(timeSeries, (Band) event.getSourceNode());
+                form.configureTimeSlider((Band) event.getSourceNode());
             }
         }
 
         @Override
         public void nodeRemoved(ProductNodeEvent event) {
             if (event.getSourceNode() instanceof Band) {
-                form.configureTimeSlider(timeSeries, (Band) event.getSourceNode());
+                form.configureTimeSlider((Band) event.getSourceNode());
             }
         }
     }

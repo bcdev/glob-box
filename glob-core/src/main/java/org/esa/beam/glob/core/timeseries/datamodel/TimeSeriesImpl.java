@@ -24,7 +24,7 @@ import java.util.Map;
  * Date: 31.03.2010
  * Time: 10:26:15
  */
-class TimeSeriesImpl extends TimeSeries {
+class TimeSeriesImpl extends AbstractTimeSeries {
 
     private static final String TIME_SERIES_ROOT_NAME = "TIME_SERIES";
     private static final String PRODUCT_LOCATIONS = "PRODUCT_LOCATIONS";

@@ -4,7 +4,7 @@ import org.esa.beam.dataio.dimap.DimapProductWriter;
 import org.esa.beam.framework.dataio.ProductWriterPlugIn;
 import org.esa.beam.framework.datamodel.ProductNode;
 import org.esa.beam.framework.datamodel.RasterDataNode;
-import org.esa.beam.glob.core.timeseries.datamodel.TimeSeries;
+import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
 
 /**
  * User: Thomas Storm
@@ -20,7 +20,7 @@ class TimeSeriesProductWriter extends DimapProductWriter {
     @Override
     public boolean shouldWrite(ProductNode node) {
         boolean shouldWrite = super.shouldWrite(node);
-        if (shouldWrite && node.getProduct().getProductType().equals(TimeSeries.TIME_SERIES_PRODUCT_TYPE)) {
+        if (shouldWrite && node.getProduct().getProductType().equals(AbstractTimeSeries.TIME_SERIES_PRODUCT_TYPE)) {
             return !(node instanceof RasterDataNode);
         }
         return shouldWrite;
