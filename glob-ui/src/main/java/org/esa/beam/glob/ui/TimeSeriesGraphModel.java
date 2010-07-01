@@ -1,18 +1,10 @@
 package org.esa.beam.glob.ui;
 
-import com.bc.ceres.glayer.support.ImageLayer;
-import com.bc.ceres.grender.Viewport;
 import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.PixelPos;
-import org.esa.beam.framework.datamodel.Placemark;
-import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.framework.datamodel.Stx;
-import org.esa.beam.framework.ui.product.ProductSceneView;
-import org.esa.beam.glob.core.TimeSeriesMapper;
 import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
-import org.esa.beam.util.Guardian;
 import org.esa.beam.util.StringUtils;
 import org.esa.beam.util.math.Histogram;
 import org.jfree.chart.annotations.XYLineAnnotation;
@@ -30,8 +22,6 @@ import org.jfree.data.time.TimeSeriesDataItem;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.geom.AffineTransform;
-import java.awt.geom.Point2D;
 import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
 import java.util.ArrayList;
@@ -45,6 +35,7 @@ import java.util.concurrent.ExecutionException;
 
 class TimeSeriesGraphModel {
     private static final String NO_DATA_MESSAGE = "No data to display";
+    private static final Stroke CURSOR_STROKE = new BasicStroke(2.0f);
     private static final Stroke PIN_STROKE = new BasicStroke(
             1.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, new float[]{10.0f}, 0.0f);
 
@@ -55,7 +46,6 @@ class TimeSeriesGraphModel {
     private final List<TimeSeriesCollection> pinDatasets;
     private final List<TimeSeriesCollection> cursorDatasets;
     private DisplayModel displayModel;
-    private TimeSeriesUpdater updater;
 
 
     TimeSeriesGraphModel(XYPlot plot) {
@@ -139,10 +129,13 @@ class TimeSeriesGraphModel {
 
                 XYLineAndShapeRenderer cursorRenderer = new XYLineAndShapeRenderer(true, true);
                 cursorRenderer.setSeriesPaint(0, paint);
+                cursorRenderer.setSeriesStroke(0, CURSOR_STROKE);
 
                 XYLineAndShapeRenderer pinRenderer = new XYLineAndShapeRenderer(true, true);
-                pinRenderer.setSeriesPaint(0, paint);
-                pinRenderer.setSeriesStroke(0, PIN_STROKE);
+                pinRenderer.setBasePaint(paint);
+                pinRenderer.setBaseStroke(PIN_STROKE);
+                pinRenderer.setAutoPopulateSeriesPaint(false);
+                pinRenderer.setAutoPopulateSeriesStroke(false);
 
                 timeSeriesPlot.setRenderer(i, cursorRenderer, true);
                 timeSeriesPlot.setRenderer(i + numVariables, pinRenderer, true);
@@ -189,56 +182,22 @@ class TimeSeriesGraphModel {
         return value;
     }
 
-    List<TimeSeries> computeTimeSeries(String title, int pixelX, int pixelY, int currentLevel) {
-        List<String> variableNames = displayModel.getVariablesToDisplay();
-        List<TimeSeries> result = new ArrayList<TimeSeries>(variableNames.size());
-        for (int i = 0; i < variableNames.size(); i++) {
-            String variableName = variableNames.get(i);
-            List<Band> bandList = variableBands.get(i);
-            result.add(computeTimeSeries(title + "_" + variableName, bandList, pixelX, pixelY, currentLevel));
-        }
-        return result;
-    }
-
-    private static TimeSeries computeTimeSeries(String title, final List<Band> bandList, int pixelX, int pixelY,
-                                                int currentLevel) {
-        TimeSeries timeSeries = new TimeSeries(title);
-        for (Band band : bandList) {
-            final ProductData.UTC startTime = band.getTimeCoding().getStartTime();
-            final Millisecond timePeriod = new Millisecond(startTime.getAsDate(),
-                    ProductData.UTC.UTC_TIME_ZONE,
-                    Locale.getDefault());
-
-            final double value = getValue(band, pixelX, pixelY, currentLevel);
-            timeSeries.add(new TimeSeriesDataItem(timePeriod, value));
-        }
-        return timeSeries;
-    }
-
-    void addSelectedPinSeries(Placemark pin, ProductSceneView view) {
-        PixelPos position = pin.getPixelPos();
-
-        final Viewport viewport = view.getViewport();
-        final ImageLayer baseLayer = view.getBaseImageLayer();
-        final int currentLevel = baseLayer.getLevel(viewport);
-        final AffineTransform levelZeroToModel = baseLayer.getImageToModelTransform();
-        final AffineTransform modelToCurrentLevel = baseLayer.getModelToImageTransform(currentLevel);
-        final Point2D modelPos = levelZeroToModel.transform(position, null);
-        final Point2D currentPos = modelToCurrentLevel.transform(modelPos, null);
-
-        List<TimeSeries> pinTimeSeries = computeTimeSeries("pin", (int) currentPos.getX(), (int) currentPos.getY(), currentLevel);
-        removeTimeSeries(false);
-        addTimeSeries(pinTimeSeries, false);
-    }
-
-    void addTimeSeries(List<TimeSeries> timeSeries, boolean cursor) {
+    private void addTimeSeries(List<TimeSeries> timeSeries, boolean cursor) {
         List<TimeSeriesCollection> collections = getDatasets(cursor);
         for (int i = 0; i < timeSeries.size(); i++) {
             collections.get(i).addSeries(timeSeries.get(i));
         }
     }
 
-    void removeTimeSeries(boolean cursor) {
+    void removeCursorTimeSeries() {
+        removeTimeSeries(true);
+    }
+
+    void removePinTimeSeries() {
+        removeTimeSeries(false);
+    }
+
+    private void removeTimeSeries(boolean cursor) {
         List<TimeSeriesCollection> collections = getDatasets(cursor);
         for (TimeSeriesCollection dataset : collections) {
             dataset.removeAllSeries();
@@ -272,11 +231,9 @@ class TimeSeriesGraphModel {
         timeSeriesPlot.clearAnnotations();
     }
 
-    void doit(int pixelX, int pixelY, int currentLevel, boolean cursor) {
-        if (updater == null || updater.isDone()) {
-            updater = new TimeSeriesUpdater(pixelX, pixelY, currentLevel, cursor);
-            updater.execute();
-        }
+    void updateTimeSeries(int pixelX, int pixelY, int currentLevel, boolean cursor) {
+        TimeSeriesUpdater updater = new TimeSeriesUpdater(pixelX, pixelY, currentLevel, cursor);
+        updater.execute();
     }
 
     private class TimeSeriesUpdater extends SwingWorker<List<TimeSeries>, Void> {
@@ -295,18 +252,40 @@ class TimeSeriesGraphModel {
 
         @Override
         protected List<TimeSeries> doInBackground() throws Exception {
-            return computeTimeSeries("cursor", pixelX, pixelY, currentLevel);
+            List<String> variableNames = displayModel.getVariablesToDisplay();
+            List<TimeSeries> result = new ArrayList<TimeSeries>(variableNames.size());
+            for (int i = 0; i < variableNames.size(); i++) {
+                List<Band> bandList = variableBands.get(i);
+                result.add(computeTimeSeries(bandList, pixelX, pixelY, currentLevel));
+            }
+            return result;
         }
 
         @Override
         protected void done() {
 //                getTimeSeriesPlot().removeAnnotation(loadingMessage);
-            removeTimeSeries(cursor);
+            if (cursor) {
+                removeCursorTimeSeries();
+            }
             try {
                 addTimeSeries(get(), cursor);
             } catch (InterruptedException ignore) {
             } catch (ExecutionException ignore) {
             }
+        }
+
+        private TimeSeries computeTimeSeries(final List<Band> bandList, int pixelX, int pixelY, int currentLevel) {
+            TimeSeries timeSeries = new TimeSeries("title");
+            for (Band band : bandList) {
+                final ProductData.UTC startTime = band.getTimeCoding().getStartTime();
+                final Millisecond timePeriod = new Millisecond(startTime.getAsDate(),
+                        ProductData.UTC.UTC_TIME_ZONE,
+                        Locale.getDefault());
+
+                final double value = getValue(band, pixelX, pixelY, currentLevel);
+                timeSeries.add(new TimeSeriesDataItem(timePeriod, value));
+            }
+            return timeSeries;
         }
     }
 

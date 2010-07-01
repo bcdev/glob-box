@@ -1,6 +1,7 @@
 package org.esa.beam.glob.ui;
 
 import com.bc.ceres.glayer.support.ImageLayer;
+import com.bc.ceres.grender.Viewport;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Placemark;
 import org.esa.beam.framework.datamodel.ProductNodeEvent;
@@ -15,7 +16,6 @@ import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
 import org.esa.beam.visat.VisatApp;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
-import org.jfree.data.time.TimeSeries;
 
 import javax.swing.*;
 import javax.swing.event.InternalFrameAdapter;
@@ -23,9 +23,10 @@ import javax.swing.event.InternalFrameEvent;
 import java.awt.Container;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Point2D;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.util.List;
 
 import static org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries.*;
 
@@ -106,18 +107,34 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
             setTitle(String.format("%s - %s", titleBase, variableName));
 
             graphModel.updateTimeAnnotation(raster);
+            showPinAction.setEnabled(newView.getSelectedPin() != null);
         } else {
-            graphModel.removeTimeSeries(true);
-            graphModel.removeTimeSeries(false);
+            graphModel.removeCursorTimeSeries();
+            graphModel.removePinTimeSeries();
             graphModel.removeTimeAnnotation();
             graphModel.adaptToTimeSeries(null);
 
             setTitle(titleBase);
+            showPinAction.setEnabled(false);
+            graphForm.setShowingSelectPinSelected(false);
         }
         currentView = newView;
         graphForm.setButtonsEnabled(currentView != null);
-        if (currentView != null) {
-            showPinAction.setEnabled(currentView.getSelectedPin() != null);
+    }
+
+    private void updatePins() {
+        graphModel.removePinTimeSeries();
+        if (graphForm.isShowingSelectedPins()) {
+            for (Placemark pin : currentView.getSelectedPins()) {
+                final Viewport viewport = currentView.getViewport();
+                final ImageLayer baseLayer = currentView.getBaseImageLayer();
+                final int currentLevel = baseLayer.getLevel(viewport);
+                final AffineTransform levelZeroToModel = baseLayer.getImageToModelTransform();
+                final AffineTransform modelToCurrentLevel = baseLayer.getModelToImageTransform(currentLevel);
+                final Point2D modelPos = levelZeroToModel.transform(pin.getPixelPos(), null);
+                final Point2D currentPos = modelToCurrentLevel.transform(modelPos, null);
+                graphModel.updateTimeSeries((int) currentPos.getX(), (int) currentPos.getY(), currentLevel, false);
+            }
         }
     }
 
@@ -125,17 +142,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            if (currentView != null) {
-                Placemark selectedPin = currentView.getSelectedPin();
-
-                boolean showPinSeries = graphForm.isShowPinSeries();
-                if (showPinSeries && selectedPin != null) {
-                    graphModel.addSelectedPinSeries(selectedPin, currentView);
-                }
-                if (!showPinSeries) {
-                    graphModel.removeTimeSeries(false);
-                }
-            }
+            updatePins();
         }
     }
 
@@ -171,7 +178,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         public void pixelPosChanged(ImageLayer imageLayer, int pixelX, int pixelY,
                                     int currentLevel, boolean pixelPosValid, MouseEvent e) {
             if (pixelPosValid && isVisible() && currentView != null) {
-                graphModel.doit(pixelX, pixelY, currentLevel, true);
+                graphModel.updateTimeSeries(pixelX, pixelY, currentLevel, true);
             }
 //            loadingMessage = new XYTextAnnotation("Loading data...",
 //                                                  getTimeSeriesPlot().getDomainAxis().getRange().getCentralValue(),
@@ -191,7 +198,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
 
         @Override
         public void pixelPosNotAvailable() {
-            graphModel.removeTimeSeries(true);
+            graphModel.removeCursorTimeSeries();
         }
     }
 
@@ -199,19 +206,9 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
 
         @Override
         public void propertyChange(PropertyChangeEvent evt) {
-            if (currentView != null && currentView.getSelectedPins().length <= 1) {
-                Placemark pin = (Placemark) evt.getNewValue();
-                boolean pinSelected = pin != null;
-                showPinAction.setEnabled(pinSelected);
-                
-                if (graphForm.isShowPinSeries() && pinSelected) {
-                    graphModel.addSelectedPinSeries(pin, currentView);
-                } else {
-                    graphModel.removeTimeSeries(false);
-                }
-            } else {
-                showPinAction.setEnabled(false);
-            }
+            Placemark pin = (Placemark) evt.getNewValue();
+            showPinAction.setEnabled(pin != null);
+            updatePins();
         }
     }
 
@@ -220,11 +217,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         @Override
         public void nodeChanged(ProductNodeEvent event) {
             if (event.getPropertyName().equals(Placemark.PROPERTY_NAME_PIXELPOS)) {
-                graphModel.removeTimeSeries(false);
-                Placemark selectedPin = currentView.getSelectedPin();
-                if (graphForm.isShowPinSeries() && selectedPin != null) {
-                    graphModel.addSelectedPinSeries(selectedPin, currentView);
-                }
+                updatePins();
             }
         }
     }
@@ -246,16 +239,10 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         }
 
         private void timeSeriesProductChanged() {
-            if (currentView != null) {
-                AbstractTimeSeries timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(currentView.getProduct());
-                graphModel.adaptToTimeSeries(timeSeries);
-                graphModel.updateTimeAnnotation(currentView.getRaster());
-                Placemark selectedPin = currentView.getSelectedPin();
-                if ((selectedPin != null) && (graphForm.isShowPinSeries())) {
-                    graphModel.removeTimeSeries(false);
-                    graphModel.addSelectedPinSeries(selectedPin, currentView);
-                }
-            }
+            AbstractTimeSeries timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(currentView.getProduct());
+            graphModel.adaptToTimeSeries(timeSeries);
+            graphModel.updateTimeAnnotation(currentView.getRaster());
+            updatePins();
         }
     }
 
@@ -263,9 +250,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
 
         @Override
         public void propertyChange(PropertyChangeEvent evt) {
-            if (currentView != null) {
-                graphModel.updateTimeAnnotation(currentView.getRaster());
-            }
+            graphModel.updateTimeAnnotation(currentView.getRaster());
         }
     }
 }

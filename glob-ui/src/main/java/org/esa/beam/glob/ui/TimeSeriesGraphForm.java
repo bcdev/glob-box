@@ -105,7 +105,11 @@ class TimeSeriesGraphForm {
         }
     }
 
-    boolean isShowPinSeries() {
+    boolean isShowingSelectedPins() {
         return showTimeSeriesForSelectedPinButton.isSelected();
+    }
+
+    public void setShowingSelectPinSelected(boolean enabled) {
+        showTimeSeriesForSelectedPinButton.setSelected(enabled);
     }
 }
