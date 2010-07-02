@@ -213,8 +213,10 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
             final List<Band> bandList = form.getBandList(currentView.getRaster());
             if (currentBandIndex == newBandIndex) {
                 final Band newRaster = bandList.get(newBandIndex);
-                exchangeRasterInProductSceneView(newRaster, currentView);
-                currentView.firePropertyChange(TIME_PROPERTY, -1, newBandIndex);
+                if (currentView.getRaster() != newRaster) {
+                    exchangeRasterInProductSceneView(newRaster, currentView);
+                    currentView.firePropertyChange(TIME_PROPERTY, -1, newBandIndex);
+                }
             } else {
                 if (bandList.size() > currentBandIndex + 1) {
                     changeTransparency(bandList.get(currentBandIndex + 1), transparency);
@@ -226,18 +228,12 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
     private class TimeSeriesProductNodeListener extends ProductNodeListenerAdapter {
 
         @Override
-        public void nodeAdded(ProductNodeEvent event) {
-            if (event.getSourceNode() instanceof Band) {
-                form.configureTimeSlider(currentView.getRaster());
-            }
-        }
-
-        @Override
-        public void nodeRemoved(ProductNodeEvent event) {
-            if (event.getSourceNode() instanceof Band) {
+        public void nodeChanged(ProductNodeEvent event) {
+            String propertyName = event.getPropertyName();
+            if (propertyName.equals(AbstractTimeSeries.PROPERTY_PRODUCT_LOCATIONS) ||
+                    propertyName.equals(AbstractTimeSeries.PROPERTY_VARIABLE_SELECTION)) {
                 form.configureTimeSlider(currentView.getRaster());
             }
         }
     }
-
 }
