@@ -95,26 +95,23 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
 
     // todo (mp) - The following should be done on ProductSceneView.setRasters()
 
-    private void exchangeRasterInProductSceneView(Band nextRaster, ProductSceneView sceneView) {
+    private void exchangeRasterInProductSceneView(Band nextRaster) {
         // todo use a real ProgressMonitor
-        final RasterDataNode currentRaster = sceneView.getRaster();
+        final RasterDataNode currentRaster = currentView.getRaster();
         final ImageInfo imageInfoClone = (ImageInfo) currentRaster.getImageInfo(ProgressMonitor.NULL).clone();
         nextRaster.setImageInfo(imageInfoClone);
-        reconfigureBaseImageLayer(nextRaster, currentView);
-        sceneView.setRasters(new RasterDataNode[]{nextRaster});
-        sceneView.setImageInfo(imageInfoClone.createDeepCopy());
+        reconfigureBaseImageLayer(nextRaster);
+        currentView.setRasters(new RasterDataNode[]{nextRaster});
+        currentView.setImageInfo(imageInfoClone.createDeepCopy());
         VisatApp.getApp().getSelectedInternalFrame().setTitle(nextRaster.getDisplayName());
     }
 
-    private void reconfigureBaseImageLayer(RasterDataNode rasterDataNode, ProductSceneView sceneView) {
-        final Layer rootLayer = sceneView.getRootLayer();
+    private void reconfigureBaseImageLayer(RasterDataNode rasterDataNode) {
+        final Layer rootLayer = currentView.getRootLayer();
         final ImageLayer baseImageLayer = (ImageLayer) LayerUtils.getChildLayerById(rootLayer,
                                                                                     ProductSceneView.BASE_IMAGE_LAYER_ID);
-        MultiLevelSource multiLevelSource;
         final ImageLayer nextLayer = (ImageLayer) LayerUtils.getChildLayerById(rootLayer, NEXT_IMAGE_LAYER);
         if (nextLayer != null) {
-            multiLevelSource = nextLayer.getMultiLevelSource();
-
             final List<Layer> children = rootLayer.getChildren();
             final int baseIndex = children.indexOf(baseImageLayer);
             children.remove(baseIndex);
@@ -125,7 +122,7 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
             nextLayer.setTransparency(0);
         } else {
             // todo use a real ProgressMonitor
-            multiLevelSource = BandImageMultiLevelSource.create(rasterDataNode, ProgressMonitor.NULL);
+            MultiLevelSource multiLevelSource = BandImageMultiLevelSource.create(rasterDataNode, ProgressMonitor.NULL);
 
             baseImageLayer.setMultiLevelSource(multiLevelSource);
             baseImageLayer.setTransparency(0);
@@ -213,10 +210,8 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
             final List<Band> bandList = form.getBandList(currentView.getRaster());
             if (currentBandIndex == newBandIndex) {
                 final Band newRaster = bandList.get(newBandIndex);
-                if (currentView.getRaster() != newRaster) {
-                    exchangeRasterInProductSceneView(newRaster, currentView);
-                    currentView.firePropertyChange(TIME_PROPERTY, -1, newBandIndex);
-                }
+                exchangeRasterInProductSceneView(newRaster);
+                currentView.firePropertyChange(TIME_PROPERTY, -1, newBandIndex);
             } else {
                 if (bandList.size() > currentBandIndex + 1) {
                     changeTransparency(bandList.get(currentBandIndex + 1), transparency);
