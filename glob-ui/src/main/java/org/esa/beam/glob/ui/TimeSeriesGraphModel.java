@@ -5,6 +5,7 @@ import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.framework.datamodel.Stx;
 import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
+import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.StringUtils;
 import org.esa.beam.util.math.Histogram;
 import org.jfree.chart.annotations.XYLineAnnotation;
@@ -20,20 +21,26 @@ import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 import org.jfree.data.time.TimeSeriesDataItem;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.SwingWorker;
+import java.awt.BasicStroke;
+import java.awt.Paint;
+import java.awt.Rectangle;
+import java.awt.Stroke;
 import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 class TimeSeriesGraphModel {
+
     private static final String NO_DATA_MESSAGE = "No data to display";
     private static final Stroke CURSOR_STROKE = new BasicStroke(2.0f);
     private static final Stroke PIN_STROKE = new BasicStroke(
@@ -46,6 +53,7 @@ class TimeSeriesGraphModel {
     private final List<TimeSeriesCollection> pinDatasets;
     private final List<TimeSeriesCollection> cursorDatasets;
     private DisplayModel displayModel;
+    private final AtomicInteger version = new AtomicInteger(0);
 
 
     TimeSeriesGraphModel(XYPlot plot) {
@@ -70,6 +78,7 @@ class TimeSeriesGraphModel {
     }
 
     void adaptToTimeSeries(AbstractTimeSeries timeSeries) {
+        version.incrementAndGet();
         variableBands.clear();
 
         if (timeSeries != null) {
@@ -167,17 +176,13 @@ class TimeSeriesGraphModel {
         return result;
     }
 
-    private static double getValue(RasterDataNode raster, int pixelX, int pixelY, int currentLevel) {
-        final RenderedImage image = raster.getGeophysicalImage().getImage(currentLevel);
+    private static double getValue(Band band, int pixelX, int pixelY, int currentLevel) {
         final Rectangle pixelRect = new Rectangle(pixelX, pixelY, 1, 1);
-        final Raster data = image.getData(pixelRect);
-        final RenderedImage validMask = raster.getValidMaskImage().getImage(currentLevel);
+        final RenderedImage validMask = band.getValidMaskImage().getImage(currentLevel);
         final Raster validMaskData = validMask.getData(pixelRect);
-        final double value;
+        double value = Double.NaN;
         if (validMaskData.getSample(pixelX, pixelY, 0) > 0) {
-            value = data.getSampleDouble(pixelX, pixelY, 0);
-        } else {
-            value = Double.NaN;
+            value = ProductUtils.getGeophysicalSampleDouble(band, pixelX, pixelY, currentLevel);
         }
         return value;
     }
@@ -213,8 +218,8 @@ class TimeSeriesGraphModel {
 
         final ProductData.UTC startTime = raster.getTimeCoding().getStartTime();
         final Millisecond timePeriod = new Millisecond(startTime.getAsDate(),
-                ProductData.UTC.UTC_TIME_ZONE,
-                Locale.getDefault());
+                                                       ProductData.UTC.UTC_TIME_ZONE,
+                                                       Locale.getDefault());
 
         double millisecond = timePeriod.getFirstMillisecond();
         Range valueRange = null;
@@ -222,7 +227,8 @@ class TimeSeriesGraphModel {
             valueRange = Range.combine(valueRange, timeSeriesPlot.getRangeAxis(i).getRange());
         }
         if (valueRange != null) {
-            XYLineAnnotation xyla = new XYLineAnnotation(millisecond, valueRange.getLowerBound(), millisecond, valueRange.getUpperBound());
+            XYLineAnnotation xyla = new XYLineAnnotation(millisecond, valueRange.getLowerBound(), millisecond,
+                                                         valueRange.getUpperBound());
             timeSeriesPlot.addAnnotation(xyla, true);
         }
     }
@@ -231,9 +237,16 @@ class TimeSeriesGraphModel {
         timeSeriesPlot.clearAnnotations();
     }
 
+    private SwingWorker cursorUpdater;
+
     void updateTimeSeries(int pixelX, int pixelY, int currentLevel, boolean cursor) {
-        TimeSeriesUpdater updater = new TimeSeriesUpdater(pixelX, pixelY, currentLevel, cursor);
-        updater.execute();
+        if (cursor && (cursorUpdater == null || cursorUpdater.isDone())) {
+            cursorUpdater = new TimeSeriesUpdater(pixelX, pixelY, currentLevel, cursor, version.get());
+            cursorUpdater.execute();
+        } else {
+            TimeSeriesUpdater updater = new TimeSeriesUpdater(pixelX, pixelY, currentLevel, cursor, version.get());
+            updater.execute();
+        }
     }
 
     private class TimeSeriesUpdater extends SwingWorker<List<TimeSeries>, Void> {
@@ -242,20 +255,23 @@ class TimeSeriesGraphModel {
         private final int pixelY;
         private final int currentLevel;
         private final boolean cursor;
+        private final int myVersion;
 
-        TimeSeriesUpdater(int pixelX, int pixelY, int currentLevel, boolean cursor) {
+        TimeSeriesUpdater(int pixelX, int pixelY, int currentLevel, boolean cursor, int version) {
             this.pixelX = pixelX;
             this.pixelY = pixelY;
             this.currentLevel = currentLevel;
             this.cursor = cursor;
+            this.myVersion = version;
         }
 
         @Override
         protected List<TimeSeries> doInBackground() throws Exception {
-            List<String> variableNames = displayModel.getVariablesToDisplay();
-            List<TimeSeries> result = new ArrayList<TimeSeries>(variableNames.size());
-            for (int i = 0; i < variableNames.size(); i++) {
-                List<Band> bandList = variableBands.get(i);
+            if (version.get() != myVersion) {
+                return Collections.emptyList();
+            }
+            List<TimeSeries> result = new ArrayList<TimeSeries>(variableBands.size());
+            for (List<Band> bandList : variableBands) {
                 result.add(computeTimeSeries(bandList, pixelX, pixelY, currentLevel));
             }
             return result;
@@ -263,6 +279,9 @@ class TimeSeriesGraphModel {
 
         @Override
         protected void done() {
+            if (version.get() != myVersion) {
+                return;
+            }
 //                getTimeSeriesPlot().removeAnnotation(loadingMessage);
             if (cursor) {
                 removeCursorTimeSeries();
@@ -279,8 +298,8 @@ class TimeSeriesGraphModel {
             for (Band band : bandList) {
                 final ProductData.UTC startTime = band.getTimeCoding().getStartTime();
                 final Millisecond timePeriod = new Millisecond(startTime.getAsDate(),
-                        ProductData.UTC.UTC_TIME_ZONE,
-                        Locale.getDefault());
+                                                               ProductData.UTC.UTC_TIME_ZONE,
+                                                               Locale.getDefault());
 
                 final double value = getValue(band, pixelX, pixelY, currentLevel);
                 timeSeries.add(new TimeSeriesDataItem(timePeriod, value));
@@ -290,6 +309,7 @@ class TimeSeriesGraphModel {
     }
 
     private static class DisplayModel {
+
         private final Map<String, Paint> variablename2colorMap;
         private final List<String> variablesToDisplay;
         private int maxColorIndex;

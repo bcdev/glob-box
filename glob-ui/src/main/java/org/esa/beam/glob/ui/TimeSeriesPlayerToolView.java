@@ -228,14 +228,14 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
         @Override
         public void nodeAdded(ProductNodeEvent event) {
             if (event.getSourceNode() instanceof Band) {
-                form.configureTimeSlider((Band) event.getSourceNode());
+                form.configureTimeSlider(currentView.getRaster());
             }
         }
 
         @Override
         public void nodeRemoved(ProductNodeEvent event) {
             if (event.getSourceNode() instanceof Band) {
-                form.configureTimeSlider((Band) event.getSourceNode());
+                form.configureTimeSlider(currentView.getRaster());
             }
         }
     }
