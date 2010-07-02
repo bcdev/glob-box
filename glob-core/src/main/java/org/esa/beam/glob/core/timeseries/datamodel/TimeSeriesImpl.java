@@ -228,6 +228,7 @@ class TimeSeriesImpl extends AbstractTimeSeries {
                 bands.add(band);
             }
         }
+        sortBands(bands);
         return bands;
     }
 
