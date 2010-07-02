@@ -28,6 +28,16 @@ public abstract class AbstractTimeSeries {
     static final String SEPARATOR = "_";
 
     public static final String TIME_SERIES_PRODUCT_TYPE = "org.esa.beam.glob.timeseries";
+    public static final String TIME_SERIES_ROOT_NAME = "TIME_SERIES";
+    public static final String PRODUCT_LOCATIONS = "PRODUCT_LOCATIONS";
+    public static final String VARIABLE_NAME = "NAME";
+    public static final String VARIABLE_SELECTION = "SELECTION";
+    public static final String PL_PATH = "PATH";
+    public static final String PL_TYPE = "TYPE";
+    public static final String VARIABLES = "VARIABLES";
+
+    public static final String PROPERTY_PRODUCT_LOCATIONS = "PROPERTY_PRODUCT_LOCATIONS";
+    public static final String PROPERTY_VARIABLE_SELECTION = "PROPERTY_VARIABLE_SELECTION";
 
     public abstract List<String> getTimeVariables();
 
