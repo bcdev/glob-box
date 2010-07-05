@@ -238,10 +238,12 @@ class TimeSeriesPlayerForm extends JPanel {
             public void actionPerformed(ActionEvent e) {
                 if (blendButton.isSelected()) {
                     stepsPerTimespan = 8;
+                    timeSlider.setValue(0);
                     timer.setDelay(calculateTimerDelay());
                     configureTimeSlider(currentView.getRaster());
                 } else {
                     stepsPerTimespan = 1;
+                    timeSlider.setValue(0);
                     timer.setDelay(calculateTimerDelay());
                     configureTimeSlider(currentView.getRaster());
                 }

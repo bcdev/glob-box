@@ -28,6 +28,16 @@ public abstract class AbstractTimeSeries {
     static final String SEPARATOR = "_";
 
     public static final String TIME_SERIES_PRODUCT_TYPE = "org.esa.beam.glob.timeseries";
+    public static final String TIME_SERIES_ROOT_NAME = "TIME_SERIES";
+    public static final String PRODUCT_LOCATIONS = "PRODUCT_LOCATIONS";
+    public static final String VARIABLE_NAME = "NAME";
+    public static final String VARIABLE_SELECTION = "SELECTION";
+    public static final String PL_PATH = "PATH";
+    public static final String PL_TYPE = "TYPE";
+    public static final String VARIABLES = "VARIABLES";
+
+    public static final String PROPERTY_PRODUCT_LOCATIONS = "PROPERTY_PRODUCT_LOCATIONS";
+    public static final String PROPERTY_VARIABLE_SELECTION = "PROPERTY_VARIABLE_SELECTION";
 
     public abstract List<String> getTimeVariables();
 
@@ -61,13 +71,13 @@ public abstract class AbstractTimeSeries {
         return rasterName.substring(0, lastUnderscore);
     }
 
-    public static void sortBands(List<RasterDataNode> rasterList) {
-        Collections.sort(rasterList, new Comparator<RasterDataNode>() {
+    static void sortBands(List<Band> bandList) {
+        Collections.sort(bandList, new Comparator<Band>() {
             @Override
-            public int compare(RasterDataNode raster1, RasterDataNode raster2) {
-                final Date raster1Date = raster1.getProduct().getStartTime().getAsDate();
-                final Date raster2Date = raster2.getProduct().getStartTime().getAsDate();
-                return raster1Date.compareTo(raster2Date) * -1;
+            public int compare(Band band1, Band band2) {
+                final Date date1 = band1.getTimeCoding().getStartTime().getAsDate();
+                final Date date2 = band2.getTimeCoding().getStartTime().getAsDate();
+                return date1.compareTo(date2);
             }
         });
     }

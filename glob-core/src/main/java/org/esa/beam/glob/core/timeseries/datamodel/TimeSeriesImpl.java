@@ -26,16 +26,7 @@ import java.util.Map;
  */
 class TimeSeriesImpl extends AbstractTimeSeries {
 
-    private static final String TIME_SERIES_ROOT_NAME = "TIME_SERIES";
-    private static final String PRODUCT_LOCATIONS = "PRODUCT_LOCATIONS";
-    private static final String VARIABLE_NAME = "name";
-    private static final String VARIABLE_SELECTION = "selection";
-    private static final String PL_PATH = "path";
-    private static final String PL_TYPE = "type";
-
-    private static final String VARIABLES = "VARIABLES";
     private Product tsProduct;
-
     private List<Product> productList;
     private Map<String, Product> productTimeMap;
 
@@ -145,6 +136,7 @@ class TimeSeriesImpl extends AbstractTimeSeries {
                 // todo log in gui as well as in console
             }
         }
+        tsProduct.fireProductNodeChanged(PROPERTY_PRODUCT_LOCATIONS);
     }
 
     public void removeProductLocation(ProductLocation productLocation) {
@@ -168,6 +160,7 @@ class TimeSeriesImpl extends AbstractTimeSeries {
         //remove from internal model
         //productList.removeAll( productLocation.findProducts() );   //TODO
         //productTimeMap remove too
+        tsProduct.fireProductNodeChanged( PROPERTY_PRODUCT_LOCATIONS );
     }
 
     private void handleProductLocations(List<ProductLocation> productLocations, boolean addToMetadata) {
@@ -210,6 +203,7 @@ class TimeSeriesImpl extends AbstractTimeSeries {
                 }
             }
         }
+        tsProduct.fireProductNodeChanged( PROPERTY_VARIABLE_SELECTION );
     }
 
     @Override
@@ -234,6 +228,7 @@ class TimeSeriesImpl extends AbstractTimeSeries {
                 bands.add(band);
             }
         }
+        sortBands(bands);
         return bands;
     }
 

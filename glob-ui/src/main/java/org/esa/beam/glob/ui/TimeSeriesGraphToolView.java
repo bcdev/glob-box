@@ -2,7 +2,6 @@ package org.esa.beam.glob.ui;
 
 import com.bc.ceres.glayer.support.ImageLayer;
 import com.bc.ceres.grender.Viewport;
-import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Placemark;
 import org.esa.beam.framework.datamodel.PlacemarkGroup;
 import org.esa.beam.framework.datamodel.ProductNodeEvent;
@@ -31,7 +30,7 @@ import java.awt.geom.Point2D;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
-import static org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries.*;
+import static org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries.rasterToVariableName;
 
 public class TimeSeriesGraphToolView extends AbstractToolView {
 
@@ -41,7 +40,6 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
     private final TimeSeriesPPL pixelPosListener;
     private final PropertyChangeListener pinSelectionListener;
     private final PropertyChangeListener sliderListener;
-    private final ProductNodeListener pinMovedListener;
     private final ProductNodeListener productNodeListener;
     private final Action showSelectedPinAction;
     private final Action showAllPinAction;
@@ -58,7 +56,6 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         pixelPosListener = new TimeSeriesPPL();
         pinSelectionListener = new PinSelectionListener();
         sliderListener = new SliderListener();
-        pinMovedListener = new PinMovedListener();
         productNodeListener = new TimeSeriesProductNodeListener();
         showSelectedPinAction = new ShowPinAction(true);
         showAllPinAction = new ShowPinAction(false);
@@ -101,7 +98,6 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
     private void setCurrentView(ProductSceneView newView) {
         if (currentView != null) {
             currentView.getProduct().removeProductNodeListener(productNodeListener);
-            currentView.getProduct().removeProductNodeListener(pinMovedListener);
             currentView.removePixelPositionListener(pixelPosListener);
             currentView.removePropertyChangeListener(ProductSceneView.PROPERTY_NAME_SELECTED_PIN, pinSelectionListener);
             currentView.removePropertyChangeListener(TimeSeriesPlayerToolView.TIME_PROPERTY, sliderListener);
@@ -110,7 +106,6 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         graphForm.setButtonsEnabled(currentView != null);
         if (currentView != null) {
             currentView.getProduct().addProductNodeListener(productNodeListener);
-            currentView.getProduct().addProductNodeListener(pinMovedListener);
             currentView.addPixelPositionListener(pixelPosListener);
             currentView.addPropertyChangeListener(ProductSceneView.PROPERTY_NAME_SELECTED_PIN, pinSelectionListener);
             currentView.addPropertyChangeListener(TimeSeriesPlayerToolView.TIME_PROPERTY, sliderListener);
@@ -237,32 +232,30 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         }
     }
 
-    private class PinMovedListener extends ProductNodeListenerAdapter {
+    private class TimeSeriesProductNodeListener extends ProductNodeListenerAdapter {
+
 
         @Override
         public void nodeChanged(ProductNodeEvent event) {
-            if (event.getPropertyName().equals(Placemark.PROPERTY_NAME_PIXELPOS)) {
+            String propertyName = event.getPropertyName();
+            if (propertyName.equals(AbstractTimeSeries.PROPERTY_PRODUCT_LOCATIONS) ||
+                    propertyName.equals(AbstractTimeSeries.PROPERTY_VARIABLE_SELECTION)) {
+                handleBandsChanged();
+            } else if (propertyName.equals(Placemark.PROPERTY_NAME_PIXELPOS)) {
                 updatePins(graphForm.isShowingSelectedPins());
             }
         }
-    }
-
-    private class TimeSeriesProductNodeListener extends ProductNodeListenerAdapter {
 
         @Override
         public void nodeAdded(ProductNodeEvent event) {
-            if (event.getSourceNode() instanceof Band) {
-                handleBandsChanged();
-            } else if (event.getSourceNode() instanceof Placemark) {
+            if (event.getSourceNode() instanceof Placemark) {
                 handlePlacemarkChanged();
             }
         }
 
         @Override
         public void nodeRemoved(ProductNodeEvent event) {
-            if (event.getSourceNode() instanceof Band) {
-                handleBandsChanged();
-            } else if (event.getSourceNode() instanceof Placemark) {
+            if (event.getSourceNode() instanceof Placemark) {
                 handlePlacemarkChanged();
             }
         }
