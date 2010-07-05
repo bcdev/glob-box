@@ -4,9 +4,9 @@
 4;Needleleaf Evergreen Trees;0,99,0
 5;Needleleaf Deciduous Trees;139,189,0
 6;Short Vegetation/C4 Grassland;0,229,0
-7;Shrubs with Bare Soil
-8;Dwarf Trees and Shrubs
-9;Agriculture or C3 Grassland 
+7;Shrubs with Bare Soil;165,165,165
+8;Dwarf Trees and Shrubs;143,164,153
+9;Agriculture or C3 Grassland;217,217,147
 10;Water,Wetlands;63,127,191
 11;Ice/Snow;255,255,255
 100;NO DATA;0,0,0
