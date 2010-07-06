@@ -11,7 +11,6 @@ import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
 
 import javax.swing.AbstractButton;
 import javax.swing.ImageIcon;
-import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
@@ -21,8 +20,10 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Hashtable;
 import java.util.List;
@@ -35,18 +36,21 @@ import java.util.TimeZone;
  */
 class TimeSeriesPlayerForm extends JPanel {
 
-    private final ImageIcon playIcon = UIUtils.loadImageIcon("icons/Play24.gif");
-    private final ImageIcon stopIcon = UIUtils.loadImageIcon("icons/PlayerStop24.gif");
-    private final ImageIcon pauseIcon = UIUtils.loadImageIcon("icons/Pause24.gif");
+    private final ImageIcon playIcon = UIUtils.loadImageIcon("icons/Play24.png");
+    private final ImageIcon stopIcon = UIUtils.loadImageIcon("icons/Stop24.png");
+    private final ImageIcon pauseIcon = UIUtils.loadImageIcon("icons/Pause24.png");
+    private final ImageIcon blendIcon = UIUtils.loadImageIcon("icons/Blend24.png");
     private final ImageIcon repeatIcon = UIUtils.loadImageIcon("icons/Repeat24.gif");
-    private final ImageIcon minusIcon = UIUtils.loadImageIcon("icons/PlayerMinus16.gif");
-    private final ImageIcon plusIcon = UIUtils.loadImageIcon("icons/PlayerPlus16.gif");
+    private final ImageIcon minusIcon = UIUtils.loadImageIcon("icons/Remove16.png");
+    private final ImageIcon plusIcon = UIUtils.loadImageIcon("icons/Add16.png");
 
     private JSlider timeSlider;
     private AbstractButton playButton;
     private AbstractButton stopButton;
+    private JLabel dateLabel;
     private JSlider speedSlider;
     private JLabel speedLabel;
+    private JLabel speedUnit;
     private AbstractButton blendButton;
     private Timer timer;
     private AbstractButton repeatButton;
@@ -54,23 +58,31 @@ class TimeSeriesPlayerForm extends JPanel {
     private AbstractButton plusButton;
 
     private int stepsPerTimespan = 1;
+    private int timerDelay = 1250;
     private AbstractTimeSeries timeSeries;
     private ProductSceneView currentView;
+    /**
+     * must be different from any character occuring in the date format
+     */
+    private static final String DATE_SEPARATOR = " ";
 
     TimeSeriesPlayerForm() {
         this.setLayout(createLayout());
         final JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
 
+        dateLabel = new JLabel("Date: ");
         timeSlider = createTimeSlider();
         playButton = createPlayButton();
         stopButton = createStopButton();
         repeatButton = createRepeatButton();
         blendButton = createBlendButton();
-        speedLabel = new JLabel("Player speed:");
+        speedLabel = new JLabel("Speed:");
         minusButton = createMinusButton();
         speedSlider = createSpeedSlider();
+        speedUnit = new JLabel();
         plusButton = createPlusButton();
 
+        updateSpeedUnit();
         setUIEnabled(false);
 
         buttonsPanel.add(playButton);
@@ -83,7 +95,9 @@ class TimeSeriesPlayerForm extends JPanel {
         buttonsPanel.add(minusButton);
         buttonsPanel.add(speedSlider);
         buttonsPanel.add(plusButton);
+        buttonsPanel.add(speedUnit);
 
+        this.add(dateLabel);
         this.add(timeSlider);
         this.add(buttonsPanel);
     }
@@ -120,23 +134,15 @@ class TimeSeriesPlayerForm extends JPanel {
 
             timeSlider.setMinimum(0);
             final int nodeCount = bandList.size();
-            timeSlider.setMaximum((nodeCount - 1) * stepsPerTimespan);
+            final int maximum = (nodeCount - 1) * stepsPerTimespan;
+            timeSlider.setMaximum(maximum);
 
             final Hashtable<Integer, JLabel> labelTable = new Hashtable<Integer, JLabel>();
             if (nodeCount > 1) {
                 setUIEnabled(true);
-                for (int i = 0; i < nodeCount; i++) {
-                    final ProductData.UTC utcStartTime = bandList.get(i).getTimeCoding().getStartTime();
-                    SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MMM-yyyy");
-                    SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
-                    dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-                    final String dateText = dateFormat.format(utcStartTime.getAsCalendar().getTime());
-                    final String timeText = timeFormat.format(utcStartTime.getAsCalendar().getTime());
-                    String labelText = String.format("<html><p align=\"center\"> <font size=\"2\">%s<br>%s</font></p>",
-                                                     dateText, timeText);
-                    final JVertLabel label = new JVertLabel(labelText);
-                    labelTable.put(i * stepsPerTimespan, label);
-                }
+                labelTable.put(0, new JLabel(createSliderLabelFormattedText(bandList, 0)));
+                labelTable.put(maximum,
+                               new JLabel(createSliderLabelFormattedText(bandList, maximum / stepsPerTimespan)));
                 timeSlider.setLabelTable(labelTable);
             } else {
                 timeSlider.setLabelTable(null);
@@ -152,12 +158,38 @@ class TimeSeriesPlayerForm extends JPanel {
         }
     }
 
+    private String createSliderLabelText(List<Band> bandList, int index) {
+        final ProductData.UTC utcStartTime = bandList.get(index).getTimeCoding().getStartTime();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MMM-yyyy");
+        SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
+        dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+        final String dateText = dateFormat.format(utcStartTime.getAsCalendar().getTime());
+        final String timeText = timeFormat.format(utcStartTime.getAsCalendar().getTime());
+        return dateText + DATE_SEPARATOR + timeText;
+    }
+
+    private String createSliderLabelFormattedText(List<Band> bandList, int index) {
+        final String labelText = createSliderLabelText(bandList, index);
+        final String[] strings = labelText.split(DATE_SEPARATOR);
+        return String.format("<html><p align=\"center\"> <font size=\"2\">%s<br>%s</font></p>", strings[0], strings[1]);
+    }
+
     private JSlider createTimeSlider() {
         final JSlider timeSlider = new JSlider(JSlider.HORIZONTAL, 0, 0, 0);
         timeSlider.setMajorTickSpacing(stepsPerTimespan);
         timeSlider.setMinorTickSpacing(1);
         timeSlider.setPaintTrack(true);
         timeSlider.setSnapToTicks(true);
+        timeSlider.setPaintTicks(true);
+        timeSlider.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                final int index = timeSlider.getValue() / stepsPerTimespan;
+                final List<Band> bandList = getBandList(currentView.getRaster());
+                final String labelText = createSliderLabelText(bandList, index);
+                dateLabel.setText("Date: " + labelText);
+            }
+        });
         return timeSlider;
     }
 
@@ -175,6 +207,7 @@ class TimeSeriesPlayerForm extends JPanel {
                     playButton.setSelected(false);
                     timer.stop();
                     playButton.setIcon(playIcon);
+                    playButton.setRolloverIcon(playIcon);
                     currentValue = 0;
                 } else {
                     // if slider is not on maximum value, go on
@@ -184,7 +217,7 @@ class TimeSeriesPlayerForm extends JPanel {
             }
         };
 
-        timer = new Timer(1250, playAction);
+        timer = new Timer(timerDelay, playAction);
 
         final AbstractButton playButton = ToolButtonFactory.createButton(playIcon, false);
         playButton.setToolTipText("Play the time series");
@@ -231,7 +264,7 @@ class TimeSeriesPlayerForm extends JPanel {
     }
 
     private AbstractButton createBlendButton() {
-        final JCheckBox blendButton = new JCheckBox("Show blending");
+        final AbstractButton blendButton = ToolButtonFactory.createButton(blendIcon, true);
         blendButton.setToolTipText("Toggle blending mode");
         blendButton.addActionListener(new ActionListener() {
             @Override
@@ -278,7 +311,9 @@ class TimeSeriesPlayerForm extends JPanel {
         speedSlider.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent e) {
-                timer.setDelay(calculateTimerDelay());
+                timerDelay = calculateTimerDelay();
+                timer.setDelay(timerDelay);
+                updateSpeedUnit();
             }
         });
         return speedSlider;
@@ -299,8 +334,8 @@ class TimeSeriesPlayerForm extends JPanel {
     }
 
     private void setUIEnabled(boolean enable) {
+        dateLabel.setEnabled(enable);
         timeSlider.setPaintLabels(enable);
-        timeSlider.setPaintTicks(enable);
         timeSlider.setEnabled(enable);
         playButton.setEnabled(enable);
         stopButton.setEnabled(enable);
@@ -309,6 +344,7 @@ class TimeSeriesPlayerForm extends JPanel {
         speedLabel.setEnabled(enable);
         minusButton.setEnabled(enable);
         speedSlider.setEnabled(enable);
+        speedUnit.setEnabled(enable);
         plusButton.setEnabled(enable);
     }
 
@@ -316,13 +352,20 @@ class TimeSeriesPlayerForm extends JPanel {
         return 250 / stepsPerTimespan * (11 - speedSlider.getValue());
     }
 
+    private void updateSpeedUnit() {
+        double fps = 1 / (timerDelay * stepsPerTimespan / 1000.0);
+        DecimalFormat format = new DecimalFormat("0.00");
+        speedUnit.setText(format.format(fps) + " FPS");
+        speedUnit.setToolTipText(format.format(fps) + " Frames per second");
+    }
+
     private static TableLayout createLayout() {
         final TableLayout tableLayout = new TableLayout(1);
+        tableLayout.setRowPadding(0, new Insets(4, 4, 4, 0));
         tableLayout.setColumnWeightX(0, 1.0);
-        tableLayout.setRowWeightY(0, 1.0);
+        tableLayout.setRowWeightY(1, 1.0);
         tableLayout.setTableFill(TableLayout.Fill.HORIZONTAL);
-        tableLayout.setRowFill(0, TableLayout.Fill.BOTH);
+        tableLayout.setRowFill(1, TableLayout.Fill.BOTH);
         return tableLayout;
     }
-    
 }

@@ -23,6 +23,8 @@ import org.jfree.data.time.TimeSeriesDataItem;
 
 import javax.swing.SwingWorker;
 import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Font;
 import java.awt.Paint;
 import java.awt.Rectangle;
 import java.awt.Stroke;
@@ -41,8 +43,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 class TimeSeriesGraphModel {
 
+    private final static String DEFAULT_FONT_NAME = "Verdana";
+    private final static int DEFAULT_FONT_SIZE = 9;
+    private static final Color DEFAULT_FOREGROUND_COLOR = Color.BLACK;
+    private static final Color DEFAULT_BACKGROUND_COLOR = new Color(180, 180, 180);
+    //    private static final Color DEFAULT_BACKGROUND_COLOR = new Color(210, 210, 255);
     private static final String NO_DATA_MESSAGE = "No data to display";
-    private static final Stroke CURSOR_STROKE = new BasicStroke(2.0f);
+    private static final Stroke CURSOR_STROKE = new BasicStroke(1.0f);
     private static final Stroke PIN_STROKE = new BasicStroke(
             1.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, new float[]{10.0f}, 0.0f);
 
@@ -73,7 +80,10 @@ class TimeSeriesGraphModel {
             XYLineAndShapeRenderer xyRenderer = (XYLineAndShapeRenderer) renderer;
             xyRenderer.setBaseShapesVisible(true);
             xyRenderer.setBaseShapesFilled(true);
+            xyRenderer.setBaseLegendTextFont(Font.getFont(DEFAULT_FONT_NAME));
+            xyRenderer.setBaseLegendTextPaint(DEFAULT_FOREGROUND_COLOR);
         }
+        timeSeriesPlot.setBackgroundPaint(DEFAULT_BACKGROUND_COLOR);
         timeSeriesPlot.setNoDataMessage(NO_DATA_MESSAGE);
     }
 
@@ -312,7 +322,20 @@ class TimeSeriesGraphModel {
 
         private final Map<String, Paint> variablename2colorMap;
         private final List<String> variablesToDisplay;
+        private static final int ALPHA = 200;
+
         private int maxColorIndex;
+        private Color[] colors = {
+                new Color(0, 0, 0, ALPHA),
+                new Color(0, 0, 60, ALPHA),
+                new Color(0, 60, 0, ALPHA),
+                new Color(60, 0, 0, ALPHA),
+                new Color(60, 60, 60, ALPHA),
+                new Color(0, 0, 120, ALPHA),
+                new Color(0, 120, 0, ALPHA),
+                new Color(120, 0, 0, ALPHA),
+                new Color(120, 120, 120, ALPHA)
+        };
 
         private DisplayModel(AbstractTimeSeries timeSeries) {
             variablesToDisplay = new ArrayList<String>();
@@ -350,7 +373,7 @@ class TimeSeriesGraphModel {
 
         private Paint getNextPaint() {
             int numColors = DefaultDrawingSupplier.DEFAULT_PAINT_SEQUENCE.length;
-            return DefaultDrawingSupplier.DEFAULT_PAINT_SEQUENCE[maxColorIndex++ % numColors];
+            return colors[maxColorIndex++ % numColors];
         }
     }
 }
