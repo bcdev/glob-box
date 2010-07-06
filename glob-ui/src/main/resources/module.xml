@@ -47,11 +47,11 @@
         </toolView>
 
         <toolView>
-            <id>timeSeriesConfigToolView</id>
-            <class>org.esa.beam.glob.ui.TimeSeriesConfigToolView</class>
-            <title>Time Series Configuration</title>
-            <tabTitle>Time Series Config</tabTitle>
-            <description>Time Series Configuration</description>
+            <id>timeSeriesManagerToolView</id>
+            <class>org.esa.beam.glob.ui.TimeSeriesManagerToolView</class>
+            <title>Time Series Manager</title>
+            <tabTitle>Time Series Manager</tabTitle>
+            <description>Time Series Manager</description>
             <mnemonic>C</mnemonic>
             <accelerator>ctrl alt C</accelerator>
             <smallIcon>/org/esa/beam/glob/ui/icons/GlobToolbox16.gif</smallIcon>

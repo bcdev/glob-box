@@ -17,21 +17,21 @@ import java.awt.BorderLayout;
 import java.util.WeakHashMap;
 
 
-public class TimeSeriesConfigToolView extends AbstractToolView {
+public class TimeSeriesManagerToolView extends AbstractToolView {
 
     private AppContext appContext;
     private JPanel controlPanel;
     private Product selectedProduct;
     private String prefixTitle;
 
-    private WeakHashMap<Product, TimeSeriesConfigForm> formMap;
-    private TimeSeriesConfigForm activeForm;
-    private TimeSeriesConfigToolView.TSConfigPNL tsConfigPNL;
+    private WeakHashMap<Product, TimeSeriesManagerForm> formMap;
+    private TimeSeriesManagerForm activeForm;
+    private TSManagerPNL tsManagerPNL;
 
-    public TimeSeriesConfigToolView() {
-        formMap = new WeakHashMap<Product, TimeSeriesConfigForm>();
+    public TimeSeriesManagerToolView() {
+        formMap = new WeakHashMap<Product, TimeSeriesManagerForm>();
         appContext = VisatApp.getApp();
-        tsConfigPNL = new TSConfigPNL();
+        tsManagerPNL = new TSManagerPNL();
     }
 
     protected JPanel getControlPanel() {
@@ -47,7 +47,7 @@ public class TimeSeriesConfigToolView extends AbstractToolView {
 
         setSelectedProduct(appContext.getSelectedProduct());
 
-        VisatApp.getApp().addProductTreeListener(new TSConfigPTL());
+        VisatApp.getApp().addProductTreeListener(new TSManagerPTL());
         realizeActiveForm();
         updateTitle();
         return controlPanel;
@@ -71,16 +71,16 @@ public class TimeSeriesConfigToolView extends AbstractToolView {
     private void setSelectedProduct(Product newProduct) {
         Product oldProduct = selectedProduct;
         if (newProduct != oldProduct) {
-            if(oldProduct != null) {
-                oldProduct.removeProductNodeListener(tsConfigPNL);
+            if (oldProduct != null) {
+                oldProduct.removeProductNodeListener(tsManagerPNL);
             }
-            
+
             selectedProduct = newProduct;
             realizeActiveForm();
             updateTitle();
 
-            if(newProduct != null) {
-                selectedProduct.addProductNodeListener(tsConfigPNL);
+            if (newProduct != null) {
+                selectedProduct.addProductNodeListener(tsManagerPNL);
             }
         }
     }
@@ -104,18 +104,18 @@ public class TimeSeriesConfigToolView extends AbstractToolView {
         controlPanel.repaint();
     }
 
-    protected TimeSeriesConfigForm getOrCreateActiveForm(Product product) {
+    protected TimeSeriesManagerForm getOrCreateActiveForm(Product product) {
         if (formMap.containsKey(product)) {
             activeForm = formMap.get(product);
         } else {
-            activeForm = new TimeSeriesConfigForm();
+            activeForm = new TimeSeriesManagerForm();
             formMap.put(product, activeForm);
         }
         activeForm.updateFormControl(product);
         return activeForm;
     }
 
-    private class TSConfigPTL extends ProductTreeListenerAdapter {
+    private class TSManagerPTL extends ProductTreeListenerAdapter {
 
         @Override
         public void productRemoved(Product product) {
@@ -141,7 +141,7 @@ public class TimeSeriesConfigToolView extends AbstractToolView {
         }
     }
 
-    private class TSConfigPNL extends ProductNodeListenerAdapter {
+    private class TSManagerPNL extends ProductNodeListenerAdapter {
 
         @Override
         public void nodeChanged(ProductNodeEvent event) {

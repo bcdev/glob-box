@@ -26,7 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-class TimeSeriesConfigForm {
+class TimeSeriesManagerForm {
 
     private final SimpleDateFormat dateFormat;
     private final JComponent control;
@@ -42,7 +42,7 @@ class TimeSeriesConfigForm {
     private JButton regridButton;
     private JButton exportButton;
 
-    TimeSeriesConfigForm() {
+    TimeSeriesManagerForm() {
         dateFormat = new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss", Locale.ENGLISH);
         control = createControl();
     }
