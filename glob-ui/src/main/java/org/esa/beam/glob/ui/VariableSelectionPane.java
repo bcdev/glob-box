@@ -36,6 +36,10 @@ class VariableSelectionPane extends JPanel {
         updatePane();
     }
 
+    public VariableSelectionPaneModel getModel() {
+        return model;
+    }
+
     private void createPane() {
         final TableLayout tableLayout = new TableLayout(1);
         tableLayout.setTableAnchor(TableLayout.Anchor.NORTHWEST);

@@ -108,7 +108,7 @@ public class TimeSeriesManagerToolView extends AbstractToolView {
         if (formMap.containsKey(product)) {
             activeForm = formMap.get(product);
         } else {
-            activeForm = new TimeSeriesManagerForm();
+            activeForm = new TimeSeriesManagerForm(getDescriptor());
             formMap.put(product, activeForm);
         }
         activeForm.updateFormControl(product);

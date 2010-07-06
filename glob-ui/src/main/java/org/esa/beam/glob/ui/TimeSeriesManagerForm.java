@@ -4,7 +4,11 @@ import com.bc.ceres.swing.TableLayout;
 import com.jidesoft.swing.TitledSeparator;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.help.HelpSys;
+import org.esa.beam.framework.ui.UIUtils;
+import org.esa.beam.framework.ui.application.PageComponentDescriptor;
 import org.esa.beam.framework.ui.command.Command;
+import org.esa.beam.framework.ui.tool.ToolButtonFactory;
 import org.esa.beam.glob.core.TimeSeriesMapper;
 import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
 import org.esa.beam.glob.core.timeseries.datamodel.ProductLocation;
@@ -12,13 +16,18 @@ import org.esa.beam.glob.core.timeseries.datamodel.ProductLocationType;
 import org.esa.beam.util.Debug;
 import org.esa.beam.visat.VisatApp;
 
+import javax.swing.AbstractAction;
+import javax.swing.AbstractButton;
 import javax.swing.AbstractListModel;
-import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JInternalFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import java.awt.Dimension;
+import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.beans.PropertyVetoException;
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -28,6 +37,7 @@ import java.util.Locale;
 
 class TimeSeriesManagerForm {
 
+    private final PageComponentDescriptor descriptor;
     private final SimpleDateFormat dateFormat;
     private final JComponent control;
     private JLabel nameField;
@@ -37,41 +47,44 @@ class TimeSeriesManagerForm {
     private JLabel dimensionField;
     private VariableSelectionPane variablePane;
     private ProductLocationsPane locationsPane;
-    private JButton cloneButton;
-    private JButton viewButton;
-    private JButton regridButton;
-    private JButton exportButton;
+    private AbstractButton cloneButton;
+    private AbstractButton viewButton;
+    private AbstractButton regridButton;
+    private AbstractButton exportButton;
+    private AbstractTimeSeries currentTimeSeries;
 
-    TimeSeriesManagerForm() {
+    TimeSeriesManagerForm(PageComponentDescriptor descriptor) {
+        this.descriptor = descriptor;
         dateFormat = new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss", Locale.ENGLISH);
         control = createControl();
     }
 
     private JComponent createControl() {
-        final TableLayout layout = new TableLayout(2);
+        final TableLayout layout = new TableLayout(3);
         layout.setTableAnchor(TableLayout.Anchor.NORTHWEST);
         layout.setTablePadding(4, 4);
-        layout.setColumnFill(0, TableLayout.Fill.BOTH);
-        layout.setColumnFill(1, TableLayout.Fill.HORIZONTAL);
-        layout.setColumnWeightX(0, 1.0);
-        layout.setColumnWeightY(0, 1.0);
-        layout.setColumnWeightX(1, 0.0);
-        layout.setColumnWeightY(1, 0.0);
+        layout.setTableFill(TableLayout.Fill.BOTH);
+        layout.setColumnFill(2, TableLayout.Fill.BOTH);
+        layout.setRowWeightY(0, 0.0);
+        layout.setCellWeightY(0, 2, 1.0);
+        layout.setColumnWeightX(0, 0.4);
+        layout.setColumnWeightX(1, 0.6);
+        layout.setColumnWeightX(2, 0.0);
+        layout.setRowWeightY(1, 1.0);
         layout.setCellFill(0, 0, TableLayout.Fill.HORIZONTAL);
-        layout.setCellWeightY(0, 0, 0.0);
+        layout.setCellRowspan(0, 2, 2);
         layout.setCellColspan(1, 0, 2);
-        layout.setCellColspan(2, 0, 2);
 
         JPanel infoPanel = createInfoPanel();
-        JPanel buttonPanel = createButtonPanel();
         JPanel variablePanel = createVariablePanel();
+        JPanel buttonPanel = createButtonPanel();
         JPanel productsPanel = createProductsPanel();
 
         final JPanel control = new JPanel(layout);
         control.add(infoPanel);
+        control.add(variablePanel);
         control.add(buttonPanel);
-        control.add(variablePanel, new TableLayout.Cell(1, 0));
-        control.add(productsPanel, new TableLayout.Cell(2, 0));
+        control.add(productsPanel);
         return control;
     }
 
@@ -80,11 +93,11 @@ class TimeSeriesManagerForm {
     }
 
     public void updateFormControl(Product product) {
-        AbstractTimeSeries timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(product);
-        updateInfoPanel(timeSeries);
-        updateButtonPanel(timeSeries);
-        updateVariablePanel(timeSeries);
-        updateProductsPanel(timeSeries);
+        currentTimeSeries = TimeSeriesMapper.getInstance().getTimeSeries(product);
+        updateInfoPanel(currentTimeSeries);
+        updateButtonPanel(currentTimeSeries);
+        updateVariablePanel(currentTimeSeries);
+        updateProductsPanel(currentTimeSeries);
     }
 
 
@@ -147,27 +160,74 @@ class TimeSeriesManagerForm {
 
 
     private JPanel createButtonPanel() {
+        final Command newTSCommand = VisatApp.getApp().getCommandManager().getCommand(NewTimeSeriesAssistantAction.ID);
+        final AbstractButton newButton = ToolButtonFactory.createButton(newTSCommand.getAction(), false);
+
+        cloneButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("/org/esa/beam/glob/ui/icons/CloneTS24.gif"),
+                                                     false);
+        viewButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("/org/esa/beam/glob/ui/icons/ViewTS24.gif"),
+                                                    false);
+        viewButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                final VariableSelectionPaneModel variableModel = variablePane.getModel();
+                final List<String> variableNames = variableModel.getSelectedVariableNames();
+                if (!variableNames.isEmpty() && currentTimeSeries != null) {
+                    if (variableNames.size() == 1) {
+                        showTimeSeriesView(variableNames.get(0));
+
+                    } else {
+                        JPopupMenu viewPopup = new JPopupMenu("View variable");
+                        for (String varName : variableNames) {
+                            viewPopup.add(new ViewTimeSeriesAction(currentTimeSeries, varName));
+                        }
+                        final Rectangle buttonBounds = viewButton.getBounds();
+                        viewPopup.show(viewButton, 1, buttonBounds.height + 1);
+                    }
+                }
+            }
+        });
+        regridButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("/org/esa/beam/glob/ui/icons/Regrid24.gif"),
+                                                      false);
+        exportButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/Export24.gif"), false);
+        AbstractButton helpButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/Help24.gif"), false);
+        helpButton.setToolTipText("Help");
+
+
         final TableLayout layout = new TableLayout(1);
         layout.setTableAnchor(TableLayout.Anchor.NORTHWEST);
         layout.setTableFill(TableLayout.Fill.HORIZONTAL);
         layout.setTableWeightX(1.0);
         layout.setTableWeightY(0.0);
-
-        final JButton newButton = new JButton("New TS");
-        final Command newTSCommand = VisatApp.getApp().getCommandManager().getCommand(NewTimeSeriesAssistantAction.ID);
-        newButton.setAction(newTSCommand.getAction());
-        cloneButton = new JButton("Clone TS");
-        viewButton = new JButton("View TS");
-        regridButton = new JButton("Regrid TS");
-        exportButton = new JButton("Export TS");
-
         final JPanel panel = new JPanel(layout);
         panel.add(newButton);
         panel.add(cloneButton);
         panel.add(viewButton);
         panel.add(regridButton);
         panel.add(exportButton);
+        panel.add(layout.createVerticalSpacer());
+        panel.add(helpButton);
+
+        if (descriptor.getHelpId() != null) {
+            HelpSys.enableHelpOnButton(helpButton, descriptor.getHelpId());
+            HelpSys.enableHelpKey(panel, descriptor.getHelpId());
+        }
+
         return panel;
+    }
+
+    private void showTimeSeriesView(String variableName) {
+        final List<Band> bandList = currentTimeSeries.getBandsForVariable(variableName);
+        final VisatApp app = VisatApp.getApp();
+        for (Band band : bandList) {
+            final JInternalFrame internalFrame = app.findInternalFrame(band);
+            if(internalFrame != null) {
+                return;
+            }
+        }
+        if (!bandList.isEmpty()) {
+            app.openProductSceneView(bandList.get(0));
+        }
     }
 
     private void updateButtonPanel(AbstractTimeSeries timeSeries) {
@@ -202,7 +262,6 @@ class TimeSeriesManagerForm {
         } else {
             model = new DefaultVariableSelectionPaneModel();
         }
-
         variablePane.setModel(model);
     }
 
@@ -360,4 +419,20 @@ class TimeSeriesManagerForm {
         }
     }
 
+    private class ViewTimeSeriesAction extends AbstractAction {
+
+        private String variableName;
+        private AbstractTimeSeries timeSeries;
+
+        private ViewTimeSeriesAction(AbstractTimeSeries timeSeries, String variableName) {
+            super("View " + variableName);
+            this.timeSeries = timeSeries;
+            this.variableName = variableName;
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            showTimeSeriesView(variableName);
+        }
+    }
 }

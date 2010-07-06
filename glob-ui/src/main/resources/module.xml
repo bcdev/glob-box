@@ -54,8 +54,8 @@
             <description>Time Series Manager</description>
             <mnemonic>C</mnemonic>
             <accelerator>ctrl alt C</accelerator>
-            <smallIcon>/org/esa/beam/glob/ui/icons/GlobToolbox16.gif</smallIcon>
-            <largeIcon>/org/esa/beam/glob/ui/icons/GlobToolbox24.gif</largeIcon>
+            <smallIcon>/org/esa/beam/glob/ui/icons/TimeSeriesManager16.gif</smallIcon>
+            <largeIcon>/org/esa/beam/glob/ui/icons/TimeSeriesManager24.gif</largeIcon>
             <initState>FLOATING</initState>
             <initSide>EAST</initSide>
             <initIndex>3</initIndex>
@@ -104,6 +104,8 @@
             <parent>file</parent>
             <class>org.esa.beam.glob.ui.NewTimeSeriesAssistantAction</class>
             <text>New Time Series...</text>
+            <smallIcon>icons/New16.gif</smallIcon>
+            <largeIcon>icons/New24.gif</largeIcon>
             <shortDescr>Create a new time series</shortDescr>
             <helpId>newTimeSeriesAssistantAction</helpId>
             <placeAfter>new</placeAfter>

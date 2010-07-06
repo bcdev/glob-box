@@ -4,6 +4,8 @@ import com.bc.ceres.swing.TableLayout;
 import com.jidesoft.swing.FolderChooser;
 import org.esa.beam.framework.dataio.ProductIOPlugIn;
 import org.esa.beam.framework.dataio.ProductIOPlugInManager;
+import org.esa.beam.framework.ui.UIUtils;
+import org.esa.beam.framework.ui.tool.ToolButtonFactory;
 import org.esa.beam.glob.core.timeseries.datamodel.ProductLocation;
 import org.esa.beam.glob.core.timeseries.datamodel.ProductLocationType;
 import org.esa.beam.util.PropertyMap;
@@ -13,6 +15,7 @@ import org.esa.beam.util.io.BeamFileFilter;
 import org.esa.beam.visat.VisatApp;
 
 import javax.swing.AbstractAction;
+import javax.swing.AbstractButton;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -33,8 +36,8 @@ class ProductLocationsPane extends JPanel {
 
     private ProductLocationsPaneModel model;
     private JList sourceList;
-    private JButton addButton;
-    private JButton removeButton;
+    private AbstractButton addButton;
+    private AbstractButton removeButton;
 
     ProductLocationsPane() {
         this(new DefaultProductLocationsPaneModel());
@@ -92,7 +95,7 @@ class ProductLocationsPane extends JPanel {
         });
 
 
-        addButton = new JButton("Add");
+        addButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/Plus24.gif"), false);
         addButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -105,7 +108,7 @@ class ProductLocationsPane extends JPanel {
             }
         });
 
-        removeButton = new JButton("Remove");
+        removeButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/Minus24.gif"), false);
         removeButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
