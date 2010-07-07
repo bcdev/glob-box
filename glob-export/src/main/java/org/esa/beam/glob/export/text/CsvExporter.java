@@ -1,5 +1,6 @@
 package org.esa.beam.glob.export.text;
 
+import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.util.Debug;
@@ -25,7 +26,7 @@ public abstract class CsvExporter {
 
     List<String> columns;
     List<String> rows;
-    List<RasterDataNode> rasterList;
+    List<List<Band>> variablesList;
     File outputFile;
     int level;
 
@@ -35,12 +36,12 @@ public abstract class CsvExporter {
     boolean exportUnit = true;
     List<PixelPos> positions;
 
-    public CsvExporter(List<RasterDataNode> rasterList, List<PixelPos> positions, File outputFile) {
-        this(rasterList, positions, outputFile, 0);
+    public CsvExporter(List<List<Band>> variablesList, List<PixelPos> positions, File outputFile) {
+        this(variablesList, positions, outputFile, 0);
     }
 
-    public CsvExporter(List<RasterDataNode> rasterList, List<PixelPos> positions, File outputFile, int level) {
-        this.rasterList = rasterList;
+    public CsvExporter(List<List<Band>> variablesList, List<PixelPos> positions, File outputFile, int level) {
+        this.variablesList = variablesList;
         this.positions = positions;
         this.outputFile = outputFile;
         this.level = level;
@@ -61,10 +62,11 @@ public abstract class CsvExporter {
             }
         }
         builder.append("\n");
-        FileOutputStream outStream;
+        FileOutputStream outStream = null;
+        PrintStream printStream = null;
         try {
             outStream = new FileOutputStream(outputFile);
-            PrintStream printStream = new PrintStream(outStream);
+            printStream = new PrintStream(outStream);
             printStream.print(builder.toString());
             for (String row : rows) {
                 printStream.print(row);
@@ -76,6 +78,12 @@ public abstract class CsvExporter {
         } catch (IOException exc) {
             VisatApp.getApp().handleError(exc);
             Debug.trace(exc);
+        } finally {
+            try {
+                outStream.close();
+                printStream.close();
+            } catch (IOException ignore) {
+            }
         }
     }
 

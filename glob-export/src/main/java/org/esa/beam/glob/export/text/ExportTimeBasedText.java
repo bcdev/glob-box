@@ -1,9 +1,10 @@
 package org.esa.beam.glob.export.text;
 
+import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.PlacemarkGroup;
-import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.framework.ui.product.ProductSceneView;
+import org.esa.beam.glob.core.TimeSeriesMapper;
 import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
 import org.esa.beam.util.SystemUtils;
 import org.esa.beam.util.io.BeamFileChooser;
@@ -16,7 +17,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -32,16 +32,22 @@ public class ExportTimeBasedText implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent event) {
 
+
         final VisatApp app = VisatApp.getApp();
         final ProductSceneView view = app.getSelectedProductSceneView();
         if (view != null && view.getProduct() != null &&
             view.getProduct().getProductType().equals(AbstractTimeSeries.TIME_SERIES_PRODUCT_TYPE)) {
-            RasterDataNode[] rasterList = view.getProduct().getBands();
+            AbstractTimeSeries timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(view.getProduct());
+            List<List<Band>> bandList = new ArrayList<List<Band>>();
+            final List<String> timeVariables = timeSeries.getTimeVariables();
+            for (String timeVariable : timeVariables) {
+                bandList.add(timeSeries.getBandsForVariable(timeVariable));
+            }
             List<PixelPos> positions = getPositions();
             if (positions.isEmpty()) {
                 app.showErrorDialog("No pins specified", "There are no pins, which could be exported.");
             } else {
-                CsvExporter exporter = new TimeCsvExporter(Arrays.asList(rasterList), positions, fetchOutputFile());
+                CsvExporter exporter = new TimeCsvExporter(bandList, positions, fetchOutputFile());
                 exporter.exportCsv();
             }
         } else {
