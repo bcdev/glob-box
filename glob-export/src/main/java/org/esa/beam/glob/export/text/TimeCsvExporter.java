@@ -91,7 +91,7 @@ public class TimeCsvExporter extends CsvExporter {
         row.append(AbstractTimeSeries.rasterToVariableName(refBand.getName()));
         row.append(getSeparator());
         if (exportUnit) {
-            row.append(" (").append(refBand.getUnit()).append(")");
+            row.append(refBand.getUnit());
             row.append(getSeparator());
         }
         for (int i = 0; i < bandList.size(); i++) {
