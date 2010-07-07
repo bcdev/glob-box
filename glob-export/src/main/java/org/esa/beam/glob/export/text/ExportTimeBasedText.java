@@ -1,5 +1,7 @@
 package org.esa.beam.glob.export.text;
 
+import com.bc.ceres.core.ProgressMonitor;
+import com.bc.ceres.swing.progress.ProgressMonitorSwingWorker;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.PlacemarkGroup;
@@ -12,9 +14,8 @@ import org.esa.beam.util.io.BeamFileFilter;
 import org.esa.beam.visat.VisatApp;
 
 import javax.swing.JFileChooser;
+import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,15 +25,17 @@ import java.util.List;
  * Date: 18.03.2010
  * Time: 16:51:49
  */
-public class ExportTimeBasedText implements ActionListener {
+public class ExportTimeBasedText extends ProgressMonitorSwingWorker<Void, Void> {
 
     private static final String EXPORT_DIR_PREFERENCES_KEY = "user.export.dir";
     BeamFileFilter kmzFileFilter = new BeamFileFilter("CSV", "csv", "Comma separated values");
 
+    public ExportTimeBasedText(Component parentComponent, String title) {
+        super(parentComponent, title);
+    }
+
     @Override
-    public void actionPerformed(ActionEvent event) {
-
-
+    protected Void doInBackground(ProgressMonitor pm) throws Exception {
         final VisatApp app = VisatApp.getApp();
         final ProductSceneView view = app.getSelectedProductSceneView();
         if (view != null && view.getProduct() != null &&
@@ -48,12 +51,13 @@ public class ExportTimeBasedText implements ActionListener {
                 app.showErrorDialog("No pins specified", "There are no pins, which could be exported.");
             } else {
                 CsvExporter exporter = new TimeCsvExporter(bandList, positions, fetchOutputFile());
-                exporter.exportCsv();
+                exporter.exportCsv(pm);
             }
         } else {
             app.showErrorDialog("No time series specified", "There is no time series view open in VISAT, " +
                                                             "which could be exported.");
         }
+        return null;
     }
 
     private List<PixelPos> getPositions() {

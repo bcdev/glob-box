@@ -1,5 +1,6 @@
 package org.esa.beam.glob.export.text;
 
+import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.RasterDataNode;
@@ -49,9 +50,9 @@ public abstract class CsvExporter {
         this.rows = new ArrayList<String>();
     }
 
-    void exportCsv() {
+    void exportCsv(ProgressMonitor pm) {
         setUpColumns();
-        setUpRows();
+        setUpRows(pm);
         StringBuilder builder = new StringBuilder();
         String sep = getSeparator();
         for (int i = 0; i < columns.size(); i++) {
@@ -80,8 +81,12 @@ public abstract class CsvExporter {
             Debug.trace(exc);
         } finally {
             try {
-                outStream.close();
-                printStream.close();
+                if (outStream != null) {
+                    outStream.close();
+                }
+                if (printStream != null) {
+                    printStream.close();
+                }
             } catch (IOException ignore) {
             }
         }
@@ -89,7 +94,7 @@ public abstract class CsvExporter {
 
     abstract void setUpColumns();
 
-    abstract void setUpRows();
+    abstract void setUpRows(ProgressMonitor pm);
 
     String getSeparator() {
         return forExcel ? ";" : ",";

@@ -1,5 +1,6 @@
 package org.esa.beam.glob.export.text;
 
+import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.framework.datamodel.PixelPos;
@@ -17,7 +18,6 @@ import java.util.List;
  * Time: 10:13:43
  */
 public class TimeCsvExporter extends CsvExporter {
-
 
     public TimeCsvExporter(List<List<Band>> rasterList, List<PixelPos> positions, File outputFile) {
         super(rasterList, positions, outputFile);
@@ -52,9 +52,9 @@ public class TimeCsvExporter extends CsvExporter {
     }
 
     @Override
-    void setUpRows() {
+    void setUpRows(ProgressMonitor pm) {
         int index = 0;
-//        todo ProgressMonitor
+        pm.beginTask("Exporting pin data as csv-file...", positions.size());
         for (PixelPos pixelPos : positions) {
             index++;
             for (List<Band> bandList : variablesList) {
@@ -62,7 +62,9 @@ public class TimeCsvExporter extends CsvExporter {
                     rows.add(setUpRow(pixelPos, bandList, index));
                 }
             }
+            pm.worked(1);
         }
+        pm.done();
     }
 
     private String setUpRow(PixelPos pixelPos, List<Band> bandList, int index) {
