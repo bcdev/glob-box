@@ -117,14 +117,14 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
             String variableName = rasterToVariableName(raster.getName());
             setTitle(String.format("%s - %s", titleBase, variableName));
 
-            graphModel.updateTimeAnnotation(raster);
+            graphModel.updateAnnotation(raster);
             updatePins(graphForm.isShowingSelectedPins());
             showSelectedPinAction.setEnabled(currentView.getSelectedPin() != null);
             showAllPinAction.setEnabled(currentView.getProduct().getPinGroup().getNodeCount() > 0);
         } else {
             graphModel.removeCursorTimeSeries();
             graphModel.removePinTimeSeries();
-            graphModel.removeTimeAnnotation();
+            graphModel.removeAnnotation();
             graphModel.adaptToTimeSeries(null);
 
             setTitle(titleBase);
@@ -152,7 +152,8 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
                 final AffineTransform modelToCurrentLevel = baseLayer.getModelToImageTransform(currentLevel);
                 final Point2D modelPos = levelZeroToModel.transform(pin.getPixelPos(), null);
                 final Point2D currentPos = modelToCurrentLevel.transform(modelPos, null);
-                graphModel.updateTimeSeries((int) currentPos.getX(), (int) currentPos.getY(), currentLevel, false);
+                graphModel.updateTimeSeries(graphForm.getControl(), (int) currentPos.getX(), (int) currentPos.getY(),
+                                            currentLevel, false);
             }
         }
     }
@@ -198,7 +199,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         public void pixelPosChanged(ImageLayer imageLayer, int pixelX, int pixelY,
                                     int currentLevel, boolean pixelPosValid, MouseEvent e) {
             if (pixelPosValid && isVisible() && currentView != null) {
-                graphModel.updateTimeSeries(pixelX, pixelY, currentLevel, true);
+                graphModel.updateTimeSeries(graphForm.getControl(), pixelX, pixelY, currentLevel, true);
             }
 //            loadingMessage = new XYTextAnnotation("Loading data...",
 //                                                  getTimeSeriesPlot().getDomainAxis().getRange().getCentralValue(),
@@ -270,7 +271,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         private void handleBandsChanged() {
             AbstractTimeSeries timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(currentView.getProduct());
             graphModel.adaptToTimeSeries(timeSeries);
-            graphModel.updateTimeAnnotation(currentView.getRaster());
+            graphModel.updateAnnotation(currentView.getRaster());
             updatePins(graphForm.isShowingSelectedPins());
         }
     }
@@ -279,7 +280,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
 
         @Override
         public void propertyChange(PropertyChangeEvent evt) {
-            graphModel.updateTimeAnnotation(currentView.getRaster());
+            graphModel.updateAnnotation(currentView.getRaster());
         }
     }
 }

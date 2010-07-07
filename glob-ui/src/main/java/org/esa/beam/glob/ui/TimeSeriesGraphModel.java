@@ -1,5 +1,7 @@
 package org.esa.beam.glob.ui;
 
+import com.bc.ceres.core.ProgressMonitor;
+import com.bc.ceres.swing.progress.ProgressMonitorSwingWorker;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.RasterDataNode;
@@ -8,9 +10,12 @@ import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.StringUtils;
 import org.esa.beam.util.math.Histogram;
+import org.jfree.chart.annotations.XYAnnotation;
 import org.jfree.chart.annotations.XYLineAnnotation;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.axis.ValueAxis;
+import org.jfree.chart.event.PlotChangeEvent;
+import org.jfree.chart.event.PlotChangeListener;
 import org.jfree.chart.plot.DefaultDrawingSupplier;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
@@ -21,9 +26,11 @@ import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 import org.jfree.data.time.TimeSeriesDataItem;
 
+import javax.swing.JComponent;
 import javax.swing.SwingWorker;
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Font;
 import java.awt.Paint;
 import java.awt.Rectangle;
@@ -63,6 +70,12 @@ class TimeSeriesGraphModel {
 
     TimeSeriesGraphModel(XYPlot plot) {
         timeSeriesPlot = plot;
+        timeSeriesPlot.addChangeListener(new PlotChangeListener() {
+            @Override
+            public void plotChanged(PlotChangeEvent plotChangeEvent) {
+//                updateAnnotation();
+            }
+        });
         variableBands = new ArrayList<List<Band>>();
         displayModelMap = new WeakHashMap<AbstractTimeSeries, DisplayModel>();
         pinDatasets = new ArrayList<TimeSeriesCollection>();
@@ -221,8 +234,8 @@ class TimeSeriesGraphModel {
         return cursor ? cursorDatasets : pinDatasets;
     }
 
-    void updateTimeAnnotation(RasterDataNode raster) {
-        removeTimeAnnotation();
+    void updateAnnotation(RasterDataNode raster) {
+        removeAnnotation();
 
         final ProductData.UTC startTime = raster.getTimeCoding().getStartTime();
         final Millisecond timePeriod = new Millisecond(startTime.getAsDate(),
@@ -235,29 +248,40 @@ class TimeSeriesGraphModel {
             valueRange = Range.combine(valueRange, timeSeriesPlot.getRangeAxis(i).getRange());
         }
         if (valueRange != null) {
-            XYLineAnnotation xyla = new XYLineAnnotation(millisecond, valueRange.getLowerBound(), millisecond,
-                                                         valueRange.getUpperBound());
-            timeSeriesPlot.addAnnotation(xyla, true);
+            XYAnnotation annotation = new XYLineAnnotation(millisecond, valueRange.getLowerBound(), millisecond,
+                                                           valueRange.getUpperBound());
+            timeSeriesPlot.addAnnotation(annotation, true);
         }
     }
 
-    void removeTimeAnnotation() {
+//    void updateAnnotationBounds() {
+//        final List annotations = timeSeriesPlot.getAnnotations();
+//        if( annotations.isEmpty() ) {
+//            return;
+//        }
+//        XYLineAnnotation annotation = (XYLineAnnotation) annotations.get( 0 );
+//        annotation.
+//    }
+
+    void removeAnnotation() {
         timeSeriesPlot.clearAnnotations();
     }
 
     private SwingWorker cursorUpdater;
 
-    void updateTimeSeries(int pixelX, int pixelY, int currentLevel, boolean cursor) {
+    void updateTimeSeries(JComponent control, int pixelX, int pixelY, int currentLevel, boolean cursor) {
         if (cursor && (cursorUpdater == null || cursorUpdater.isDone())) {
-            cursorUpdater = new TimeSeriesUpdater(pixelX, pixelY, currentLevel, cursor, version.get());
+            cursorUpdater = new TimeSeriesUpdater(control, "Loading...", pixelX, pixelY, currentLevel, cursor,
+                                                  version.get());
             cursorUpdater.execute();
         } else {
-            TimeSeriesUpdater updater = new TimeSeriesUpdater(pixelX, pixelY, currentLevel, cursor, version.get());
+            TimeSeriesUpdater updater = new TimeSeriesUpdater(control, "Loading...", pixelX, pixelY, currentLevel,
+                                                              cursor, version.get());
             updater.execute();
         }
     }
 
-    private class TimeSeriesUpdater extends SwingWorker<List<TimeSeries>, Void> {
+    private class TimeSeriesUpdater extends ProgressMonitorSwingWorker<List<TimeSeries>, Void> {
 
         private final int pixelX;
         private final int pixelY;
@@ -265,7 +289,9 @@ class TimeSeriesGraphModel {
         private final boolean cursor;
         private final int myVersion;
 
-        TimeSeriesUpdater(int pixelX, int pixelY, int currentLevel, boolean cursor, int version) {
+        TimeSeriesUpdater(Component parent, String title, int pixelX, int pixelY, int currentLevel,
+                          boolean cursor, int version) {
+            super(parent, title);
             this.pixelX = pixelX;
             this.pixelY = pixelY;
             this.currentLevel = currentLevel;
@@ -274,13 +300,24 @@ class TimeSeriesGraphModel {
         }
 
         @Override
-        protected List<TimeSeries> doInBackground() throws Exception {
+        protected List<TimeSeries> doInBackground(ProgressMonitor pm) throws Exception {
             if (version.get() != myVersion) {
                 return Collections.emptyList();
             }
-            List<TimeSeries> result = new ArrayList<TimeSeries>(variableBands.size());
+            final int variableCount = variableBands.size();
+            final boolean usePm = variableCount > 2;
+            List<TimeSeries> result = new ArrayList<TimeSeries>(variableCount);
+            if (usePm) {
+                pm.beginTask("Loading data", variableCount);
+            }
             for (List<Band> bandList : variableBands) {
                 result.add(computeTimeSeries(bandList, pixelX, pixelY, currentLevel));
+                if (usePm) {
+                    pm.worked(1);
+                }
+            }
+            if (usePm) {
+                pm.done();
             }
             return result;
         }
