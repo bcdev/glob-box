@@ -354,9 +354,9 @@ class TimeSeriesPlayerForm extends JPanel {
 
     private void updateSpeedUnit() {
         double fps = 1 / (timerDelay * stepsPerTimespan / 1000.0);
-        DecimalFormat format = new DecimalFormat("0.00");
-        speedUnit.setText(format.format(fps) + " FPS");
-        speedUnit.setToolTipText(format.format(fps) + " Frames per second");
+        DecimalFormat formatter = new DecimalFormat("0.00");
+        speedUnit.setText(formatter.format(fps) + " FPS");
+        speedUnit.setToolTipText(formatter.format(fps) + " Frames per second");
     }
 
     private static TableLayout createLayout() {

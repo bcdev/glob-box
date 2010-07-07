@@ -2,12 +2,22 @@ package org.esa.beam.glob.ui;
 
 import org.esa.beam.framework.ui.GridBagUtils;
 import org.esa.beam.framework.ui.UIUtils;
+import org.esa.beam.framework.ui.product.ProductSceneView;
 import org.esa.beam.framework.ui.tool.ToolButtonFactory;
+import org.esa.beam.glob.export.text.ExportTimeBasedText;
+import org.esa.beam.visat.VisatApp;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.AbstractButton;
+import javax.swing.Action;
+import javax.swing.BorderFactory;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -30,7 +40,7 @@ class TimeSeriesGraphForm {
         mainPanel.setPreferredSize(new Dimension(320, 200));
 
         filterButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/Filter24.gif"),
-                                                                           false);
+                                                      false);
         filterButton.setName("filterButton");
         filterButton.setToolTipText("Choose which variables to display");
         filterButton.setEnabled(true);
@@ -72,14 +82,15 @@ class TimeSeriesGraphForm {
         exportTimeSeriesButton = ToolButtonFactory.createButton(
                 UIUtils.loadImageIcon("icons/Export24.gif"),
                 false);
-        exportTimeSeriesButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // export values of graph to csv
-            }
-        });
-        exportTimeSeriesButton.setToolTipText("Export time series graph to csv file");
+        exportTimeSeriesButton.addActionListener(new ExportTimeBasedText());
+        exportTimeSeriesButton.setToolTipText("Export time series of all pins to csv file");
         exportTimeSeriesButton.setName("exportTimeSeriesButton");
+        final ProductSceneView sceneView = VisatApp.getApp().getSelectedProductSceneView();
+        if (sceneView != null) {
+            exportTimeSeriesButton.setEnabled(sceneView.getProduct().getPinGroup().getNodeCount() > 0);
+        } else {
+            exportTimeSeriesButton.setEnabled(false);
+        }
 
         JPanel buttonPanel = GridBagUtils.createPanel();
         final GridBagConstraints gbc = new GridBagConstraints();
@@ -115,7 +126,6 @@ class TimeSeriesGraphForm {
         filterButton.setEnabled(enabled);
         showTimeSeriesForSelectedPinsButton.setEnabled(enabled);
         showTimeSeriesForAllPinsButton.setEnabled(enabled);
-        exportTimeSeriesButton.setEnabled(enabled);
     }
 
     boolean isShowingSelectedPins() {
@@ -126,4 +136,7 @@ class TimeSeriesGraphForm {
         return showTimeSeriesForAllPinsButton.isSelected();
     }
 
+    public void setExportEnabled(boolean placemarksSet) {
+        exportTimeSeriesButton.setEnabled(placemarksSet);
+    }
 }

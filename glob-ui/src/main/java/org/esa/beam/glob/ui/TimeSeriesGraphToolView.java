@@ -30,7 +30,7 @@ import java.awt.geom.Point2D;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
-import static org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries.rasterToVariableName;
+import static org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries.*;
 
 public class TimeSeriesGraphToolView extends AbstractToolView {
 
@@ -239,7 +239,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         public void nodeChanged(ProductNodeEvent event) {
             String propertyName = event.getPropertyName();
             if (propertyName.equals(AbstractTimeSeries.PROPERTY_PRODUCT_LOCATIONS) ||
-                    propertyName.equals(AbstractTimeSeries.PROPERTY_VARIABLE_SELECTION)) {
+                propertyName.equals(AbstractTimeSeries.PROPERTY_VARIABLE_SELECTION)) {
                 handleBandsChanged();
             } else if (propertyName.equals(Placemark.PROPERTY_NAME_PIXELPOS)) {
                 updatePins(graphForm.isShowingSelectedPins());
@@ -262,7 +262,9 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
 
         private void handlePlacemarkChanged() {
             showSelectedPinAction.setEnabled(currentView.getSelectedPin() != null);
-            showAllPinAction.setEnabled(currentView.getProduct().getPinGroup().getNodeCount() > 0);
+            final boolean placemarksSet = currentView.getProduct().getPinGroup().getNodeCount() > 0;
+            showAllPinAction.setEnabled(placemarksSet);
+            graphForm.setExportEnabled(placemarksSet);
         }
 
         private void handleBandsChanged() {

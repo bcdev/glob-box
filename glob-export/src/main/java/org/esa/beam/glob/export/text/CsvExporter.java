@@ -1,8 +1,6 @@
 package org.esa.beam.glob.export.text;
 
-import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.framework.datamodel.PixelPos;
-import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.util.Debug;
 import org.esa.beam.visat.VisatApp;
@@ -23,57 +21,54 @@ import java.util.List;
  * Date: 23.03.2010
  * Time: 14:40:45
  */
-public class CsvExporter {
+public abstract class CsvExporter {
 
-    private List<String> columns;
-    private List<String> rows;
-    private List<RasterDataNode> rasterList;
-    private File outputFile;
+    List<String> columns;
+    List<String> rows;
+    List<RasterDataNode> rasterList;
+    File outputFile;
+    int level;
 
-    private boolean forExcel = false;
-    private boolean exportImageCoords = true;
-    private boolean exportLatLon = true;
-    private boolean exportUnit = true;
-    private boolean exportTime = true;
-    private int level = 2;
-    private String sep;
+    boolean forExcel = false;
+    boolean exportImageCoords = true;
+    boolean exportLatLon = true;
+    boolean exportUnit = true;
+    List<PixelPos> positions;
 
-    public CsvExporter(List<RasterDataNode> rasterList, File outputFile, int level) {
-        this.rasterList = rasterList;
-        this.outputFile = outputFile;
-        this.columns = new ArrayList<String>();
-        this.rows = new ArrayList<String>();
-        this.level = level;
+    public CsvExporter(List<RasterDataNode> rasterList, List<PixelPos> positions, File outputFile) {
+        this(rasterList, positions, outputFile, 0);
     }
 
-    public CsvExporter(RasterDataNode raster, File outputFile, int level) {
-        this((List<RasterDataNode>) null, outputFile, level);
-        List<RasterDataNode> rasterList = new ArrayList<RasterDataNode>();
-        rasterList.add(raster);
+    public CsvExporter(List<RasterDataNode> rasterList, List<PixelPos> positions, File outputFile, int level) {
         this.rasterList = rasterList;
+        this.positions = positions;
+        this.outputFile = outputFile;
+        this.level = level;
+        this.columns = new ArrayList<String>();
+        this.rows = new ArrayList<String>();
     }
 
     void exportCsv() {
         setUpColumns();
         setUpRows();
         StringBuilder builder = new StringBuilder();
-        if (isForExcel()) {
-            sep = ";";
-        } else {
-            sep = ",";
-        }
-        for (String column : columns) {
-            builder.append(column).append(sep);
+        String sep = getSeparator();
+        for (int i = 0; i < columns.size(); i++) {
+            String column = columns.get(i);
+            builder.append(column);
+            if (i < columns.size() - 1) {
+                builder.append(sep);
+            }
         }
         builder.append("\n");
-        FileOutputStream outStream = null;
+        FileOutputStream outStream;
         try {
             outStream = new FileOutputStream(outputFile);
-            PrintStream print = new PrintStream(outStream);
-            print.print(builder.toString());
+            PrintStream printStream = new PrintStream(outStream);
+            printStream.print(builder.toString());
             for (String row : rows) {
-                print.print(row);
-                print.print("\n");
+                printStream.print(row);
+                printStream.print("\n");
             }
         } catch (FileNotFoundException exc) {
             VisatApp.getApp().handleError(exc);
@@ -84,63 +79,15 @@ public class CsvExporter {
         }
     }
 
-    private void setUpColumns() {
-        for (RasterDataNode raster : rasterList) {
-            columns.add("Value for " + raster.getProductRefString());
-            if (exportTime) {
-                columns.add("Start-time");
-                columns.add("End-time");
-            }
-        }
-        if (exportImageCoords) {
-            columns.add("Image-X");
-            columns.add("Image-Y");
-        }
-        if (exportLatLon) {
-            columns.add("Latitude");
-            columns.add("Longitude");
-        }
-        if (exportUnit) {
-            columns.add("Unit");
-        }
+    abstract void setUpColumns();
+
+    abstract void setUpRows();
+
+    String getSeparator() {
+        return forExcel ? ";" : ",";
     }
 
-    private void setUpRows() {
-        final RasterDataNode refRaster = VisatApp.getApp().getSelectedProductSceneView().getRaster();
-        final RenderedImage image = refRaster.getGeophysicalImage().getImage(level);
-        final int width = image.getWidth();
-        final int height = image.getHeight();
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
-                PixelPos pixelPos = new PixelPos(x, y);
-                GeoPos geoPos = refRaster.getGeoCoding().getGeoPos(pixelPos, null);
-                final StringBuilder row = new StringBuilder();
-                for (RasterDataNode raster : rasterList) {
-//                    row.add( getValue( raster, x, y, level ) + "" );
-                    row.append("10.5");
-                    if (exportTime) {
-                        final Product product = raster.getProduct();
-                        row.append(product.getStartTime().getAsDate().toString());
-                        row.append(product.getEndTime().getAsDate().toString());
-                    }
-                }
-                if (exportImageCoords) {
-                    row.append(pixelPos.getX());
-                    row.append(pixelPos.getY());
-                }
-                if (exportLatLon) {
-                    row.append(geoPos.getLatString());
-                    row.append(geoPos.getLonString());
-                }
-                if (exportUnit) {
-                    row.append(refRaster.getUnit());
-                }
-                rows.add(row.toString());
-            }
-        }
-    }
-
-    private double getValue(RasterDataNode raster, int pixelX, int pixelY, int currentLevel) {
+    double getValue(RasterDataNode raster, int pixelX, int pixelY, int currentLevel) {
         final RenderedImage image = raster.getGeophysicalImage().getImage(currentLevel);
         final Rectangle pixelRect = new Rectangle(pixelX, pixelY, 1, 1);
         final Raster data = image.getData(pixelRect);
@@ -153,33 +100,5 @@ public class CsvExporter {
             value = Double.NaN;
         }
         return value;
-    }
-
-    public List<RasterDataNode> getRasterList() {
-        return rasterList;
-    }
-
-    public boolean isForExcel() {
-        return forExcel;
-    }
-
-    public void setForExcel(boolean forExcel) {
-        this.forExcel = forExcel;
-    }
-
-    public void setExportUnit(boolean exportUnit) {
-        this.exportUnit = exportUnit;
-    }
-
-    public void setExportTime(boolean exportTime) {
-        this.exportTime = exportTime;
-    }
-
-    public void setExportLatLon(boolean exportLatLon) {
-        this.exportLatLon = exportLatLon;
-    }
-
-    public void setExportImageCoords(boolean exportImageCoords) {
-        this.exportImageCoords = exportImageCoords;
     }
 }
