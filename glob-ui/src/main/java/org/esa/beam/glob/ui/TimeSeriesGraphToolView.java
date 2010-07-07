@@ -16,6 +16,7 @@ import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
 import org.esa.beam.visat.VisatApp;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.axis.ValueAxis;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -201,20 +202,14 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
             if (pixelPosValid && isVisible() && currentView != null) {
                 graphModel.updateTimeSeries(graphForm.getControl(), pixelX, pixelY, currentLevel, true);
             }
-//            loadingMessage = new XYTextAnnotation("Loading data...",
-//                                                  getTimeSeriesPlot().getDomainAxis().getRange().getCentralValue(),
-//                                                  getTimeSeriesPlot().getRangeAxis().getRange().getCentralValue());
-//            getTimeSeriesPlot().addAnnotation(loadingMessage);
 
-
-//            final ValueAxis rangeAxis = chart.getXYPlot().getRangeAxis();
-//            if (e.isShiftDown()) {
-//                rangeAxis.setAutoRange(true);
-//            } else {
-//                if (rangeAxis.isAutoRange()) {
-//                    rangeAxis.setRange(TimeSeriesGraphModel.computeYAxisRange(graphModel.getVariableBandList()));
-//                }
-//            }
+            final ValueAxis rangeAxis = chart.getXYPlot().getRangeAxis();
+            if (e.isShiftDown()) {
+                rangeAxis.setAutoRange(true);
+            } else {
+                rangeAxis.setAutoRange(false);
+            }
+            graphModel.updateAnnotation(currentView.getRaster());
         }
 
         @Override

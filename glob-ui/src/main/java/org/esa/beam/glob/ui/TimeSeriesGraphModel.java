@@ -119,6 +119,22 @@ class TimeSeriesGraphModel {
         updatePlot(timeSeries != null);
     }
 
+    static Range computeYAxisRange(List<Band> bands) {
+        Range result = null;
+        for (Band band : bands) {
+            Stx stx = band.getStx();
+            Histogram histogram = new Histogram(stx.getHistogramBins(), stx.getMin(), stx.getMax());
+            org.esa.beam.util.math.Range rangeFor95Percent = histogram.findRangeFor95Percent();
+            Range range = new Range(band.scale(rangeFor95Percent.getMin()), band.scale(rangeFor95Percent.getMax()));
+            if (result == null) {
+                result = range;
+            } else {
+                result = Range.combine(result, range);
+            }
+        }
+        return result;
+    }
+
     private void updatePlot(boolean hasData) {
         for (int i = 0; i < timeSeriesPlot.getDatasetCount(); i++) {
             timeSeriesPlot.setDataset(i, null);
@@ -133,7 +149,7 @@ class TimeSeriesGraphModel {
             for (int i = 0; i < numVariables; i++) {
 
                 String variableName = variablesToDisplay.get(i);
-                List<Band> bandList = variableBands.get(i);
+                final List<Band> bandList = variableBands.get(i);
 
                 Paint paint = displayModel.getVariablename2colorMap().get(variableName);
                 String axisLabel = getAxisLabel(variableName, bandList.get(0).getUnit());
@@ -169,6 +185,7 @@ class TimeSeriesGraphModel {
 
                 timeSeriesPlot.setRenderer(i, cursorRenderer, true);
                 timeSeriesPlot.setRenderer(i + numVariables, pinRenderer, true);
+
             }
         }
     }
@@ -179,22 +196,6 @@ class TimeSeriesGraphModel {
         } else {
             return variableName;
         }
-    }
-
-    private static Range computeYAxisRange(List<Band> bands) {
-        Range result = null;
-        for (Band band : bands) {
-            Stx stx = band.getStx();
-            Histogram histogram = new Histogram(stx.getHistogramBins(), stx.getMin(), stx.getMax());
-            org.esa.beam.util.math.Range rangeFor95Percent = histogram.findRangeFor95Percent();
-            Range range = new Range(band.scale(rangeFor95Percent.getMin()), band.scale(rangeFor95Percent.getMax()));
-            if (result == null) {
-                result = range;
-            } else {
-                result = Range.combine(result, range);
-            }
-        }
-        return result;
     }
 
     private static double getValue(Band band, int pixelX, int pixelY, int currentLevel) {
@@ -254,15 +255,6 @@ class TimeSeriesGraphModel {
         }
     }
 
-//    void updateAnnotationBounds() {
-//        final List annotations = timeSeriesPlot.getAnnotations();
-//        if( annotations.isEmpty() ) {
-//            return;
-//        }
-//        XYLineAnnotation annotation = (XYLineAnnotation) annotations.get( 0 );
-//        annotation.
-//    }
-
     void removeAnnotation() {
         timeSeriesPlot.clearAnnotations();
     }
@@ -305,20 +297,13 @@ class TimeSeriesGraphModel {
                 return Collections.emptyList();
             }
             final int variableCount = variableBands.size();
-            final boolean usePm = variableCount > 2;
             List<TimeSeries> result = new ArrayList<TimeSeries>(variableCount);
-            if (usePm) {
-                pm.beginTask("Loading data", variableCount);
-            }
+            pm.beginTask("Loading data", variableCount);
             for (List<Band> bandList : variableBands) {
                 result.add(computeTimeSeries(bandList, pixelX, pixelY, currentLevel));
-                if (usePm) {
-                    pm.worked(1);
-                }
+                pm.worked(1);
             }
-            if (usePm) {
-                pm.done();
-            }
+            pm.done();
             return result;
         }
 
