@@ -1,5 +1,6 @@
 package org.esa.beam.glob.core.timeseries.datamodel;
 
+import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.DefaultTimeCoding;
 import org.esa.beam.framework.datamodel.MetadataAttribute;
@@ -123,7 +124,7 @@ class TimeSeriesImpl extends AbstractTimeSeries {
         ProductLocation location = new ProductLocation(type, path);
         addProductLocationMetadata(location);
         List<String> variables = getTimeVariables();
-        for (Product product : location.findProducts()) {
+        for (Product product : location.findProducts(ProgressMonitor.NULL)) {
             if (product.getTimeCoding() != null) {
                 addToVariableList(product);
                 storeProductInternally(product);
@@ -168,7 +169,7 @@ class TimeSeriesImpl extends AbstractTimeSeries {
             if (addToMetadata) {
                 addProductLocationMetadata(productLocation);
             }
-            for (Product product : productLocation.findProducts()) {
+            for (Product product : productLocation.findProducts(ProgressMonitor.NULL)) {
                 if (product.getTimeCoding() != null) {
                     storeProductInternally(product);
                     if (addToMetadata) {

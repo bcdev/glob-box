@@ -35,7 +35,7 @@ class DefaultVariableSelectionPaneModel extends AbstractListModel implements Var
     public void add(Variable... variables) {
         final int startIndex = variableList.size();
         variableList.addAll(Arrays.asList(variables));
-        final int stopIndex = variableList.size() - 1;
+        final int stopIndex = Math.max(0, variableList.size() - 1);
         fireIntervalAdded(this, startIndex, stopIndex);
     }
 
