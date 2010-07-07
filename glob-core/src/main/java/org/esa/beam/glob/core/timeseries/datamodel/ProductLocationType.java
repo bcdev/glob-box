@@ -63,7 +63,7 @@ public enum ProductLocationType {
     private static List<Product> readSingleProduct(File path) {
         try {
             final Product product = ProductIO.readProduct(path);
-            if (product != null) {
+            if (product != null && product.getStartTime() != null && product.getEndTime() != null) {
                 return Arrays.asList(product);
             }
         } catch (IOException ignore) {
