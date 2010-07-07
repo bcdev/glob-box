@@ -1,5 +1,6 @@
 package org.esa.beam.glob.core.timeseries.datamodel;
 
+import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.framework.datamodel.Product;
 
 import java.util.List;
@@ -27,7 +28,7 @@ public class ProductLocation {
         return productLocationType;
     }
 
-    public List<Product> findProducts() {
-        return this.productLocationType.findProducts( path );
+    public List<Product> findProducts(ProgressMonitor pm) {
+        return this.productLocationType.findProducts( path, pm);
     }
 }

@@ -1,5 +1,6 @@
 package org.esa.beam.glob.core.timeseries.datamodel;
 
+import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.glob.core.TimeSeriesMapper;
 import org.esa.beam.util.Guardian;
@@ -47,10 +48,9 @@ public class TimeSeriesFactory {
         Guardian.assertGreaterThan("variables.size()", variableNames.size(), 0);
         Guardian.assertNotNullOrEmpty("name", name);
 
-        // todo get ref product in a smarter way
         final List<Product> productList = new ArrayList<Product>();
         for (ProductLocation productLocation : productLocations) {
-            productList.addAll(productLocation.findProducts());
+            productList.addAll(productLocation.findProducts(ProgressMonitor.NULL));
         }
         if (productList.isEmpty()) {
             return null;

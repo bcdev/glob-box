@@ -1,14 +1,18 @@
 package org.esa.beam.glob.ui;
 
+import com.bc.ceres.core.ProgressMonitor;
+import com.bc.ceres.core.SubProgressMonitor;
 import com.bc.ceres.swing.TableLayout;
+import com.bc.ceres.swing.progress.ProgressMonitorSwingWorker;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductNode;
 import org.esa.beam.framework.ui.assistant.AbstractAssistantPage;
 import org.esa.beam.framework.ui.assistant.AssistantPage;
 import org.esa.beam.framework.ui.assistant.AssistantPane;
 import org.esa.beam.framework.ui.command.CommandEvent;
-import org.esa.beam.glob.core.timeseries.datamodel.ProductLocation;
 import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
+import org.esa.beam.glob.core.timeseries.datamodel.ProductLocation;
+import org.esa.beam.glob.core.timeseries.datamodel.ProductLocationType;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesFactory;
 import org.esa.beam.visat.actions.AbstractVisatAction;
 
@@ -19,6 +23,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import java.awt.Component;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 public abstract class AbstractTimeSeriesAssistantAction extends AbstractVisatAction {
 
@@ -62,8 +67,8 @@ public abstract class AbstractTimeSeriesAssistantAction extends AbstractVisatAct
             final ProductLocationsPaneModel locationsModel = assistantModel.getProductLocationsModel();
             final VariableSelectionPaneModel variablesModel = assistantModel.getVariableSelectionModel();
             final AbstractTimeSeries timeSeries = TimeSeriesFactory.create(assistantModel.getTimeSeriesName(),
-                                                                   locationsModel.getProductLocations(),
-                                                                   variablesModel.getSelectedVariableNames());
+                                                                           locationsModel.getProductLocations(),
+                                                                           variablesModel.getSelectedVariableNames());
             getAppContext().getProductManager().addProduct(timeSeries.getTsProduct());
         }
     }
@@ -84,7 +89,7 @@ public abstract class AbstractTimeSeriesAssistantAction extends AbstractVisatAct
         public boolean validatePage() {
             if (super.validatePage()) {
                 final ProductLocationsPaneModel locationsModel = getAssistantModel().getProductLocationsModel();
-                if(locationsModel.getSize() > 0) {
+                if (locationsModel.getSize() > 0) {
                     return true;
                 }
             }
@@ -99,6 +104,9 @@ public abstract class AbstractTimeSeriesAssistantAction extends AbstractVisatAct
         @Override
         public AssistantPage getNextPage() {
             final TimeSeriesAssistantModel model = getAssistantModel();
+            final ProgressMonitorSwingWorker worker = new MyProgressMonitorSwingWorker(model);
+            worker.executeWithBlocking();
+
             return new NewTimeSeriesAssistantPage2(model);
         }
 
@@ -108,6 +116,58 @@ public abstract class AbstractTimeSeriesAssistantAction extends AbstractVisatAct
 
         }
 
+        private class MyProgressMonitorSwingWorker extends ProgressMonitorSwingWorker<Variable[], Object> {
+
+            private final TimeSeriesAssistantModel model;
+
+            private MyProgressMonitorSwingWorker(TimeSeriesAssistantModel model) {
+                super(NewTimeSeriesAssistantPage1.this.getContext().getCurrentPage().getPageComponent(),
+                      "Scanning for products");
+                this.model = model;
+            }
+
+            @Override
+            protected Variable[] doInBackground(ProgressMonitor pm) throws Exception {
+                return getVariables(getAssistantModel().getProductLocationsModel(), pm);
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    model.getVariableSelectionModel().set(get());
+                } catch (InterruptedException ignored) {
+                } catch (ExecutionException e) {
+                    getContext().showErrorDialog("Failed to scan for products: \n" + e.getMessage());
+                    e.printStackTrace();
+                }
+            }
+
+            private Variable[] getVariables(ProductLocationsPaneModel locationsModel, ProgressMonitor pm) {
+                try {
+                    pm.beginTask("Scanning product locations...", locationsModel.getSize());
+                    for (int i = 0; i < locationsModel.getSize(); i++) {
+                        final ProductLocation location = locationsModel.getElementAt(i);
+                        final ProductLocationType type = location.getProductLocationType();
+                        final List<Product> products = type.findProducts(location.getPath(), 
+                                                                         new SubProgressMonitor(pm, 1));
+                        if (!products.isEmpty()) {
+                            final Product product = products.get(0);
+                            final String[] bandNames = product.getBandNames();
+                            final Variable[] variables = new Variable[bandNames.length];
+                            for (int j = 0; j < bandNames.length; j++) {
+                                variables[j] = new Variable(bandNames[j]);
+                            }
+                            return variables;
+                        }
+                    }
+                } finally {
+                    pm.done();
+                }
+
+                return new Variable[0];
+            }
+
+        }
     }
 
     private class NewTimeSeriesAssistantPage2 extends AbstractTimeSeriesAssistantPage {
@@ -118,11 +178,7 @@ public abstract class AbstractTimeSeriesAssistantAction extends AbstractVisatAct
 
         @Override
         protected Component createPageComponent() {
-            final VariableSelectionPaneModel variableModel = getAssistantModel().getVariableSelectionModel();
-            if(variableModel.getSize() == 0) {
-                variableModel.set(getVariables(getAssistantModel().getProductLocationsModel()));
-            }
-            return new VariableSelectionPane(variableModel);
+            return new VariableSelectionPane(getAssistantModel().getVariableSelectionModel());
         }
 
         @Override
@@ -153,33 +209,15 @@ public abstract class AbstractTimeSeriesAssistantAction extends AbstractVisatAct
         @Override
         public AssistantPage getNextPage() {
             final TimeSeriesAssistantModel model = getAssistantModel();
-                final VariableSelectionPaneModel variableModel = model.getVariableSelectionModel();
-                for (int i = 0; i < variableModel.getSize(); i++) {
-                    final Variable variable = variableModel.getElementAt(i);
-                    if (variable.isSelected()) {
-                        model.setTimeSeriesName("TimeSeries_" + variable.getName());
-                        break;
-                    }
-                }
-            return new NewTimeSeriesAssistantPage3(model);
-        }
-
-        private Variable[] getVariables(ProductLocationsPaneModel locationsModel) {
-            for (int i = 0; i < locationsModel.getSize(); i++) {
-                final ProductLocation location = locationsModel.getElementAt(i);
-                final List<Product> products = location.getProductLocationType().findProducts(location.getPath());
-                if (!products.isEmpty()) {
-                    final Product product = products.get(0);
-                    final String[] bandNames = product.getBandNames();
-                    final Variable[] variables = new Variable[bandNames.length];
-                    for (int j = 0; j < bandNames.length; j++) {
-                        variables[j] = new Variable(bandNames[j]);
-                    }
-                    return variables;
+            final VariableSelectionPaneModel variableModel = model.getVariableSelectionModel();
+            for (int i = 0; i < variableModel.getSize(); i++) {
+                final Variable variable = variableModel.getElementAt(i);
+                if (variable.isSelected()) {
+                    model.setTimeSeriesName("TimeSeries_" + variable.getName());
+                    break;
                 }
             }
-
-            return new Variable[0];
+            return new NewTimeSeriesAssistantPage3(model);
         }
 
     }
@@ -212,9 +250,9 @@ public abstract class AbstractTimeSeriesAssistantAction extends AbstractVisatAct
 
         @Override
         public boolean validatePage() {
-            if(super.validatePage()) {
+            if (super.validatePage()) {
                 final String name = field.getText();
-                if(!name.isEmpty() && ProductNode.isValidNodeName(name)) {
+                if (!name.isEmpty() && ProductNode.isValidNodeName(name)) {
                     return true;
                 }
             }
