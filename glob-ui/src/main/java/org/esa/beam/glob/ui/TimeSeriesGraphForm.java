@@ -82,7 +82,14 @@ class TimeSeriesGraphForm {
         exportTimeSeriesButton = ToolButtonFactory.createButton(
                 UIUtils.loadImageIcon("icons/Export24.gif"),
                 false);
-        exportTimeSeriesButton.addActionListener(new ExportTimeBasedText());
+        exportTimeSeriesButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                ExportTimeBasedText exportTimeBasedText = new ExportTimeBasedText(mainPanel,
+                                                                                  "Exporting pin data as csv-file");
+                exportTimeBasedText.executeWithBlocking();
+            }
+        });
         exportTimeSeriesButton.setToolTipText("Export time series of all pins to csv file");
         exportTimeSeriesButton.setName("exportTimeSeriesButton");
         final ProductSceneView sceneView = VisatApp.getApp().getSelectedProductSceneView();
