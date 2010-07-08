@@ -12,6 +12,7 @@ import org.esa.beam.framework.datamodel.ProductNodeListener;
 import org.esa.beam.framework.datamodel.ProductNodeListenerAdapter;
 import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.framework.ui.application.support.AbstractToolView;
+import org.esa.beam.framework.ui.product.ProductSceneImage;
 import org.esa.beam.framework.ui.product.ProductSceneView;
 import org.esa.beam.glevel.BandImageMultiLevelSource;
 import org.esa.beam.glob.core.TimeSeriesMapper;
@@ -25,6 +26,7 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.InternalFrameAdapter;
 import javax.swing.event.InternalFrameEvent;
 import java.awt.Container;
+import java.lang.reflect.Field;
 import java.util.List;
 
 /**
@@ -100,17 +102,18 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
         final RasterDataNode currentRaster = currentView.getRaster();
         final ImageInfo imageInfoClone = (ImageInfo) currentRaster.getImageInfo(ProgressMonitor.NULL).clone();
         nextRaster.setImageInfo(imageInfoClone);
-        reconfigureBaseImageLayer(nextRaster);
+        reconfigureBaseImageLayer(nextRaster, currentView);
         currentView.setRasters(new RasterDataNode[]{nextRaster});
         currentView.setImageInfo(imageInfoClone.createDeepCopy());
         VisatApp.getApp().getSelectedInternalFrame().setTitle(nextRaster.getDisplayName());
     }
 
-    private void reconfigureBaseImageLayer(RasterDataNode rasterDataNode) {
+    private void reconfigureBaseImageLayer(RasterDataNode rasterDataNode, ProductSceneView sceneView) {
         final Layer rootLayer = currentView.getRootLayer();
         final ImageLayer baseImageLayer = (ImageLayer) LayerUtils.getChildLayerById(rootLayer,
                                                                                     ProductSceneView.BASE_IMAGE_LAYER_ID);
         final ImageLayer nextLayer = (ImageLayer) LayerUtils.getChildLayerById(rootLayer, NEXT_IMAGE_LAYER);
+        MultiLevelSource baseImageLevelSource;
         if (nextLayer != null) {
             final List<Layer> children = rootLayer.getChildren();
             final int baseIndex = children.indexOf(baseImageLayer);
@@ -120,31 +123,31 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
             nextLayer.setName(rasterDataNode.getDisplayName());
             children.add(baseIndex, nextLayer);
             nextLayer.setTransparency(0);
+            baseImageLevelSource = nextLayer.getMultiLevelSource();
         } else {
             // todo use a real ProgressMonitor
-            MultiLevelSource multiLevelSource = BandImageMultiLevelSource.create(rasterDataNode, ProgressMonitor.NULL);
+            baseImageLevelSource = BandImageMultiLevelSource.create(rasterDataNode, ProgressMonitor.NULL);
 
-            baseImageLayer.setMultiLevelSource(multiLevelSource);
+            baseImageLayer.setMultiLevelSource(baseImageLevelSource);
             baseImageLayer.setTransparency(0);
         }
+        configureSceneView(sceneView, baseImageLevelSource);
+    }
 
-        // TODO why this code  ????
-//        baseImageLayer.getConfiguration().setValue(RasterImageLayerType.PROPERTY_NAME_RASTER, rasterDataNode);
-//        baseImageLayer.getConfiguration().setValue(ImageLayer.PROPERTY_NAME_MULTI_LEVEL_SOURCE, multiLevelSource);
-//        baseImageLayer.setName(rasterDataNode.getDisplayName());
-//        try {
-//            // todo add comment: what does this code do?
-//            final Field sceneImageField = ProductSceneView.class.getDeclaredField("sceneImage");
-//            sceneImageField.setAccessible(true);
-//            final Object sceneImage = sceneImageField.get(sceneView);
-//            final Field multiLevelSourceField = ProductSceneImage.class.getDeclaredField("bandImageMultiLevelSource");
-//            multiLevelSourceField.setAccessible(true);
-//            multiLevelSourceField.set(sceneImage, multiLevelSource);
-//        } catch (NoSuchFieldException e) {
-//            e.printStackTrace();
-//        } catch (IllegalAccessException e) {
-//            e.printStackTrace();
-//        }
+    // This is needed because sceneView must return correct ImageInfo
+    private void configureSceneView(ProductSceneView sceneView, MultiLevelSource multiLevelSource) {
+        try {
+        final Field sceneImageField = ProductSceneView.class.getDeclaredField("sceneImage");
+        sceneImageField.setAccessible(true);
+        final Object sceneImage = sceneImageField.get(sceneView);
+        final Field multiLevelSourceField = ProductSceneImage.class.getDeclaredField("bandImageMultiLevelSource");
+        multiLevelSourceField.setAccessible(true);
+        multiLevelSourceField.set(sceneImage, multiLevelSource);
+    } catch (NoSuchFieldException e) {
+        e.printStackTrace();
+    } catch (IllegalAccessException e) {
+        e.printStackTrace();
+    }
     }
 
     private void changeTransparency(RasterDataNode nextRaster, float transparency) {
