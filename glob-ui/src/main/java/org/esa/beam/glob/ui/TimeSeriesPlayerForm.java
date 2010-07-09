@@ -102,8 +102,8 @@ class TimeSeriesPlayerForm extends JPanel {
         this.add(buttonsPanel);
     }
 
-    List<Band> getBandList(RasterDataNode raster) {
-        final String variableName = AbstractTimeSeries.rasterToVariableName(raster.getName());
+    List<Band> getBandList(final String rasterName) {
+        final String variableName = AbstractTimeSeries.rasterToVariableName(rasterName);
         return timeSeries.getBandsForVariable(variableName);
     }
 
@@ -130,7 +130,7 @@ class TimeSeriesPlayerForm extends JPanel {
 
     void configureTimeSlider(RasterDataNode raster) {
         if (timeSeries != null) {
-            List<Band> bandList = getBandList(raster);
+            List<Band> bandList = getBandList(raster.getName());
 
             timeSlider.setMinimum(0);
             final int nodeCount = bandList.size();
@@ -185,7 +185,7 @@ class TimeSeriesPlayerForm extends JPanel {
             @Override
             public void stateChanged(ChangeEvent e) {
                 final int index = timeSlider.getValue() / stepsPerTimespan;
-                final List<Band> bandList = getBandList(currentView.getRaster());
+                final List<Band> bandList = getBandList(currentView.getRaster().getName());
                 final String labelText = createSliderLabelText(bandList, index);
                 dateLabel.setText("Date: " + labelText);
             }

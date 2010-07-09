@@ -43,6 +43,7 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
     private final SceneViewListener sceneViewListener;
     private final ProductNodeListener productNodeListener;
 
+    private BandImageMultiLevelSource[] imageMultiLevelSources;
     private ProductSceneView currentView;
     private TimeSeriesPlayerForm form;
 
@@ -85,9 +86,18 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
             form.setView(currentView);
             if (currentView != null) {
                 form.setTimeSeries(TimeSeriesMapper.getInstance().getTimeSeries(currentView.getProduct()));
+                final List<Band> bandList = form.getBandList(currentView.getRaster().getName());
+                imageMultiLevelSources = new BandImageMultiLevelSource[bandList.size()];
+                for (int i = 0; i < bandList.size(); i++) {
+                    Band band = bandList.get(i);
+                    imageMultiLevelSources[i] = BandImageMultiLevelSource.create(band, ProgressMonitor.NULL);
+                }
                 currentView.getProduct().addProductNodeListener(productNodeListener);
+                exchangeRasterInProductSceneView(currentView.getRaster());
+                reconfigureBaseImageLayer(currentView);
                 form.configureTimeSlider(currentView.getRaster());
             } else {
+                imageMultiLevelSources = null;
                 form.setTimeSeries(null);
                 form.configureTimeSlider(null);
                 form.getTimer().stop();
@@ -97,79 +107,59 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
 
     // todo (mp) - The following should be done on ProductSceneView.setRasters()
 
-    private void exchangeRasterInProductSceneView(Band nextRaster) {
+    private void exchangeRasterInProductSceneView(RasterDataNode nextRaster) {
         // todo use a real ProgressMonitor
         final RasterDataNode currentRaster = currentView.getRaster();
         final ImageInfo imageInfoClone = (ImageInfo) currentRaster.getImageInfo(ProgressMonitor.NULL).clone();
         nextRaster.setImageInfo(imageInfoClone);
-        reconfigureBaseImageLayer(nextRaster, currentView);
         currentView.setRasters(new RasterDataNode[]{nextRaster});
         currentView.setImageInfo(imageInfoClone.createDeepCopy());
         VisatApp.getApp().getSelectedInternalFrame().setTitle(nextRaster.getDisplayName());
     }
 
-    private void reconfigureBaseImageLayer(RasterDataNode rasterDataNode, ProductSceneView sceneView) {
+    private void reconfigureBaseImageLayer(ProductSceneView sceneView) {
         final Layer rootLayer = currentView.getRootLayer();
         final ImageLayer baseImageLayer = (ImageLayer) LayerUtils.getChildLayerById(rootLayer,
                                                                                     ProductSceneView.BASE_IMAGE_LAYER_ID);
-        final ImageLayer nextLayer = (ImageLayer) LayerUtils.getChildLayerById(rootLayer, NEXT_IMAGE_LAYER);
-        MultiLevelSource baseImageLevelSource;
-        if (nextLayer != null) {
+        final List<Band> bandList = form.getBandList(currentView.getRaster().getName());
+        final Band band = (Band) sceneView.getRaster();
+        int nextIndex = bandList.indexOf(band) + 1;
+        if (nextIndex >= bandList.size()) {
+            nextIndex = 0;
+        }
+
+        if (!(baseImageLayer instanceof BlendImageLayer)) {
+            final Band nextBand = bandList.get(nextIndex);
+            MultiLevelSource nextLevelSource = BandImageMultiLevelSource.create(nextBand, ProgressMonitor.NULL);
+            final BlendImageLayer blendLayer = new BlendImageLayer(baseImageLayer.getMultiLevelSource(),
+                                                                   nextLevelSource);
+
             final List<Layer> children = rootLayer.getChildren();
             final int baseIndex = children.indexOf(baseImageLayer);
             children.remove(baseIndex);
-            children.remove(nextLayer);
-            nextLayer.setId(ProductSceneView.BASE_IMAGE_LAYER_ID);
-            nextLayer.setName(rasterDataNode.getDisplayName());
-            children.add(baseIndex, nextLayer);
-            nextLayer.setTransparency(0);
-            baseImageLevelSource = nextLayer.getMultiLevelSource();
-        } else {
-            // todo use a real ProgressMonitor
-            baseImageLevelSource = BandImageMultiLevelSource.create(rasterDataNode, ProgressMonitor.NULL);
-
-            baseImageLayer.setMultiLevelSource(baseImageLevelSource);
-            baseImageLayer.setTransparency(0);
+            blendLayer.setId(ProductSceneView.BASE_IMAGE_LAYER_ID);
+            blendLayer.setName(band.getDisplayName());
+            blendLayer.setTransparency(0);
+            children.add(baseIndex, blendLayer);
+            configureSceneView(sceneView, blendLayer.getMultiLevelSource());
         }
-        configureSceneView(sceneView, baseImageLevelSource);
     }
 
     // This is needed because sceneView must return correct ImageInfo
+
     private void configureSceneView(ProductSceneView sceneView, MultiLevelSource multiLevelSource) {
         try {
-        final Field sceneImageField = ProductSceneView.class.getDeclaredField("sceneImage");
-        sceneImageField.setAccessible(true);
-        final Object sceneImage = sceneImageField.get(sceneView);
-        final Field multiLevelSourceField = ProductSceneImage.class.getDeclaredField("bandImageMultiLevelSource");
-        multiLevelSourceField.setAccessible(true);
-        multiLevelSourceField.set(sceneImage, multiLevelSource);
-    } catch (NoSuchFieldException e) {
-        e.printStackTrace();
-    } catch (IllegalAccessException e) {
-        e.printStackTrace();
-    }
-    }
-
-    private void changeTransparency(RasterDataNode nextRaster, float transparency) {
-        final Layer rootLayer = currentView.getRootLayer();
-
-        ImageLayer nextImageLayer = (ImageLayer) LayerUtils.getChildLayerById(rootLayer, NEXT_IMAGE_LAYER);
-        if (nextImageLayer == null) {
-            RasterDataNode currentRaster = currentView.getRaster();
-            final ImageInfo imageInfoClone = (ImageInfo) currentRaster.getImageInfo(ProgressMonitor.NULL).clone();
-            nextRaster.setImageInfo(imageInfoClone);
-
-            final BandImageMultiLevelSource multiLevelSource = BandImageMultiLevelSource.create(nextRaster,
-                                                                                                ProgressMonitor.NULL);
-            nextImageLayer = new ImageLayer(multiLevelSource);
-            nextImageLayer.setId(NEXT_IMAGE_LAYER);
-            rootLayer.getChildren().add(nextImageLayer);
+            final Field sceneImageField = ProductSceneView.class.getDeclaredField("sceneImage");
+            sceneImageField.setAccessible(true);
+            final Object sceneImage = sceneImageField.get(sceneView);
+            final Field multiLevelSourceField = ProductSceneImage.class.getDeclaredField("bandImageMultiLevelSource");
+            multiLevelSourceField.setAccessible(true);
+            multiLevelSourceField.set(sceneImage, multiLevelSource);
+        } catch (NoSuchFieldException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
         }
-
-        final ImageLayer baseImageLayer = (ImageLayer) LayerUtils.getChildLayerById(rootLayer,
-                                                                                    ProductSceneView.BASE_IMAGE_LAYER_ID);
-        nextImageLayer.setTransparency(1 - transparency);
-        baseImageLayer.setTransparency(transparency);
     }
 
     private class SceneViewListener extends InternalFrameAdapter {
@@ -199,28 +189,69 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
 
     private class SliderChangeListener implements ChangeListener {
 
+        private int value;
+
         @Override
         public void stateChanged(ChangeEvent e) {
             if (currentView == null) {
                 return;
             }
             final int currentValue = form.getTimeSlider().getValue();
-            int stepsPerTimespan = form.getStepsPerTimespan();
-            final float transparency = (currentValue % stepsPerTimespan) / (float) stepsPerTimespan;
-            final int currentBandIndex = currentValue / stepsPerTimespan;
-            final int newBandIndex = MathUtils.ceilInt(currentValue / (float) stepsPerTimespan);
+            MultiLevelSource newFirstLevelSource;
+            MultiLevelSource newSecondLevelSource;
+            if (currentView.getBaseImageLayer() instanceof BlendImageLayer) {
+                BlendImageLayer blendLayer = (BlendImageLayer) currentView.getBaseImageLayer();
+                int stepsPerTimespan = form.getStepsPerTimespan();
 
-            final List<Band> bandList = form.getBandList(currentView.getRaster());
-            if (currentBandIndex == newBandIndex) {
-                final Band newRaster = bandList.get(newBandIndex);
-                exchangeRasterInProductSceneView(newRaster);
-                currentView.firePropertyChange(TIME_PROPERTY, -1, newBandIndex);
-            } else {
-                if (bandList.size() > currentBandIndex + 1) {
-                    changeTransparency(bandList.get(currentBandIndex + 1), transparency);
+                final int secondBandIndex;
+                final int firstBandIndex;
+
+                final float transparency = (currentValue % stepsPerTimespan) / (float) stepsPerTimespan;
+                blendLayer.setBlendFactor(transparency);
+
+                if (currentValue == value) {
+                    // nothing has changed -- do nothing
+                    return;
+                } else if (currentValue < value) {
+                    // go backwards in time
+                    value = currentValue;
+                    firstBandIndex = MathUtils.floorInt(currentValue / (float) stepsPerTimespan);
+                    secondBandIndex = currentValue / stepsPerTimespan;
+                    newFirstLevelSource = imageMultiLevelSources[firstBandIndex];
+                    newSecondLevelSource = blendLayer.getMultiLevelSource();
+                } else {
+                    // go forward in time
+                    value = currentValue;
+                    firstBandIndex = currentValue / stepsPerTimespan;
+                    secondBandIndex = MathUtils.ceilInt(currentValue / (float) stepsPerTimespan);
+                    newFirstLevelSource = blendLayer.getSecondMultiLevelSource();
+                    newSecondLevelSource = imageMultiLevelSources[secondBandIndex];
+                }
+
+                if (secondBandIndex == firstBandIndex) {
+                    final List<Band> bandList = form.getBandList(currentView.getRaster().getName());
+                    final BlendImageLayer newBlendLayer = new BlendImageLayer(newFirstLevelSource,
+                                                                              newSecondLevelSource);
+                    newBlendLayer.setName(currentView.getRaster().getDisplayName());
+                    newBlendLayer.setId(ProductSceneView.BASE_IMAGE_LAYER_ID);
+
+                    final List<Layer> children = currentView.getRootLayer().getChildren();
+                    int baseIndex = children.indexOf(blendLayer);
+                    if (baseIndex == -1) {
+                        baseIndex = children.indexOf(newBlendLayer);
+                    }
+//                    children.add(newBlendLayer);
+                    children.set(baseIndex, newBlendLayer);
+                    exchangeRasterInProductSceneView(bandList.get(firstBandIndex));
+
+//                 todo why use view to fire property changes and not time series itself?
+                    currentView.firePropertyChange(TIME_PROPERTY, -1, firstBandIndex);
+                } else {
+                    currentView.getLayerCanvas().repaint();
                 }
             }
         }
+
     }
 
     private class TimeSeriesProductNodeListener extends ProductNodeListenerAdapter {
@@ -229,7 +260,7 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
         public void nodeChanged(ProductNodeEvent event) {
             String propertyName = event.getPropertyName();
             if (propertyName.equals(AbstractTimeSeries.PROPERTY_PRODUCT_LOCATIONS) ||
-                    propertyName.equals(AbstractTimeSeries.PROPERTY_VARIABLE_SELECTION)) {
+                propertyName.equals(AbstractTimeSeries.PROPERTY_VARIABLE_SELECTION)) {
                 form.configureTimeSlider(currentView.getRaster());
             }
         }
