@@ -2,11 +2,14 @@ package org.esa.beam.glob.ui;
 
 import com.bc.ceres.glayer.support.ImageLayer;
 import com.bc.ceres.glevel.MultiLevelSource;
+import com.bc.ceres.glevel.support.DefaultMultiLevelSource;
 import com.bc.ceres.grender.Rendering;
+import org.esa.beam.glevel.BandImageMultiLevelSource;
 
 import java.awt.AlphaComposite;
 import java.awt.Composite;
 import java.awt.Graphics2D;
+import java.awt.geom.AffineTransform;
 import java.awt.image.RenderedImage;
 
 /**
@@ -16,50 +19,64 @@ import java.awt.image.RenderedImage;
  */
 public class BlendImageLayer extends ImageLayer {
 
-    private ImageLayer firstImageLayer;
-    private ImageLayer secondImageLayer;
+    private ImageLayer baseLayer;
+    private ImageLayer blendLayer;
     private float blendFactor;
 
-    public BlendImageLayer(MultiLevelSource firstMultiLevelSource, MultiLevelSource secondMultiLevelSource) {
-        super(firstMultiLevelSource);
+    public BlendImageLayer(MultiLevelSource baseMultiLevelSource, MultiLevelSource blendMultiLevelSource) {
+        super(DefaultMultiLevelSource.NULL);
         blendFactor = 0.0f;
-        firstImageLayer = new ImageLayer(firstMultiLevelSource);
-        secondImageLayer = new ImageLayer(secondMultiLevelSource);
-    }
-
-    public MultiLevelSource getSecondMultiLevelSource() {
-        return secondImageLayer.getMultiLevelSource();
+        baseLayer = new ImageLayer(baseMultiLevelSource);
+        blendLayer = new ImageLayer(blendMultiLevelSource);
     }
 
     public void setBlendFactor(float factor) {
         blendFactor = factor;
     }
 
+    @Override
+    public MultiLevelSource getMultiLevelSource() {
+        return getBaseMultiLevelSource();
+    }
+
+    public BandImageMultiLevelSource getBaseMultiLevelSource() {
+        return (BandImageMultiLevelSource) baseLayer.getMultiLevelSource();
+    }
+
+    @Override
+    public AffineTransform getImageToModelTransform(int level) {
+        return baseLayer.getImageToModelTransform(level);
+    }
+
+    @Override
+    public AffineTransform getModelToImageTransform(int level) {
+        return baseLayer.getModelToImageTransform(level);
+    }
+
     /**
-     * Returns the image of the first layer
+     * Returns the image of the base layer
      */
     @Override
     public RenderedImage getImage(int level) {
-        return firstImageLayer.getImage(level);
+        return baseLayer.getImage(level);
     }
 
 
     @Override
     protected void renderLayer(Rendering rendering) {
         final Graphics2D graphics = rendering.getGraphics();
-//        System.out.println("blendFactor = " + blendFactor);
         final Composite oldComposite = graphics.getComposite();
         try {
             final float layerAlpha = 1 - (float) getTransparency();
-            final float firstLayerAlpha = (1 - blendFactor) * layerAlpha;
-            graphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, firstLayerAlpha));
-            if (firstLayerAlpha != 0) {
-                firstImageLayer.render(rendering);
+            final float baseLayerAlpha = (1 - blendFactor) * layerAlpha;
+            graphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, baseLayerAlpha));
+            if (baseLayerAlpha != 0) {
+                baseLayer.render(rendering);
             }
-            final float secondLayerAlpha = blendFactor * layerAlpha;
-            graphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, secondLayerAlpha));
-            if (secondLayerAlpha != 0) {
-                secondImageLayer.render(rendering);
+            final float blendLayerAlpha = blendFactor * layerAlpha;
+            graphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, blendLayerAlpha));
+            if (blendLayerAlpha != 0) {
+                blendLayer.render(rendering);
             }
         } finally {
             graphics.setComposite(oldComposite);
@@ -68,8 +85,18 @@ public class BlendImageLayer extends ImageLayer {
 
     @Override
     public void regenerate() {
-        // do nothing
-        System.out.printf("");
+        baseLayer.regenerate();
+        blendLayer.regenerate();
+    }
+
+    public void swap(BandImageMultiLevelSource multiLevelSource, boolean forward) {
+        if (forward) {
+            baseLayer = blendLayer;
+            blendLayer = new ImageLayer(multiLevelSource);
+        } else {
+            blendLayer = baseLayer;
+            baseLayer = new ImageLayer(multiLevelSource);
+        }
     }
 
 }

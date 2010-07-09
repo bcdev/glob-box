@@ -38,12 +38,9 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
 
     public static final String TIME_PROPERTY = "timeProperty";
 
-    private static final String NEXT_IMAGE_LAYER = "nextImageLayer";
-
     private final SceneViewListener sceneViewListener;
     private final ProductNodeListener productNodeListener;
 
-    private BandImageMultiLevelSource[] imageMultiLevelSources;
     private ProductSceneView currentView;
     private TimeSeriesPlayerForm form;
 
@@ -86,18 +83,11 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
             form.setView(currentView);
             if (currentView != null) {
                 form.setTimeSeries(TimeSeriesMapper.getInstance().getTimeSeries(currentView.getProduct()));
-                final List<Band> bandList = form.getBandList(currentView.getRaster().getName());
-                imageMultiLevelSources = new BandImageMultiLevelSource[bandList.size()];
-                for (int i = 0; i < bandList.size(); i++) {
-                    Band band = bandList.get(i);
-                    imageMultiLevelSources[i] = BandImageMultiLevelSource.create(band, ProgressMonitor.NULL);
-                }
                 currentView.getProduct().addProductNodeListener(productNodeListener);
                 exchangeRasterInProductSceneView(currentView.getRaster());
                 reconfigureBaseImageLayer(currentView);
                 form.configureTimeSlider(currentView.getRaster());
             } else {
-                imageMultiLevelSources = null;
                 form.setTimeSeries(null);
                 form.configureTimeSlider(null);
                 form.getTimer().stop();
@@ -141,13 +131,12 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
             blendLayer.setName(band.getDisplayName());
             blendLayer.setTransparency(0);
             children.add(baseIndex, blendLayer);
-            configureSceneView(sceneView, blendLayer.getMultiLevelSource());
+            configureSceneView(sceneView, blendLayer.getBaseMultiLevelSource());
         }
     }
 
-    // This is needed because sceneView must return correct ImageInfo
-
     private void configureSceneView(ProductSceneView sceneView, MultiLevelSource multiLevelSource) {
+        // This is needed because sceneView must return correct ImageInfo
         try {
             final Field sceneImageField = ProductSceneView.class.getDeclaredField("sceneImage");
             sceneImageField.setAccessible(true);
@@ -197,8 +186,8 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
                 return;
             }
             final int currentValue = form.getTimeSlider().getValue();
-            MultiLevelSource newFirstLevelSource;
-            MultiLevelSource newSecondLevelSource;
+            BandImageMultiLevelSource newSource;
+            BandImageMultiLevelSource newSecondLevelSource;
             if (currentView.getBaseImageLayer() instanceof BlendImageLayer) {
                 BlendImageLayer blendLayer = (BlendImageLayer) currentView.getBaseImageLayer();
                 int stepsPerTimespan = form.getStepsPerTimespan();
@@ -208,42 +197,34 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
 
                 final float transparency = (currentValue % stepsPerTimespan) / (float) stepsPerTimespan;
                 blendLayer.setBlendFactor(transparency);
-
+                boolean forward = currentValue > value;
+                final List<Band> bandList = form.getBandList(currentView.getRaster().getName());
                 if (currentValue == value) {
                     // nothing has changed -- do nothing
                     return;
-                } else if (currentValue < value) {
+                } else if (!forward) {
                     // go backwards in time
                     value = currentValue;
                     firstBandIndex = MathUtils.floorInt(currentValue / (float) stepsPerTimespan);
                     secondBandIndex = currentValue / stepsPerTimespan;
-                    newFirstLevelSource = imageMultiLevelSources[firstBandIndex];
-                    newSecondLevelSource = blendLayer.getMultiLevelSource();
+                    newSource = BandImageMultiLevelSource.create(bandList.get(firstBandIndex), ProgressMonitor.NULL);
                 } else {
                     // go forward in time
                     value = currentValue;
                     firstBandIndex = currentValue / stepsPerTimespan;
                     secondBandIndex = MathUtils.ceilInt(currentValue / (float) stepsPerTimespan);
-                    newFirstLevelSource = blendLayer.getSecondMultiLevelSource();
-                    newSecondLevelSource = imageMultiLevelSources[secondBandIndex];
+                    newSource = BandImageMultiLevelSource.create(bandList.get(secondBandIndex), ProgressMonitor.NULL);
                 }
 
                 if (secondBandIndex == firstBandIndex) {
-                    final List<Band> bandList = form.getBandList(currentView.getRaster().getName());
-                    final BlendImageLayer newBlendLayer = new BlendImageLayer(newFirstLevelSource,
-                                                                              newSecondLevelSource);
-                    newBlendLayer.setName(currentView.getRaster().getDisplayName());
-                    newBlendLayer.setId(ProductSceneView.BASE_IMAGE_LAYER_ID);
 
-                    final List<Layer> children = currentView.getRootLayer().getChildren();
-                    int baseIndex = children.indexOf(blendLayer);
-                    if (baseIndex == -1) {
-                        baseIndex = children.indexOf(newBlendLayer);
-                    }
-//                    children.add(newBlendLayer);
-                    children.set(baseIndex, newBlendLayer);
-                    exchangeRasterInProductSceneView(bandList.get(firstBandIndex));
+                    exchangeRasterInProductSceneView(bandList.get(forward ? firstBandIndex : secondBandIndex));
+                    final BandImageMultiLevelSource multiLevelSource = blendLayer.getBaseMultiLevelSource();
+                    newSource.setImageInfo(multiLevelSource.getImageInfo().createDeepCopy());
+                    blendLayer.swap(newSource, forward);
 
+                    configureSceneView(currentView, blendLayer.getBaseMultiLevelSource());
+                    blendLayer.setName(currentView.getRaster().getDisplayName());
 //                 todo why use view to fire property changes and not time series itself?
                     currentView.firePropertyChange(TIME_PROPERTY, -1, firstBandIndex);
                 } else {
