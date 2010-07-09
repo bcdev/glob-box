@@ -13,10 +13,14 @@ import org.opengis.referencing.operation.Projection;
 
 import java.awt.geom.Point2D;
 
+import static java.lang.Math.*;
+
 /**
  * Javadocs describing the projection
  */
 public class Sinusoidal extends MapProjection {
+
+    private static final double HALF_PI = PI/2;
 
     /**
      */
@@ -28,7 +32,7 @@ public class Sinusoidal extends MapProjection {
         static final ParameterDescriptorGroup PARAMETERS = createDescriptorGroup(new NamedIdentifier[]{
                 new NamedIdentifier(Citations.OGC, "Sinusoidal"),
                 new NamedIdentifier(Citations.GEOTOOLS, "CT_Sinusoidal"),
-                new NamedIdentifier(Citations.ESRI, "Sinusoidal")
+                new NamedIdentifier(Citations.ESRI, "Sinusoidal"),
         }, new ParameterDescriptor[]{
                 SEMI_MAJOR, SEMI_MINOR,
                 CENTRAL_MERIDIAN, SCALE_FACTOR,
@@ -50,6 +54,7 @@ public class Sinusoidal extends MapProjection {
             return PseudoCylindricalProjection.class;
         }
 
+
         /**
          * Create a new map projection based on the parameters.
          */
@@ -65,7 +70,8 @@ public class Sinusoidal extends MapProjection {
      *
      * @param parameters The parameter values in standard units.
      *
-     * @throws org.opengis.parameter.ParameterNotFoundException if a mandatory parameter is missing.
+     * @throws org.opengis.parameter.ParameterNotFoundException
+     *          if a mandatory parameter is missing.
      */
     protected Sinusoidal(final ParameterValueGroup parameters)
             throws ParameterNotFoundException {
@@ -76,6 +82,7 @@ public class Sinusoidal extends MapProjection {
     public ParameterDescriptorGroup getParameterDescriptors() {
         return Provider.PARAMETERS;
     }
+
     /**
      * Transforms the specified (<var>&lambda;</var>,<var>&phi;</var>) coordinates
      * (units in radians) and stores the result in {@code ptDst} (linear distance
@@ -83,7 +90,7 @@ public class Sinusoidal extends MapProjection {
      */
     @Override
     protected Point2D transformNormalized(double x, double y, final Point2D ptDst) throws ProjectionException {
-        double mapX = x * Math.cos(y);
+        double mapX = x * cos(y);
         double mapY = y;
 
         if (ptDst != null) {
@@ -100,8 +107,22 @@ public class Sinusoidal extends MapProjection {
     @Override
     protected Point2D inverseTransformNormalized(double x, double y, final Point2D ptDst)
             throws ProjectionException {
-        double lon = x / Math.cos(y);
+        double lon = x / cos(y);
+        if (lon < -PI) {
+            lon = -PI;
+        }
+        if (lon > +PI) {
+            lon = +PI;
+        }
         double lat = y;
+        if (lat < -HALF_PI) {
+            lon = 0;
+            lat = -HALF_PI;
+        }
+        if (lat > +HALF_PI) {
+            lon = 0;
+            lat = +HALF_PI;
+        }
         if (ptDst != null) {
             ptDst.setLocation(lon, lat);
             return ptDst;
