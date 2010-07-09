@@ -7,6 +7,7 @@ import com.bc.ceres.glayer.support.LayerUtils;
 import com.bc.ceres.glevel.MultiLevelSource;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.ImageInfo;
+import org.esa.beam.framework.datamodel.ProductNode;
 import org.esa.beam.framework.datamodel.ProductNodeEvent;
 import org.esa.beam.framework.datamodel.ProductNodeListener;
 import org.esa.beam.framework.datamodel.ProductNodeListenerAdapter;
@@ -100,7 +101,7 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
     private void exchangeRasterInProductSceneView(RasterDataNode nextRaster) {
         // todo use a real ProgressMonitor
         final RasterDataNode currentRaster = currentView.getRaster();
-        final ImageInfo imageInfoClone = (ImageInfo) currentRaster.getImageInfo(ProgressMonitor.NULL).clone();
+        final ImageInfo imageInfoClone = currentRaster.getImageInfo(ProgressMonitor.NULL).createDeepCopy();
         nextRaster.setImageInfo(imageInfoClone);
         currentView.setRasters(new RasterDataNode[]{nextRaster});
         currentView.setImageInfo(imageInfoClone.createDeepCopy());
@@ -187,14 +188,9 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
             }
             final int currentValue = form.getTimeSlider().getValue();
             BandImageMultiLevelSource newSource;
-            BandImageMultiLevelSource newSecondLevelSource;
             if (currentView.getBaseImageLayer() instanceof BlendImageLayer) {
                 BlendImageLayer blendLayer = (BlendImageLayer) currentView.getBaseImageLayer();
                 int stepsPerTimespan = form.getStepsPerTimespan();
-
-                final int secondBandIndex;
-                final int firstBandIndex;
-
                 final float transparency = (currentValue % stepsPerTimespan) / (float) stepsPerTimespan;
                 blendLayer.setBlendFactor(transparency);
                 boolean forward = currentValue > value;
@@ -202,25 +198,20 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
                 if (currentValue == value) {
                     // nothing has changed -- do nothing
                     return;
-                } else if (!forward) {
+                }
+                value = currentValue;
+                final int firstBandIndex = MathUtils.floorInt(currentValue / (float) stepsPerTimespan);
+                final int secondBandIndex = MathUtils.ceilInt(currentValue / (float) stepsPerTimespan);
+                if (!forward) {
                     // go backwards in time
-                    value = currentValue;
-                    firstBandIndex = MathUtils.floorInt(currentValue / (float) stepsPerTimespan);
-                    secondBandIndex = currentValue / stepsPerTimespan;
                     newSource = BandImageMultiLevelSource.create(bandList.get(firstBandIndex), ProgressMonitor.NULL);
                 } else {
                     // go forward in time
-                    value = currentValue;
-                    firstBandIndex = currentValue / stepsPerTimespan;
-                    secondBandIndex = MathUtils.ceilInt(currentValue / (float) stepsPerTimespan);
                     newSource = BandImageMultiLevelSource.create(bandList.get(secondBandIndex), ProgressMonitor.NULL);
                 }
-
                 if (secondBandIndex == firstBandIndex) {
 
                     exchangeRasterInProductSceneView(bandList.get(forward ? firstBandIndex : secondBandIndex));
-                    final BandImageMultiLevelSource multiLevelSource = blendLayer.getBaseMultiLevelSource();
-                    newSource.setImageInfo(multiLevelSource.getImageInfo().createDeepCopy());
                     blendLayer.swap(newSource, forward);
 
                     configureSceneView(currentView, blendLayer.getBaseMultiLevelSource());
@@ -237,12 +228,45 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
 
     private class TimeSeriesProductNodeListener extends ProductNodeListenerAdapter {
 
+        private volatile boolean adjustingImageInfos;
+
         @Override
         public void nodeChanged(ProductNodeEvent event) {
             String propertyName = event.getPropertyName();
             if (propertyName.equals(AbstractTimeSeries.PROPERTY_PRODUCT_LOCATIONS) ||
                 propertyName.equals(AbstractTimeSeries.PROPERTY_VARIABLE_SELECTION)) {
                 form.configureTimeSlider(currentView.getRaster());
+            }
+            if (propertyName.equals(RasterDataNode.PROPERTY_NAME_IMAGE_INFO)) {
+                adjustImageInfos(event);
+            }
+        }
+
+        private void adjustImageInfos(ProductNodeEvent event) {
+            final ProductNode node = event.getSourceNode();
+            if (node instanceof RasterDataNode) {
+                if (!adjustingImageInfos) {
+                    RasterDataNode rasterDataNode = (RasterDataNode) node;
+                    final TimeSeriesMapper tsMapper = TimeSeriesMapper.getInstance();
+                    final AbstractTimeSeries timeSeries = tsMapper.getTimeSeries(rasterDataNode.getProduct());
+                    final List<Band> bandList = timeSeries.getBandsForVariable(
+                            AbstractTimeSeries.rasterToVariableName(rasterDataNode.getName()));
+                    final ImageInfo imageInfo = rasterDataNode.getImageInfo();
+                    if (imageInfo != null) {
+                        adjustingImageInfos = true;
+                        for (Band band : bandList) {
+                            if (band != rasterDataNode) {
+                                band.setImageInfo(imageInfo.createDeepCopy());
+                            }
+                        }
+                        final ImageLayer baseImageLayer = currentView.getBaseImageLayer();
+                        if (baseImageLayer instanceof BlendImageLayer) {
+                            BlendImageLayer blendLayer = (BlendImageLayer) baseImageLayer;
+                            blendLayer.getBlendMultiLevelSource().setImageInfo(imageInfo.createDeepCopy());
+                        }
+                    }
+                    adjustingImageInfos = false;
+                }
             }
         }
     }

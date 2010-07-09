@@ -43,6 +43,10 @@ public class BlendImageLayer extends ImageLayer {
         return (BandImageMultiLevelSource) baseLayer.getMultiLevelSource();
     }
 
+    public BandImageMultiLevelSource getBlendMultiLevelSource() {
+        return (BandImageMultiLevelSource) blendLayer.getMultiLevelSource();
+    }
+
     @Override
     public AffineTransform getImageToModelTransform(int level) {
         return baseLayer.getImageToModelTransform(level);
