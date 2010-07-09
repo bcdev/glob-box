@@ -3,8 +3,9 @@ package org.esa.beam.glob.export.text;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.swing.progress.ProgressMonitorSwingWorker;
 import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.PixelPos;
+import org.esa.beam.framework.datamodel.Placemark;
 import org.esa.beam.framework.datamodel.PlacemarkGroup;
+import org.esa.beam.framework.datamodel.ProductNode;
 import org.esa.beam.framework.ui.product.ProductSceneView;
 import org.esa.beam.glob.core.TimeSeriesMapper;
 import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
@@ -28,7 +29,7 @@ import java.util.List;
 public class ExportTimeBasedText extends ProgressMonitorSwingWorker<Void, Void> {
 
     private static final String EXPORT_DIR_PREFERENCES_KEY = "user.export.dir";
-    BeamFileFilter kmzFileFilter = new BeamFileFilter("CSV", "csv", "Comma separated values");
+    BeamFileFilter csvFileFilter = new BeamFileFilter("CSV", "csv", "Comma separated values");
 
     public ExportTimeBasedText(Component parentComponent, String title) {
         super(parentComponent, title);
@@ -46,11 +47,16 @@ public class ExportTimeBasedText extends ProgressMonitorSwingWorker<Void, Void> 
             for (String timeVariable : timeVariables) {
                 bandList.add(timeSeries.getBandsForVariable(timeVariable));
             }
-            List<PixelPos> positions = getPositions();
-            if (positions.isEmpty()) {
+            final PlacemarkGroup pinGroup = view.getProduct().getPinGroup();
+            final ProductNode[] placemarkArray = pinGroup.toArray();
+            if (placemarkArray.length == 0) {
                 app.showErrorDialog("No pins specified", "There are no pins, which could be exported.");
             } else {
-                CsvExporter exporter = new TimeCsvExporter(bandList, positions, fetchOutputFile());
+                List<Placemark> placemarks = new ArrayList<Placemark>();
+                for (ProductNode placemark : placemarkArray) {
+                    placemarks.add((Placemark) placemark);
+                }
+                CsvExporter exporter = new TimeCsvExporter(bandList, placemarks, fetchOutputFile());
                 exporter.exportCsv(pm);
             }
         } else {
@@ -58,16 +64,6 @@ public class ExportTimeBasedText extends ProgressMonitorSwingWorker<Void, Void> 
                                                             "which could be exported.");
         }
         return null;
-    }
-
-    private List<PixelPos> getPositions() {
-        final ArrayList<PixelPos> positions = new ArrayList<PixelPos>();
-        final ProductSceneView view = VisatApp.getApp().getSelectedProductSceneView();
-        final PlacemarkGroup pinGroup = view.getProduct().getPinGroup();
-        for (int i = 0; i < pinGroup.getNodeCount(); i++) {
-            positions.add(pinGroup.get(i).getPixelPos());
-        }
-        return positions;
     }
 
     private File fetchOutputFile() {
@@ -80,7 +76,7 @@ public class ExportTimeBasedText extends ProgressMonitorSwingWorker<Void, Void> 
         final BeamFileChooser fileChooser = new BeamFileChooser();
 //        HelpSys.enableHelpKey(fileChooser, getHelpId());
         fileChooser.setCurrentDirectory(currentDir);
-        fileChooser.addChoosableFileFilter(kmzFileFilter);
+        fileChooser.addChoosableFileFilter(csvFileFilter);
         fileChooser.setAcceptAllFileFilterUsed(false);
 
         fileChooser.setDialogTitle(visatApp.getAppName() + " - " + "Export time series as CSV file..."); /* I18N */

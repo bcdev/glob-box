@@ -136,6 +136,8 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
         }
     }
 
+    // todo (mp) - The following should be done on ProductSceneView.setRasters()
+
     private void configureSceneView(ProductSceneView sceneView, MultiLevelSource multiLevelSource) {
         // This is needed because sceneView must return correct ImageInfo
         try {

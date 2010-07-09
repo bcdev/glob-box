@@ -8,6 +8,7 @@ import org.esa.beam.framework.ui.UIUtils;
 import org.esa.beam.framework.ui.product.ProductSceneView;
 import org.esa.beam.framework.ui.tool.ToolButtonFactory;
 import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
+import org.esa.beam.glob.export.animations.AnimatedGifExport;
 
 import javax.swing.AbstractButton;
 import javax.swing.ImageIcon;
@@ -43,6 +44,7 @@ class TimeSeriesPlayerForm extends JPanel {
     private final ImageIcon repeatIcon = UIUtils.loadImageIcon("icons/Repeat24.gif");
     private final ImageIcon minusIcon = UIUtils.loadImageIcon("icons/Remove16.png");
     private final ImageIcon plusIcon = UIUtils.loadImageIcon("icons/Add16.png");
+    private final ImageIcon exportIcon = UIUtils.loadImageIcon("icons/Export24.gif");
 
     private JSlider timeSlider;
     private AbstractButton playButton;
@@ -56,6 +58,7 @@ class TimeSeriesPlayerForm extends JPanel {
     private AbstractButton repeatButton;
     private AbstractButton minusButton;
     private AbstractButton plusButton;
+    private AbstractButton exportButton;
 
     private int stepsPerTimespan = 1;
     private int timerDelay = 1250;
@@ -81,6 +84,7 @@ class TimeSeriesPlayerForm extends JPanel {
         speedSlider = createSpeedSlider();
         speedUnit = new JLabel();
         plusButton = createPlusButton();
+        exportButton = createExportButton();
 
         updateSpeedUnit();
         setUIEnabled(false);
@@ -96,6 +100,8 @@ class TimeSeriesPlayerForm extends JPanel {
         buttonsPanel.add(speedSlider);
         buttonsPanel.add(plusButton);
         buttonsPanel.add(speedUnit);
+        buttonsPanel.add(new JLabel("           "));
+        buttonsPanel.add(exportButton);
 
         this.add(dateLabel);
         this.add(timeSlider);
@@ -333,6 +339,22 @@ class TimeSeriesPlayerForm extends JPanel {
         return plusButton;
     }
 
+    private AbstractButton createExportButton() {
+        final AbstractButton exportButton = ToolButtonFactory.createButton(exportIcon, false);
+        exportButton.setToolTipText("Export as animated gif");
+        exportButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                final AnimatedGifExport export = new AnimatedGifExport(TimeSeriesPlayerForm.this,
+                                                                       "Export time series as animated gif");
+                final String varName = AbstractTimeSeries.rasterToVariableName(currentView.getRaster().getName());
+                export.createFrames(timeSeries.getBandsForVariable(varName));
+                export.executeWithBlocking();
+            }
+        });
+        return exportButton;
+    }
+
     private void setUIEnabled(boolean enable) {
         dateLabel.setEnabled(enable);
         timeSlider.setPaintLabels(enable);
@@ -346,6 +368,7 @@ class TimeSeriesPlayerForm extends JPanel {
         speedSlider.setEnabled(enable);
         speedUnit.setEnabled(enable);
         plusButton.setEnabled(enable);
+        exportButton.setEnabled(enable);
     }
 
     private int calculateTimerDelay() {

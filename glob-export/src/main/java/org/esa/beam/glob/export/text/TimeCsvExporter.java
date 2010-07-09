@@ -4,6 +4,7 @@ import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.framework.datamodel.PixelPos;
+import org.esa.beam.framework.datamodel.Placemark;
 import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
 
 import java.io.File;
@@ -19,19 +20,53 @@ import java.util.List;
  */
 public class TimeCsvExporter extends CsvExporter {
 
-    public TimeCsvExporter(List<List<Band>> rasterList, List<PixelPos> positions, File outputFile) {
-        super(rasterList, positions, outputFile);
-        forExcel = true;
+    List<List<Band>> variablesList;
+    List<Placemark> pins;
+    int level;
+    boolean exportImageCoords = true;
+    boolean exportLonLat = true;
+    boolean exportUnit = true;
+
+    public TimeCsvExporter(List<List<Band>> rasterList, List<Placemark> pins, File outputFile) {
+        super(outputFile);
+        this.variablesList = rasterList;
+        this.pins = pins;
+        this.level = 0;
+    }
+
+    void setUpHeader() {
+        if (!variablesList.isEmpty()) {
+
+        }
+        header.add("GlobToolbox pin time series export table");
+        header.add("");
+        header.add("Product:\t" + resolveProductName());
+        header.add("Created on:\t" + new Date());
+    }
+
+    private String resolveProductName() {
+        for (List<Band> bandList : variablesList) {
+            if (!bandList.isEmpty()) {
+                for (Band band : bandList) {
+                    if (band != null) {
+                        return band.getProduct().getName();
+                    }
+                }
+            }
+        }
+        return "Time Series Product";
     }
 
     @Override
     void setUpColumns() {
-        columns.add("Pin");
+        columns.add("Name");
         if (exportImageCoords) {
-            columns.add("Image position (x | y)");
+            columns.add("X");
+            columns.add("Y");
         }
-        if (exportLatLon) {
-            columns.add("Geo position (lat | lon)");
+        if (exportLonLat) {
+            columns.add("Lon");
+            columns.add("Lat");
         }
         columns.add("Variable");
         if (exportUnit) {
@@ -53,13 +88,11 @@ public class TimeCsvExporter extends CsvExporter {
 
     @Override
     void setUpRows(ProgressMonitor pm) {
-        int index = 0;
-        pm.beginTask("Exporting pin data as csv-file...", positions.size());
-        for (PixelPos pixelPos : positions) {
-            index++;
+        pm.beginTask("Exporting pin data as csv-file...", pins.size());
+        for (Placemark pin : pins) {
             for (List<Band> bandList : variablesList) {
                 if (!bandList.isEmpty()) {
-                    rows.add(setUpRow(pixelPos, bandList, index));
+                    rows.add(setUpRow(pin, bandList));
                 }
             }
             pm.worked(1);
@@ -67,26 +100,17 @@ public class TimeCsvExporter extends CsvExporter {
         pm.done();
     }
 
-    private String setUpRow(PixelPos pixelPos, List<Band> bandList, int index) {
+    private String setUpRow(Placemark pin, List<Band> bandList) {
         Band refBand = bandList.get(0);
         final StringBuilder row = new StringBuilder();
-        row.append("Pin").append(index);
+        row.append(pin.getLabel());
         row.append(getSeparator());
+        PixelPos pixelPos = pin.getPixelPos();
         if (exportImageCoords) {
-            DecimalFormat formatter = new DecimalFormat("0.00");
-            row.append(formatter.format(pixelPos.getX()));
-            row.append(" | ");
-            row.append(formatter.format(pixelPos.getY()));
-            row.append(getSeparator());
+            exportImageCoords(row, pixelPos);
         }
-        if (exportLatLon) {
-            final GeoPos geoPos = new GeoPos();
-            refBand.getGeoCoding().getGeoPos(pixelPos, geoPos);
-            row.append(geoPos.getLatString()).append(" (").append(geoPos.getLat()).append(") ");
-            row.append(" | ");
-            row.append(geoPos.getLonString()).append(" (").append(geoPos.getLon()).append(") ");
-            row.append(getSeparator());
-
+        if (exportLonLat) {
+            exportLatLon(refBand, row, pixelPos);
         }
         row.append(AbstractTimeSeries.rasterToVariableName(refBand.getName()));
         row.append(getSeparator());
@@ -104,4 +128,25 @@ public class TimeCsvExporter extends CsvExporter {
         return row.toString();
     }
 
+    private void exportLatLon(Band refBand, StringBuilder row, PixelPos pixelPos) {
+        final GeoPos geoPos = new GeoPos();
+        refBand.getGeoCoding().getGeoPos(pixelPos, geoPos);
+        row.append(geoPos.getLon());
+        row.append(getSeparator());
+        row.append(geoPos.getLat());
+        row.append(getSeparator());
+    }
+
+    private void exportImageCoords(StringBuilder row, PixelPos pixelPos) {
+        DecimalFormat formatter = new DecimalFormat("0.000");
+        row.append(formatter.format(pixelPos.getX()));
+        row.append(getSeparator());
+        row.append(formatter.format(pixelPos.getY()));
+        row.append(getSeparator());
+    }
+
+    @Override
+    String getSeparator() {
+        return "\t";
+    }
 }

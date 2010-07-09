@@ -1,8 +1,6 @@
 package org.esa.beam.glob.export.text;
 
 import com.bc.ceres.core.ProgressMonitor;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.util.Debug;
 import org.esa.beam.visat.VisatApp;
@@ -25,36 +23,29 @@ import java.util.List;
  */
 public abstract class CsvExporter {
 
+    List<String> header;
     List<String> columns;
     List<String> rows;
-    List<List<Band>> variablesList;
+
     File outputFile;
-    int level;
 
-    boolean forExcel = false;
-    boolean exportImageCoords = true;
-    boolean exportLatLon = true;
-    boolean exportUnit = true;
-    List<PixelPos> positions;
-
-    public CsvExporter(List<List<Band>> variablesList, List<PixelPos> positions, File outputFile) {
-        this(variablesList, positions, outputFile, 0);
-    }
-
-    public CsvExporter(List<List<Band>> variablesList, List<PixelPos> positions, File outputFile, int level) {
-        this.variablesList = variablesList;
-        this.positions = positions;
+    public CsvExporter(File outputFile) {
         this.outputFile = outputFile;
-        this.level = level;
+        this.header = new ArrayList<String>();
         this.columns = new ArrayList<String>();
         this.rows = new ArrayList<String>();
     }
 
     void exportCsv(ProgressMonitor pm) {
+        setUpHeader();
         setUpColumns();
         setUpRows(pm);
         StringBuilder builder = new StringBuilder();
         String sep = getSeparator();
+        for (String headerString : header) {
+            builder.append("#").append(headerString).append("\n");
+        }
+        builder.append("\n");
         for (int i = 0; i < columns.size(); i++) {
             String column = columns.get(i);
             builder.append(column);
@@ -92,15 +83,15 @@ public abstract class CsvExporter {
         }
     }
 
+    abstract void setUpHeader();
+
     abstract void setUpColumns();
 
     abstract void setUpRows(ProgressMonitor pm);
 
-    String getSeparator() {
-        return forExcel ? ";" : ",";
-    }
+    abstract String getSeparator();
 
-    double getValue(RasterDataNode raster, int pixelX, int pixelY, int currentLevel) {
+    static double getValue(RasterDataNode raster, int pixelX, int pixelY, int currentLevel) {
         final RenderedImage image = raster.getGeophysicalImage().getImage(currentLevel);
         final Rectangle pixelRect = new Rectangle(pixelX, pixelY, 1, 1);
         final Raster data = image.getData(pixelRect);
