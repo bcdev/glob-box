@@ -1,6 +1,5 @@
 package org.esa.beam.glob.core.timeseries.datamodel;
 
-import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.DefaultTimeCoding;
 import org.esa.beam.framework.datamodel.MetadataAttribute;
@@ -15,10 +14,10 @@ import org.esa.beam.util.StringUtils;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * User: Thomas Storm
@@ -28,12 +27,13 @@ import java.util.Map;
 class TimeSeriesImpl extends AbstractTimeSeries {
 
     private Product tsProduct;
-    private List<Product> productList;
+    private List<ProductLocation> productLocationList;
     private Map<String, Product> productTimeMap;
 
     TimeSeriesImpl(Product tsProduct) {
         init(tsProduct);
-        handleProductLocations(getProductLocations(), false);
+        productLocationList = getProductLocations();
+        handleProductLocations(false);
         setSourceImages();
         fixBandTimeCodings();
         updateAutogrouping();
@@ -58,7 +58,8 @@ class TimeSeriesImpl extends AbstractTimeSeries {
 
     TimeSeriesImpl(Product tsProduct, List<ProductLocation> productLocations, List<String> variableNames) {
         init(tsProduct);
-        handleProductLocations(productLocations, true);
+        productLocationList = productLocations;
+        handleProductLocations(true);
         for (String variable : variableNames) {
             setVariableSelected(variable, true);
         }
@@ -66,14 +67,8 @@ class TimeSeriesImpl extends AbstractTimeSeries {
 
     private void init(Product product) {
         this.tsProduct = product;
-        productList = new ArrayList<Product>();
         productTimeMap = new HashMap<String, Product>();
         createTimeSeriesMetadataStructure(product);
-    }
-
-    @Override
-    public List<Product> getProducts() {
-        return Collections.unmodifiableList(productList);
     }
 
     public Band getBand(String destBandName) {
@@ -122,22 +117,24 @@ class TimeSeriesImpl extends AbstractTimeSeries {
 
     public void addProductLocation(ProductLocationType type, String path) {
         ProductLocation location = new ProductLocation(type, path);
-        addProductLocationMetadata(location);
-        List<String> variables = getTimeVariables();
-        for (Product product : location.findProducts(ProgressMonitor.NULL)) {
-            if (product.getTimeCoding() != null) {
-                addToVariableList(product);
-                storeProductInternally(product);
-                for (String variable : variables) {
-                    if (isVariableSelected(variable)) {
-                        addSpecifiedBandOfGivenProduct(variable, product);
+        if (!productLocationList.contains(location)) {
+            addProductLocationMetadata(location);
+            List<String> variables = getTimeVariables();
+            for (Product product : location.getProducts()) {
+                if (product.getTimeCoding() != null && product.getTimeCoding().getStartTime() != null) {
+                    addToVariableList(product);
+                    productTimeMap.put(formatTimeString(product), product);
+                    for (String variable : variables) {
+                        if (isVariableSelected(variable)) {
+                            addSpecifiedBandOfGivenProduct(variable, product);
+                        }
                     }
+                } else {
+                    // todo log in gui as well as in console
                 }
-            } else {
-                // todo log in gui as well as in console
             }
+            tsProduct.fireProductNodeChanged(PROPERTY_PRODUCT_LOCATIONS);
         }
-        tsProduct.fireProductNodeChanged(PROPERTY_PRODUCT_LOCATIONS);
     }
 
     public void removeProductLocation(ProductLocation productLocation) {
@@ -155,23 +152,33 @@ class TimeSeriesImpl extends AbstractTimeSeries {
         }
         productLocationsElement.removeElement(removeElem);
         // remove variables for this productLocation
-        updateAutogrouping();
+        updateAutogrouping(); // TODO ???
 
+        List<Product> products = productLocation.getProducts();
+        final Band[] bands = tsProduct.getBands();
+        for (Product product : products) {
+            String timeString = formatTimeString(product);
+            productTimeMap.remove(timeString);
+            for (Band band : bands) {
+                if (band.getName().endsWith(timeString)) {
+                    tsProduct.removeBand(band);
+                }
+            }
+        }
+        productLocation.closeProducts();
+        productLocationList.remove(productLocation);
 
-        //remove from internal model
-        //productList.removeAll( productLocation.findProducts() );   //TODO
-        //productTimeMap remove too
         tsProduct.fireProductNodeChanged( PROPERTY_PRODUCT_LOCATIONS );
     }
 
-    private void handleProductLocations(List<ProductLocation> productLocations, boolean addToMetadata) {
-        for (ProductLocation productLocation : productLocations) {
+    private void handleProductLocations(boolean addToMetadata) {
+        for (ProductLocation productLocation : productLocationList) {
             if (addToMetadata) {
                 addProductLocationMetadata(productLocation);
             }
-            for (Product product : productLocation.findProducts(ProgressMonitor.NULL)) {
-                if (product.getTimeCoding() != null) {
-                    storeProductInternally(product);
+            for (Product product : productLocation.getProducts()) {
+                if (product.getTimeCoding() != null && product.getTimeCoding().getStartTime() != null) {
+                    productTimeMap.put(formatTimeString(product), product);
                     if (addToMetadata) {
                         addToVariableList(product);
                     }
@@ -193,8 +200,10 @@ class TimeSeriesImpl extends AbstractTimeSeries {
             }
         }
         if (selected) {
-            for (Product product : productList) {
-                addSpecifiedBandOfGivenProduct(variableName, product);
+            for (ProductLocation productLocation : productLocationList) {
+                for (Product product : productLocation.getProducts()) {
+                    addSpecifiedBandOfGivenProduct(variableName, product);
+                }
             }
         } else {
             final Band[] bands = tsProduct.getBands();
@@ -233,6 +242,22 @@ class TimeSeriesImpl extends AbstractTimeSeries {
         return bands;
     }
 
+    @Override
+    public List<Band> getBandsForProductLocation(ProductLocation location) {
+        final List<Band> bands = new ArrayList<Band>();
+        List<Product> products = location.getProducts();
+        for (Product product : products) {
+            String timeString = formatTimeString(product);
+            // TODO relies on one timecoding per product... thats not good (mz, ts, 2010-07-12)
+            for (Band band : tsProduct.getBands()) {
+                if (band.getName().endsWith(timeString)) {
+                    bands.add(band);
+                }
+            }
+        }
+        return bands;
+    }
+
     private void updateAutogrouping() {
         tsProduct.setAutoGrouping(StringUtils.join(getTimeVariables(), ":"));
     }
@@ -262,15 +287,11 @@ class TimeSeriesImpl extends AbstractTimeSeries {
         productLocationsElement.addElement(elem);
     }
 
-    private void storeProductInternally(Product product) {
+    private static String formatTimeString(Product product) {
         final SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
         TimeCoding timeCoding = product.getTimeCoding();
         final ProductData.UTC startTime = timeCoding.getStartTime();
-        if (startTime != null) {
-            String timeString = dateFormat.format(startTime.getAsDate());
-            productList.add(product);
-            productTimeMap.put(timeString, product);
-        }
+        return dateFormat.format(startTime.getAsDate());
     }
 
     private void addToVariableList(Product product) {

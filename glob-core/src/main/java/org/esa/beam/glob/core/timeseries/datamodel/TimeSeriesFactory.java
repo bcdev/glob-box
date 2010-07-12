@@ -50,7 +50,7 @@ public class TimeSeriesFactory {
 
         final List<Product> productList = new ArrayList<Product>();
         for (ProductLocation productLocation : productLocations) {
-            productList.addAll(productLocation.findProducts(ProgressMonitor.NULL));
+            productList.addAll(productLocation.getProducts());
         }
         if (productList.isEmpty()) {
             return null;

@@ -65,7 +65,7 @@ public enum ProductLocationType {
         }
     };
 
-    public abstract List<Product> findProducts(String path, ProgressMonitor pm);
+    abstract List<Product> findProducts(String path, ProgressMonitor pm);
 
     private static File[] listFiles(String path) {
         File dir = new File(path);

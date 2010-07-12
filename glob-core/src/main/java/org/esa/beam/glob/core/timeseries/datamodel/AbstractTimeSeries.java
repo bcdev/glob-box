@@ -55,9 +55,9 @@ public abstract class AbstractTimeSeries {
 
     public abstract Product getTsProduct();
 
-    public abstract List<Product> getProducts();
-
     public abstract List<Band> getBandsForVariable(String variableName);
+
+    public abstract List<Band> getBandsForProductLocation(ProductLocation location);
 
     public static String variableToRasterName(String variableName, TimeCoding timeCoding) {
         final ProductData.UTC rasterStartTime = timeCoding.getStartTime();
@@ -81,4 +81,6 @@ public abstract class AbstractTimeSeries {
             }
         });
     }
+
+
 }

@@ -413,9 +413,25 @@ class TimeSeriesManagerForm {
                 toRemove.add(locationList.get(index));
             }
             for (ProductLocation location : toRemove) {
+                closeAssociatedViews(location);
                 timeSeries.removeProductLocation(location);
             }
             fireContentsChanged(this, indices[0], indices[indices.length - 1]);
+        }
+
+        private void closeAssociatedViews(ProductLocation location) {
+            final List<Band> bands = timeSeries.getBandsForProductLocation(location);
+            for (Band band : bands) {
+                final JInternalFrame[] internalFrames = VisatApp.getApp().findInternalFrames(band);
+                for (final JInternalFrame internalFrame : internalFrames) {
+                    try {
+                        internalFrame.setClosed(true);
+                    } catch (PropertyVetoException e) {
+                        Debug.trace(e);
+                    }
+                }
+            }
+
         }
     }
 

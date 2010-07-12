@@ -12,7 +12,6 @@ import org.esa.beam.framework.ui.assistant.AssistantPane;
 import org.esa.beam.framework.ui.command.CommandEvent;
 import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
 import org.esa.beam.glob.core.timeseries.datamodel.ProductLocation;
-import org.esa.beam.glob.core.timeseries.datamodel.ProductLocationType;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesFactory;
 import org.esa.beam.visat.actions.AbstractVisatAction;
 
@@ -147,9 +146,8 @@ public abstract class AbstractTimeSeriesAssistantAction extends AbstractVisatAct
                     pm.beginTask("Scanning product locations...", locationsModel.getSize());
                     for (int i = 0; i < locationsModel.getSize(); i++) {
                         final ProductLocation location = locationsModel.getElementAt(i);
-                        final ProductLocationType type = location.getProductLocationType();
-                        final List<Product> products = type.findProducts(location.getPath(), 
-                                                                         new SubProgressMonitor(pm, 1));
+                        location.loadProducts(new SubProgressMonitor(pm, 1));
+                        final List<Product> products = location.getProducts();
                         if (!products.isEmpty()) {
                             final Product product = products.get(0);
                             final String[] bandNames = product.getBandNames();
@@ -157,7 +155,10 @@ public abstract class AbstractTimeSeriesAssistantAction extends AbstractVisatAct
                             for (int j = 0; j < bandNames.length; j++) {
                                 variables[j] = new Variable(bandNames[j]);
                             }
+                            location.closeProducts();
                             return variables;
+                        } else {
+                            location.closeProducts();
                         }
                     }
                 } finally {
