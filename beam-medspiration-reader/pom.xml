@@ -19,5 +19,10 @@
             <groupId>org.esa.beam</groupId>
             <artifactId>beam-netcdf-reader</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.esa.beam</groupId>
+            <artifactId>beam-netcdf</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
     </dependencies>
 </project>
