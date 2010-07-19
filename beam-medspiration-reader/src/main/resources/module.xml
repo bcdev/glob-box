@@ -14,15 +14,19 @@
 
     <changelog>
         <![CDATA[
-        ]]>
+                ]]>
     </changelog>
 
     <dependency>
         <module>beam-core</module>
     </dependency>
-    
+
     <dependency>
         <module>beam-netcdf-reader</module>
+    </dependency>
+
+    <dependency>
+        <module>beam-netcdf</module>
     </dependency>
 
     <dependency>

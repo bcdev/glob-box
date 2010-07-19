@@ -1,5 +1,6 @@
 package org.esa.beam.dataio.medspiration.profile;
 
+import org.esa.beam.dataio.netcdf.metadata.ProfileInitPart;
 import org.esa.beam.dataio.netcdf.metadata.ProfilePart;
 import org.esa.beam.dataio.netcdf.metadata.profiles.def.DefaultProfileSpi;
 import org.esa.beam.framework.dataio.DecodeQualification;
@@ -13,6 +14,11 @@ import ucar.nc2.NetcdfFile;
  * @author Thomas Storm
  */
 public class MedspirationSpi extends DefaultProfileSpi {
+
+    @Override
+    public ProfileInitPart createInitialisationPart() {
+        return new MedspirationInitialisationPart();
+    }
 
     @Override
     public ProfilePart createBandPart() {
