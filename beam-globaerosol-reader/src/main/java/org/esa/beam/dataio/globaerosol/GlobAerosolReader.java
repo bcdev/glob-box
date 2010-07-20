@@ -15,9 +15,14 @@ import org.esa.beam.util.Debug;
 import org.esa.beam.util.io.FileUtils;
 import org.geotools.referencing.ReferencingFactoryFinder;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
-import org.geotools.referencing.cs.DefaultEllipsoidalCS;
-import org.opengis.referencing.datum.DatumAuthorityFactory;
-import org.opengis.referencing.datum.GeodeticDatum;
+import org.geotools.referencing.crs.DefaultProjectedCRS;
+import org.geotools.referencing.cs.DefaultCartesianCS;
+import org.geotools.referencing.datum.DefaultEllipsoid;
+import org.opengis.parameter.ParameterValueGroup;
+import org.opengis.referencing.NoSuchIdentifierException;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.opengis.referencing.operation.MathTransform;
+import org.opengis.referencing.operation.MathTransformFactory;
 import ucar.ma2.Array;
 import ucar.ma2.InvalidRangeException;
 import ucar.ma2.Section;
@@ -25,8 +30,6 @@ import ucar.nc2.Attribute;
 import ucar.nc2.NetcdfFile;
 import ucar.nc2.Variable;
 
-import java.awt.Rectangle;
-import java.awt.geom.AffineTransform;
 import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
@@ -182,20 +185,36 @@ public class GlobAerosolReader extends AbstractProductReader {
     }
 
     private void addGeoCoding(Product product) throws IOException {
-        AffineTransform i2m = new AffineTransform();
-        i2m.translate(-180, 90);
-        double pixelSizeX = 360.0 / width;
-        double pixelSizeY = 180.0 / height;
-        i2m.scale(pixelSizeX, -pixelSizeY);
 
+        DefaultGeographicCRS base = DefaultGeographicCRS.WGS84;
+        final MathTransformFactory transformFactory = ReferencingFactoryFinder.getMathTransformFactory(null);
+        ParameterValueGroup parameters;
         try {
-            Rectangle rectangle = new Rectangle(0, 0, width, height);
-            final DatumAuthorityFactory factory = ReferencingFactoryFinder.getDatumAuthorityFactory("EPSG", null);
+            parameters = transformFactory.getDefaultParameters("OGC:Sinusoidal");
+        } catch (NoSuchIdentifierException e) {
+            throw new IOException(e);
+        }
+        DefaultEllipsoid ellipsoid = (DefaultEllipsoid) base.getDatum().getEllipsoid();
+        parameters.parameter("semi_major").setValue(ellipsoid.getSemiMajorAxis());
+        parameters.parameter("semi_minor").setValue(ellipsoid.getSemiMinorAxis());
+        double latExtendMeters = ellipsoid.orthodromicDistance(0.0, 90.0, 0.0, -90);
+        double lonExtendMeters = ellipsoid.orthodromicDistance(0.0, 0.0, 180.0, 0.0) * 2;
 
-            final GeodeticDatum wgs66Datum = factory.createGeodeticDatum("EPSG:6760");
-            final DefaultGeographicCRS geographicCRS = new DefaultGeographicCRS("WGS 66", wgs66Datum,
-                                                                                DefaultEllipsoidalCS.GEODETIC_2D);
-            CrsGeoCoding geoCoding = new CrsGeoCoding(geographicCRS, rectangle, i2m);
+        MathTransform mathTransform;
+        try {
+            mathTransform = transformFactory.createParameterizedTransform(parameters);
+        } catch (Exception e) {
+            throw new IOException(e);
+        }
+
+        CoordinateReferenceSystem modelCrs = new DefaultProjectedCRS("Sinusoidal", base, mathTransform,
+                DefaultCartesianCS.PROJECTED);
+        try {
+            double pixelSizeX = lonExtendMeters / width;
+            double pixelSizeY = latExtendMeters / height;
+            double easting = -lonExtendMeters / 2;
+            double northing = latExtendMeters / 2;
+            CrsGeoCoding geoCoding = new CrsGeoCoding(modelCrs, width, height, easting, northing, pixelSizeX, pixelSizeY);
             product.setGeoCoding(geoCoding);
         } catch (Exception e) {
             throw new IOException(e);
