@@ -2,8 +2,6 @@ package org.esa.beam.glob.core.timeseries;
 
 import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.framework.datamodel.RasterDataNode;
-import org.esa.beam.framework.datamodel.TimeCoding;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -14,18 +12,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * User: Thomas Storm
- * Date: 06.04.2010
- * Time: 08:59:55
+ * @author Thomas Storm
  */
-public class GlobCarbonBaeAsciiHandler extends TimeHandler {
-
-    @Override
-    public TimeCoding generateTimeCoding(final RasterDataNode raster) throws ParseException, IOException {
-        final TimeCoding timeCoding = super.generateTimeCoding(raster);
-//        timeCoding.setPixelToDateMap(generateTimePerPixelMap(raster.getProduct().getFileLocation()));
-        return timeCoding;
-    }
+public class GlobCarbonBaeAsciiHandler {
 
     protected Map<PixelPos, ProductData.UTC[]> generateTimePerPixelMap(final File productFile) throws IOException,
                                                                                                       ParseException {

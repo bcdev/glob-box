@@ -19,6 +19,7 @@ import org.esa.beam.framework.ui.command.ExecCommand;
 import org.esa.beam.framework.ui.product.ProductSceneView;
 import org.esa.beam.glob.core.TimeSeriesMapper;
 import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
+import org.esa.beam.glob.core.timeseries.datamodel.TimeCoding;
 import org.esa.beam.jai.ImageManager;
 import org.esa.beam.util.SystemUtils;
 import org.esa.beam.util.io.BeamFileChooser;
@@ -80,7 +81,7 @@ public class ExportTimeBasedKmz extends ExecCommand {
 
         if (isGeographic) {
             final File output = fetchOutputFile(view);
-            if(output == null) {
+            if (output == null) {
                 return;
             }
             final String title = "KMZ Export";
@@ -169,8 +170,8 @@ public class ExportTimeBasedKmz extends ExecCommand {
         TimeSeriesMapper timeSeriesMapper = TimeSeriesMapper.getInstance();
         AbstractTimeSeries timeSeries = timeSeriesMapper.getTimeSeries(view.getProduct());
         List<Band> bands = timeSeries.getBandsForVariable(
-                    AbstractTimeSeries.rasterToVariableName(view.getRaster().getName()));
-        
+                AbstractTimeSeries.rasterToVariableName(view.getRaster().getName()));
+
         if (bands.size() == 0) {
             return null;
         }
@@ -194,8 +195,9 @@ public class ExportTimeBasedKmz extends ExecCommand {
             final BoundingBox referencedEnvelope = new ReferencedEnvelope(west, east, north, south,
                                                                           DefaultGeographicCRS.WGS84);
 
-            final ProductData.UTC startTime = raster.getTimeCoding().getStartTime();
-            final ProductData.UTC endTime = raster.getTimeCoding().getEndTime();
+            TimeCoding timeCoding = timeSeries.getRasterTimeMap().get(raster);
+            final ProductData.UTC startTime = timeCoding.getStartTime();
+            final ProductData.UTC endTime = timeCoding.getEndTime();
 
             final ImageManager imageManager = ImageManager.getInstance();
             final ImageInfo imageInfo = raster.getImageInfo(ProgressMonitor.NULL);
@@ -247,7 +249,8 @@ public class ExportTimeBasedKmz extends ExecCommand {
         protected Object doInBackground(ProgressMonitor pm) throws Exception {
             KmlFeature kmlFeature = createKmlFeature();
             final FileOutputStream fileOutputStream = new FileOutputStream(output);
-            ZipOutputStream zipStream = new ZipOutputStream(new BufferedOutputStream(fileOutputStream, 5* ONE_MEGABYTE));
+            ZipOutputStream zipStream = new ZipOutputStream(
+                    new BufferedOutputStream(fileOutputStream, 5 * ONE_MEGABYTE));
             try {
                 final KmzExporter exporter = new KmzExporter();
                 exporter.export(kmlFeature, zipStream, pm);

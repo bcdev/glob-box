@@ -8,6 +8,7 @@ import org.esa.beam.framework.ui.UIUtils;
 import org.esa.beam.framework.ui.product.ProductSceneView;
 import org.esa.beam.framework.ui.tool.ToolButtonFactory;
 import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
+import org.esa.beam.glob.core.timeseries.datamodel.TimeCoding;
 import org.esa.beam.glob.export.animations.AnimatedGifExport;
 
 import javax.swing.AbstractButton;
@@ -165,7 +166,9 @@ class TimeSeriesPlayerForm extends JPanel {
     }
 
     private String createSliderLabelText(List<Band> bandList, int index) {
-        final ProductData.UTC utcStartTime = bandList.get(index).getTimeCoding().getStartTime();
+        Band band = bandList.get(index);
+        TimeCoding timeCoding = timeSeries.getRasterTimeMap().get(band);
+        final ProductData.UTC utcStartTime = timeCoding.getStartTime();
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MMM-yyyy");
         SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
         dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));

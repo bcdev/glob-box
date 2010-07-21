@@ -4,7 +4,6 @@ import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.RasterDataNode;
-import org.esa.beam.framework.datamodel.TimeCoding;
 import org.esa.beam.util.Guardian;
 
 import java.text.SimpleDateFormat;
@@ -12,11 +11,11 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.WeakHashMap;
 
 /**
- * User: Thomas Storm
- * Date: 23.06.2010
- * Time: 18:12:03
+ * @author Thomas Storm
  */
 public abstract class AbstractTimeSeries {
 
@@ -38,6 +37,7 @@ public abstract class AbstractTimeSeries {
 
     public static final String PROPERTY_PRODUCT_LOCATIONS = "PROPERTY_PRODUCT_LOCATIONS";
     public static final String PROPERTY_VARIABLE_SELECTION = "PROPERTY_VARIABLE_SELECTION";
+    protected Map<RasterDataNode, TimeCoding> rasterTimeMap = new WeakHashMap<RasterDataNode, TimeCoding>();
 
     public abstract List<String> getTimeVariables();
 
@@ -71,16 +71,19 @@ public abstract class AbstractTimeSeries {
         return rasterName.substring(0, lastUnderscore);
     }
 
-    static void sortBands(List<Band> bandList) {
+    void sortBands(List<Band> bandList) {
         Collections.sort(bandList, new Comparator<Band>() {
             @Override
             public int compare(Band band1, Band band2) {
-                final Date date1 = band1.getTimeCoding().getStartTime().getAsDate();
-                final Date date2 = band2.getTimeCoding().getStartTime().getAsDate();
+                final Date date1 = rasterTimeMap.get(band1).getStartTime().getAsDate();
+                final Date date2 = rasterTimeMap.get(band2).getStartTime().getAsDate();
                 return date1.compareTo(date2);
             }
         });
     }
 
 
+    public Map<RasterDataNode, TimeCoding> getRasterTimeMap() {
+        return rasterTimeMap;
+    }
 }

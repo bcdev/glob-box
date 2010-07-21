@@ -6,10 +6,14 @@ import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.framework.datamodel.Stx;
+import org.esa.beam.framework.ui.product.ProductSceneView;
+import org.esa.beam.glob.core.TimeSeriesMapper;
 import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
+import org.esa.beam.glob.core.timeseries.datamodel.TimeCoding;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.StringUtils;
 import org.esa.beam.util.math.Histogram;
+import org.esa.beam.visat.VisatApp;
 import org.jfree.chart.annotations.XYAnnotation;
 import org.jfree.chart.annotations.XYLineAnnotation;
 import org.jfree.chart.axis.NumberAxis;
@@ -66,7 +70,6 @@ class TimeSeriesGraphModel {
     private final List<TimeSeriesCollection> cursorDatasets;
     private DisplayModel displayModel;
     private final AtomicInteger version = new AtomicInteger(0);
-
 
     TimeSeriesGraphModel(XYPlot plot) {
         timeSeriesPlot = plot;
@@ -238,7 +241,11 @@ class TimeSeriesGraphModel {
     void updateAnnotation(RasterDataNode raster) {
         removeAnnotation();
 
-        final ProductData.UTC startTime = raster.getTimeCoding().getStartTime();
+        ProductSceneView sceneView = VisatApp.getApp().getSelectedProductSceneView();
+        AbstractTimeSeries timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(sceneView.getProduct());
+
+        TimeCoding timeCoding = timeSeries.getRasterTimeMap().get(raster);
+        final ProductData.UTC startTime = timeCoding.getStartTime();
         final Millisecond timePeriod = new Millisecond(startTime.getAsDate(),
                                                        ProductData.UTC.UTC_TIME_ZONE,
                                                        Locale.getDefault());
@@ -325,8 +332,12 @@ class TimeSeriesGraphModel {
 
         private TimeSeries computeTimeSeries(final List<Band> bandList, int pixelX, int pixelY, int currentLevel) {
             TimeSeries timeSeries = new TimeSeries("title");
+            ProductSceneView sceneView = VisatApp.getApp().getSelectedProductSceneView();
+            AbstractTimeSeries globTimeSeries = TimeSeriesMapper.getInstance().getTimeSeries(sceneView.getProduct());
+
             for (Band band : bandList) {
-                final ProductData.UTC startTime = band.getTimeCoding().getStartTime();
+                TimeCoding timeCoding = globTimeSeries.getRasterTimeMap().get(band);
+                final ProductData.UTC startTime = timeCoding.getStartTime();
                 final Millisecond timePeriod = new Millisecond(startTime.getAsDate(),
                                                                ProductData.UTC.UTC_TIME_ZONE,
                                                                Locale.getDefault());

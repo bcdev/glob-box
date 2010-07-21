@@ -1,6 +1,5 @@
 package org.esa.beam.glob.core.timeseries.datamodel;
 
-import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.glob.core.TimeSeriesMapper;
 import org.esa.beam.util.Guardian;
@@ -10,9 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * User: Thomas Storm
- * Date: 23.06.2010
- * Time: 18:14:12
+ * @author Thomas Storm
  */
 public class TimeSeriesFactory {
 
@@ -41,7 +38,7 @@ public class TimeSeriesFactory {
      * @return a time series
      */
     public static AbstractTimeSeries create(String name, List<ProductLocation> productLocations,
-                                    List<String> variableNames) {
+                                            List<String> variableNames) {
         Guardian.assertNotNull("productLocations", productLocations);
         Guardian.assertGreaterThan("productLocations.size()", productLocations.size(), 0);
         Guardian.assertNotNull("variables", variableNames);

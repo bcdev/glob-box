@@ -1,13 +1,11 @@
 package org.esa.beam.glob.core.timeseries.datamodel;
 
 import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.DefaultTimeCoding;
 import org.esa.beam.framework.datamodel.MetadataAttribute;
 import org.esa.beam.framework.datamodel.MetadataElement;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.RasterDataNode;
-import org.esa.beam.framework.datamodel.TimeCoding;
 import org.esa.beam.util.Guardian;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.StringUtils;
@@ -17,12 +15,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
- * User: Thomas Storm
- * Date: 31.03.2010
- * Time: 10:26:15
+ * @author Thomas Storm
  */
 class TimeSeriesImpl extends AbstractTimeSeries {
 
@@ -49,10 +44,9 @@ class TimeSeriesImpl extends AbstractTimeSeries {
     private void fixBandTimeCodings() {
         for (Band destBand : tsProduct.getBands()) {
             final Band raster = getBand(destBand.getName());
-            TimeCoding rasterTimeCoding = raster.getTimeCoding();
-            final ProductData.UTC startTime = rasterTimeCoding.getStartTime();
-            final ProductData.UTC endTime = rasterTimeCoding.getEndTime();
-            destBand.setTimeCoding(new DefaultTimeCoding(startTime, endTime, raster.getSceneRasterHeight()));
+            final ProductData.UTC startTime = raster.getProduct().getStartTime();
+            final ProductData.UTC endTime = raster.getProduct().getEndTime();
+            rasterTimeMap.put(destBand, new DefaultTimeCoding(startTime, endTime, raster.getSceneRasterHeight()));
         }
     }
 
@@ -121,7 +115,7 @@ class TimeSeriesImpl extends AbstractTimeSeries {
             addProductLocationMetadata(location);
             List<String> variables = getTimeVariables();
             for (Product product : location.getProducts()) {
-                if (product.getTimeCoding() != null && product.getTimeCoding().getStartTime() != null) {
+                if (product.getStartTime() != null) {
                     addToVariableList(product);
                     productTimeMap.put(formatTimeString(product), product);
                     for (String variable : variables) {
@@ -168,7 +162,7 @@ class TimeSeriesImpl extends AbstractTimeSeries {
         productLocation.closeProducts();
         productLocationList.remove(productLocation);
 
-        tsProduct.fireProductNodeChanged( PROPERTY_PRODUCT_LOCATIONS );
+        tsProduct.fireProductNodeChanged(PROPERTY_PRODUCT_LOCATIONS);
     }
 
     private void handleProductLocations(boolean addToMetadata) {
@@ -177,7 +171,7 @@ class TimeSeriesImpl extends AbstractTimeSeries {
                 addProductLocationMetadata(productLocation);
             }
             for (Product product : productLocation.getProducts()) {
-                if (product.getTimeCoding() != null && product.getTimeCoding().getStartTime() != null) {
+                if (product.getStartTime() != null) {
                     productTimeMap.put(formatTimeString(product), product);
                     if (addToMetadata) {
                         addToVariableList(product);
@@ -213,7 +207,7 @@ class TimeSeriesImpl extends AbstractTimeSeries {
                 }
             }
         }
-        tsProduct.fireProductNodeChanged( PROPERTY_VARIABLE_SELECTION );
+        tsProduct.fireProductNodeChanged(PROPERTY_VARIABLE_SELECTION);
     }
 
     @Override
@@ -289,8 +283,7 @@ class TimeSeriesImpl extends AbstractTimeSeries {
 
     private static String formatTimeString(Product product) {
         final SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
-        TimeCoding timeCoding = product.getTimeCoding();
-        final ProductData.UTC startTime = timeCoding.getStartTime();
+        final ProductData.UTC startTime = product.getStartTime();
         return dateFormat.format(startTime.getAsDate());
     }
 
@@ -332,10 +325,9 @@ class TimeSeriesImpl extends AbstractTimeSeries {
     private void addSpecifiedBandOfGivenProduct(String nodeName, Product product) {
         if (isProductCompatible(product, tsProduct, nodeName)) {
             final RasterDataNode raster = product.getRasterDataNode(nodeName);
-            TimeCoding rasterTimeCoding = raster.getTimeCoding();
-            if (rasterTimeCoding == null) {
-                return;
-            }
+            TimeCoding rasterTimeCoding = new DefaultTimeCoding(product.getStartTime(),
+                                                                product.getEndTime(),
+                                                                product.getSceneRasterHeight());
             final ProductData.UTC rasterStartTime = rasterTimeCoding.getStartTime();
             final ProductData.UTC rasterEndTime = rasterTimeCoding.getEndTime();
             Guardian.assertNotNull("rasterStartTime", rasterStartTime);
@@ -347,8 +339,8 @@ class TimeSeriesImpl extends AbstractTimeSeries {
                 ProductUtils.copyRasterDataNodeProperties(raster, band);
                 // todo copy also referenced band in valid pixel expression
                 band.setValidPixelExpression(null);
-                band.setTimeCoding(new DefaultTimeCoding(rasterStartTime, rasterEndTime,
-                                                         raster.getSceneRasterHeight()));
+                rasterTimeMap.put(band, new DefaultTimeCoding(rasterStartTime, rasterEndTime,
+                                                              raster.getSceneRasterHeight()));
                 tsProduct.addBand(band);
                 ProductData.UTC tsStartTime = tsProduct.getStartTime();
                 if (tsStartTime == null || rasterStartTime.getAsDate().before(tsStartTime.getAsDate())) {

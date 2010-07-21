@@ -5,7 +5,11 @@ import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Placemark;
+import org.esa.beam.framework.ui.product.ProductSceneView;
+import org.esa.beam.glob.core.TimeSeriesMapper;
 import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
+import org.esa.beam.glob.core.timeseries.datamodel.TimeCoding;
+import org.esa.beam.visat.VisatApp;
 
 import java.io.File;
 import java.text.DecimalFormat;
@@ -14,9 +18,7 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * User: Thomas Storm
- * Date: 07.07.2010
- * Time: 10:13:43
+ * @author Thomas Storm
  */
 public class TimeCsvExporter extends CsvExporter {
 
@@ -74,10 +76,14 @@ public class TimeCsvExporter extends CsvExporter {
         }
         // we assume all bandlists to contain the same time information, so the columns are built on the first
         // non-empty bandlist.
+        ProductSceneView sceneView = VisatApp.getApp().getSelectedProductSceneView();
+        AbstractTimeSeries timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(sceneView.getProduct());
+
         for (List<Band> bandList : variablesList) {
             if (!bandList.isEmpty()) {
                 for (Band band : bandList) {
-                    final Date date = band.getTimeCoding().getStartTime().getAsDate();
+                    TimeCoding timeCoding = timeSeries.getRasterTimeMap().get(band);
+                    final Date date = timeCoding.getStartTime().getAsDate();
                     SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
                     columns.add(sdf.format(date));
                 }
