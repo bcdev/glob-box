@@ -20,16 +20,19 @@ import org.esa.beam.dataio.netcdf.metadata.ProfileInitPart;
 import org.esa.beam.dataio.netcdf.metadata.ProfilePart;
 import org.esa.beam.dataio.netcdf.metadata.profiles.def.DefaultProfileSpi;
 import org.esa.beam.framework.dataio.DecodeQualification;
+import org.esa.beam.util.io.BeamFileFilter;
 import ucar.nc2.Attribute;
 import ucar.nc2.NetcdfFile;
 
 /**
  * A Service Provider Interface (SPI) for the Medspiration metadata profile.
  *
- * @author Marco Z�hlke
+ * @author Marco Zühlke
  * @author Thomas Storm
  */
 public class MedspirationSpi extends DefaultProfileSpi {
+
+    private static final String[] FILE_EXTENSIONS = new String[]{".nc", ".nc.gz"};
 
     @Override
     public ProfileInitPart createInitialisationPart() {
@@ -59,5 +62,10 @@ public class MedspirationSpi extends DefaultProfileSpi {
         }
 
         return DecodeQualification.UNABLE;
+    }
+
+    @Override
+    public BeamFileFilter getProductFileFilter() {
+        return new BeamFileFilter("Medspiration", FILE_EXTENSIONS, "Medspiration products");
     }
 }

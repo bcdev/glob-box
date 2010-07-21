@@ -30,7 +30,7 @@ import java.util.Locale;
 
 public class MedspirationReaderPlugIn implements ProductReaderPlugIn {
 
-    private static final String DESCRIPTION = "Medspiration";
+    private static final String DESCRIPTION = "OLD Medspiration";
     private static final String[] FILE_EXTENSIONS = new String[]{".nc", ".nc.gz"};
     private static final String FORMAT_NAME = "MEDSPIRATION";
     private static final String[] FORMAT_NAMES = new String[]{FORMAT_NAME};
