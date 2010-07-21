@@ -32,17 +32,15 @@ import java.util.List;
 import java.util.TimeZone;
 
 /**
- * User: Thomas Storm
- * Date: 30.06.2010
- * Time: 10:49:16
+ * @author Thomas Storm
  */
 class TimeSeriesPlayerForm extends JPanel {
 
     private final ImageIcon playIcon = UIUtils.loadImageIcon("icons/Play24.png");
     private final ImageIcon stopIcon = UIUtils.loadImageIcon("icons/Stop24.png");
     private final ImageIcon pauseIcon = UIUtils.loadImageIcon("icons/Pause24.png");
-    private final ImageIcon blendIcon = UIUtils.loadImageIcon("icons/Blend24.png");
-    private final ImageIcon repeatIcon = UIUtils.loadImageIcon("icons/Repeat24.gif");
+    private final ImageIcon blendIcon = UIUtils.loadImageIcon("/org/esa/beam/glob/ui/icons/Blend24.png");
+    private final ImageIcon repeatIcon = UIUtils.loadImageIcon("icons/Repeat24.png");
     private final ImageIcon minusIcon = UIUtils.loadImageIcon("icons/Remove16.png");
     private final ImageIcon plusIcon = UIUtils.loadImageIcon("icons/Add16.png");
     private final ImageIcon exportIcon = UIUtils.loadImageIcon("icons/Export24.gif");

@@ -47,9 +47,9 @@ class TimeSeriesManagerForm {
     private JLabel dimensionField;
     private VariableSelectionPane variablePane;
     private ProductLocationsPane locationsPane;
-    private AbstractButton cloneButton;
+    //    private AbstractButton cloneButton;
     private AbstractButton viewButton;
-    private AbstractButton regridButton;
+    //    private AbstractButton regridButton;
     private AbstractButton exportButton;
     private AbstractTimeSeries currentTimeSeries;
 
@@ -163,9 +163,9 @@ class TimeSeriesManagerForm {
         final Command newTSCommand = VisatApp.getApp().getCommandManager().getCommand(NewTimeSeriesAssistantAction.ID);
         final AbstractButton newButton = ToolButtonFactory.createButton(newTSCommand.getAction(), false);
 
-        cloneButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("/org/esa/beam/glob/ui/icons/CloneTS24.gif"),
-                                                     false);
-        viewButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("/org/esa/beam/glob/ui/icons/ViewTS24.gif"),
+//        cloneButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("/org/esa/beam/glob/ui/icons/CloneTS24.gif"),
+//                                                     false);
+        viewButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("/org/esa/beam/glob/ui/icons/ViewTS24.png"),
                                                     false);
         viewButton.addActionListener(new ActionListener() {
             @Override
@@ -187,8 +187,8 @@ class TimeSeriesManagerForm {
                 }
             }
         });
-        regridButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("/org/esa/beam/glob/ui/icons/Regrid24.gif"),
-                                                      false);
+//        regridButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("/org/esa/beam/glob/ui/icons/Regrid24.gif"),
+//                                                      false);
         exportButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/Export24.gif"), false);
         AbstractButton helpButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/Help24.gif"), false);
         helpButton.setToolTipText("Help");
@@ -201,9 +201,9 @@ class TimeSeriesManagerForm {
         layout.setTableWeightY(0.0);
         final JPanel panel = new JPanel(layout);
         panel.add(newButton);
-        panel.add(cloneButton);
+//        panel.add(cloneButton);
         panel.add(viewButton);
-        panel.add(regridButton);
+//        panel.add(regridButton);
         panel.add(exportButton);
         panel.add(layout.createVerticalSpacer());
         panel.add(helpButton);
@@ -221,7 +221,7 @@ class TimeSeriesManagerForm {
         final VisatApp app = VisatApp.getApp();
         for (Band band : bandList) {
             final JInternalFrame internalFrame = app.findInternalFrame(band);
-            if(internalFrame != null) {
+            if (internalFrame != null) {
                 return;
             }
         }
@@ -232,9 +232,9 @@ class TimeSeriesManagerForm {
 
     private void updateButtonPanel(AbstractTimeSeries timeSeries) {
         boolean enabled = timeSeries != null;
-        cloneButton.setEnabled(enabled);
+//        cloneButton.setEnabled(enabled);
         viewButton.setEnabled(enabled);
-        regridButton.setEnabled(enabled);
+//        regridButton.setEnabled(enabled);
         exportButton.setEnabled(enabled);
     }
 

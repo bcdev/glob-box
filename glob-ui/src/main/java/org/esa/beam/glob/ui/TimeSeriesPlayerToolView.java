@@ -31,9 +31,7 @@ import java.lang.reflect.Field;
 import java.util.List;
 
 /**
- * User: Thomas Storm
- * Date: 18.06.2010
- * Time: 15:48:31
+ * @author Thomas Storm
  */
 public class TimeSeriesPlayerToolView extends AbstractToolView {
 

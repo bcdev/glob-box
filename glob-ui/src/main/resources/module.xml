@@ -38,8 +38,8 @@
             <mnemonic>T</mnemonic>
             <description>Time Series Player</description>
             <accelerator>ctrl alt T</accelerator>
-            <smallIcon>/org/esa/beam/glob/ui/icons/GlobToolbox16.gif</smallIcon>
-            <largeIcon>/org/esa/beam/glob/ui/icons/GlobToolbox24.gif</largeIcon>
+            <smallIcon>/org/esa/beam/glob/ui/icons/TSPlayer16.png</smallIcon>
+            <largeIcon>/org/esa/beam/glob/ui/icons/TSPlayer24.png</largeIcon>
             <initState>FLOATING</initState>
             <initSide>EAST</initSide>
             <initIndex>3</initIndex>
@@ -54,8 +54,8 @@
             <description>Time Series Manager</description>
             <mnemonic>C</mnemonic>
             <accelerator>ctrl alt C</accelerator>
-            <smallIcon>/org/esa/beam/glob/ui/icons/TimeSeriesManager16.gif</smallIcon>
-            <largeIcon>/org/esa/beam/glob/ui/icons/TimeSeriesManager24.gif</largeIcon>
+            <smallIcon>/org/esa/beam/glob/ui/icons/GlobToolbox16.gif</smallIcon>
+            <largeIcon>/org/esa/beam/glob/ui/icons/GlobToolbox24.gif</largeIcon>
             <initState>FLOATING</initState>
             <initSide>EAST</initSide>
             <initIndex>3</initIndex>
@@ -70,8 +70,8 @@
             <description>Time Series Graph</description>
             <mnemonic>T</mnemonic>
             <accelerator>ctrl alt T</accelerator>
-            <smallIcon>/org/esa/beam/glob/ui/icons/TimeSeries16.gif</smallIcon>
-            <largeIcon>/org/esa/beam/glob/ui/icons/TimeSeries24.gif</largeIcon>
+            <smallIcon>/org/esa/beam/glob/ui/icons/TimeSeriesGraph16.png</smallIcon>
+            <largeIcon>/org/esa/beam/glob/ui/icons/TimeSeriesGraph24.png</largeIcon>
             <initState>FLOATING</initState>
             <initSide>EAST</initSide>
             <initIndex>4</initIndex>
