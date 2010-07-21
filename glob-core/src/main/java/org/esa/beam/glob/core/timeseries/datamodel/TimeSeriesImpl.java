@@ -21,6 +21,9 @@ import org.esa.beam.framework.datamodel.MetadataAttribute;
 import org.esa.beam.framework.datamodel.MetadataElement;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.datamodel.ProductNode;
+import org.esa.beam.framework.datamodel.ProductNodeEvent;
+import org.esa.beam.framework.datamodel.ProductNodeListenerAdapter;
 import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.util.Guardian;
 import org.esa.beam.util.ProductUtils;
@@ -52,14 +55,16 @@ class TimeSeriesImpl extends AbstractTimeSeries {
 
     private void setSourceImages() {
         for (Band destBand : tsProduct.getBands()) {
-            final Band raster = getBand(destBand.getName());
-            destBand.setSourceImage(raster.getSourceImage());
+            final Band raster = getSourceBand(destBand.getName());
+            if (raster != null) {
+                destBand.setSourceImage(raster.getSourceImage());
+            }
         }
     }
 
     private void fixBandTimeCodings() {
         for (Band destBand : tsProduct.getBands()) {
-            final Band raster = getBand(destBand.getName());
+            final Band raster = getSourceBand(destBand.getName());
             final ProductData.UTC startTime = raster.getProduct().getStartTime();
             final ProductData.UTC endTime = raster.getProduct().getEndTime();
             rasterTimeMap.put(destBand, new DefaultTimeCoding(startTime, endTime, raster.getSceneRasterHeight()));
@@ -79,9 +84,29 @@ class TimeSeriesImpl extends AbstractTimeSeries {
         this.tsProduct = product;
         productTimeMap = new HashMap<String, Product>();
         createTimeSeriesMetadataStructure(product);
+
+        // to recontruct the source image which will be nulled when
+        // a product is reopened after saving
+        tsProduct.addProductNodeListener(new ProductNodeListenerAdapter() {
+            @Override
+            public void nodeChanged(ProductNodeEvent event) {
+                if (event.getPropertyName().equals("sourceImage") &&
+                    event.getOldValue() != null &&
+                    event.getNewValue() == null) {
+                    ProductNode productNode = event.getSourceNode();
+                    if (productNode instanceof Band) {
+                        Band destBand = (Band) productNode;
+                        final Band sourceBand = getSourceBand(destBand.getName());
+                        if (sourceBand != null) {
+                            destBand.setSourceImage(sourceBand.getSourceImage());
+                        }
+                    }
+                }
+            }
+        });
     }
 
-    public Band getBand(String destBandName) {
+    public Band getSourceBand(String destBandName) {
         final int lastUnderscore = destBandName.lastIndexOf(SEPARATOR);
         String normalizedBandName = destBandName.substring(0, lastUnderscore);
         String timePart = destBandName.substring(lastUnderscore + 1);

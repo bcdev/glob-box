@@ -32,11 +32,11 @@ class TimeSeriesProductReader extends DimapProductReader {
     }
 
     @Override
-    protected Product readProductNodesImpl() throws IOException {
-        final Product product = super.readProductNodesImpl();
-        if (product.getProductType().equals(TIME_SERIES_PRODUCT_TYPE)) {
-            TimeSeriesFactory.create(product);
+    protected Product processProduct(Product product) throws IOException {
+        Product readProduct = super.processProduct(product);
+        if (readProduct.getProductType().equals(TIME_SERIES_PRODUCT_TYPE)) {
+            TimeSeriesFactory.create(readProduct);
         }
-        return product;
+        return readProduct;
     }
 }

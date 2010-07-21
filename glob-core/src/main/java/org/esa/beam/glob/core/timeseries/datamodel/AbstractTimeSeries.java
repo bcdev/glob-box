@@ -67,7 +67,7 @@ public abstract class AbstractTimeSeries {
 
     public abstract boolean isVariableSelected(String variableName);
 
-    public abstract Band getBand(String destBandName);
+    public abstract Band getSourceBand(String destBandName);
 
     public abstract Product getTsProduct();
 
