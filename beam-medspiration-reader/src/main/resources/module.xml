@@ -41,7 +41,8 @@
             <class>org.esa.beam.visat.actions.ProductImportAction</class>
             <id>importMedspirationProduct</id>
             <helpId>importMedspirationProduct</helpId>
-            <formatName>MEDSPIRATION</formatName>
+            <formatName>NetCDF4_supported</formatName>
+            <profileClassName>org.esa.beam.dataio.medspiration.profile.MedspirationSpi</profileClassName>
             <useAllFileFilter>false</useAllFileFilter>
             <text>Import Medspiration Product...</text>
             <mnemonic/>
