@@ -45,11 +45,6 @@
         </dependency>
         <dependency>
             <groupId>org.esa.beam</groupId>
-            <artifactId>beam-gt-referencing-ext</artifactId>
-            <version>${pom.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.esa.beam</groupId>
             <artifactId>beam-arcbingrid-reader</artifactId>
             <version>${pom.version}</version>
         </dependency>

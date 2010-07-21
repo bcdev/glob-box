@@ -39,7 +39,6 @@
         <module>beam-globcolour-reader</module>
         <module>beam-globaerosol-reader</module>
         <module>beam-medspiration-reader</module>
-        <module>beam-gt-referencing-ext</module>
         <module>beam-arcbingrid-reader</module>
         <module>glob-ui</module>
         <module>glob-help</module>
