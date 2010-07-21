@@ -2,12 +2,17 @@ package org.esa.beam.dataio.globaerosol;
 
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.dataio.merisl3.ISINGrid;
+import org.esa.beam.dataio.netcdf.NcAttributeMap;
+import org.esa.beam.dataio.netcdf.NcVariableMap;
+import org.esa.beam.dataio.netcdf.NetcdfReaderUtils;
 import org.esa.beam.framework.dataio.AbstractProductReader;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.CrsGeoCoding;
 import org.esa.beam.framework.datamodel.IndexCoding;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.util.Debug;
+import org.esa.beam.util.io.FileUtils;
 import org.geotools.referencing.ReferencingFactoryFinder;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.geotools.referencing.crs.DefaultProjectedCRS;
@@ -27,8 +32,11 @@ import ucar.nc2.Variable;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 
@@ -137,33 +145,31 @@ public class GlobAerosolReader extends AbstractProductReader {
         isinGrid = new ISINGrid(ROW_COUNT);
         width = isinGrid.getRowCount() * 2;
         height = isinGrid.getRowCount();
-//        NcAttributeMap globalAttributes = NcAttributeMap.create(ncfile);
-//        String prodName = globalAttributes.getStringValue(NC_ATTRIBUTE_PRODUCT_ID);
-//        if (prodName == null) {
-//            prodName = FileUtils.getFilenameWithoutExtension(ncfile.getLocation());
-//        }
-//        final String[] idElements = prodName.split("_");
-//        final String prodType = idElements[0] + "_" + idElements[1];
-//        final Product product = new Product(prodName, prodType, width, height);
-//
-//        try {
-//            final Attribute startDateAttribute = ncfile.findGlobalAttribute(NC_ATTRIBUTE_START_DATE);
-//            final ProductData.UTC startTime = ProductData.UTC.parse(startDateAttribute.getStringValue(),
-//                                                                    UTC_DATE_PATTERN);
-//            product.setStartTime(startTime);
-//            product.setEndTime(calcEndTime(startTime, getPeriod()));
-//        } catch (ParseException e) {
-//            Debug.trace(e);
-//        }
+        NcAttributeMap globalAttributes = NcAttributeMap.create(ncfile);
+        String prodName = globalAttributes.getStringValue(NC_ATTRIBUTE_PRODUCT_ID);
+        if (prodName == null) {
+            prodName = FileUtils.getFilenameWithoutExtension(ncfile.getLocation());
+        }
+        final String[] idElements = prodName.split("_");
+        final String prodType = idElements[0] + "_" + idElements[1];
+        final Product product = new Product(prodName, prodType, width, height);
 
-//        addBands(product);
-//        lonBand = product.getBand("lon");
-//        addGeoCoding(product);
-//
-//        NetcdfReaderUtils.transferMetadata(ncfile, product.getMetadataRoot());
-//        return product;
+        try {
+            final Attribute startDateAttribute = ncfile.findGlobalAttribute(NC_ATTRIBUTE_START_DATE);
+            final ProductData.UTC startTime = ProductData.UTC.parse(startDateAttribute.getStringValue(),
+                                                                    UTC_DATE_PATTERN);
+            product.setStartTime(startTime);
+            product.setEndTime(calcEndTime(startTime, getPeriod()));
+        } catch (ParseException e) {
+            Debug.trace(e);
+        }
 
-        return null;
+        addBands(product);
+        lonBand = product.getBand("lon");
+        addGeoCoding(product);
+
+        NetcdfReaderUtils.transferMetadata(ncfile, product.getMetadataRoot());
+        return product;
     }
 
     static ProductData.UTC calcEndTime(ProductData.UTC startDate, Period period) {
@@ -213,6 +219,41 @@ public class GlobAerosolReader extends AbstractProductReader {
             product.setGeoCoding(geoCoding);
         } catch (Exception e) {
             throw new IOException(e);
+        }
+    }
+
+    private void addBands(Product product) {
+        Variable modelVar = ncfile.getRootGroup().findVariable(NC_VARIABLE_MODEL);
+        String[] modeNames = null;
+        if (modelVar != null && modelVar.getDimension(0).getLength() > 1) {
+            NcAttributeMap modelAttMap = NcAttributeMap.create(modelVar);
+            modeNames = modelAttMap.getStringValue("flag_meanings").split(" ");
+        }
+        List<Variable> variableList = ncfile.getRootGroup().getVariables();
+        for (Variable variable : variableList) {
+            int cellDimemsionIndex = variable.findDimensionIndex("cell");
+            if (cellDimemsionIndex != -1) {
+                final NcAttributeMap attMap = NcAttributeMap.create(variable);
+                int modelDimemsionIndex = variable.findDimensionIndex(NC_VARIABLE_MODEL);
+                String bandName = NcVariableMap.getAbsoluteName(variable);
+                IndexCoding indexCoding = NetcdfReaderUtils.createIndexCoding(bandName + "_coding", attMap);
+                if (indexCoding != null) {
+                    product.getIndexCodingGroup().add(indexCoding);
+                }
+                if (modeNames != null && modelDimemsionIndex != -1) {
+                    for (int i = 0; i < modeNames.length; i++) {
+                        Band band = NetcdfReaderUtils.createBand(variable, attMap, null, width, height);
+                        band.setName(band.getName() + "_" + modeNames[i]);
+                        Map<Integer, Integer> dimSelection = new HashMap<Integer, Integer>();
+                        dimSelection.put(modelDimemsionIndex, i);
+                        handleBand(band, product, variable, cellDimemsionIndex, indexCoding, dimSelection);
+                    }
+                } else {
+                    Band band = NetcdfReaderUtils.createBand(variable, attMap, null, width, height);
+                    Map<Integer, Integer> dimSelection = Collections.EMPTY_MAP;
+                    handleBand(band, product, variable, cellDimemsionIndex, indexCoding, dimSelection);
+                }
+            }
         }
     }
 
