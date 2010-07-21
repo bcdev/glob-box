@@ -9,10 +9,6 @@ import java.text.ParseException;
 
 import static org.junit.Assert.assertEquals;
 
-/**
- * User: Marco
- * Date: 25.03.2010
- */
 public class KmlGroundOverlayTest {
 
     @Test

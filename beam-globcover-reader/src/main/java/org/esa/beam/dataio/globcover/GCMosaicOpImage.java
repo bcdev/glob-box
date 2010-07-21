@@ -20,10 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-/**
- * User: Marco
- * Date: 11.10.2009
- */
 class GCMosaicOpImage extends SingleBandedOpImage {
 
     private final Map<TileIndex, GCTileFile> tileMap;

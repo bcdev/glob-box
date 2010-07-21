@@ -17,11 +17,6 @@ import java.beans.PropertyChangeListener;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * User: Thomas Storm
- * Date: 11.06.2010
- * Time: 15:12:44
- */
 @Deprecated
 class ColorSynchronizer implements PropertyChangeListener {
 

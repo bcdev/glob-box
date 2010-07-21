@@ -7,11 +7,6 @@ import org.esa.beam.util.io.BeamFileFilter;
 import java.io.File;
 import java.util.Locale;
 
-/**
- * User: Thomas Storm
- * Date: 25.03.2010
- * Time: 08:41:59
- */
 public class NetCdfWriterPlugIn implements ProductWriterPlugIn {
 
     private String outputLocation;

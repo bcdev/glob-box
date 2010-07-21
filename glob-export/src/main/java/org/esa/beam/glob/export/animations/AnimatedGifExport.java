@@ -36,11 +36,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * User: Thomas Storm
- * Date: 09.07.2010
- * Time: 15:48:46
- */
 public class AnimatedGifExport extends ProgressMonitorSwingWorker<Void, Void> {
 
     private File outputFile;

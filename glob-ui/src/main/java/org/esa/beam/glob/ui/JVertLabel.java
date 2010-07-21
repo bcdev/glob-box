@@ -7,11 +7,6 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
 
-/**
- * User: Thomas Storm
- * Date: 30.06.2010
- * Time: 10:57:31
- */
 class JVertLabel extends JLabel {
 
     private static final double THETA_PLUS_90 = Math.toRadians(90.0);

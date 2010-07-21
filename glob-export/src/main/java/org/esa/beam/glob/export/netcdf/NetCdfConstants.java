@@ -1,10 +1,5 @@
 package org.esa.beam.glob.export.netcdf;
 
-/**
- * User: Thomas Storm
- * Date: 26.03.2010
- * Time: 09:42:29
- */
 public interface NetCdfConstants {
 
     // CF-conventions

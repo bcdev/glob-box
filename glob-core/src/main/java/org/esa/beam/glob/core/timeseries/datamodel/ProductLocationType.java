@@ -12,11 +12,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * User: Thomas Storm
- * Date: 22.06.2010
- * Time: 11:21:17
- */
 public enum ProductLocationType {
 
     FILE {

@@ -19,11 +19,6 @@ import java.util.List;
 
 import static junit.framework.Assert.*;
 
-/**
- * User: Thomas Storm
- * Date: 25.03.2010
- * Time: 08:39:26
- */
 public class NetCdfWriterTest implements NetcdfConstants {
 
     private NetCdfWriter writer;

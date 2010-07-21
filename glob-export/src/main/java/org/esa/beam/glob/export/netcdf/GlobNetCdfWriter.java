@@ -12,11 +12,6 @@ import ucar.nc2.Variable;
 
 import java.io.IOException;
 
-/**
- * User: Thomas Storm
- * Date: 25.03.2010
- * Time: 16:36:10
- */
 public class GlobNetCdfWriter implements NetCdfConstants {
 
     private NetCdfWriter writer;

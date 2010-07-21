@@ -6,11 +6,6 @@ import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * User: Thomas Storm
- * Date: 22.06.2010
- * Time: 15:30:14
- */
 public class TimeSeriesMapper {
 
     private Map<Product, AbstractTimeSeries> map = new HashMap<Product, AbstractTimeSeries>();

@@ -2,11 +2,6 @@ package org.esa.beam.glob.core.timeseries.datamodel;
 
 import org.junit.Test;
 
-/**
- * User: Thomas Storm
- * Date: 11.06.2010
- * Time: 11:17:33
- */
 public class TimeSeriesTest {
 
     @Test

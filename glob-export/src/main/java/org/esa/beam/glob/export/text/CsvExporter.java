@@ -16,11 +16,6 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * User: Thomas Storm
- * Date: 23.03.2010
- * Time: 14:40:45
- */
 public abstract class CsvExporter {
 
     List<String> header;

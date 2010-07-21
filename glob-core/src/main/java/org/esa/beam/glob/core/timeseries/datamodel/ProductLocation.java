@@ -6,11 +6,6 @@ import org.esa.beam.framework.datamodel.Product;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * User: Thomas Storm
- * Date: 22.06.2010
- * Time: 11:22:05
- */
 public class ProductLocation {
 
     private final ProductLocationType productLocationType;

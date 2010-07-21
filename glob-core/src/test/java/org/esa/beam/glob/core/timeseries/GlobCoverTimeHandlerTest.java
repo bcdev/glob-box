@@ -8,11 +8,6 @@ import java.text.ParseException;
 
 import static junit.framework.Assert.*;
 
-/**
- * User: Thomas Storm
- * Date: 01.04.2010
- * Time: 10:39:56
- */
 public class GlobCoverTimeHandlerTest {
 
     private GlobCoverTimeHandler timeHandler;

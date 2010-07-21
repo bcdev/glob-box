@@ -5,11 +5,6 @@ import ucar.ma2.InvalidRangeException;
 
 import java.io.IOException;
 
-/**
- * User: Thomas Storm
- * Date: 25.03.2010
- * Time: 16:49:34
- */
 public class GlobNetCdfWriterTest {
 
     @Test

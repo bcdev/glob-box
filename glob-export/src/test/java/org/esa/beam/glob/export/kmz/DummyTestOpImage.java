@@ -7,10 +7,6 @@ import javax.media.jai.PlanarImage;
 import javax.media.jai.SourcelessOpImage;
 import java.awt.image.DataBuffer;
 
-/**
-* User: Marco
-* Date: 25.03.2010
-*/
 class DummyTestOpImage extends SourcelessOpImage {
 
     DummyTestOpImage(int width, int height) {

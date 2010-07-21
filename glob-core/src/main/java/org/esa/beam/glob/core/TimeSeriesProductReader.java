@@ -9,11 +9,6 @@ import java.io.IOException;
 
 import static org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries.*;
 
-/**
- * User: Thomas Storm
- * Date: 22.06.2010
- * Time: 14:53:52
- */
 class TimeSeriesProductReader extends DimapProductReader {
 
     public TimeSeriesProductReader(ProductReaderPlugIn productReaderPlugIn) {

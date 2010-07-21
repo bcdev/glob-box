@@ -4,11 +4,6 @@ import org.esa.beam.framework.datamodel.ProductData;
 
 import java.text.ParseException;
 
-/**
- * User: Thomas Storm
- * Date: 01.04.2010
- * Time: 09:19:38
- */
 public class GlobCoverTimeHandler {
 
     // TODO ts move into GlobCover-Reader

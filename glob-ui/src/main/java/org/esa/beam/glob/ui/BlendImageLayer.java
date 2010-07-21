@@ -12,11 +12,6 @@ import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
 import java.awt.image.RenderedImage;
 
-/**
- * User: Thomas Storm
- * Date: 08.07.2010
- * Time: 10:15:10
- */
 public class BlendImageLayer extends ImageLayer {
 
     private ImageLayer baseLayer;

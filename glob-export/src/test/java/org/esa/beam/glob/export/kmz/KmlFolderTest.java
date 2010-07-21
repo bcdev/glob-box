@@ -5,10 +5,6 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 
-/**
- * User: Marco
- * Date: 25.03.2010
- */
 public class KmlFolderTest {
 
     @Test

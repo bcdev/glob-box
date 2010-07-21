@@ -6,11 +6,6 @@ import org.esa.beam.framework.datamodel.ProductNode;
 import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
 
-/**
- * User: Thomas Storm
- * Date: 22.06.2010
- * Time: 15:47:52
- */
 class TimeSeriesProductWriter extends DimapProductWriter {
 
     public TimeSeriesProductWriter(ProductWriterPlugIn productWriterPlugIn) {

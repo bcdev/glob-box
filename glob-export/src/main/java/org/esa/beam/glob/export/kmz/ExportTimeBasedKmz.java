@@ -48,11 +48,6 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.zip.ZipOutputStream;
 
-/**
- * User: Thomas Storm
- * Date: 17.03.2010
- * Time: 15:48:58
- */
 public class ExportTimeBasedKmz extends ExecCommand {
 
     private static final String IMAGE_EXPORT_DIR_PREFERENCES_KEY = "user.image.export.dir";

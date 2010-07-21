@@ -9,11 +9,7 @@ import java.util.Map;
 
 import static junit.framework.Assert.*;
 
-/**
- * User: Thomas Storm
- * Date: 19.05.2010
- * Time: 17:43:52
- */
+
 public class XlsReadingTest {
 
     @Test

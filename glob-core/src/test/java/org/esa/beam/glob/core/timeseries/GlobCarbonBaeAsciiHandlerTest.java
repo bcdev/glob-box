@@ -14,11 +14,6 @@ import java.util.Map;
 
 import static junit.framework.Assert.*;
 
-/**
- * User: Thomas Storm
- * Date: 06.04.2010
- * Time: 09:39:44
- */
 public class GlobCarbonBaeAsciiHandlerTest {
 
     private GlobCarbonBaeAsciiHandler timeHandler;

@@ -6,10 +6,6 @@ import java.awt.geom.Point2D;
 
 import static org.junit.Assert.assertEquals;
 
-/**
- * User: Marco
- * Date: 25.03.2010
- */
 public class KmlPlacemarkTest {
     @Test
     public void testExport() throws Exception {

@@ -21,11 +21,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * User: Thomas Storm
- * Date: 18.03.2010
- * Time: 16:51:49
- */
 public class ExportTimeBasedText extends ProgressMonitorSwingWorker<Void, Void> {
 
     private static final String EXPORT_DIR_PREFERENCES_KEY = "user.export.dir";

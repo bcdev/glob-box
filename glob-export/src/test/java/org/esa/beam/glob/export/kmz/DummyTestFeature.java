@@ -1,9 +1,5 @@
 package org.esa.beam.glob.export.kmz;
 
-/**
- * User: Marco
- * Date: 25.03.2010
- */
 class DummyTestFeature extends KmlFeature {
     DummyTestFeature(String name) {
         super(name, null);

@@ -13,11 +13,6 @@ import java.util.Map;
 
 import static org.junit.Assert.*;
 
-/**
- * User: Thomas Storm
- * Date: 06.04.2010
- * Time: 14:44:49
- */
 public class WorldFireTimeHandlerTest {
 
     @Test

@@ -18,11 +18,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
 
-/**
- * User: Thomas Storm
- * Date: 25.03.2010
- * Time: 08:22:15
- */
 public class NetCdfWriter extends AbstractProductWriter implements NetCdfConstants {
 
     private NetcdfFileWriteable outFile;

@@ -14,11 +14,6 @@ import java.util.Map;
 
 import static junit.framework.Assert.*;
 
-/**
- * User: Thomas Storm
- * Date: 06.04.2010
- * Time: 16:39:45
- */
 public class MedspirationXmlTimeHandlerTest {
 
     private MedspirationXmlTimeHandler timeHandler;

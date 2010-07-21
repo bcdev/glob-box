@@ -5,11 +5,6 @@ import com.bc.ceres.glayer.Layer;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
-/**
- * User: Thomas Storm
- * Date: 11.06.2010
- * Time: 15:12:09
- */
 @Deprecated
 class WorldMapHandler implements PropertyChangeListener {
 

@@ -5,11 +5,6 @@ import org.junit.Test;
 import java.io.IOException;
 import java.text.ParseException;
 
-/**
- * User: Thomas Storm
- * Date: 01.04.2010
- * Time: 15:01:58
- */
 public class GlobColourTimeHandlerTest {
 
 
