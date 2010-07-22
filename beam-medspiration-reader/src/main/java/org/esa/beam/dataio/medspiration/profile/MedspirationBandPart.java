@@ -20,7 +20,7 @@ import org.esa.beam.dataio.netcdf.metadata.ProfilePart;
 import org.esa.beam.dataio.netcdf.metadata.ProfileReadContext;
 import org.esa.beam.dataio.netcdf.metadata.ProfileWriteContext;
 import org.esa.beam.dataio.netcdf.metadata.profiles.cf.CfBandPart;
-import org.esa.beam.dataio.netcdf.util.ReaderUtils;
+import org.esa.beam.dataio.netcdf.util.DataTypeUtils;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
@@ -46,7 +46,7 @@ public class MedspirationBandPart extends ProfilePart {
         final Variable[] variables = ctx.getRasterDigest().getRasterVariables();
         for (Variable variable : variables) {
             final Band band = p.addBand(variable.getName(), getRasterDataType(variable));
-            CfBandPart.applyAttributes(band, variable);
+            CfBandPart.readCfBandAttributes(variable, band);
         }
     }
 
@@ -56,7 +56,7 @@ public class MedspirationBandPart extends ProfilePart {
         if (dataType == DataType.BYTE) {
             rasterDataType = ProductData.TYPE_UINT8;
         } else {
-            rasterDataType = ReaderUtils.getRasterDataType(dataType, variable.isUnsigned());
+            rasterDataType = DataTypeUtils.getRasterDataType(dataType, variable.isUnsigned());
         }
         return rasterDataType;
     }
