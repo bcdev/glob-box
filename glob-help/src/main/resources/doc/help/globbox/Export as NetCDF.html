@@ -1,0 +1,124 @@
+<!--
+  ~ Copyright (C) 2010 Brockmann Consult GmbH (info@brockmann-consult.de)
+  ~
+  ~ This program is free software; you can redistribute it and/or modify it
+  ~ under the terms of the GNU General Public License as published by the Free
+  ~ Software Foundation; either version 3 of the License, or (at your option)
+  ~ any later version.
+  ~ This program is distributed in the hope that it will be useful, but WITHOUT
+  ~ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+  ~ FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+  ~ more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License along
+  ~ with this program; if not, see http://www.gnu.org/licenses/
+  -->
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title>Export as NetCDF/CF</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+
+<table class="header">
+    <tr class="header">
+        <td class="header">GlobToolbox</td>
+        <td class="header" align="right"><img src="../images/GlobToolboxHeader.png" border=0>
+        </td>
+    </tr>
+</table>
+<hr/>
+
+<h3>Export as NetCDF/CF</h3>
+
+<p>
+    The GlobToolbox 2.0 extends the BEAM file menu by the entry "Export NetCDF/CF product", which allows to export
+    products originating from the Glob*-projects as NetCDF/CF-files. Thus, they may be read by every software capable of
+    reading NetCDF/CF-compliant files, which, of course, includes the GlobToolbox 2.0. An exemplary header of such a
+    NetCDF/CF-compliant file is shown below.
+</p>
+
+<p>
+    <code>
+        netcdfFile = netcdf C:\Glob-products\Medspiration\medspiration.nc {<br>
+        &nbsp;&nbsp;&nbsp; dimensions:<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; lat = 1600;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; lon = 3600;<br>
+        &nbsp;&nbsp;&nbsp; variables:<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; byte metadata;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :/history/SubsetInfo/SourceProduct.name =
+        "20090423-EUR-L4HRfnd-GLOB-v01-fv01-ODYSSEA";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :/history/SubsetInfo/SubSampling.x = 1; // int<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :/history/SubsetInfo/SubSampling.y = 1; // int<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; short analysed_sst(lat=1600, lon=3600);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :long_name = "analysed sea surface temperature";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :units = "kelvin";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :scale_factor = 0.01; // double<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :add_offset = 273.15; // double<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :_FillValue = -32768.0; // double<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; short analysis_error(lat=1600, lon=3600);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :long_name = "estimated error percentage";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :units = "percent";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :scale_factor = 0.01; // double<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :_FillValue = -32768.0; // double<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; byte mask(lat=1600, lon=3600);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :long_name = "sea/land/lake/ice field composite
+        mask";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :_Unsigned = "true";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :flag_meanings = "sea land lake ice";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :flag_masks = 1, 2, 4, 8; // int<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :flag_coding_name = "mask_coding";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :flag_descriptions = "sea\tland\tlake\tice";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; byte sea_ice_fraction(lat=1600, lon=3600);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :long_name = "sea ice area fraction";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :units = "";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :_Unsigned = "true";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :scale_factor = 0.01; // double<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :_FillValue = 128.0; // double<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float lat(lat=1600);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :units = "degrees_north";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :long_name = "latitude coordinate";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :standard_name = "latitude";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :valid_min = -79.94756f; // float<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :valid_max = 79.95f; // float<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; float lon(lon=3600);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :units = "degrees_east";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :long_name = "longitude coordinate";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :standard_name = "longitude";<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :valid_min = -179.95f; // float<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :valid_max = 179.91705f; // float<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int crs;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :wkt = "GEOGCS[ "WGS84(DD)",<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DATUM["WGS84",<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; SPHEROID["WGS84",<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 6378137.0,
+        298.257223563]],<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; PRIMEM["Greenwich", 0.0],<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; UNIT["degree",<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        0.017453292519943295],<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; AXIS["Geodetic longitude", EAST],<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; AXIS["Geodetic latitude", NORTH]]";<br>
+        &nbsp;&nbsp;&nbsp; :i2m =
+        "0.0999908447265625,0.0,0.0,-0.09999847412109375,-179.99999237060547,79.99999618530273";<br>
+        &nbsp;&nbsp;&nbsp; :product_type = "Medspiration";<br>
+        &nbsp;&nbsp;&nbsp; :metadata_profile = "beam";<br>
+        &nbsp;&nbsp;&nbsp; :metadata_version = "0.5";<br>
+        &nbsp;&nbsp;&nbsp; :Conventions = "CF-1.4";<br>
+        &nbsp;&nbsp;&nbsp; :start_date = "22-APR-2009 12:00:00.000000";<br>
+        &nbsp;&nbsp;&nbsp; :stop_date = "23-APR-2009 12:00:00.000000";<br>
+        &nbsp;&nbsp;&nbsp; :title = "Global Sea Surface Temperature Analysis";<br>
+        }<br>
+    </code>
+</p>
+
+<p>&nbsp;</p>
+<hr/>
+
+<p><i>Copyright &copy; 2010 by Brockmann Consult (beam-issues@brockmann-consult.de). All rights reserved.</i></p>
+
+</body>
+</html>

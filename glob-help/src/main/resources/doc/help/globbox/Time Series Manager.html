@@ -1,0 +1,116 @@
+<!--
+  ~ Copyright (C) 2010 Brockmann Consult GmbH (info@brockmann-consult.de)
+  ~
+  ~ This program is free software; you can redistribute it and/or modify it
+  ~ under the terms of the GNU General Public License as published by the Free
+  ~ Software Foundation; either version 3 of the License, or (at your option)
+  ~ any later version.
+  ~ This program is distributed in the hope that it will be useful, but WITHOUT
+  ~ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+  ~ FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+  ~ more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License along
+  ~ with this program; if not, see http://www.gnu.org/licenses/
+  -->
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title>Time Series Manager</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+
+<table class="header">
+    <tr class="header">
+        <td class="header">GlobToolbox
+        </td>
+        <td class="header" align="right"><img src="../images/GlobToolboxHeader.png" border=0>
+        </td>
+    </tr>
+</table>
+<hr/>
+
+<h3>Time Series Manager</h3>
+
+<p>
+    This page comprises a short definition of Time Series in the context of the BEAM GlobToolbox, and describes how such
+    Time Series are created and edited using the GlobToolbox Time Series Manager tool.
+</p>
+
+<h4>Time Series Specification</h4>
+
+<p>
+    Within the GlobToolbox, a <i>Time Series</i> is specified by several source products and variables. Every product
+    comprising remote-sensing bands may be used as source product of a Time Series; Glob*-products in particular.
+    However, a Time Series is limited to contain <i>compatible</i> source products, that is, to source products which
+    have the same bounds.
+</p>
+
+<p>
+    Variables in the context of the GlobToolbox are types of bands, such as <code>TSM_mean</code> or <code>SST</code>.
+    Thus, a time series comprises several bands of different variables, for example, 4 bands of <code>TSM_mean</code>,
+    each originating from a different source product.
+</p>
+
+<h4>Time Series Manager Tool</h4>
+
+<p>
+    The Time Series Manager, opened by a click on <img src="../images/ts-manager-button.gif" alt="ts-manager-button">,
+    allows to define and edit such time series. It provides a wizard which allows to specify source
+    products in three different ways: either a directory is scanned for compatible products or a directory is scanned
+    together with its sub-directories, or single products may be chosen (see Screenshot 1).
+</p>
+
+<p>&nbsp;</p>
+
+<div class="image">
+    <img src="../images/wizard-product-locations.png" alt="wizard-product-locations">
+
+    <div align="center"><font size="2">Screenshot 1 - Defining Time Series source products</font></div>
+</div>
+
+<p>&nbsp;</p>
+
+<p>
+    In the second step, the wizard allows to specify the variables the Time Series shall contain. The list of possible
+    variables is derived from the products which have been chosen in the previous step. The second step is displayed in
+    Screenshot 2.
+</p>
+
+<p>&nbsp;</p>
+
+<div class="image">
+    <img src="../images/wizard-variables.png" alt="wizard-variables">
+
+    <div align="center"><font size="2">Screenshot 2 - Specifying the variables</font></div>
+</div>
+
+<p>&nbsp;</p>
+
+<p>
+    After that, the user may assign the Time Series a name and finish the wizard. The Time Series Manager now looks as
+    displayed in Screenshot 3: the variables may be selected and de-selected and the product sources may be edited.
+    Additionally, information about the Time Series is provided, such as the start and end time, the CRS and the
+    dimensions. The view button on the right <img src="../images/view-button.png" alt="view-button"> allows to show one
+    of the selected variables in the VISAT Product Scene View.
+</p>
+
+<p>&nbsp;</p>
+
+<div class="image">
+    <img src="../images/ts-manager.png" alt="ts-manager">
+
+    <div align="center"><font size="2">Screenshot 3 - The Time Series Manager</font></div>
+</div>
+
+<p>&nbsp;</p>
+
+<hr/>
+
+<p><i>Copyright &copy; 2010 by Brockmann Consult (beam-issues@brockmann-consult.de). All rights reserved.</i></p>
+
+</body>
+</html>

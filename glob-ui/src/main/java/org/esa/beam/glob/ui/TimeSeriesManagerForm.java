@@ -432,7 +432,9 @@ class TimeSeriesManagerForm {
                 closeAssociatedViews(location);
                 timeSeries.removeProductLocation(location);
             }
-            fireContentsChanged(this, indices[0], indices[indices.length - 1]);
+            if (!toRemove.isEmpty()) {
+                fireContentsChanged(this, indices[0], indices[indices.length - 1]);
+            }
         }
 
         private void closeAssociatedViews(ProductLocation location) {

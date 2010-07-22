@@ -1,0 +1,65 @@
+<!--
+  ~ Copyright (C) 2010 Brockmann Consult GmbH (info@brockmann-consult.de)
+  ~
+  ~ This program is free software; you can redistribute it and/or modify it
+  ~ under the terms of the GNU General Public License as published by the Free
+  ~ Software Foundation; either version 3 of the License, or (at your option)
+  ~ any later version.
+  ~ This program is distributed in the hope that it will be useful, but WITHOUT
+  ~ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+  ~ FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+  ~ more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License along
+  ~ with this program; if not, see http://www.gnu.org/licenses/
+  -->
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title>Time Series Graph</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<table class="header">
+    <tr class="header">
+        <td class="header">GlobToolbox
+        </td>
+        <td class="header" align="right"><img src="../images/GlobToolboxHeader.png" border="0">
+        </td>
+    </tr>
+</table>
+<hr/>
+
+<h3>Time Series Graph</h3>
+
+<p>The main analysis tool for the time dimension the GlobToolbox comprises is the Time Series Graph, shown in
+    Screenshot 1. It is opened by clicking on <img src="../images/ts-graph-button.png" alt="ts-graph-button">.
+</p>
+
+<div class="image">
+    <img src="../images/ts-graph.png" alt="ts-graph">
+
+    <div align="center"><font size="2">Screenshot 1 - The Time Series Graph</font></div>
+</div>
+
+<p>
+    This tool may be used to compare values of different measures, such as <code>TSM</code> or <code>SST</code> (given
+    by the variables), for the specified Time Series. It allows to show an arbitrary number of variables for the whole
+    Time Series. The x-axis determines the point in time, the y-axes represent the unit of the respective variable. In
+    the example provided in Screenshot 1, the variables <code>TSM_mean</code> and <code>TSM_count</code> are compared;
+    each features its own y-axis. The values shown in the graph are the values at a given pixel position for all points
+    in time which are part of the Time Series. The graph always shows the values of the pixel position of the cursor;
+    additionally, it allows to show the values of the selected pins or of all pins. For automated analysis or further
+    investigation, it allows exporting the values given by the pins to a text file by clicking
+    <img src="../images/export.gif" alt="ts-graph-export"> (CSV-format, tab-separated).
+</p>
+
+<p>&nbsp;</p>
+<hr/>
+
+<p><i>Copyright &copy; 2010 by Brockmann Consult (beam-issues@brockmann-consult.de). All rights reserved.</i></p>
+
+</body>
+</html>

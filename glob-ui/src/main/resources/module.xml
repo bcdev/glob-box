@@ -44,6 +44,7 @@
             <initSide>EAST</initSide>
             <initIndex>3</initIndex>
             <toolBarId>GlobToolbox</toolBarId>
+            <helpId>timeSeriesPlayer</helpId>
         </toolView>
 
         <toolView>
