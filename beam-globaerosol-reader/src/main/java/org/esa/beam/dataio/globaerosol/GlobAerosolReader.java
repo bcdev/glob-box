@@ -18,9 +18,10 @@ package org.esa.beam.dataio.globaerosol;
 
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.dataio.merisl3.ISINGrid;
-import org.esa.beam.dataio.netcdf.NcAttributeMap;
-import org.esa.beam.dataio.netcdf.NcVariableMap;
-import org.esa.beam.dataio.netcdf.NetcdfReaderUtils;
+import org.esa.beam.dataio.netcdf.metadata.profiles.cf.CfBandPart;
+import org.esa.beam.dataio.netcdf.metadata.profiles.cf.CfIndexCodingPart;
+import org.esa.beam.dataio.netcdf.util.DataTypeUtils;
+import org.esa.beam.dataio.netcdf.util.MetadataUtils;
 import org.esa.beam.framework.dataio.AbstractProductReader;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.CrsGeoCoding;
@@ -161,8 +162,11 @@ public class GlobAerosolReader extends AbstractProductReader {
         isinGrid = new ISINGrid(ROW_COUNT);
         width = isinGrid.getRowCount() * 2;
         height = isinGrid.getRowCount();
-        NcAttributeMap globalAttributes = NcAttributeMap.create(ncfile);
-        String prodName = globalAttributes.getStringValue(NC_ATTRIBUTE_PRODUCT_ID);
+        Attribute productNameAttribute = ncfile.findGlobalAttribute(NC_ATTRIBUTE_PRODUCT_ID);
+        String prodName = null;
+        if (productNameAttribute != null) {
+            prodName = productNameAttribute.getStringValue();
+        }
         if (prodName == null) {
             prodName = FileUtils.getFilenameWithoutExtension(ncfile.getLocation());
         }
@@ -184,7 +188,7 @@ public class GlobAerosolReader extends AbstractProductReader {
         lonBand = product.getBand("lon");
         addGeoCoding(product);
 
-        NetcdfReaderUtils.transferMetadata(ncfile, product.getMetadataRoot());
+        MetadataUtils.readNetcdfMetadata(ncfile, product.getMetadataRoot());
         return product;
     }
 
@@ -242,45 +246,49 @@ public class GlobAerosolReader extends AbstractProductReader {
         Variable modelVar = ncfile.getRootGroup().findVariable(NC_VARIABLE_MODEL);
         String[] modeNames = null;
         if (modelVar != null && modelVar.getDimension(0).getLength() > 1) {
-            NcAttributeMap modelAttMap = NcAttributeMap.create(modelVar);
-            modeNames = modelAttMap.getStringValue("flag_meanings").split(" ");
+            Attribute attribute = modelVar.findAttribute("flag_meanings");
+            if (attribute != null) {
+                modeNames = attribute.getStringValue().split(" ");
+            }
         }
         List<Variable> variableList = ncfile.getRootGroup().getVariables();
         for (Variable variable : variableList) {
             int cellDimemsionIndex = variable.findDimensionIndex("cell");
             if (cellDimemsionIndex != -1) {
-                final NcAttributeMap attMap = NcAttributeMap.create(variable);
                 int modelDimemsionIndex = variable.findDimensionIndex(NC_VARIABLE_MODEL);
-                String bandName = NcVariableMap.getAbsoluteName(variable);
-                IndexCoding indexCoding = NetcdfReaderUtils.createIndexCoding(bandName + "_coding", attMap);
+                String bandName = variable.getName();
+
+                IndexCoding indexCoding = CfIndexCodingPart.readIndexCoding(variable, bandName);
                 if (indexCoding != null) {
                     product.getIndexCodingGroup().add(indexCoding);
                 }
                 if (modeNames != null && modelDimemsionIndex != -1) {
                     for (int i = 0; i < modeNames.length; i++) {
-                        Band band = NetcdfReaderUtils.createBand(variable, attMap, null, width, height);
-                        band.setName(band.getName() + "_" + modeNames[i]);
+                        final int rasterDataType = DataTypeUtils.getRasterDataType(variable);
+                        final Band band = product.addBand(variable.getName() + "_" + modeNames[i], rasterDataType);
+                        CfBandPart.readCfBandAttributes(variable, band);
                         Map<Integer, Integer> dimSelection = new HashMap<Integer, Integer>();
                         dimSelection.put(modelDimemsionIndex, i);
-                        handleBand(band, product, variable, cellDimemsionIndex, indexCoding, dimSelection);
+                        handleBand(band, variable, cellDimemsionIndex, indexCoding, dimSelection);
                     }
                 } else {
-                    Band band = NetcdfReaderUtils.createBand(variable, attMap, null, width, height);
+                    final int rasterDataType = DataTypeUtils.getRasterDataType(variable);
+                    final Band band = product.addBand(variable.getName(), rasterDataType);
+                    CfBandPart.readCfBandAttributes(variable, band);
                     Map<Integer, Integer> dimSelection = Collections.EMPTY_MAP;
-                    handleBand(band, product, variable, cellDimemsionIndex, indexCoding, dimSelection);
+                    handleBand(band, variable, cellDimemsionIndex, indexCoding, dimSelection);
                 }
             }
         }
     }
 
-    private void handleBand(Band band, Product product, Variable variable, int cellDimemsionIndex,
+    private void handleBand(Band band, Variable variable, int cellDimemsionIndex,
                             IndexCoding indexCoding, Map<Integer, Integer> dimSelection) {
         VariableAccessor1D accessor = new VariableAccessor1D(variable, cellDimemsionIndex, dimSelection);
         if (indexCoding != null) {
             band.setSampleCoding(indexCoding);
         }
         accessorMap.put(band, accessor);
-        product.addBand(band);
     }
 
     private NetcdfFile getInputNetcdfFile() throws IOException {
