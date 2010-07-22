@@ -16,7 +16,8 @@
 
 package org.esa.beam.dataio.globcover;
 
-import org.esa.beam.dataio.netcdf.NetcdfReaderUtils;
+import org.esa.beam.dataio.netcdf.util.DataTypeUtils;
+import org.esa.beam.dataio.netcdf.util.MetadataUtils;
 import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.framework.datamodel.MetadataElement;
 import org.esa.beam.framework.datamodel.ProductData;
@@ -147,8 +148,8 @@ class GCTileFile {
         return annual;
     }
 
-    public MetadataElement getMetadata() {
-        return NetcdfReaderUtils.createMetadataElement(ncFile);
+    public void readMetadata(MetadataElement metadataRoot) {
+        metadataRoot.addElement(MetadataUtils.readAttributeList(ncFile.getGlobalAttributes(), "MPH"));
     }
 
     @Override
@@ -218,7 +219,7 @@ class GCTileFile {
         if (unsignedAttrib != null) {
             isUnsigned = Boolean.parseBoolean(unsignedAttrib.getStringValue());
         }
-        return NetcdfReaderUtils.getProductDataType(variable.getDataType(), isUnsigned, true);
+        return DataTypeUtils.getEquivalentProductDataType(variable.getDataType(), isUnsigned, true);
     }
 
     static GeoPos createGeoPos(String lonString, String latString) {

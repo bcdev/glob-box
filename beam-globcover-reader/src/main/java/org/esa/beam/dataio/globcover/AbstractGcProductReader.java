@@ -64,7 +64,7 @@ abstract class AbstractGcProductReader extends AbstractProductReader {
         addGeoCoding(product);
         addBands(product, refGcFile);
         addIndexCodingAndBitmasks(product.getBand("SM"));
-        product.getMetadataRoot().addElement(refGcFile.getMetadata());
+        refGcFile.readMetadata(product.getMetadataRoot());
         return product;
     }
 
