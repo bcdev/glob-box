@@ -44,7 +44,7 @@ class TimeSeriesGraphForm {
     private final AbstractButton showTimeSeriesForSelectedPinsButton;
     private final AbstractButton showTimeSeriesForAllPinsButton;
     private final AbstractButton exportTimeSeriesButton;
-    private final AbstractButton filterButton;
+//    private final AbstractButton filterButton;
 
     TimeSeriesGraphForm(JFreeChart chart, Action showSelectedPinsAction, Action showAllPinsAction) {
         mainPanel = new JPanel(new BorderLayout(4, 4));
@@ -55,17 +55,17 @@ class TimeSeriesGraphForm {
         mainPanel.add(BorderLayout.CENTER, chartPanel);
         mainPanel.setPreferredSize(new Dimension(320, 200));
 
-        filterButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/Filter24.gif"),
-                                                      false);
-        filterButton.setName("filterButton");
-        filterButton.setToolTipText("Choose which variables to display");
-        filterButton.setEnabled(true);
-        filterButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // choose variables to display
-            }
-        });
+//        filterButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/Filter24.gif"),
+//                                                      false);
+//        filterButton.setName("filterButton");
+//        filterButton.setToolTipText("Choose which variables to display");
+//        filterButton.setEnabled(true);
+//        filterButton.addActionListener(new ActionListener() {
+//            @Override
+//            public void actionPerformed(ActionEvent e) {
+//                choose variables to display
+//            }
+//        });
         //////////////////////////////////////////
         showTimeSeriesForSelectedPinsButton = ToolButtonFactory.createButton(
                 UIUtils.loadImageIcon("icons/SelectedPinSpectra24.gif"), true);
@@ -121,8 +121,8 @@ class TimeSeriesGraphForm {
         gbc.fill = GridBagConstraints.NONE;
         gbc.insets.top = 2;
         gbc.gridy = 0;
-        buttonPanel.add(filterButton, gbc);
-        gbc.gridy++;
+//        buttonPanel.add(filterButton, gbc);
+//        gbc.gridy++;
         buttonPanel.add(showTimeSeriesForSelectedPinsButton, gbc);
         gbc.gridy++;
         buttonPanel.add(showTimeSeriesForAllPinsButton, gbc);
@@ -146,7 +146,7 @@ class TimeSeriesGraphForm {
     }
 
     void setButtonsEnabled(boolean enabled) {
-        filterButton.setEnabled(enabled);
+//        filterButton.setEnabled(enabled);
         showTimeSeriesForSelectedPinsButton.setEnabled(enabled);
         showTimeSeriesForAllPinsButton.setEnabled(enabled);
     }

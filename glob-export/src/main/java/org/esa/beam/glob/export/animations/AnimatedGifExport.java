@@ -237,12 +237,9 @@ public class AnimatedGifExport extends ProgressMonitorSwingWorker<Void, Void> {
                 String buttonText = button.getText();
                 final int index = buttonText.indexOf(" (");
                 if (index != -1) {
-                    buttonText = buttonText.substring(index);
+                    buttonText = buttonText.substring(0, index);
                 }
                 level = Integer.parseInt(buttonText);
-                if (level < 2) {
-
-                }
             }
         }
     }

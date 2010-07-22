@@ -135,11 +135,17 @@ public class ExportTimeBasedKmz extends ExecCommand {
         maxLevel = maxLevel > 10 ? 10 : maxLevel;
 
         final JPanel levelPanel = new JPanel(new GridLayout(maxLevel, 1));
-        levelPanel.setBorder(BorderFactory.createTitledBorder("Level"));
+        levelPanel.setBorder(BorderFactory.createTitledBorder("Resolution Level"));
         ButtonGroup buttonGroup = new ButtonGroup();
         final RadioButtonActionListener radioButtonListener = new RadioButtonActionListener();
         for (int i = 0; i < maxLevel; i++) {
-            final JRadioButton button = new JRadioButton(Integer.toString(i), true);
+            String buttonText = Integer.toString(i);
+            if (i == 0) {
+                buttonText += " (high, very slow)";
+            } else if (i == maxLevel - 1) {
+                buttonText += " (low, fast)";
+            }
+            final JRadioButton button = new JRadioButton(buttonText, true);
             buttonGroup.add(button);
             levelPanel.add(button);
             button.addActionListener(radioButtonListener);
@@ -237,7 +243,12 @@ public class ExportTimeBasedKmz extends ExecCommand {
         public void actionPerformed(ActionEvent e) {
             final JRadioButton button = (JRadioButton) e.getSource();
             if (button.isSelected()) {
-                level = Integer.parseInt(button.getText());
+                String buttonText = button.getText();
+                final int index = buttonText.indexOf(" (");
+                if (index != -1) {
+                    buttonText = buttonText.substring(0, index);
+                }
+                level = Integer.parseInt(buttonText);
             }
         }
     }
