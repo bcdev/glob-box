@@ -20,15 +20,9 @@
     <dependency>
         <module>beam-core</module>
     </dependency>
-
-    <dependency>
-        <module>beam-netcdf-reader</module>
-    </dependency>
-
     <dependency>
         <module>beam-netcdf</module>
     </dependency>
-
     <dependency>
         <module>beam-visat</module>
         <optional>true</optional>
@@ -41,7 +35,7 @@
             <class>org.esa.beam.visat.actions.ProductImportAction</class>
             <id>importMedspirationProduct</id>
             <helpId>importMedspirationProduct</helpId>
-            <formatName>NetCDF4_supported</formatName>
+            <formatName>NetCDF/CF</formatName>
             <profileClassName>org.esa.beam.dataio.medspiration.profile.MedspirationSpi</profileClassName>
             <useAllFileFilter>false</useAllFileFilter>
             <text>Import Medspiration Product...</text>

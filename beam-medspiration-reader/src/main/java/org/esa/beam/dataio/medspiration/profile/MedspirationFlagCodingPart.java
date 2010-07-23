@@ -87,7 +87,7 @@ public class MedspirationFlagCodingPart extends ProfilePart {
         }
     }
 
-    private static List<MetadataAttribute> getFlagAttributes(String comment, String separator) {
+    static List<MetadataAttribute> getFlagAttributes(String comment, String separator) {
         String[] split;
         if (comment.contains(separator)) {
             split = comment.split(separator);

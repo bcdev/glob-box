@@ -64,7 +64,7 @@ public class MedspirationIndexCodingPart extends ProfilePart {
         }
     }
 
-    private static List<MetadataAttribute> getIndexAttributes(String comment) {
+    static List<MetadataAttribute> getIndexAttributes(String comment) {
         if (comment.contains(";")) {
             String[] split = comment.split(";");
             return createAttributes(split, "(\\d+)\\s+(.+)", false);
