@@ -90,7 +90,7 @@ public class GlobAerosolReader extends AbstractProductReader {
         if (titleAttr != null) {
             if (titleAttr.getStringValue().startsWith("Statistic")) {
                 delegateReader = new NetCdfReader(new NetCdfReaderPlugIn(), CF_PROFILE);
-                return delegateReader.readProductNodes(getInput(), null);
+                return delegateReader.readProductNodes(getInput(), getSubsetDef());
             }
         }
         accessorMap = new HashMap<Band, VariableAccessor1D>();
