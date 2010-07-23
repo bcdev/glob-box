@@ -18,6 +18,8 @@ package org.esa.beam.dataio.globaerosol;
 
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.dataio.merisl3.ISINGrid;
+import org.esa.beam.dataio.netcdf.NetCdfReader;
+import org.esa.beam.dataio.netcdf.NetCdfReaderPlugIn;
 import org.esa.beam.dataio.netcdf.metadata.profiles.cf.CfBandPart;
 import org.esa.beam.dataio.netcdf.metadata.profiles.cf.CfIndexCodingPart;
 import org.esa.beam.dataio.netcdf.util.DataTypeUtils;
@@ -61,20 +63,21 @@ public class GlobAerosolReader extends AbstractProductReader {
 
     private static final String NC_ATTRIBUTE_START_DATE = "StartDate";
     private static final String NC_VARIABLE_MODEL = "model";
-
     private static final int ROW_COUNT = 2004;
+    static final String UTC_DATE_PATTERN = "yyyy-MM-dd";
+    private static final String NC_ATTRIBUTE_PERIOD = "Period";
+    private static final String NC_ATTRIBUTE_PRODUCT_ID = "ProductID";
+    private static final String CF_PROFILE = "org.esa.beam.dataio.netcdf.metadata.profiles.cf.CfProfileSpi";
 
     private NetcdfFile ncfile;
     private ISINGrid isinGrid;
     private Map<Band, VariableAccessor1D> accessorMap;
     private RowInfo[] rowInfos;
     private Band lonBand;
-
     private int width;
     private int height;
-    static final String UTC_DATE_PATTERN = "yyyy-MM-dd";
-    private static final String NC_ATTRIBUTE_PERIOD = "Period";
-    private static final String NC_ATTRIBUTE_PRODUCT_ID = "ProductID";
+
+    private NetCdfReader delegateReader;
 
     protected GlobAerosolReader(GlobAerosolReaderPlugIn readerPlugIn) {
         super(readerPlugIn);
@@ -83,6 +86,13 @@ public class GlobAerosolReader extends AbstractProductReader {
     @Override
     protected Product readProductNodesImpl() throws IOException {
         ncfile = getInputNetcdfFile();
+        Attribute titleAttr = ncfile.findGlobalAttribute("title");
+        if (titleAttr != null) {
+            if (titleAttr.getStringValue().startsWith("Statistic")) {
+                delegateReader = new NetCdfReader(new NetCdfReaderPlugIn(), CF_PROFILE);
+                return delegateReader.readProductNodes(getInput(), null);
+            }
+        }
         accessorMap = new HashMap<Band, VariableAccessor1D>();
         return createProduct();
     }
@@ -92,6 +102,10 @@ public class GlobAerosolReader extends AbstractProductReader {
                                           int sourceStepX, int sourceStepY, Band destBand, int destOffsetX,
                                           int destOffsetY, int destWidth, int destHeight, ProductData destBuffer,
                                           ProgressMonitor pm) throws IOException {
+        if (delegateReader != null) {
+            delegateReader.readBandRasterData(destBand, destOffsetX, destOffsetY, destWidth, destHeight, destBuffer, pm);
+            return;
+        }
 
         synchronized (this) {
             if (rowInfos == null) {
