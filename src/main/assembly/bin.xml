@@ -53,11 +53,11 @@
                 <fileMode>0444</fileMode>
                 <dependencySets>
                     <dependencySet>
-                        <outputDirectory>modules</outputDirectory>
+                        <outputDirectory>lib</outputDirectory>
                         <outputFileNameMapping>${artifact.artifactId}-${artifact.version}.${artifact.extension}
                         </outputFileNameMapping>
                         <includes>
-                            <include>com.bc.ceres:ceres-binio</include>
+                            <include>net.sourceforge.jexcelapi:jxl</include>
                         </includes>
                     </dependencySet>
                 </dependencySets>
