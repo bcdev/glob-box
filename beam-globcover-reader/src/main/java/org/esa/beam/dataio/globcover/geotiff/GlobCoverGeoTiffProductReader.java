@@ -36,6 +36,9 @@ import java.util.List;
 
 class GlobCoverGeoTiffProductReader extends GeoTiffProductReader {
 
+    private static final String BAND_NAME_CLA_QL = "CLA_QL";
+    private static final String BAND_NAME_CLA = "CLA";
+
     /**
      * Constructs a new abstract product reader.
      *
@@ -51,11 +54,12 @@ class GlobCoverGeoTiffProductReader extends GeoTiffProductReader {
         final Product product = super.readProductNodesImpl();
         final File inputFile = new File(getInput().toString());
         final Band band = product.getBandAt(0);
-        band.setName(getBandName(inputFile));
+        String bandName = getBandName(inputFile);
+        band.setName(bandName);
         final File parentDir = inputFile.getParentFile();
         final File legendFile = parentDir.listFiles(new LegendFilenameFilter())[0];
         final LegendClass[] legendClasses = LegendParser.parse(legendFile, isFileRegional(inputFile));
-        if (legendClasses.length > 0) {
+        if (legendClasses.length > 0 && bandName.equals(BAND_NAME_CLA)) {
             assignLegend(product, band, legendFile, legendClasses);
         }
 
@@ -91,9 +95,9 @@ class GlobCoverGeoTiffProductReader extends GeoTiffProductReader {
 
     private String getBandName(File inputFile) {
         if (FileUtils.getFilenameWithoutExtension(inputFile).endsWith("_QL")) {
-            return "CLA_QL";
+            return BAND_NAME_CLA_QL;
         } else {
-            return "CLA";
+            return BAND_NAME_CLA;
         }
     }
 
