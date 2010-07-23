@@ -16,7 +16,8 @@
 package org.esa.beam.dataio.globcolour;
 
 import com.bc.ceres.core.ProgressMonitor;
-import org.esa.beam.dataio.netcdf.NetcdfReaderUtils;
+import org.esa.beam.dataio.netcdf.util.DataTypeUtils;
+import org.esa.beam.dataio.netcdf.util.MetadataUtils;
 import org.esa.beam.framework.dataio.AbstractProductReader;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.CrsGeoCoding;
@@ -112,7 +113,7 @@ public class BinnedProductReader extends AbstractProductReader {
         }
 
         product.setFileLocation(file);
-        NetcdfReaderUtils.transferMetadata(ncFile, product.getMetadataRoot());
+        MetadataUtils.readNetcdfMetadata(ncFile, product.getMetadataRoot());
 
         final Dimension bin = ncroot.findDimension(ReaderConstants.BIN);
         final List<Variable> variableList = findVariables(ncroot, bin);
@@ -356,7 +357,7 @@ public class BinnedProductReader extends AbstractProductReader {
 
         for (final Variable variable : variableList) {
             final String variableName = variable.getShortName();
-            final int rasterDataType = NetcdfReaderUtils.getRasterDataType(variable.getDataType(),
+            final int rasterDataType = DataTypeUtils.getRasterDataType(variable.getDataType(),
                                                                            variable.isUnsigned());
             final Band band = new Band(variableName, rasterDataType, rasterWidth, rasterHeight);
 

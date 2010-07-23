@@ -16,8 +16,8 @@
 package org.esa.beam.dataio.globcolour;
 
 import com.bc.ceres.core.ProgressMonitor;
-import org.esa.beam.dataio.netcdf.NetcdfReader;
-import org.esa.beam.dataio.netcdf.NetcdfReaderPlugIn;
+import org.esa.beam.dataio.netcdf.NetCdfReader;
+import org.esa.beam.dataio.netcdf.NetCdfReaderPlugIn;
 import org.esa.beam.framework.dataio.AbstractProductReader;
 import org.esa.beam.framework.dataio.ProductReader;
 import org.esa.beam.framework.datamodel.Band;
@@ -40,8 +40,8 @@ import java.io.IOException;
  * @version $Revision: 3720 $ $Date: 2008-11-19 10:44:16 +0100 (Mi, 19. Nov 2008) $
  */
 public class MappedProductReader extends AbstractProductReader {
-
-    private final ProductReader productReader;
+    
+    private final ProductReader delegateReader;
 
     /**
      * Constructs an instance of this class.
@@ -50,8 +50,7 @@ public class MappedProductReader extends AbstractProductReader {
      */
     public MappedProductReader(MappedProductReaderPlugIn productReaderPlugIn) {
         super(productReaderPlugIn);
-
-        productReader = new NetcdfReader(new NetcdfReaderPlugIn());
+        delegateReader = new NetCdfReader(new NetCdfReaderPlugIn(), MappedProductReaderPlugIn.CF_PROFILE);
     }
 
     /**
@@ -66,7 +65,7 @@ public class MappedProductReader extends AbstractProductReader {
      */
     @Override
     protected Product readProductNodesImpl() throws IOException {
-        final Product product = productReader.readProductNodes(getInput(), getSubsetDef());
+        final Product product = delegateReader.readProductNodes(getInput(), getSubsetDef());
 
         if (ProductUtilities.isDiagnosticDataSet(product)) {
             product.setProductType(ReaderConstants.MAPPED_DDS);
@@ -122,7 +121,7 @@ public class MappedProductReader extends AbstractProductReader {
                                           ProductData targetBuffer,
                                           ProgressMonitor pm)
             throws IOException {
-        productReader.readBandRasterData(targetBand, targetOffsetX, targetOffsetY, targetWidth, targetHeight,
+        delegateReader.readBandRasterData(targetBand, targetOffsetX, targetOffsetY, targetWidth, targetHeight,
                                          targetBuffer, pm);
     }
 
@@ -139,8 +138,8 @@ public class MappedProductReader extends AbstractProductReader {
      */
     @Override
     public void close() throws IOException {
-        if (productReader != null) {
-            productReader.close();
+        if (delegateReader != null) {
+            delegateReader.close();
         }
         super.close();
     }
