@@ -76,7 +76,7 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
 
     @Override
     protected JComponent createControl() {
-        form = new TimeSeriesPlayerForm();
+        form = new TimeSeriesPlayerForm(getDescriptor());
         form.getTimeSlider().addChangeListener(new SliderChangeListener());
         ProductSceneView view = VisatApp.getApp().getSelectedProductSceneView();
         if (view != null) {

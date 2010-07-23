@@ -61,6 +61,7 @@
             <initSide>EAST</initSide>
             <initIndex>3</initIndex>
             <toolBarId>GlobToolbox</toolBarId>
+            <helpId>timeSeriesManager</helpId>
         </toolView>
 
         <toolView>
@@ -76,6 +77,7 @@
             <initState>FLOATING</initState>
             <initSide>EAST</initSide>
             <initIndex>4</initIndex>
+            <helpId>timeSeriesGraph</helpId>
             <toolBarId>GlobToolbox</toolBarId>
         </toolView>
 

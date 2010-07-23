@@ -20,7 +20,9 @@ import com.bc.ceres.swing.TableLayout;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.RasterDataNode;
+import org.esa.beam.framework.help.HelpSys;
 import org.esa.beam.framework.ui.UIUtils;
+import org.esa.beam.framework.ui.application.PageComponentDescriptor;
 import org.esa.beam.framework.ui.product.ProductSceneView;
 import org.esa.beam.framework.ui.tool.ToolButtonFactory;
 import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
@@ -52,6 +54,7 @@ import java.util.TimeZone;
  */
 class TimeSeriesPlayerForm extends JPanel {
 
+    private final PageComponentDescriptor descriptor;
     private final ImageIcon playIcon = UIUtils.loadImageIcon("icons/Play24.png");
     private final ImageIcon stopIcon = UIUtils.loadImageIcon("icons/Stop24.png");
     private final ImageIcon pauseIcon = UIUtils.loadImageIcon("icons/Pause24.png");
@@ -84,7 +87,8 @@ class TimeSeriesPlayerForm extends JPanel {
      */
     private static final String DATE_SEPARATOR = " ";
 
-    TimeSeriesPlayerForm() {
+    TimeSeriesPlayerForm(PageComponentDescriptor descriptor) {
+        this.descriptor = descriptor;
         this.setLayout(createLayout());
         final JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
 
@@ -100,6 +104,9 @@ class TimeSeriesPlayerForm extends JPanel {
         speedUnit = new JLabel();
         plusButton = createPlusButton();
         exportButton = createExportButton();
+
+        AbstractButton helpButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/Help24.gif"), false);
+        helpButton.setToolTipText("Help");
 
         updateSpeedUnit();
         setUIEnabled(false);
@@ -117,6 +124,12 @@ class TimeSeriesPlayerForm extends JPanel {
         buttonsPanel.add(speedUnit);
         buttonsPanel.add(new JLabel("           "));
         buttonsPanel.add(exportButton);
+        buttonsPanel.add(helpButton);
+
+        if (descriptor.getHelpId() != null) {
+            HelpSys.enableHelpOnButton(helpButton, descriptor.getHelpId());
+            HelpSys.enableHelpKey(buttonsPanel, descriptor.getHelpId());
+        }
 
         this.add(dateLabel);
         this.add(timeSlider);
