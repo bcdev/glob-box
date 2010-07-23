@@ -28,8 +28,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
+ * Preliminary API. Do not use.
+ *
  * @author Thomas Storm
  */
+
+
+// todo move into wordld fire reader
 public class WorldFireTimeHandler {
 
     protected Map<PixelPos, ProductData.UTC[]> createPixelToDateMap(File product) throws ParseException, IOException {

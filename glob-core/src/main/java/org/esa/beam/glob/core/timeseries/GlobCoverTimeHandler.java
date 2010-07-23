@@ -20,6 +20,12 @@ import org.esa.beam.framework.datamodel.ProductData;
 
 import java.text.ParseException;
 
+/**
+ * Preliminary API. Do not use.
+ *
+ * @author Thomas Storm
+ */
+
 public class GlobCoverTimeHandler {
 
     // TODO ts move into GlobCover-Reader

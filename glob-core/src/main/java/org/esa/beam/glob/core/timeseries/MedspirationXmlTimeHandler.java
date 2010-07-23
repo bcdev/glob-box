@@ -37,8 +37,12 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * Preliminary API. Do not use.
+ *
  * @author Thomas Storm
  */
+
+// TODO move into medspiration reader
 public class MedspirationXmlTimeHandler {
 
     protected Map<PixelPos, ProductData.UTC[]> createPixelToDateMap(File file) throws ParseException, IOException {

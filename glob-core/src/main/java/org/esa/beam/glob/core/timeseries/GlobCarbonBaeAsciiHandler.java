@@ -28,8 +28,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
+ * Preliminary API. Do not use.
+ *
  * @author Thomas Storm
  */
+
+// TODO move functionality into GlobCarbonReader 
 public class GlobCarbonBaeAsciiHandler {
 
     protected Map<PixelPos, ProductData.UTC[]> generateTimePerPixelMap(final File productFile) throws IOException,
