@@ -80,16 +80,11 @@ public class MappedProductReaderPlugIn implements ProductReaderPlugIn {
             return DecodeQualification.UNABLE;
         }
 
-        NetcdfFile file = null;
+        NetcdfFile ncFile = null;
         try {
             final String path = input.toString();
-
-            file = NetcdfFile.open(path);
-//            if (!file.isNetcdf3FileFormat()) {
-//                return DecodeQualification.UNABLE;
-//            }
-
-            final Attribute title = file.findGlobalAttributeIgnoreCase(ProductAttributes.TITLE);
+            ncFile = NetcdfFile.open(path);
+            final Attribute title = ncFile.findGlobalAttributeIgnoreCase(ProductAttributes.TITLE);
             if (title == null || !title.isString() || !title.getStringValue().toLowerCase().contains(
                     "globcolour")) {
                 return DecodeQualification.UNABLE;
@@ -98,8 +93,8 @@ public class MappedProductReaderPlugIn implements ProductReaderPlugIn {
             return DecodeQualification.UNABLE;
         } finally {
             try {
-                if (file != null) {
-                    file.close();
+                if (ncFile != null) {
+                    ncFile.close();
                 }
             } catch (IOException e) {
                 // OK, ignored
@@ -135,7 +130,7 @@ public class MappedProductReaderPlugIn implements ProductReaderPlugIn {
 
     /**
      * Returns an array of the default file extensions associated with each format
-     * name returned by the <code>{@link#getFormatNames}</code> method.
+     * name returned by the <code>{@link #getFormatNames}</code> method.
      * <p/>
      * The array returned has the same length as the array returned by the
      * <code>{@link #getFormatNames}</code> method.
