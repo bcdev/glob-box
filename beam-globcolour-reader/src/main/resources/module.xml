@@ -3,7 +3,7 @@
     <symbolicName>beam-globcolour-reader</symbolicName>
     <version>2.0</version>
     <name>GlobColour Product Readers</name>
-    
+
     <description>
         This module provides product readers for importing Binned and Mapped GlobColour data products into BEAM/VISAT.
     </description>
@@ -18,7 +18,7 @@
         <module>beam-core</module>
     </dependency>
     <dependency>
-        <module>lib-netcdf</module>
+        <module>beam-netcdf</module>
     </dependency>
     <dependency>
         <module>beam-visat</module>
