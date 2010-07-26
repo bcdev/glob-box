@@ -24,6 +24,7 @@ import org.esa.beam.framework.datamodel.CrsGeoCoding;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.util.Guardian;
+import org.esa.beam.util.io.FileUtils;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.operation.TransformException;
@@ -37,7 +38,7 @@ import ucar.nc2.Group;
 import ucar.nc2.NetcdfFile;
 import ucar.nc2.Variable;
 
-import java.awt.*;
+import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.io.File;
 import java.io.IOException;
@@ -100,8 +101,8 @@ public class BinnedProductReader extends AbstractProductReader {
                                                           0.0);
 
         equirectGrid = createEquirectGrid(minLat, maxLat, minLon, maxLon, latitudeOfTrueScale);
-
-        final Product product = new Product(file.getName(),
+        String productName = FileUtils.getFilenameWithoutExtension(file);
+        final Product product = new Product(productName,
                                             ReaderConstants.BINNED_GLOBAL,
                                             equirectGrid.getColCount(),
                                             equirectGrid.getRowCount(),
@@ -358,7 +359,7 @@ public class BinnedProductReader extends AbstractProductReader {
         for (final Variable variable : variableList) {
             final String variableName = variable.getShortName();
             final int rasterDataType = DataTypeUtils.getRasterDataType(variable.getDataType(),
-                                                                           variable.isUnsigned());
+                                                                       variable.isUnsigned());
             final Band band = new Band(variableName, rasterDataType, rasterWidth, rasterHeight);
 
             double fillValue;
