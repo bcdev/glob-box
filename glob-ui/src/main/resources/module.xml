@@ -27,6 +27,9 @@
     <dependency>
         <module>glob-core</module>
     </dependency>
+    <dependency>
+        <module>glob-export</module>
+    </dependency>
 
     <extension point="beam-ui:toolViews">
 
