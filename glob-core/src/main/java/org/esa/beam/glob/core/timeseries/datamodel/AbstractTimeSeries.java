@@ -36,7 +36,7 @@ import java.util.WeakHashMap;
 public abstract class AbstractTimeSeries {
 
     /**
-     * may NOT contain underscore character '_'
+     * may NOT contain SEPARATOR
      */
     static final String DATE_FORMAT = "yyyyMMdd.HHmmss.SSS";
 
