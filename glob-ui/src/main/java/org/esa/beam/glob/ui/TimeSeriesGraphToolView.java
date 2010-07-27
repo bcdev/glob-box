@@ -106,8 +106,9 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
     private void maySetCurrentView(ProductSceneView view) {
         final String viewProductType = view.getProduct().getProductType();
         if (view != currentView &&
-            !view.isRGB() &&
-            viewProductType.equals(AbstractTimeSeries.TIME_SERIES_PRODUCT_TYPE)) {
+                !view.isRGB() &&
+                viewProductType.equals(AbstractTimeSeries.TIME_SERIES_PRODUCT_TYPE) &&
+                TimeSeriesMapper.getInstance().getTimeSeries(view.getProduct()) != null) {
             setCurrentView(view);
         }
     }

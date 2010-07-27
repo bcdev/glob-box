@@ -50,8 +50,10 @@ public class ExportTimeBasedText extends ProgressMonitorSwingWorker<Void, Void> 
     protected Void doInBackground(ProgressMonitor pm) throws Exception {
         final VisatApp app = VisatApp.getApp();
         final ProductSceneView view = app.getSelectedProductSceneView();
-        if (view != null && view.getProduct() != null &&
-            view.getProduct().getProductType().equals(AbstractTimeSeries.TIME_SERIES_PRODUCT_TYPE)) {
+        if (view != null &&
+                view.getProduct() != null &&
+                view.getProduct().getProductType().equals(AbstractTimeSeries.TIME_SERIES_PRODUCT_TYPE) &&
+                TimeSeriesMapper.getInstance().getTimeSeries(view.getProduct()) != null) {
             AbstractTimeSeries timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(view.getProduct());
             List<List<Band>> bandList = new ArrayList<List<Band>>();
             final List<String> timeVariables = timeSeries.getTimeVariables();

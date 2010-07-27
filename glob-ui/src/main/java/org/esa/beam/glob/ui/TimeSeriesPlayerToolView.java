@@ -81,8 +81,9 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
         ProductSceneView view = VisatApp.getApp().getSelectedProductSceneView();
         if (view != null) {
             final String viewProductType = view.getProduct().getProductType();
-            if (!view.isRGB() && viewProductType.equals(
-                    AbstractTimeSeries.TIME_SERIES_PRODUCT_TYPE)) {
+            if (!view.isRGB() &&
+                    viewProductType.equals(AbstractTimeSeries.TIME_SERIES_PRODUCT_TYPE) &&
+                    TimeSeriesMapper.getInstance().getTimeSeries(view.getProduct()) != null) {
                 setCurrentView(view);
             }
         }
@@ -177,8 +178,10 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
                 ProductSceneView view = (ProductSceneView) contentPane;
                 final RasterDataNode viewRaster = view.getRaster();
                 final String viewProductType = viewRaster.getProduct().getProductType();
-                if (currentView != view && !view.isRGB() && viewProductType.equals(
-                        AbstractTimeSeries.TIME_SERIES_PRODUCT_TYPE)) {
+                if (currentView != view &&
+                        !view.isRGB() &&
+                        viewProductType.equals(AbstractTimeSeries.TIME_SERIES_PRODUCT_TYPE) &&
+                        TimeSeriesMapper.getInstance().getTimeSeries(view.getProduct()) != null) {
                     setCurrentView(view);
                 }
             }
