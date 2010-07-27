@@ -24,6 +24,9 @@
         <module>beam-netcdf</module>
     </dependency>
     <dependency>
+        <module>beam-geotiff</module>
+    </dependency>
+    <dependency>
         <module>beam-visat</module>
         <optional>true</optional>
     </dependency>
