@@ -270,9 +270,8 @@ public class GlobAerosolReader extends AbstractProductReader {
             int cellDimemsionIndex = variable.findDimensionIndex("cell");
             if (cellDimemsionIndex != -1) {
                 int modelDimemsionIndex = variable.findDimensionIndex(NC_VARIABLE_MODEL);
-                String bandName = variable.getName();
 
-                IndexCoding indexCoding = CfIndexCodingPart.readIndexCoding(variable, bandName);
+                IndexCoding indexCoding = CfIndexCodingPart.readIndexCoding(variable, variable.getName() + "_index_coding");
                 if (indexCoding != null) {
                     product.getIndexCodingGroup().add(indexCoding);
                 }
