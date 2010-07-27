@@ -19,12 +19,12 @@ package org.esa.beam.glob.core;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.WeakHashMap;
 
 public class TimeSeriesMapper {
 
-    private Map<Product, AbstractTimeSeries> map = new HashMap<Product, AbstractTimeSeries>();
+    private Map<Product, AbstractTimeSeries> map = new WeakHashMap<Product, AbstractTimeSeries>();
 
     private TimeSeriesMapper() {
     }

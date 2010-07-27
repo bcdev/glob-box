@@ -39,4 +39,13 @@ class TimeSeriesProductReader extends DimapProductReader {
         }
         return readProduct;
     }
+
+    @Override
+    public void close() throws IOException {
+        super.close();
+        Product product = getProduct();
+        if (product.getProductType().equals(TIME_SERIES_PRODUCT_TYPE)) {
+            TimeSeriesMapper.getInstance().remove(product);
+        }
+    }
 }
