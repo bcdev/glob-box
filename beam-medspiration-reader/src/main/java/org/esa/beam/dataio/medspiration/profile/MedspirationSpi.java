@@ -18,7 +18,7 @@ package org.esa.beam.dataio.medspiration.profile;
 
 import org.esa.beam.dataio.netcdf.metadata.ProfileInitPart;
 import org.esa.beam.dataio.netcdf.metadata.ProfilePart;
-import org.esa.beam.dataio.netcdf.metadata.profiles.beam.BeamProfileSpi;
+import org.esa.beam.dataio.netcdf.metadata.profiles.cf.CfProfileSpi;
 import org.esa.beam.framework.dataio.DecodeQualification;
 import org.esa.beam.util.io.BeamFileFilter;
 import ucar.nc2.Attribute;
@@ -30,7 +30,7 @@ import ucar.nc2.NetcdfFile;
  * @author Marco Zühlke
  * @author Thomas Storm
  */
-public class MedspirationSpi extends BeamProfileSpi {
+public class MedspirationSpi extends CfProfileSpi {
 
     private static final String[] FILE_EXTENSIONS = new String[]{".nc", ".nc.gz"};
 
