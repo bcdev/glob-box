@@ -172,7 +172,7 @@ public class GlobAerosolReader extends AbstractProductReader {
         super.close();
     }
 
-    private Product createProduct() throws IOException {
+    private Product createProduct() {
         isinGrid = new ISINGrid(ROW_COUNT);
         width = isinGrid.getRowCount() * 2;
         height = isinGrid.getRowCount();
@@ -218,7 +218,7 @@ public class GlobAerosolReader extends AbstractProductReader {
         return Period.valueOf(startDateAttribute.getStringValue());
     }
 
-    private void addGeoCoding(Product product) throws IOException {
+    private void addGeoCoding(Product product) {
 
         DefaultGeographicCRS base = DefaultGeographicCRS.WGS84;
         final MathTransformFactory transformFactory = ReferencingFactoryFinder.getMathTransformFactory(null);
@@ -226,7 +226,8 @@ public class GlobAerosolReader extends AbstractProductReader {
         try {
             parameters = transformFactory.getDefaultParameters("OGC:Sinusoidal");
         } catch (NoSuchIdentifierException e) {
-            throw new IOException(e);
+            Debug.trace(e);
+            return;
         }
         DefaultEllipsoid ellipsoid = (DefaultEllipsoid) base.getDatum().getEllipsoid();
         parameters.parameter("semi_major").setValue(ellipsoid.getSemiMajorAxis());
@@ -238,7 +239,8 @@ public class GlobAerosolReader extends AbstractProductReader {
         try {
             mathTransform = transformFactory.createParameterizedTransform(parameters);
         } catch (Exception e) {
-            throw new IOException(e);
+            Debug.trace(e);
+            return;
         }
 
         CoordinateReferenceSystem modelCrs = new DefaultProjectedCRS("Sinusoidal", base, mathTransform,
@@ -252,7 +254,7 @@ public class GlobAerosolReader extends AbstractProductReader {
                                                       pixelSizeY);
             product.setGeoCoding(geoCoding);
         } catch (Exception e) {
-            throw new IOException(e);
+            Debug.trace(e);
         }
     }
 
