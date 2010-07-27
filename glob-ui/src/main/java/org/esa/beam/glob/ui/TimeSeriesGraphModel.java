@@ -377,7 +377,6 @@ class TimeSeriesGraphModel {
 
         private int maxColorIndex;
         private Color[] colors = {
-                new Color(0, 0, 0, ALPHA),
                 new Color(0, 0, 60, ALPHA),
                 new Color(0, 60, 0, ALPHA),
                 new Color(60, 0, 0, ALPHA),
