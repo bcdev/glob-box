@@ -99,9 +99,11 @@ public class TimeCsvExporter extends CsvExporter {
             if (!bandList.isEmpty()) {
                 for (Band band : bandList) {
                     TimeCoding timeCoding = timeSeries.getRasterTimeMap().get(band);
-                    final Date date = timeCoding.getStartTime().getAsDate();
-                    SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
-                    columns.add(sdf.format(date));
+                    if (timeCoding != null) {
+                        final Date date = timeCoding.getStartTime().getAsDate();
+                        SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
+                        columns.add(sdf.format(date));
+                    }
                 }
                 break;
             }

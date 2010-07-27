@@ -261,20 +261,22 @@ class TimeSeriesGraphModel {
         AbstractTimeSeries timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(sceneView.getProduct());
 
         TimeCoding timeCoding = timeSeries.getRasterTimeMap().get(raster);
-        final ProductData.UTC startTime = timeCoding.getStartTime();
-        final Millisecond timePeriod = new Millisecond(startTime.getAsDate(),
-                                                       ProductData.UTC.UTC_TIME_ZONE,
-                                                       Locale.getDefault());
+        if (timeCoding != null) {
+            final ProductData.UTC startTime = timeCoding.getStartTime();
+            final Millisecond timePeriod = new Millisecond(startTime.getAsDate(),
+                    ProductData.UTC.UTC_TIME_ZONE,
+                    Locale.getDefault());
 
-        double millisecond = timePeriod.getFirstMillisecond();
-        Range valueRange = null;
-        for (int i = 0; i < timeSeriesPlot.getRangeAxisCount(); i++) {
-            valueRange = Range.combine(valueRange, timeSeriesPlot.getRangeAxis(i).getRange());
-        }
-        if (valueRange != null) {
-            XYAnnotation annotation = new XYLineAnnotation(millisecond, valueRange.getLowerBound(), millisecond,
-                                                           valueRange.getUpperBound());
-            timeSeriesPlot.addAnnotation(annotation, true);
+            double millisecond = timePeriod.getFirstMillisecond();
+            Range valueRange = null;
+            for (int i = 0; i < timeSeriesPlot.getRangeAxisCount(); i++) {
+                valueRange = Range.combine(valueRange, timeSeriesPlot.getRangeAxis(i).getRange());
+            }
+            if (valueRange != null) {
+                XYAnnotation annotation = new XYLineAnnotation(millisecond, valueRange.getLowerBound(), millisecond,
+                        valueRange.getUpperBound());
+                timeSeriesPlot.addAnnotation(annotation, true);
+            }
         }
     }
 
@@ -353,13 +355,15 @@ class TimeSeriesGraphModel {
 
             for (Band band : bandList) {
                 TimeCoding timeCoding = globTimeSeries.getRasterTimeMap().get(band);
-                final ProductData.UTC startTime = timeCoding.getStartTime();
-                final Millisecond timePeriod = new Millisecond(startTime.getAsDate(),
-                                                               ProductData.UTC.UTC_TIME_ZONE,
-                                                               Locale.getDefault());
+                if (timeCoding != null) {
+                    final ProductData.UTC startTime = timeCoding.getStartTime();
+                    final Millisecond timePeriod = new Millisecond(startTime.getAsDate(),
+                            ProductData.UTC.UTC_TIME_ZONE,
+                            Locale.getDefault());
 
-                final double value = getValue(band, pixelX, pixelY, currentLevel);
-                timeSeries.add(new TimeSeriesDataItem(timePeriod, value));
+                    final double value = getValue(band, pixelX, pixelY, currentLevel);
+                    timeSeries.add(new TimeSeriesDataItem(timePeriod, value));
+                }
             }
             return timeSeries;
         }

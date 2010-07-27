@@ -195,13 +195,17 @@ class TimeSeriesPlayerForm extends JPanel {
     private String createSliderLabelText(List<Band> bandList, int index) {
         Band band = bandList.get(index);
         TimeCoding timeCoding = timeSeries.getRasterTimeMap().get(band);
-        final ProductData.UTC utcStartTime = timeCoding.getStartTime();
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MMM-yyyy");
-        SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
-        dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-        final String dateText = dateFormat.format(utcStartTime.getAsCalendar().getTime());
-        final String timeText = timeFormat.format(utcStartTime.getAsCalendar().getTime());
-        return dateText + DATE_SEPARATOR + timeText;
+        if (timeCoding != null) {
+            final ProductData.UTC utcStartTime = timeCoding.getStartTime();
+            SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MMM-yyyy");
+            SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
+            dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+            final String dateText = dateFormat.format(utcStartTime.getAsCalendar().getTime());
+            final String timeText = timeFormat.format(utcStartTime.getAsCalendar().getTime());
+            return dateText + DATE_SEPARATOR + timeText;
+        } else {
+            return "";
+        }
     }
 
     private String createSliderLabelFormattedText(List<Band> bandList, int index) {

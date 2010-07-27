@@ -213,20 +213,22 @@ public class ExportTimeBasedKmz extends ExecCommand {
                                                                           DefaultGeographicCRS.WGS84);
 
             TimeCoding timeCoding = timeSeries.getRasterTimeMap().get(raster);
-            final ProductData.UTC startTime = timeCoding.getStartTime();
-            final ProductData.UTC endTime = timeCoding.getEndTime();
+            if (timeCoding != null) {
+                final ProductData.UTC startTime = timeCoding.getStartTime();
+                final ProductData.UTC endTime = timeCoding.getEndTime();
 
-            final ImageManager imageManager = ImageManager.getInstance();
-            final ImageInfo imageInfo = raster.getImageInfo(ProgressMonitor.NULL);
-            final RenderedImage levelImage = imageManager.createColoredBandImage(new RasterDataNode[]{raster},
-                                                                                 imageInfo, level);
-            final String name = raster.getName();
-            final KmlGroundOverlay groundOverlay = new KmlGroundOverlay(name,
-                                                                        levelImage,
-                                                                        referencedEnvelope,
-                                                                        startTime, endTime);
-            groundOverlay.setIconName(name + raster.getProduct().getRefNo());
-            folder.addChild(groundOverlay);
+                final ImageManager imageManager = ImageManager.getInstance();
+                final ImageInfo imageInfo = raster.getImageInfo(ProgressMonitor.NULL);
+                final RenderedImage levelImage = imageManager.createColoredBandImage(new RasterDataNode[]{raster},
+                        imageInfo, level);
+                final String name = raster.getName();
+                final KmlGroundOverlay groundOverlay = new KmlGroundOverlay(name,
+                        levelImage,
+                        referencedEnvelope,
+                        startTime, endTime);
+                groundOverlay.setIconName(name + raster.getProduct().getRefNo());
+                folder.addChild(groundOverlay);
+            }
         }
         return folder;
     }
