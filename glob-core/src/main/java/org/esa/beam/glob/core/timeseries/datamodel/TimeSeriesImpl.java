@@ -36,6 +36,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * <p><i>Note that this class is not yet public API. Interface may chhange in future releases.</i></p>
+ * 
  * @author Thomas Storm
  */
 class TimeSeriesImpl extends AbstractTimeSeries {

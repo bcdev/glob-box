@@ -31,6 +31,8 @@ import java.util.Map;
 import java.util.WeakHashMap;
 
 /**
+ * <p><i>Note that this class is not yet public API. Interface may chhange in future releases.</i></p>
+ * 
  * @author Thomas Storm
  */
 public abstract class AbstractTimeSeries {

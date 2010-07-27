@@ -22,6 +22,9 @@ import org.esa.beam.framework.datamodel.Product;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * <p><i>Note that this class is not yet public API. Interface may chhange in future releases.</i></p>
+ */
 public class ProductLocation {
 
     private final ProductLocationType productLocationType;

@@ -20,6 +20,8 @@ import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.ProductData;
 
 /**
+ * <p><i>Note that this class is not yet public API. Interface may chhange in future releases.</i></p>
+ * 
  * Default implementation of {@link org.esa.beam.glob.core.timeseries.datamodel.TimeCoding}. It simply interpolates line-wise
  * between start and end time.
  */
