@@ -43,7 +43,7 @@ public class TimeSeriesMapper {
     }
 
     public void remove(Product product) {
-        map.remove(product);
+        product.dispose();
     }
 
     public AbstractTimeSeries getTimeSeries(Product product) {

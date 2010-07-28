@@ -24,7 +24,6 @@ import org.esa.beam.visat.VisatApp;
 
 public class NewTimeSeriesFromBandAssistantAction extends AbstractTimeSeriesAssistantAction {
 
-
     @Override
     protected TimeSeriesAssistantModel createModel() {
         final TimeSeriesAssistantModel assistantModel = new TimeSeriesAssistantModel();
@@ -32,7 +31,7 @@ public class NewTimeSeriesFromBandAssistantAction extends AbstractTimeSeriesAssi
         final Product[] allProducts = appContext.getProductManager().getProducts();
         final Product selectedProduct = appContext.getSelectedProduct();
         for (Product product : allProducts) {
-            if(product.getProductType().equals(selectedProduct.getProductType())) {
+            if (product.getProductType().equals(selectedProduct.getProductType())) {
                 assistantModel.getProductLocationsModel().addFiles(product.getFileLocation());
             }
         }

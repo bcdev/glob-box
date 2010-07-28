@@ -54,7 +54,6 @@ import java.util.TimeZone;
  */
 class TimeSeriesPlayerForm extends JPanel {
 
-    private final PageComponentDescriptor descriptor;
     private final ImageIcon playIcon = UIUtils.loadImageIcon("icons/Play24.png");
     private final ImageIcon stopIcon = UIUtils.loadImageIcon("icons/Stop24.png");
     private final ImageIcon pauseIcon = UIUtils.loadImageIcon("icons/Pause24.png");
@@ -88,7 +87,6 @@ class TimeSeriesPlayerForm extends JPanel {
     private static final String DATE_SEPARATOR = " ";
 
     TimeSeriesPlayerForm(PageComponentDescriptor descriptor) {
-        this.descriptor = descriptor;
         this.setLayout(createLayout());
         final JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
 
