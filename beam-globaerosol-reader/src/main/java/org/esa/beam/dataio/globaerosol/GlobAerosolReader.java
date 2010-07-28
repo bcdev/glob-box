@@ -203,11 +203,7 @@ public class GlobAerosolReader extends AbstractProductReader {
         lonBand = product.getBand("lon");
         addGeoCoding(product);
 
-        try {
-            MetadataUtils.readNetcdfMetadata(ncfile, product.getMetadataRoot());
-        } catch (IOException e) {
-            Debug.trace(e.getMessage());
-        }
+        MetadataUtils.readNetcdfMetadata(ncfile, product.getMetadataRoot());
         return product;
     }
 
