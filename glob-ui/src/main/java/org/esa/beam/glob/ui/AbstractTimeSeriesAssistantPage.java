@@ -16,6 +16,8 @@
 
 package org.esa.beam.glob.ui;
 
+import com.bc.ceres.core.ProgressMonitor;
+import com.bc.ceres.swing.progress.ProgressMonitorSwingWorker;
 import org.esa.beam.framework.ui.assistant.AbstractAssistantPage;
 import org.esa.beam.framework.ui.assistant.AssistantPage;
 import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
@@ -24,6 +26,7 @@ import org.esa.beam.visat.VisatApp;
 
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import java.awt.Component;
 
 abstract class AbstractTimeSeriesAssistantPage extends AbstractAssistantPage {
 
@@ -43,7 +46,8 @@ abstract class AbstractTimeSeriesAssistantPage extends AbstractAssistantPage {
 
     @Override
     public boolean performFinish() {
-        addTimeSeriesProductToVisat(getAssistantModel());
+        TimeSeriesAssistantModel model = getAssistantModel();
+        new TimeSeriesCreator(model, this.getPageComponent(), "Creating Time Series...").executeWithBlocking();
         assistantModel.removeChangeListener(changeListener);
         return true;
     }
@@ -54,13 +58,18 @@ abstract class AbstractTimeSeriesAssistantPage extends AbstractAssistantPage {
         return null;
     }
 
-    private void addTimeSeriesProductToVisat(TimeSeriesAssistantModel assistantModel) {
+    private void addTimeSeriesProductToVisat(TimeSeriesAssistantModel assistantModel, ProgressMonitor pm) {
+        pm.beginTask("Creating Time Series", 50);
         final ProductLocationsPaneModel locationsModel = assistantModel.getProductLocationsModel();
+        pm.worked(1);
         final VariableSelectionPaneModel variablesModel = assistantModel.getVariableSelectionModel();
+        pm.worked(1);
         final AbstractTimeSeries timeSeries = TimeSeriesFactory.create(assistantModel.getTimeSeriesName(),
                                                                        locationsModel.getProductLocations(),
                                                                        variablesModel.getSelectedVariableNames());
+        pm.worked(43);
         VisatApp.getApp().getProductManager().addProduct(timeSeries.getTsProduct());
+        pm.worked(5);
     }
 
     private class MyChangeListener implements ChangeListener {
@@ -68,6 +77,27 @@ abstract class AbstractTimeSeriesAssistantPage extends AbstractAssistantPage {
         @Override
         public void stateChanged(ChangeEvent e) {
             getContext().updateState();
+        }
+    }
+
+    private class TimeSeriesCreator extends ProgressMonitorSwingWorker<Void, TimeSeriesAssistantModel> {
+
+        private TimeSeriesAssistantModel model;
+
+        private TimeSeriesCreator(TimeSeriesAssistantModel model, Component parentComponent, String title) {
+            super(parentComponent, title);
+            this.model = model;
+        }
+
+        @Override
+        protected Void doInBackground(ProgressMonitor pm) throws Exception {
+            addTimeSeriesProductToVisat(model, pm);
+            return null;
+        }
+
+        @Override
+        protected void done() {
+            super.done();
         }
     }
 }
