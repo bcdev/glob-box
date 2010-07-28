@@ -103,7 +103,8 @@ public class GlobAerosolReader extends AbstractProductReader {
                                           int destOffsetY, int destWidth, int destHeight, ProductData destBuffer,
                                           ProgressMonitor pm) throws IOException {
         if (delegateReader != null) {
-            delegateReader.readBandRasterData(destBand, destOffsetX, destOffsetY, destWidth, destHeight, destBuffer, pm);
+            delegateReader.readBandRasterData(destBand, destOffsetX, destOffsetY, destWidth, destHeight, destBuffer,
+                                              pm);
             return;
         }
 
@@ -202,7 +203,11 @@ public class GlobAerosolReader extends AbstractProductReader {
         lonBand = product.getBand("lon");
         addGeoCoding(product);
 
-        MetadataUtils.readNetcdfMetadata(ncfile, product.getMetadataRoot());
+        try {
+            MetadataUtils.readNetcdfMetadata(ncfile, product.getMetadataRoot());
+        } catch (IOException e) {
+            Debug.trace(e.getMessage());
+        }
         return product;
     }
 
@@ -273,7 +278,8 @@ public class GlobAerosolReader extends AbstractProductReader {
             if (cellDimemsionIndex != -1) {
                 int modelDimemsionIndex = variable.findDimensionIndex(NC_VARIABLE_MODEL);
 
-                IndexCoding indexCoding = CfIndexCodingPart.readIndexCoding(variable, variable.getName() + "_index_coding");
+                IndexCoding indexCoding = CfIndexCodingPart.readIndexCoding(variable,
+                                                                            variable.getName() + "_index_coding");
                 if (indexCoding != null) {
                     product.getIndexCodingGroup().add(indexCoding);
                 }
