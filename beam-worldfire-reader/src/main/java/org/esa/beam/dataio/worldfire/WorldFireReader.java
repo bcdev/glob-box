@@ -18,6 +18,7 @@ package org.esa.beam.dataio.worldfire;
 
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.glevel.MultiLevelImage;
+import com.bc.ceres.glevel.MultiLevelModel;
 import com.bc.ceres.glevel.MultiLevelSource;
 import com.bc.ceres.glevel.support.DefaultMultiLevelImage;
 import com.bc.ceres.glevel.support.DefaultMultiLevelSource;
@@ -34,6 +35,7 @@ import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Placemark;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.jai.ImageManager;
 import org.esa.beam.jai.ResolutionLevel;
 import org.esa.beam.util.Debug;
 import org.esa.beam.util.TreeNode;
@@ -102,19 +104,7 @@ class WorldFireReader extends AbstractProductReader {
         } catch (ParseException ignored) {
         }
         product.setFileLocation(inputFile);
-        final AffineTransform i2m = new AffineTransform();
-        i2m.translate(0, 0);
-        i2m.scale(0.1, -0.1);
-        i2m.translate(-product.getSceneRasterWidth() / 2, -product.getSceneRasterHeight() / 2);
-        try {
-            final Rectangle rectangle = new Rectangle(0, 0,
-                                                      product.getSceneRasterWidth(),
-                                                      product.getSceneRasterHeight());
-            product.setGeoCoding(new CrsGeoCoding(DefaultGeographicCRS.WGS84, rectangle, i2m));
-        } catch (Exception e) {
-            Debug.trace("Could not create GeoCoding");
-            e.printStackTrace();
-        }
+        attachGeoCoding(product);
         Band fireBand = product.addBand("fire_" + productType, ProductData.TYPE_UINT8);
         fireBand.setNoDataValue(0);
         fireBand.setNoDataValueUsed(true);
@@ -136,13 +126,30 @@ class WorldFireReader extends AbstractProductReader {
         return product;
     }
 
+    private void attachGeoCoding(Product product) {
+        final AffineTransform i2m = new AffineTransform();
+        i2m.translate(0, 0);
+        i2m.scale(0.1, -0.1);
+        i2m.translate(-product.getSceneRasterWidth() / 2, -product.getSceneRasterHeight() / 2);
+        try {
+            final Rectangle rectangle = new Rectangle(0, 0,
+                                                      product.getSceneRasterWidth(),
+                                                      product.getSceneRasterHeight());
+            product.setGeoCoding(new CrsGeoCoding(DefaultGeographicCRS.WGS84, rectangle, i2m));
+        } catch (Exception e) {
+            Debug.trace("Could not create GeoCoding");
+            e.printStackTrace();
+        }
+    }
+
     private MultiLevelImage createFireImage(List<Placemark> fireList, final Product product) {
+        MultiLevelModel multiLevelModel = ImageManager.getMultiLevelModel(product.getBandAt(0));
         final FireMaskOpImage opImage = new FireMaskOpImage(fireList,
                                                             product.getSceneRasterWidth(),
                                                             product.getSceneRasterHeight(),
                                                             product.getPreferredTileSize(),
                                                             new ResolutionLevel(0, 1.0));
-        final MultiLevelSource multiLevelSource = new DefaultMultiLevelSource(opImage, 4);
+        final MultiLevelSource multiLevelSource = new DefaultMultiLevelSource(opImage, multiLevelModel);
 
         return new DefaultMultiLevelImage(multiLevelSource);
     }
