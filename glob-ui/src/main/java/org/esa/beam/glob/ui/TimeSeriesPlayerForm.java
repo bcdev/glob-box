@@ -30,6 +30,8 @@ import org.esa.beam.glob.core.timeseries.datamodel.TimeCoding;
 import org.esa.beam.glob.export.animations.AnimatedGifExport;
 
 import javax.swing.AbstractButton;
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -38,6 +40,7 @@ import javax.swing.JSlider;
 import javax.swing.Timer;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Insets;
@@ -87,8 +90,15 @@ class TimeSeriesPlayerForm extends JPanel {
     private static final String DATE_SEPARATOR = " ";
 
     TimeSeriesPlayerForm(PageComponentDescriptor descriptor) {
-        this.setLayout(createLayout());
+        this.setLayout(new BorderLayout(4, 4));
+        this.setBorder(BorderFactory.createEmptyBorder(6, 6, 6, 6));
+        this.setPreferredSize(new Dimension(350, 200));
+        JPanel firstPanel = new JPanel(createLayout());
+        firstPanel.setPreferredSize(new Dimension(300, 150));
         final JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        final JPanel secondPanel = new JPanel();
+        BoxLayout boxLayout = new BoxLayout(secondPanel, BoxLayout.Y_AXIS);
+        secondPanel.setLayout(boxLayout);
 
         dateLabel = new JLabel("Date: ");
         timeSlider = createTimeSlider();
@@ -121,17 +131,21 @@ class TimeSeriesPlayerForm extends JPanel {
         buttonsPanel.add(plusButton);
         buttonsPanel.add(speedUnit);
         buttonsPanel.add(new JLabel("           "));
-        buttonsPanel.add(exportButton);
-        buttonsPanel.add(helpButton);
+        secondPanel.add(exportButton);
+        secondPanel.add(helpButton);
 
         if (descriptor.getHelpId() != null) {
             HelpSys.enableHelpOnButton(helpButton, descriptor.getHelpId());
             HelpSys.enableHelpKey(buttonsPanel, descriptor.getHelpId());
         }
 
-        this.add(dateLabel);
-        this.add(timeSlider);
-        this.add(buttonsPanel);
+        firstPanel.add(dateLabel);
+        firstPanel.add(timeSlider);
+        firstPanel.add(buttonsPanel);
+
+        this.add(BorderLayout.CENTER, firstPanel);
+        this.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
+        this.add(BorderLayout.EAST, secondPanel);
     }
 
     List<Band> getBandList(final String rasterName) {
@@ -228,6 +242,7 @@ class TimeSeriesPlayerForm extends JPanel {
                 dateLabel.setText("Date: " + labelText);
             }
         });
+        timeSlider.setPreferredSize(new Dimension(320, 60));
         return timeSlider;
     }
 

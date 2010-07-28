@@ -59,7 +59,7 @@ class TimeSeriesGraphForm {
         chartPanel.setPreferredSize(new Dimension(300, 200));
 
         mainPanel.setBorder(BorderFactory.createEmptyBorder(6, 6, 6, 6));
-        mainPanel.add(BorderLayout.CENTER, chartPanel);
+        mainPanel.add(chartPanel, BorderLayout.CENTER);
         mainPanel.setPreferredSize(new Dimension(320, 200));
 
 //        filterButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/Filter24.gif"),
