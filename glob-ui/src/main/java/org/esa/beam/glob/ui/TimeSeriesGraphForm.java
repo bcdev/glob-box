@@ -43,8 +43,6 @@ import java.awt.event.ActionListener;
 class TimeSeriesGraphForm {
 
 
-    private final PageComponentDescriptor descriptor;
-
     private final JComponent mainPanel;
     private final AbstractButton showTimeSeriesForSelectedPinsButton;
     private final AbstractButton showTimeSeriesForAllPinsButton;
@@ -53,7 +51,6 @@ class TimeSeriesGraphForm {
 
     TimeSeriesGraphForm(JFreeChart chart, Action showSelectedPinsAction, Action showAllPinsAction,
                         PageComponentDescriptor descriptor) {
-        this.descriptor = descriptor;
         mainPanel = new JPanel(new BorderLayout(4, 4));
         ChartPanel chartPanel = new ChartPanel(chart);
         chartPanel.setPreferredSize(new Dimension(300, 200));
