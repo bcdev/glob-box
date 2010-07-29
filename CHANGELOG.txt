@@ -1,0 +1,41 @@
+                                 CHANGELOG
+
+This file contains all significant changes for each GlobToolbox release.
+
+    o 29.07.2010: Version 2.0
+    o 03.03.2010: Version 1.0
+
+ _____________________________________________________________________________
+
+ Changes from 1.0 to 2.0
+_____________________________________________________________________________
+
+1) New Features
+
+o The readers have been revised; a reader for IGBP data products has been added.
+
+o Glob-products may be exported to a generic NetCDF/CF-format.
+
+o A number of tools tackling the time dimension have been introduced. First of all,
+  a time series manager allowing to define and edit time series. A time series player
+  allows vividly visualising a time series by providing the control elements for
+  navigating through a time series, either manually or automatically. And a time
+  series graph has been developed which may be used to compare values of different
+  measures, such as TSM or SST, for a specified time series.
+
+2) List of GlobToolbox 2.0 bug fixes
+
+Bugs
+GBOX-3 - Pins in Worldfire product are misplaced
+GBOX-2 - Pins in Worldfire product slow down VISAT
+GBOX-1 - 'Arc/Info Binary Grid Reader' does not work
+
+ _____________________________________________________________________________
+
+ Changes in version 1.0
+_____________________________________________________________________________
+
+1) New Features
+
+o Readers for GlobCover, GlobColour, MERIS L3, ATSR World Fire, Medspiration,
+  Global Land Cover 2000 and GlobAerosol data products have been developed.
