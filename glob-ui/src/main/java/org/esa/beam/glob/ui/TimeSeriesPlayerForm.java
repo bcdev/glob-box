@@ -46,6 +46,7 @@ import java.awt.FlowLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.net.URL;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Hashtable;
@@ -60,7 +61,9 @@ class TimeSeriesPlayerForm extends JPanel {
     private final ImageIcon playIcon = UIUtils.loadImageIcon("icons/Play24.png");
     private final ImageIcon stopIcon = UIUtils.loadImageIcon("icons/Stop24.png");
     private final ImageIcon pauseIcon = UIUtils.loadImageIcon("icons/Pause24.png");
-    private final ImageIcon blendIcon = UIUtils.loadImageIcon("/org/esa/beam/glob/ui/icons/Blend24.png");
+    private final URL imageURL = UIUtils.getImageURL("/org/esa/beam/glob/ui/icons/ViewTS24.png",
+                                                     TimeSeriesPlayerForm.class);
+    private final ImageIcon blendIcon = new ImageIcon(imageURL);
     private final ImageIcon repeatIcon = UIUtils.loadImageIcon("icons/Repeat24.png");
     private final ImageIcon minusIcon = UIUtils.loadImageIcon("icons/Remove16.png");
     private final ImageIcon plusIcon = UIUtils.loadImageIcon("icons/Add16.png");
