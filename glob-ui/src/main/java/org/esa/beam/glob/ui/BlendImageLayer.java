@@ -20,12 +20,14 @@ import com.bc.ceres.glayer.support.ImageLayer;
 import com.bc.ceres.glevel.MultiLevelSource;
 import com.bc.ceres.glevel.support.DefaultMultiLevelSource;
 import com.bc.ceres.grender.Rendering;
+import com.bc.ceres.grender.Viewport;
 import org.esa.beam.glevel.BandImageMultiLevelSource;
 
 import java.awt.AlphaComposite;
 import java.awt.Composite;
 import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.RenderedImage;
 
 public class BlendImageLayer extends ImageLayer {
@@ -76,6 +78,15 @@ public class BlendImageLayer extends ImageLayer {
         return baseLayer.getImage(level);
     }
 
+    public int getLevel(Viewport vp) {
+        return getLevel(getBaseMultiLevelSource().getModel(), vp);
+    }
+
+    @Override
+    protected Rectangle2D getLayerModelBounds() {
+        return getBaseMultiLevelSource().getModel().getModelBounds();
+    }
+
 
     @Override
     protected void renderLayer(Rendering rendering) {
@@ -102,6 +113,13 @@ public class BlendImageLayer extends ImageLayer {
     public void regenerate() {
         baseLayer.regenerate();
         blendLayer.regenerate();
+    }
+
+    @Override
+    protected synchronized void disposeLayer() {
+        super.disposeLayer();
+        baseLayer.dispose();
+        blendLayer.dispose();
     }
 
     public void swap(BandImageMultiLevelSource multiLevelSource, boolean forward) {
