@@ -61,7 +61,7 @@ class TimeSeriesPlayerForm extends JPanel {
     private final ImageIcon playIcon = UIUtils.loadImageIcon("icons/Play24.png");
     private final ImageIcon stopIcon = UIUtils.loadImageIcon("icons/Stop24.png");
     private final ImageIcon pauseIcon = UIUtils.loadImageIcon("icons/Pause24.png");
-    private final URL imageURL = UIUtils.getImageURL("/org/esa/beam/glob/ui/icons/ViewTS24.png",
+    private final URL imageURL = UIUtils.getImageURL("/org/esa/beam/glob/ui/icons/Blend24.png",
                                                      TimeSeriesPlayerForm.class);
     private final ImageIcon blendIcon = new ImageIcon(imageURL);
     private final ImageIcon repeatIcon = UIUtils.loadImageIcon("icons/Repeat24.png");
