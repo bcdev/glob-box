@@ -18,7 +18,9 @@ package org.esa.beam.glob.core;
 
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
+import org.esa.beam.glob.core.timeseries.datamodel.ProductLocation;
 
+import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
 
@@ -43,7 +45,14 @@ public class TimeSeriesMapper {
     }
 
     public void remove(Product product) {
-        product.dispose();
+        AbstractTimeSeries timeSeries = map.remove(product);
+        if (timeSeries != null) {
+            List<ProductLocation> locationList = timeSeries.getProductLocations();
+            for (ProductLocation productLocation : locationList) {
+                productLocation.closeProducts();
+            }
+            product.dispose();
+        }
     }
 
     public AbstractTimeSeries getTimeSeries(Product product) {
