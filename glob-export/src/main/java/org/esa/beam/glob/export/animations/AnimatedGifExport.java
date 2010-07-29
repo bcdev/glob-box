@@ -35,6 +35,7 @@ import javax.imageio.metadata.IIOInvalidTreeException;
 import javax.imageio.metadata.IIOMetadata;
 import javax.imageio.metadata.IIOMetadataNode;
 import javax.imageio.stream.ImageOutputStream;
+import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
@@ -44,12 +45,11 @@ import javax.swing.JRadioButton;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.image.RenderedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
 
 public class AnimatedGifExport extends ProgressMonitorSwingWorker<Void, Void> {
@@ -58,6 +58,7 @@ public class AnimatedGifExport extends ProgressMonitorSwingWorker<Void, Void> {
     private static final String EXPORT_DIR_PREFERENCES_KEY = "user.export.dir";
     private RenderedImage[] frames;
     private int level;
+    private ButtonGroup buttonGroup;
 
     public AnimatedGifExport(Component parentComponent, String title) {
         super(parentComponent, title);
@@ -184,8 +185,7 @@ public class AnimatedGifExport extends ProgressMonitorSwingWorker<Void, Void> {
 
         final JPanel levelPanel = new JPanel(new GridLayout(maxLevel, 1));
         levelPanel.setBorder(BorderFactory.createTitledBorder("Resolution Level"));
-        ButtonGroup buttonGroup = new ButtonGroup();
-        final RadioButtonActionListener radioButtonListener = new RadioButtonActionListener();
+        buttonGroup = new ButtonGroup();
         for (int i = 0; i < maxLevel; i++) {
             String level = Integer.toString(i);
             if (i == 0) {
@@ -193,11 +193,10 @@ public class AnimatedGifExport extends ProgressMonitorSwingWorker<Void, Void> {
             } else if (i == maxLevel - 1) {
                 level += " (low, fast)";
             }
-            final JRadioButton button = new JRadioButton(level, true);
-            buttonGroup.add(button);
-            levelPanel.add(button);
-            button.addActionListener(radioButtonListener);
-            button.setSelected(true);
+            JRadioButton levelButton = new JRadioButton(level, true);
+            buttonGroup.add(levelButton);
+            levelPanel.add(levelButton);
+            levelButton.setSelected(true);
         }
 
         final JPanel accessory = new JPanel();
@@ -225,16 +224,16 @@ public class AnimatedGifExport extends ProgressMonitorSwingWorker<Void, Void> {
             return null;
         }
 
+        parseLevel();
         return file;
     }
 
-    private class RadioButtonActionListener implements ActionListener {
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            final JRadioButton button = (JRadioButton) e.getSource();
-            if (button.isSelected()) {
-                String buttonText = button.getText();
+    private void parseLevel() {
+        Enumeration<AbstractButton> buttonEnumeration = buttonGroup.getElements();
+        while (buttonEnumeration.hasMoreElements()) {
+            AbstractButton abstractButton = buttonEnumeration.nextElement();
+            if (abstractButton.isSelected()) {
+                String buttonText = abstractButton.getText();
                 final int index = buttonText.indexOf(" (");
                 if (index != -1) {
                     buttonText = buttonText.substring(0, index);
@@ -243,5 +242,4 @@ public class AnimatedGifExport extends ProgressMonitorSwingWorker<Void, Void> {
             }
         }
     }
-
 }
