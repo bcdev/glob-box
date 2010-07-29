@@ -58,6 +58,7 @@ class NewTimeSeriesAssistantPage2 extends AbstractTimeSeriesAssistantPage {
 
     @Override
     public AssistantPage getNextPage() {
+        removeModeListener();
         final TimeSeriesAssistantModel model = getAssistantModel();
         final VariableSelectionPaneModel variableModel = model.getVariableSelectionModel();
         for (int i = 0; i < variableModel.getSize(); i++) {

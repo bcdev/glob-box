@@ -57,6 +57,7 @@ class NewTimeSeriesAssistantPage1 extends AbstractTimeSeriesAssistantPage {
 
     @Override
     public AssistantPage getNextPage() {
+        removeModeListener();
         final TimeSeriesAssistantModel model = getAssistantModel();
         final ProgressMonitorSwingWorker worker = new MyProgressMonitorSwingWorker(model);
         worker.executeWithBlocking();

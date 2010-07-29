@@ -21,16 +21,13 @@ import org.esa.beam.framework.datamodel.MetadataAttribute;
 import org.esa.beam.framework.datamodel.MetadataElement;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.framework.datamodel.ProductManager;
 import org.esa.beam.framework.datamodel.ProductNode;
 import org.esa.beam.framework.datamodel.ProductNodeEvent;
 import org.esa.beam.framework.datamodel.ProductNodeListenerAdapter;
 import org.esa.beam.framework.datamodel.RasterDataNode;
-import org.esa.beam.glob.core.TimeSeriesMapper;
 import org.esa.beam.util.Guardian;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.StringUtils;
-import org.esa.beam.visat.VisatApp;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -109,7 +106,6 @@ class TimeSeriesImpl extends AbstractTimeSeries {
                 }
             }
         });
-        VisatApp.getApp().getProductManager().addListener(new CloseListener(tsProduct));
     }
 
     public Band getSourceBand(String destBandName) {
@@ -409,24 +405,4 @@ class TimeSeriesImpl extends AbstractTimeSeries {
                tsProduct.isCompatibleProduct(product, 0.1e-6f);
     }
 
-    private static class CloseListener implements ProductManager.Listener {
-
-        private Product tsProduct;
-
-        public CloseListener(Product tsProduct) {
-            this.tsProduct = tsProduct;
-        }
-
-        @Override
-        public void productAdded(ProductManager.Event event) {
-        }
-
-        @Override
-        public void productRemoved(ProductManager.Event event) {
-            if (event.getProduct() == tsProduct) {
-                TimeSeriesMapper.getInstance().remove(tsProduct);
-                tsProduct = null;
-            }
-        }
-    }
 }

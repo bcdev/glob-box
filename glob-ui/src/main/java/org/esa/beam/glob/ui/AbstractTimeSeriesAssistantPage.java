@@ -18,8 +18,10 @@ package org.esa.beam.glob.ui;
 
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.swing.progress.ProgressMonitorSwingWorker;
+import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductManager;
 import org.esa.beam.framework.ui.assistant.AbstractAssistantPage;
-import org.esa.beam.framework.ui.assistant.AssistantPage;
+import org.esa.beam.glob.core.TimeSeriesMapper;
 import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesFactory;
 import org.esa.beam.visat.VisatApp;
@@ -31,7 +33,7 @@ import java.awt.Component;
 abstract class AbstractTimeSeriesAssistantPage extends AbstractAssistantPage {
 
     private final TimeSeriesAssistantModel assistantModel;
-    private AbstractTimeSeriesAssistantPage.MyChangeListener changeListener;
+    protected AbstractTimeSeriesAssistantPage.MyChangeListener changeListener;
 
     AbstractTimeSeriesAssistantPage(String pageTitle, TimeSeriesAssistantModel model) {
         super(pageTitle);
@@ -48,14 +50,17 @@ abstract class AbstractTimeSeriesAssistantPage extends AbstractAssistantPage {
     public boolean performFinish() {
         TimeSeriesAssistantModel model = getAssistantModel();
         new TimeSeriesCreator(model, this.getPageComponent(), "Creating Time Series...").executeWithBlocking();
-        assistantModel.removeChangeListener(changeListener);
+        removeModeListener();
         return true;
     }
 
     @Override
-    public AssistantPage getNextPage() {
+    public void performCancel() {
+        removeModeListener();
+    }
+
+    protected void removeModeListener() {
         assistantModel.removeChangeListener(changeListener);
-        return null;
     }
 
     private void addTimeSeriesProductToVisat(TimeSeriesAssistantModel assistantModel, ProgressMonitor pm) {
@@ -68,8 +73,32 @@ abstract class AbstractTimeSeriesAssistantPage extends AbstractAssistantPage {
                                                                        locationsModel.getProductLocations(),
                                                                        variablesModel.getSelectedVariableNames());
         pm.worked(43);
-        VisatApp.getApp().getProductManager().addProduct(timeSeries.getTsProduct());
+        ProductManager productManager = VisatApp.getApp().getProductManager();
+        Product tsProduct = timeSeries.getTsProduct();
+        productManager.addProduct(tsProduct);
+        productManager.addListener(new CloseListener(tsProduct));
         pm.worked(5);
+    }
+
+    private static class CloseListener implements ProductManager.Listener {
+
+        private Product tsProduct;
+
+        public CloseListener(Product tsProduct) {
+            this.tsProduct = tsProduct;
+        }
+
+        @Override
+        public void productAdded(ProductManager.Event event) {
+        }
+
+        @Override
+        public void productRemoved(ProductManager.Event event) {
+            if (event.getProduct() == tsProduct) {
+                TimeSeriesMapper.getInstance().remove(tsProduct);
+                tsProduct = null;
+            }
+        }
     }
 
     private class MyChangeListener implements ChangeListener {
