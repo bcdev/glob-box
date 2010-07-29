@@ -5,7 +5,7 @@
     <groupId>org.esa.beam.glob</groupId>
     <artifactId>glob-box</artifactId>
     <packaging>pom</packaging>
-    <version>2.0-SNAPSHOT</version>
+    <version>2.0</version>
     <name>GlobToolbox</name>
 
     <organization>
@@ -29,8 +29,8 @@
            TODO: Move the sourceEncoding property to the build tag if version 3.0 is released
            -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <beam.version>4.8-SNAPSHOT</beam.version>
-        <ceres.version>0.11-SNAPSHOT</ceres.version>
+        <beam.version>4.8</beam.version>
+        <ceres.version>0.11</ceres.version>
     </properties>
 
     <modules>
@@ -80,7 +80,7 @@
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-netcdf</artifactId>
-                <version>1.0-SNAPSHOT</version>
+                <version>1.0</version>
             </dependency>
             <dependency>
                 <groupId>org.esa.beam</groupId>
