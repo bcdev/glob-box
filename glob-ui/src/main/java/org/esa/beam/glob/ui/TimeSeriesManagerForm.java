@@ -35,6 +35,7 @@ import org.esa.beam.visat.VisatApp;
 import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
 import javax.swing.AbstractListModel;
+import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JInternalFrame;
 import javax.swing.JLabel;
@@ -46,6 +47,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyVetoException;
 import java.io.File;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -181,8 +183,10 @@ class TimeSeriesManagerForm {
 
 //        cloneButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("/org/esa/beam/glob/ui/icons/CloneTS24.gif"),
 //                                                     false);
-        viewButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("/org/esa/beam/glob/ui/icons/ViewTS24.png"),
-                                                    false);
+//        viewButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("/org/esa/beam/glob/ui/icons/ViewTS24.png"),
+//                                                    false);
+        URL imageURL = UIUtils.getImageURL("/org/esa/beam/glob/ui/icons/ViewTS24.png", TimeSeriesManagerForm.class);
+        viewButton = ToolButtonFactory.createButton(new ImageIcon(imageURL), false);
         viewButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
