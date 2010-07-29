@@ -20,9 +20,17 @@ import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductNode;
 import org.esa.beam.framework.ui.AppContext;
+import org.esa.beam.framework.ui.command.CommandEvent;
 import org.esa.beam.visat.VisatApp;
 
 public class NewTimeSeriesFromBandAssistantAction extends AbstractTimeSeriesAssistantAction {
+
+    @Override
+    public void updateState(final CommandEvent event) {
+        final AppContext appContext = getAppContext();
+        final int n = appContext.getProductManager().getProductCount();
+        setEnabled(n > 0 && appContext.getSelectedProduct() != null);
+    }
 
     @Override
     protected TimeSeriesAssistantModel createModel() {
