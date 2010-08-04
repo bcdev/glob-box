@@ -19,7 +19,7 @@
     <licenseUrl>http://www.gnu.org/licenses/gpl.html</licenseUrl>
 
 
-    <categories>Core</categories>
+    <categories>System,Core</categories>
 
     <dependency>
         <module>beam-core</module>
