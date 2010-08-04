@@ -4,7 +4,12 @@
     <version>2.0</version>
     <name>GlobCover Reader</name>
 
-    <description>Enables BEAM to read GlobCover data products.</description>
+    <description>
+        <![CDATA[
+        This module provides product readers for importing
+        <a href="http://ionia1.esrin.esa.int/">GlobCover data products</a> into BEAM/VISAT.
+        ]]>
+    </description>
 
     <vendor>Brockmann Consult GmbH</vendor>
     <contactAddress>Max Planck Str.2, 21502 Geesthacht (Germany)</contactAddress>

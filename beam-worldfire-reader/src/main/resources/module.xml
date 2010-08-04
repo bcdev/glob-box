@@ -4,7 +4,11 @@
     <version>2.0</version>
     <name>World Fire Reader</name>
 
-    <description>Enables BEAM to read AATSR World Fire Reader data products.</description>
+    <description>
+        <![CDATA[
+        This module provides product readers for importing AATSR World Fire data products into BEAM/VISAT.
+        ]]>
+    </description>
 
     <vendor>Brockmann Consult GmbH</vendor>
     <contactAddress>Max Planck Str.2, 21502 Geesthacht (Germany)</contactAddress>

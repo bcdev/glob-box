@@ -5,7 +5,9 @@
     <version>2.0</version>
     <name>GlobToolbox Export</name>
 
-    <description>Provides export components for the GlobToolbox.</description>
+    <description>The GlobToolbox export module provides export components for the GlobToolbox, such as export of time
+        series as Google Earth KMZ file, animated gif, and csv-file.
+    </description>
 
     <changelog>
         <![CDATA[
@@ -27,7 +29,7 @@
     <dependency>
         <module>glob-core</module>
     </dependency>
- 
+
     <extension point="beam-ui:actions">
 
         <action>

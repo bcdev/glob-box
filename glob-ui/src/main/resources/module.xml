@@ -5,7 +5,12 @@
     <version>2.0</version>
     <name>GlobToolbox UI</name>
 
-    <description>Provides user interface components for the GlobToolbox.</description>
+    <description>
+        <![CDATA[
+        This module provides the user interface components for the GlobToolbox. In particular, these are
+        the <i>Time Series Manager</i>, the <i>Time Series Player</i> and the <i>Time Series Graph</i>.
+        ]]>
+    </description>
 
     <changelog>
         <![CDATA[

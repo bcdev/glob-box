@@ -5,7 +5,7 @@
     <version>2.0</version>
     <name>GlobToolbox Core</name>
 
-    <description>Provides core components for the GlobToolbox.</description>
+    <description>This module provides core components for the GlobToolbox.</description>
 
     <changelog>
         <![CDATA[

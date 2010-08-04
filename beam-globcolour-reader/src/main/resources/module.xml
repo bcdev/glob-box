@@ -5,7 +5,11 @@
     <name>GlobColour Product Readers</name>
 
     <description>
-        This module provides product readers for importing Binned and Mapped GlobColour data products into BEAM/VISAT.
+        <![CDATA[
+        This module provides product readers for importing the binned and mapped
+        <a href="http://www.globcolour.info/products_description.html">GlobCOLOUR Level-3 data products
+        </a> into BEAM/VISAT. <i>This module is the successor of globcolour-product-readers version 1.5.1.</i>
+        ]]>
     </description>
 
     <vendor>Brockmann Consult GmbH</vendor>

@@ -4,7 +4,11 @@
     <version>2.0</version>
     <name>IGBP GLCC Reader</name>
 
-    <description>Enables BEAM to read IGBP Global Land Cover Classification products.</description>
+    <description>
+        <![CDATA[
+        This module provides product readers for importing IGBP Global Land Cover Classification  into BEAM/VISAT.
+        ]]>
+    </description>
 
     <vendor>Brockmann Consult GmbH</vendor>
     <contactAddress>Max Planck Str.2, 21502 Geesthacht (Germany)</contactAddress>
@@ -14,7 +18,7 @@
 
     <changelog>
         <![CDATA[
-        ]]>
+                ]]>
     </changelog>
 
     <dependency>
