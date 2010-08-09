@@ -89,6 +89,23 @@
             <toolBarId>GlobToolbox</toolBarId>
         </toolView>
 
+        <toolView>
+            <id>timeSeriesMatrixToolView</id>
+            <class>org.esa.beam.glob.ui.TimeSeriesMatrixToolView</class>
+            <title>Time Series Matrix</title>
+            <tabTitle>Time Series Matrix</tabTitle>
+            <description>Time Series Matrix</description>
+            <mnemonic>M</mnemonic>
+            <accelerator>ctrl alt M</accelerator>
+            <smallIcon>/org/esa/beam/glob/ui/icons/TimeSeriesMatrix16.png</smallIcon>
+            <largeIcon>/org/esa/beam/glob/ui/icons/TimeSeriesMatrix24.png</largeIcon>
+            <initState>FLOATING</initState>
+            <initSide>EAST</initSide>
+            <initIndex>4</initIndex>
+            <helpId>timeSeriesMatrix</helpId>
+            <toolBarId>GlobToolbox</toolBarId>
+        </toolView>
+
     </extension>
 
     <extension point="beam-ui:actions">
