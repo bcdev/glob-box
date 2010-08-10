@@ -55,7 +55,7 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
     private SceneViewListener sceneViewListener;
     private TimeSeriesPPL pixelPosListener;
 
-    public TimeSeriesMatrixToolView(AbstractButton configureButton) {
+    public TimeSeriesMatrixToolView() {
         pixelPosListener = new TimeSeriesPPL();
         sceneViewListener = new SceneViewListener();
     }
