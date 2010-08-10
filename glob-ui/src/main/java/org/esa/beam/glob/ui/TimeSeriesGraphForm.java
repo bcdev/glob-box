@@ -19,9 +19,10 @@ package org.esa.beam.glob.ui;
 import org.esa.beam.framework.help.HelpSys;
 import org.esa.beam.framework.ui.GridBagUtils;
 import org.esa.beam.framework.ui.UIUtils;
-import org.esa.beam.framework.ui.application.PageComponentDescriptor;
 import org.esa.beam.framework.ui.product.ProductSceneView;
 import org.esa.beam.framework.ui.tool.ToolButtonFactory;
+import org.esa.beam.glob.core.TimeSeriesMapper;
+import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
 import org.esa.beam.glob.export.text.ExportTimeBasedText;
 import org.esa.beam.visat.VisatApp;
 import org.jfree.chart.ChartPanel;
@@ -50,7 +51,7 @@ class TimeSeriesGraphForm {
 //    private final AbstractButton filterButton;
 
     TimeSeriesGraphForm(JFreeChart chart, Action showSelectedPinsAction, Action showAllPinsAction,
-                        PageComponentDescriptor descriptor) {
+                        final String helpID) {
         mainPanel = new JPanel(new BorderLayout(4, 4));
         ChartPanel chartPanel = new ChartPanel(chart);
         chartPanel.setPreferredSize(new Dimension(300, 200));
@@ -105,9 +106,18 @@ class TimeSeriesGraphForm {
         exportTimeSeriesButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                ExportTimeBasedText exportTimeBasedText = new ExportTimeBasedText(mainPanel,
-                                                                                  "Exporting pin data as csv-file");
-                exportTimeBasedText.executeWithBlocking();
+                final VisatApp app = VisatApp.getApp();
+                final ProductSceneView view = app.getSelectedProductSceneView();
+                if (view != null &&
+                        view.getProduct() != null &&
+                        view.getProduct().getProductType().equals(AbstractTimeSeries.TIME_SERIES_PRODUCT_TYPE) &&
+                        TimeSeriesMapper.getInstance().getTimeSeries(view.getProduct()) != null) {
+
+                    AbstractTimeSeries timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(view.getProduct());
+                    if (timeSeries != null) {
+                        ExportTimeBasedText.export(mainPanel, timeSeries, helpID);
+                    }
+                }
             }
         });
         exportTimeSeriesButton.setToolTipText("Export time series of all pins to csv file");
@@ -149,9 +159,9 @@ class TimeSeriesGraphForm {
         mainPanel.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
         mainPanel.add(BorderLayout.EAST, buttonPanel);
 
-        if (descriptor.getHelpId() != null) {
-            HelpSys.enableHelpOnButton(helpButton, descriptor.getHelpId());
-            HelpSys.enableHelpKey(buttonPanel, descriptor.getHelpId());
+        if (helpID != null) {
+            HelpSys.enableHelpOnButton(helpButton, helpID);
+            HelpSys.enableHelpKey(buttonPanel, helpID);
         }
     }
 

@@ -27,7 +27,7 @@ import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeCoding;
 import org.esa.beam.visat.VisatApp;
 
-import java.io.File;
+import java.io.PrintWriter;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -36,17 +36,17 @@ import java.util.List;
 /**
  * @author Thomas Storm
  */
-public class TimeCsvExporter extends CsvExporter {
+class TimeCsvExporter extends CsvExporter {
 
-    List<List<Band>> variablesList;
-    List<Placemark> pins;
-    int level;
-    boolean exportImageCoords = true;
-    boolean exportLonLat = true;
-    boolean exportUnit = true;
+    private final List<List<Band>> variablesList;
+    private final List<Placemark> pins;
+    private final int level;
+    private boolean exportImageCoords = true;
+    private boolean exportLonLat = true;
+    private boolean exportUnit = true;
 
-    public TimeCsvExporter(List<List<Band>> rasterList, List<Placemark> pins, File outputFile) {
-        super(outputFile);
+    TimeCsvExporter(List<List<Band>> rasterList, List<Placemark> pins, PrintWriter writer) {
+        super(writer);
         this.variablesList = rasterList;
         this.pins = pins;
         this.level = 0;

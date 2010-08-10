@@ -18,30 +18,24 @@ package org.esa.beam.glob.export.text;
 
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.framework.datamodel.RasterDataNode;
-import org.esa.beam.util.Debug;
-import org.esa.beam.visat.VisatApp;
 
 import java.awt.Rectangle;
 import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class CsvExporter {
+abstract class CsvExporter {
 
     List<String> header;
     List<String> columns;
     List<String> rows;
 
-    File outputFile;
+    private final PrintWriter out;
 
-    public CsvExporter(File outputFile) {
-        this.outputFile = outputFile;
+    CsvExporter(PrintWriter writer) {
+        this.out = writer;
         this.header = new ArrayList<String>();
         this.columns = new ArrayList<String>();
         this.rows = new ArrayList<String>();
@@ -65,31 +59,16 @@ public abstract class CsvExporter {
             }
         }
         builder.append("\n");
-        FileOutputStream outStream = null;
-        PrintStream printStream = null;
         try {
-            outStream = new FileOutputStream(outputFile);
-            printStream = new PrintStream(outStream);
-            printStream.print(builder.toString());
+            out.print(builder.toString());
+            out.print(builder.toString());
             for (String row : rows) {
-                printStream.print(row);
-                printStream.print("\n");
+                out.print(row);
+                out.print("\n");
             }
-        } catch (FileNotFoundException exc) {
-            VisatApp.getApp().handleError(exc);
-            Debug.trace(exc);
-        } catch (IOException exc) {
-            VisatApp.getApp().handleError(exc);
-            Debug.trace(exc);
         } finally {
-            try {
-                if (outStream != null) {
-                    outStream.close();
-                }
-                if (printStream != null) {
-                    printStream.close();
-                }
-            } catch (IOException ignore) {
+            if (out != null) {
+                out.close();
             }
         }
     }
