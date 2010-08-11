@@ -28,6 +28,7 @@ import org.esa.beam.framework.ui.tool.ToolButtonFactory;
 import org.esa.beam.glob.core.TimeSeriesMapper;
 import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeCoding;
+import org.esa.beam.util.Guardian;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.visat.VisatApp;
 
@@ -36,6 +37,10 @@ import javax.swing.BorderFactory;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JSpinner;
+import javax.swing.SpinnerNumberModel;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.event.InternalFrameAdapter;
 import javax.swing.event.InternalFrameEvent;
 import java.awt.BorderLayout;
@@ -56,7 +61,7 @@ import java.util.List;
  */
 public class TimeSeriesMatrixToolView extends AbstractToolView {
 
-    private AbstractButton configureButton;
+    private JSpinner configureSpinner;
     private AbstractButton exportTimeSeriesButton;
     private AbstractButton helpButton;
     private JLabel dateLabel;
@@ -70,7 +75,7 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
     private RasterDataNode currentRaster;
     private int currentLevelZeroX;
     private int currentLevelZeroY;
-    private int matrixSize = 5; // default value
+    private int matrixSize = 3; // default value; value must be uneven
 
     public TimeSeriesMatrixToolView() {
         pixelPosListener = new TimeSeriesPPL();
@@ -80,16 +85,21 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
 
     @Override
     protected JComponent createControl() {
+        Guardian.assertEquals("Specified matrix size must be uneven", matrixSize % 2 == 1, true);
         VisatApp.getApp().addInternalFrameListener(sceneViewListener);
         final JPanel panel = new JPanel(new BorderLayout());
 
-        configureButton = ToolButtonFactory.createButton(
-                UIUtils.loadImageIcon("icons/Config24.png"),
-                false);
+        configureSpinner = new JSpinner(new SpinnerNumberModel(3, 1, 9, 2));
+        configureSpinner.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                matrixSize = (Integer) configureSpinner.getModel().getValue();
+                matrixPanel.setMatrixSize(matrixSize);
+                updateMatrix();
+            }
+        });
 
-        exportTimeSeriesButton = ToolButtonFactory.createButton(
-                UIUtils.loadImageIcon("icons/Export24.gif"),
-                false);
+        exportTimeSeriesButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/Export24.gif"), false);
         exportTimeSeriesButton.setToolTipText("Export values");
 
         helpButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/Help24.gif"), false);
@@ -158,7 +168,7 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
         gbc.fill = GridBagConstraints.NONE;
         gbc.insets.top = 2;
         gbc.gridy = 0;
-        buttonPanel.add(configureButton, gbc);
+        buttonPanel.add(configureSpinner, gbc);
         gbc.gridy++;
         buttonPanel.add(exportTimeSeriesButton, gbc);
         gbc.gridy++;
@@ -176,7 +186,7 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
 
     private void setUIEnabled(boolean enable) {
         dateLabel.setEnabled(enable);
-        configureButton.setEnabled(enable);
+        configureSpinner.setEnabled(enable);
         helpButton.setEnabled(enable);
         exportTimeSeriesButton.setEnabled(enable);
     }
@@ -346,15 +356,14 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
     }
 
     private String getValue(int x, int y) {
+        if (currentRaster == null) {
+            return "";
+        }
         if (currentRaster.isFloatingPointType()) {
             return String.valueOf(ProductUtils.getGeophysicalSampleDouble((Band) currentRaster, x, y, 0));
         } else {
             return String.valueOf(ProductUtils.getGeophysicalSampleLong((Band) currentRaster, x, y, 0));
         }
-    }
-
-    public void setMatrixSize(int matrixSize) {
-        this.matrixSize = matrixSize;
     }
 
 }
