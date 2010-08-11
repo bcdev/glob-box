@@ -17,7 +17,6 @@
 package org.esa.beam.glob.ui;
 
 import com.bc.ceres.glayer.support.ImageLayer;
-import com.bc.ceres.grender.Viewport;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.framework.ui.GridBagUtils;
@@ -43,7 +42,6 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.GridBagConstraints;
-import java.awt.Point;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
@@ -67,8 +65,12 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
     private SceneViewListener sceneViewListener;
     private TimeSeriesPPL pixelPosListener;
     private MatrixMouseWheelListener mouseWheelListener;
-    private RasterDataNode currentRaster;
     private MatrixPanel matrixPanel;
+
+    private RasterDataNode currentRaster;
+    private int currentLevelZeroX;
+    private int currentLevelZeroY;
+    private int matrixSize = 5; // default value
 
     public TimeSeriesMatrixToolView() {
         pixelPosListener = new TimeSeriesPPL();
@@ -132,7 +134,7 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
         String startDateString = getStartDateString();
         dateLabel = new JLabel(String.format("Date: %s", startDateString));
         mainPanel.add(BorderLayout.NORTH, dateLabel);
-        matrixPanel = new MatrixPanel(3);
+        matrixPanel = new MatrixPanel(matrixSize);
         matrixPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));
         mainPanel.add(BorderLayout.CENTER, matrixPanel);
         return mainPanel;
@@ -258,12 +260,21 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
         public void pixelPosChanged(ImageLayer imageLayer, int pixelX, int pixelY,
                                     int currentLevel, boolean pixelPosValid, MouseEvent e) {
             if (pixelPosValid && isVisible() && currentView != null) {
-                updateMatrix(pixelX, pixelY, currentLevel);
+                AffineTransform i2mTransform = currentView.getBaseImageLayer().getImageToModelTransform(currentLevel);
+                Point2D modelP = i2mTransform.transform(new Point2D.Double(pixelX + 0.5, pixelY + 0.5), null);
+                AffineTransform m2iTransform = currentView.getBaseImageLayer().getModelToImageTransform();
+                Point2D levelZeroP = m2iTransform.transform(modelP, null);
+                currentLevelZeroX = (int) Math.floor(levelZeroP.getX());
+                currentLevelZeroY = (int) Math.floor(levelZeroP.getY());
+                updateMatrix();
+            } else {
+                //todo clear matrix
             }
         }
 
         @Override
         public void pixelPosNotAvailable() {
+            //todo clear matrix
         }
     }
 
@@ -296,52 +307,54 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
             if (nextRaster != null) {
                 dateLabel.setText(nextRaster.getName());
                 currentRaster = nextRaster;
-                final Viewport viewport = currentView.getViewport();
-                final ImageLayer baseLayer = currentView.getBaseImageLayer();
-                final int currentLevel = baseLayer.getLevel(viewport);
-                final Point mousePosition = currentView.getMousePosition();
-                final AffineTransform levelZeroToModel = baseLayer.getImageToModelTransform();
-                final AffineTransform modelToCurrentLevel = baseLayer.getModelToImageTransform(currentLevel);
-                final Point2D modelPos = levelZeroToModel.transform(mousePosition, null);
-                final Point2D currentPos = modelToCurrentLevel.transform(modelPos, null);
-                updateMatrix((int) currentPos.getX(), (int) currentPos.getY(), currentLevel);
+                updateMatrix();
             }
         }
     }
 
-    private void updateMatrix(int x, int y, int currentLevel) {
-        final String[][] values = {
-                {
-                        getValue(x - 1, y - 1, currentLevel),
-                        getValue(x, y - 1, currentLevel),
-                        getValue(x + 1, y - 1, currentLevel)
-                },
-                {
-                        getValue(x - 1, y, currentLevel),
-                        getValue(x, y, currentLevel),
-                        getValue(x + 1, y, currentLevel)
-                },
-                {
-                        getValue(x - 1, y + 1, currentLevel),
-                        getValue(x, y + 1, currentLevel),
-                        getValue(x + 1, y + 1, currentLevel)
-                }
-        };
+    private void updateMatrix() {
+        int x = currentLevelZeroX;
+        int y = currentLevelZeroY;
+        final String[][] values = new String[matrixSize][matrixSize];
+
+        for (int i = 0; i < matrixSize; i++) {
+            for (int j = 0; j < matrixSize; j++) {
+                int xIndex = x - (int) Math.floor(matrixSize / 2.0) + i;
+                int yIndex = y - (int) Math.floor(matrixSize / 2.0) + j;
+                values[j][i] = getValue(xIndex, yIndex);
+            }
+        }
+
+//                {
+//                {
+//                        getValue(x - 1, y - 1),
+//                        getValue(x, y - 1),
+//                        getValue(x + 1, y - 1)
+//                },
+//                {
+//                        getValue(x - 1, y),
+//                        getValue(x, y),
+//                        getValue(x + 1, y)
+//                },
+//                {
+//                        getValue(x - 1, y + 1),
+//                        getValue(x, y + 1),
+//                        getValue(x + 1, y + 1)
+//                }
+//        };
         matrixPanel.setValues(values);
     }
 
-    private String getValue(int x, int y, int currentLevel) {
-        if (currentLevel == -1) {
-            final Viewport viewport = currentView.getViewport();
-            final ImageLayer baseLayer = currentView.getBaseImageLayer();
-            currentLevel = baseLayer.getLevel(viewport);
-        }
+    private String getValue(int x, int y) {
         if (currentRaster.isFloatingPointType()) {
-            return String.valueOf(ProductUtils.getGeophysicalSampleDouble((Band) currentRaster, x, y, currentLevel));
+            return String.valueOf(ProductUtils.getGeophysicalSampleDouble((Band) currentRaster, x, y, 0));
         } else {
-            return String.valueOf(ProductUtils.getGeophysicalSampleLong((Band) currentRaster, x, y, currentLevel));
+            return String.valueOf(ProductUtils.getGeophysicalSampleLong((Band) currentRaster, x, y, 0));
         }
-//        return data.getSampleDouble(x, y, 0);
+    }
+
+    public void setMatrixSize(int matrixSize) {
+        this.matrixSize = matrixSize;
     }
 
 }

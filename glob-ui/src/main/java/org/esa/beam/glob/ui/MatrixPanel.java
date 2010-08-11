@@ -30,7 +30,9 @@ public class MatrixPanel extends JPanel {
     public MatrixPanel(int cols) {
         setLayout(new TableLayout(cols));
         for (int i = 0; i < cols * cols; i++) {
-            add(new JPanel());
+            final JPanel panel = new JPanel();
+            panel.add(new JLabel());
+            add(panel);
         }
     }
 
@@ -41,8 +43,8 @@ public class MatrixPanel extends JPanel {
                 String v = value[j];
                 int compIndex = i * (value.length - 1) + i + j;
                 final JPanel currentPanel = (JPanel) getComponent(compIndex);
-                currentPanel.removeAll();
-                currentPanel.add(new JLabel(v));
+                final JLabel label = (JLabel) currentPanel.getComponent(0);
+                label.setText(v);
             }
         }
     }
