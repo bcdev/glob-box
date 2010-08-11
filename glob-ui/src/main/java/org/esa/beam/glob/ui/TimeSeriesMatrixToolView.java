@@ -28,6 +28,7 @@ import org.esa.beam.framework.ui.tool.ToolButtonFactory;
 import org.esa.beam.glob.core.TimeSeriesMapper;
 import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeCoding;
+import org.esa.beam.glob.export.text.ExportTimeBasedText;
 import org.esa.beam.util.Guardian;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.visat.VisatApp;
@@ -43,10 +44,13 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.InternalFrameAdapter;
 import javax.swing.event.InternalFrameEvent;
+import javax.swing.plaf.basic.BasicSpinnerUI;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.GridBagConstraints;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
@@ -91,7 +95,19 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
         VisatApp.getApp().addInternalFrameListener(sceneViewListener);
         final JPanel panel = new JPanel(new BorderLayout());
 
-        configureSpinner = new JSpinner(new SpinnerNumberModel(3, 1, 9, 2));
+        final SpinnerNumberModel spinnerModel = new SpinnerNumberModel(3, 1, 9, 2) {
+            @Override
+            public void setValue(Object value) {
+                if ((Integer) value % 2 == 1) {
+                    super.setValue(value);
+                } else {
+                    super.setValue(getValue());
+                }
+            }
+        };
+
+        configureSpinner = new JSpinner(spinnerModel);
+        configureSpinner.setUI(new BasicSpinnerUI());
         configureSpinner.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent e) {
@@ -103,6 +119,12 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
 
         exportTimeSeriesButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/Export24.gif"), false);
         exportTimeSeriesButton.setToolTipText("Export values");
+        exportTimeSeriesButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                ExportTimeBasedText.export(panel, timeSeries, getDescriptor().getHelpId());
+            }
+        });
 
         helpButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/Help24.gif"), false);
         helpButton.setToolTipText("Help");
@@ -343,20 +365,14 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
         int y = currentLevelZeroY;
 
         final Color[][] colors = new Color[matrixSize][matrixSize];
-        for (int i = 0; i < matrixSize; i++) {
-            for (int j = 0; j < matrixSize; j++) {
-                int xIndex = x - (int) Math.floor(matrixSize / 2.0) + i;
-                int yIndex = y - (int) Math.floor(matrixSize / 2.0) + j;
-                colors[j][i] = getColor(xIndex, yIndex);
-            }
-        }
-
         final double[][] values = new double[matrixSize][matrixSize];
+
         for (int i = 0; i < matrixSize; i++) {
             for (int j = 0; j < matrixSize; j++) {
                 int xIndex = x - (int) Math.floor(matrixSize / 2.0) + i;
                 int yIndex = y - (int) Math.floor(matrixSize / 2.0) + j;
                 values[j][i] = getValue(xIndex, yIndex);
+                colors[j][i] = getColor(values[j][i]);
             }
         }
 
@@ -368,18 +384,17 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
         if (currentRaster == null) {
             return Double.NaN;
         }
-        if (currentRaster.isFloatingPointType()) {
+        if (currentRaster.isPixelValid(x, y)) {
             return ProductUtils.getGeophysicalSampleDouble((Band) currentRaster, x, y, 0);
         } else {
-            return ProductUtils.getGeophysicalSampleLong((Band) currentRaster, x, y, 0);
+            return Double.NaN;
         }
     }
 
-    private Color getColor(int x, int y) {
-        if (currentRaster == null) {
-            return Color.BLACK;
+    private Color getColor(double sample) {
+        if (currentRaster == null || Double.isNaN(sample)) {
+            return null;
         }
-        final double sample = ProductUtils.getGeophysicalSampleDouble((Band) currentRaster, x, y, 0);
         return currentRaster.getImageInfo().getColorPaletteDef().computeColor(currentRaster, sample);
     }
 

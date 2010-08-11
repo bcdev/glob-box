@@ -38,6 +38,14 @@ public class MatrixPanel extends JPanel {
         update(size);
     }
 
+    @Override
+    public void setEnabled(boolean enabled) {
+        super.setEnabled(enabled);
+        for (Component component : getComponents()) {
+            component.setEnabled(enabled);
+        }
+    }
+
     void setValues(Color[][] colors, double[][] values) {
         if (colors.length != values.length) {
             throw new IllegalArgumentException("There must be as many colours as values.");
@@ -56,7 +64,7 @@ public class MatrixPanel extends JPanel {
         }
     }
 
-    public void setMatrixSize(int matrixSize) {
+    void setMatrixSize(int matrixSize) {
         update(matrixSize);
     }
 
@@ -73,23 +81,11 @@ public class MatrixPanel extends JPanel {
         layout.setTablePadding(new Insets(2, 2, 2, 2));
         setLayout(layout);
         for (int i = 0; i < size * size; i++) {
-            final JPanel panel = new TilePanel();
-            add(panel);
+            add(new TilePanel());
         }
     }
 
-    @Override
-    public void setEnabled(boolean enabled) {
-        super.setEnabled(enabled);
-        for (Component component : getComponents()) {
-            component.setEnabled(enabled);
-//            if (component instanceof JPanel) {
-//                ((JPanel) component).getComponent(0).setEnabled(enabled);
-//            }
-        }
-    }
-
-    private class TilePanel extends JPanel {
+    private static class TilePanel extends JPanel {
 
         private JLabel label;
 
@@ -103,21 +99,30 @@ public class MatrixPanel extends JPanel {
         @Override
         protected void paintComponent(Graphics g) {
             super.paintComponent(g);
-            g.setColor(color);
-            g.fillRect(0, 0, this.getWidth(), this.getHeight() - label.getHeight());
+            if (color != null) {
+                g.setColor(color);
+                g.fillRect(0, 0, this.getWidth(), this.getHeight() - label.getHeight());
+            } else {
+                g.drawLine(0, 0, this.getWidth(), this.getHeight() - label.getHeight());
+                g.drawLine(this.getWidth(), 0, 0, this.getHeight() - label.getHeight());
+            }
         }
 
         public void setColor(Color color) {
             this.color = color;
         }
 
-        public void setValue(Double value) {
-            final NumberFormatter formatter = new NumberFormatter(new DecimalFormat("000.0000"));
-            try {
-                final String valueText = formatter.valueToString(value);
-                label.setText(valueText);
-            } catch (ParseException e) {
-                label.setText(value + "");
+        public void setValue(double value) {
+            if (Double.isNaN(value)) {
+                label.setText("NaN");
+            } else {
+                final NumberFormatter formatter = new NumberFormatter(new DecimalFormat("000.0000"));
+                try {
+                    final String valueText = formatter.valueToString(value);
+                    label.setText(valueText);
+                } catch (ParseException e) {
+                    label.setText(value + "");
+                }
             }
         }
     }
