@@ -33,7 +33,6 @@ import org.esa.beam.visat.VisatApp;
 import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
 import javax.swing.DefaultListCellRenderer;
-import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JList;
@@ -49,6 +48,7 @@ import java.io.File;
 import java.util.Iterator;
 
 class ProductLocationsPane extends JPanel {
+    private static final String PROPERTY_KEY_LAST_OPEN_TS_DIR = "glob.file.lastOpenDir";
 
     private ProductLocationsPaneModel model;
     private JList sourceList;
@@ -160,7 +160,7 @@ class ProductLocationsPane extends JPanel {
             final FolderChooser folderChooser = new FolderChooser();
             final VisatApp visatApp = VisatApp.getApp();
             final PropertyMap preferences = visatApp.getPreferences();
-            String lastDir = preferences.getPropertyString(VisatApp.PROPERTY_KEY_APP_LAST_OPEN_DIR,
+            String lastDir = preferences.getPropertyString(PROPERTY_KEY_LAST_OPEN_TS_DIR,
                                                            SystemUtils.getUserHomeDir().getPath());
 
             folderChooser.setCurrentDirectory(new File(lastDir));
@@ -173,7 +173,7 @@ class ProductLocationsPane extends JPanel {
             File currentDir = folderChooser.getSelectedFolder();
             model.addDirectory(currentDir, recursive);
             if (currentDir != null) {
-                preferences.setPropertyString(VisatApp.PROPERTY_KEY_APP_LAST_OPEN_DIR, currentDir.getAbsolutePath());
+                preferences.setPropertyString(PROPERTY_KEY_LAST_OPEN_TS_DIR, currentDir.getAbsolutePath());
             }
 
         }
@@ -189,7 +189,7 @@ class ProductLocationsPane extends JPanel {
         public void actionPerformed(ActionEvent e) {
             final VisatApp visatApp = VisatApp.getApp();
             final PropertyMap preferences = visatApp.getPreferences();
-            String lastDir = preferences.getPropertyString(VisatApp.PROPERTY_KEY_APP_LAST_OPEN_DIR,
+            String lastDir = preferences.getPropertyString(PROPERTY_KEY_LAST_OPEN_TS_DIR,
                                                            SystemUtils.getUserHomeDir().getPath());
             String lastFormat = preferences.getPropertyString(VisatApp.PROPERTY_KEY_APP_LAST_OPEN_FORMAT,
                                                               VisatApp.ALL_FILES_IDENTIFIER);
@@ -219,7 +219,7 @@ class ProductLocationsPane extends JPanel {
 
             String currentDir = fileChooser.getCurrentDirectory().getAbsolutePath();
             if (currentDir != null) {
-                preferences.setPropertyString(VisatApp.PROPERTY_KEY_APP_LAST_OPEN_DIR, currentDir);
+                preferences.setPropertyString(PROPERTY_KEY_LAST_OPEN_TS_DIR, currentDir);
             }
 
             if (fileChooser.getFileFilter() instanceof BeamFileFilter) {
