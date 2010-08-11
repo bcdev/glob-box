@@ -325,6 +325,26 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
         return Collections.unmodifiableMap(rasterTimeMap);
     }
 
+    @Override
+    public TimeCoding getTimeCoding() {
+        return new DefaultTimeCoding(tsProduct.getStartTime(), tsProduct.getEndTime(),
+                                     tsProduct.getSceneRasterHeight());
+    }
+
+    @Override
+    public void setTimeCoding(TimeCoding timeCoding) {
+        final ProductData.UTC startTime = timeCoding.getStartTime();
+        if (tsProduct.getStartTime().getAsCalendar().compareTo(startTime.getAsCalendar()) != 0) {
+            tsProduct.setStartTime(startTime);
+            tsProduct.fireProductNodeChanged("startTime");
+        }
+        final ProductData.UTC endTime = timeCoding.getEndTime();
+        if (tsProduct.getEndTime().getAsCalendar().compareTo(endTime.getAsCalendar()) != 0) {
+            tsProduct.setEndTime(endTime);
+            tsProduct.fireProductNodeChanged("endTime");
+        }
+    }
+
 
     private void sortBands(List<Band> bandList) {
         Collections.sort(bandList, new Comparator<Band>() {

@@ -2,8 +2,11 @@ package org.esa.beam.glob.ui;
 
 import com.bc.ceres.swing.TableLayout;
 import com.jidesoft.combobox.DateComboBox;
+import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.ui.ModalDialog;
 import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
+import org.esa.beam.glob.core.timeseries.datamodel.DefaultTimeCoding;
+import org.esa.beam.glob.core.timeseries.datamodel.TimeCoding;
 
 import javax.swing.AbstractAction;
 import javax.swing.JLabel;
@@ -38,7 +41,7 @@ class EditTimeSpanAction extends AbstractAction {
             window = SwingUtilities.getWindowAncestor((Component) source);
         }
 
-        final ModalDialog dialog = new EditTimeSpanDialog(window);
+        final ModalDialog dialog = new EditTimeSpanDialog(window, timeSeries);
         dialog.show();
     }
 
@@ -46,28 +49,38 @@ class EditTimeSpanAction extends AbstractAction {
 
         private final Calendar dateTimePrototype;
         private final SimpleDateFormat dateFormat;
+        private AbstractTimeSeries timeSeries;
+        private DateComboBox startTimeBox;
+        private DateComboBox endTimeBox;
 
-        private EditTimeSpanDialog(Window window) {
+        private EditTimeSpanDialog(Window window, AbstractTimeSeries timeSeries) {
             super(window, "Edit Time Span", ModalDialog.ID_OK_CANCEL, null);
             dateTimePrototype = createCalendarPrototype();
             dateFormat = new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss", Locale.ENGLISH);
-
-            createUi();
+            this.timeSeries = timeSeries;
+            createUserInterface();
         }
 
         @Override
         protected void onOK() {
-            super.onOK();
+            final ProductData.UTC startTime = ProductData.UTC.create(startTimeBox.getDate(), 0);
+            final ProductData.UTC endTime = ProductData.UTC.create(endTimeBox.getDate(), 0);
+            timeSeries.setTimeCoding(new DefaultTimeCoding(startTime, endTime,
+                                                           timeSeries.getTsProduct().getSceneRasterHeight()));
 
+            super.onOK();
         }
 
         @Override
         protected boolean verifyUserInput() {
-            return super.verifyUserInput();
-
+            if (endTimeBox.getCalendar().compareTo(startTimeBox.getCalendar()) < 0) {
+                showErrorDialog("End time is before start time."); 
+                return false;
+            }
+            return true;
         }
 
-        private void createUi() {
+        private void createUserInterface() {
             final TableLayout tableLayout = new TableLayout(2);
             tableLayout.setTableAnchor(TableLayout.Anchor.NORTHWEST);
             tableLayout.setTableWeightX(1.0);
@@ -75,9 +88,12 @@ class EditTimeSpanAction extends AbstractAction {
             tableLayout.setTablePadding(4, 4);
             JPanel content = new JPanel(tableLayout);
             final JLabel startTimeLabel = new JLabel("Start time:");
-            final DateComboBox startTimeBox = createDateComboBox();
+            startTimeBox = createDateComboBox();
+            final TimeCoding timeCoding = timeSeries.getTimeCoding();
+            startTimeBox.setCalendar(timeCoding.getStartTime().getAsCalendar());
             final JLabel endTimeLabel = new JLabel("End time:");
-            final DateComboBox endTimeBox = createDateComboBox();
+            endTimeBox = createDateComboBox();
+            endTimeBox.setCalendar(timeCoding.getEndTime().getAsCalendar());
             content.add(startTimeLabel);
             content.add(startTimeBox);
             content.add(endTimeLabel);
@@ -99,9 +115,10 @@ class EditTimeSpanAction extends AbstractAction {
         private DateComboBox createDateComboBox() {
             final DateComboBox box = new DateComboBox();
             box.setPrototypeDisplayValue(dateTimePrototype);
+            box.setTimeDisplayed(true);
             box.setFormat(dateFormat);
             box.setShowNoneButton(false);
-            box.setTimeDisplayed(true);
+            box.setShowTodayButton(false);
             box.setShowOKButton(true);
             box.setEditable(false);
             return box;
