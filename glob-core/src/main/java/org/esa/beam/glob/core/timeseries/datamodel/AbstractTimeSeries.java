@@ -32,14 +32,14 @@ import java.util.Map;
 import java.util.WeakHashMap;
 
 /**
- * <p><i>Note that this class is not yet public API. Interface may chhange in future releases.</i></p>
+ * <p><i>Note that this class is not yet public API. Interface may change in future releases.</i></p>
  * 
  * @author Thomas Storm
  */
 public abstract class AbstractTimeSeries {
 
     /**
-     * may NOT contain SEPARATOR
+     * must NOT contain SEPARATOR
      */
     static final String DATE_FORMAT = "yyyyMMdd.HHmmss.SSS";
 
