@@ -341,8 +341,17 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
     private void updateMatrix() {
         int x = currentLevelZeroX;
         int y = currentLevelZeroY;
-        final String[][] values = new String[matrixSize][matrixSize];
 
+        final Color[][] colors = new Color[matrixSize][matrixSize];
+        for (int i = 0; i < matrixSize; i++) {
+            for (int j = 0; j < matrixSize; j++) {
+                int xIndex = x - (int) Math.floor(matrixSize / 2.0) + i;
+                int yIndex = y - (int) Math.floor(matrixSize / 2.0) + j;
+                colors[j][i] = getColor(xIndex, yIndex);
+            }
+        }
+
+        final double[][] values = new double[matrixSize][matrixSize];
         for (int i = 0; i < matrixSize; i++) {
             for (int j = 0; j < matrixSize; j++) {
                 int xIndex = x - (int) Math.floor(matrixSize / 2.0) + i;
@@ -351,35 +360,27 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
             }
         }
 
-//                {
-//                {
-//                        getValue(x - 1, y - 1),
-//                        getValue(x, y - 1),
-//                        getValue(x + 1, y - 1)
-//                },
-//                {
-//                        getValue(x - 1, y),
-//                        getValue(x, y),
-//                        getValue(x + 1, y)
-//                },
-//                {
-//                        getValue(x - 1, y + 1),
-//                        getValue(x, y + 1),
-//                        getValue(x + 1, y + 1)
-//                }
-//        };
-        matrixPanel.setValues(values);
+        matrixPanel.setValues(colors, values);
+        matrixPanel.repaint();
     }
 
-    private String getValue(int x, int y) {
+    private double getValue(int x, int y) {
         if (currentRaster == null) {
-            return "";
+            return Double.NaN;
         }
         if (currentRaster.isFloatingPointType()) {
-            return String.valueOf(ProductUtils.getGeophysicalSampleDouble((Band) currentRaster, x, y, 0));
+            return ProductUtils.getGeophysicalSampleDouble((Band) currentRaster, x, y, 0);
         } else {
-            return String.valueOf(ProductUtils.getGeophysicalSampleLong((Band) currentRaster, x, y, 0));
+            return ProductUtils.getGeophysicalSampleLong((Band) currentRaster, x, y, 0);
         }
+    }
+
+    private Color getColor(int x, int y) {
+        if (currentRaster == null) {
+            return Color.BLACK;
+        }
+        final double sample = ProductUtils.getGeophysicalSampleDouble((Band) currentRaster, x, y, 0);
+        return currentRaster.getImageInfo().getColorPaletteDef().computeColor(currentRaster, sample);
     }
 
 }

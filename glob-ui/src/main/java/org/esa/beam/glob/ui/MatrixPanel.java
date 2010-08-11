@@ -20,7 +20,13 @@ import com.bc.ceres.swing.TableLayout;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.text.NumberFormatter;
+import java.awt.Color;
 import java.awt.Component;
+import java.awt.Graphics;
+import java.awt.Insets;
+import java.text.DecimalFormat;
+import java.text.ParseException;
 
 /**
  * @author Thomas Storm
@@ -28,19 +34,24 @@ import java.awt.Component;
 public class MatrixPanel extends JPanel {
 
 
-    public MatrixPanel(int cols) {
-        update(cols);
+    public MatrixPanel(int size) {
+        update(size);
     }
 
-    void setValues(String[][] values) {
-        for (int i = 0; i < values.length; i++) {
-            String[] value = values[i];
-            for (int j = 0; j < value.length; j++) {
-                String v = value[j];
-                int compIndex = i * (value.length - 1) + i + j;
-                final JPanel currentPanel = (JPanel) getComponent(compIndex);
-                final JLabel label = (JLabel) currentPanel.getComponent(0);
-                label.setText(v);
+    void setValues(Color[][] colors, double[][] values) {
+        if (colors.length != values.length) {
+            throw new IllegalArgumentException("There must be as many colours as values.");
+        }
+        for (int i = 0; i < colors.length; i++) {
+            Color[] color = colors[i];
+            double[] value = values[i];
+            for (int j = 0; j < color.length; j++) {
+                int compIndex = i * (color.length - 1) + i + j;
+                final TilePanel panel = (TilePanel) getComponent(compIndex);
+                Color v = color[j];
+                double d = value[j];
+                panel.setColor(v);
+                panel.setValue(d);
             }
         }
     }
@@ -49,15 +60,22 @@ public class MatrixPanel extends JPanel {
         update(matrixSize);
     }
 
-    private void update(int cols) {
+    private void update(int size) {
         removeAll();
-        setLayout(new TableLayout(cols));
-        for (int i = 0; i < cols * cols; i++) {
-            final JPanel panel = new JPanel();
-            panel.add(new JLabel());
+        final TableLayout layout = new TableLayout(size);
+        for (int i = 0; i < size; i++) {
+            final int weight = 1 / size;
+            layout.setRowWeightX(i, weight);
+            layout.setRowWeightX(i, weight);
+            layout.setColumnWeightX(i, weight);
+            layout.setColumnWeightY(i, weight);
+        }
+        layout.setTablePadding(new Insets(2, 2, 2, 2));
+        setLayout(layout);
+        for (int i = 0; i < size * size; i++) {
+            final JPanel panel = new TilePanel();
             add(panel);
         }
-        repaint();
     }
 
     @Override
@@ -65,8 +83,41 @@ public class MatrixPanel extends JPanel {
         super.setEnabled(enabled);
         for (Component component : getComponents()) {
             component.setEnabled(enabled);
-            if (component instanceof JPanel) {
-                ((JPanel) component).getComponent(0).setEnabled(enabled);
+//            if (component instanceof JPanel) {
+//                ((JPanel) component).getComponent(0).setEnabled(enabled);
+//            }
+        }
+    }
+
+    private class TilePanel extends JPanel {
+
+        private JLabel label;
+
+        private Color color = Color.BLACK;
+
+        private TilePanel() {
+            label = new JLabel();
+            add(label);
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            g.setColor(color);
+            g.fillRect(0, 0, this.getWidth(), this.getHeight() - label.getHeight());
+        }
+
+        public void setColor(Color color) {
+            this.color = color;
+        }
+
+        public void setValue(Double value) {
+            final NumberFormatter formatter = new NumberFormatter(new DecimalFormat("000.0000"));
+            try {
+                final String valueText = formatter.valueToString(value);
+                label.setText(valueText);
+            } catch (ParseException e) {
+                label.setText(value + "");
             }
         }
     }
