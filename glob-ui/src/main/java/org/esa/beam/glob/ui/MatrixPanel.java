@@ -20,6 +20,7 @@ import com.bc.ceres.swing.TableLayout;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import java.awt.Component;
 
 /**
  * @author Thomas Storm
@@ -59,4 +60,14 @@ public class MatrixPanel extends JPanel {
         repaint();
     }
 
+    @Override
+    public void setEnabled(boolean enabled) {
+        super.setEnabled(enabled);
+        for (Component component : getComponents()) {
+            component.setEnabled(enabled);
+            if (component instanceof JPanel) {
+                ((JPanel) component).getComponent(0).setEnabled(enabled);
+            }
+        }
+    }
 }

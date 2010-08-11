@@ -77,6 +77,8 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
     private int currentLevelZeroY;
     private int matrixSize = 3; // default value; value must be uneven
 
+    private static final String DATE_PREFIX = "Date: ";
+
     public TimeSeriesMatrixToolView() {
         pixelPosListener = new TimeSeriesPPL();
         sceneViewListener = new SceneViewListener();
@@ -116,6 +118,11 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
             maySetCurrentView(view);
         }
 
+        setUIEnabled(view != null &&
+                     !view.isRGB() &&
+                     view.getProduct().getProductType().equals(AbstractTimeSeries.TIME_SERIES_PRODUCT_TYPE) &&
+                     TimeSeriesMapper.getInstance().getTimeSeries(view.getProduct()) != null);
+
         return panel;
     }
 
@@ -142,7 +149,7 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
     private JPanel createMainPanel() {
         JPanel mainPanel = new JPanel(new BorderLayout());
         String startDateString = getStartDateString();
-        dateLabel = new JLabel(String.format("Date: %s", startDateString));
+        dateLabel = new JLabel(String.format(DATE_PREFIX + " %s", startDateString));
         mainPanel.add(BorderLayout.NORTH, dateLabel);
         matrixPanel = new MatrixPanel(matrixSize);
         matrixPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));
@@ -189,6 +196,7 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
         configureSpinner.setEnabled(enable);
         helpButton.setEnabled(enable);
         exportTimeSeriesButton.setEnabled(enable);
+        matrixPanel.setEnabled(enable);
     }
 
     /*
@@ -218,6 +226,7 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
                 addMouseWheelListener();
                 timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(currentView.getProduct());
                 currentRaster = currentView.getRaster();
+                updateDateLabel();
             } else {
                 timeSeries = null;
             }
@@ -315,11 +324,18 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
                 }
             }
             if (nextRaster != null) {
-                dateLabel.setText(nextRaster.getName());
                 currentRaster = nextRaster;
+                updateDateLabel();
                 updateMatrix();
             }
         }
+    }
+
+    private void updateDateLabel() {
+        final TimeCoding timeCoding = timeSeries.getRasterTimeMap().get(currentRaster);
+        final Date startTime = timeCoding.getStartTime().getAsDate();
+        SimpleDateFormat sdf = new SimpleDateFormat("dd-MMM-yyyy hh:mm:ss");
+        dateLabel.setText(String.format(DATE_PREFIX + " %s", sdf.format(startTime)));
     }
 
     private void updateMatrix() {
