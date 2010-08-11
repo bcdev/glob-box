@@ -31,34 +31,51 @@ import org.esa.beam.util.StringUtils;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.WeakHashMap;
 
 /**
- * <p><i>Note that this class is not yet public API. Interface may chhange in future releases.</i></p>
+ * <p><i>Note that this class is not yet public API. Interface may change in future releases.</i></p>
  *
  * @author Thomas Storm
  */
-class TimeSeriesImpl extends AbstractTimeSeries {
+final class TimeSeriesImpl extends AbstractTimeSeries {
 
     private Product tsProduct;
     private List<ProductLocation> productLocationList;
     private Map<String, Product> productTimeMap;
+    private Map<RasterDataNode, TimeCoding> rasterTimeMap = new WeakHashMap<RasterDataNode, TimeCoding>();
 
+    /**
+     * Used to create a TimeSeries from within a ProductReader
+     *
+     * @param tsProduct the product read
+     */
     TimeSeriesImpl(Product tsProduct) {
         init(tsProduct);
         productLocationList = getProductLocations();
         handleProductLocations(false);
         setSourceImages();
         fixBandTimeCodings();
-        updateAutogrouping();
+        updateAutoGrouping();
     }
 
+    /**
+     * Used to create a new TimeSeries from the user interface.
+     *
+     * @param tsProduct        the newly created time series product
+     * @param productLocations the product location to be used
+     * @param variableNames    the currently selected names of variables
+     */
     TimeSeriesImpl(Product tsProduct, List<ProductLocation> productLocations, List<String> variableNames) {
         init(tsProduct);
-        productLocationList = productLocations;
+        productLocationList = new ArrayList<ProductLocation>(productLocations);
         handleProductLocations(true);
         for (String variable : variableNames) {
             setVariableSelected(variable, true);
@@ -152,7 +169,7 @@ class TimeSeriesImpl extends AbstractTimeSeries {
         }
         productLocationsElement.removeElement(removeElem);
         // remove variables for this productLocation
-        updateAutogrouping(); // TODO ???
+        updateAutoGrouping(); // TODO ???
 
         List<Product> products = productLocation.getProducts();
         final Band[] bands = tsProduct.getBands();
@@ -303,7 +320,24 @@ class TimeSeriesImpl extends AbstractTimeSeries {
         return bands;
     }
 
-    private void updateAutogrouping() {
+    @Override
+    public Map<RasterDataNode, TimeCoding> getRasterTimeMap() {
+        return Collections.unmodifiableMap(rasterTimeMap);
+    }
+
+
+    private void sortBands(List<Band> bandList) {
+        Collections.sort(bandList, new Comparator<Band>() {
+            @Override
+            public int compare(Band band1, Band band2) {
+                final Date date1 = rasterTimeMap.get(band1).getStartTime().getAsDate();
+                final Date date2 = rasterTimeMap.get(band2).getStartTime().getAsDate();
+                return date1.compareTo(date2);
+            }
+        });
+    }
+
+    private void updateAutoGrouping() {
         tsProduct.setAutoGrouping(StringUtils.join(getTimeVariables(), ":"));
     }
 
@@ -356,7 +390,7 @@ class TimeSeriesImpl extends AbstractTimeSeries {
             addVariableToMetadata(variable);
         }
         if (!newVariables.isEmpty()) {
-            updateAutogrouping();
+            updateAutoGrouping();
         }
     }
 

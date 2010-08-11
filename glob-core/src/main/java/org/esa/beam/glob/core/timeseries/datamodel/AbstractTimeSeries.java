@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.WeakHashMap;
 
@@ -55,7 +56,6 @@ public abstract class AbstractTimeSeries {
 
     public static final String PROPERTY_PRODUCT_LOCATIONS = "PROPERTY_PRODUCT_LOCATIONS";
     public static final String PROPERTY_VARIABLE_SELECTION = "PROPERTY_VARIABLE_SELECTION";
-    protected Map<RasterDataNode, TimeCoding> rasterTimeMap = new WeakHashMap<RasterDataNode, TimeCoding>();
 
     public abstract List<String> getTimeVariables();
 
@@ -77,31 +77,17 @@ public abstract class AbstractTimeSeries {
 
     public abstract List<Band> getBandsForProductLocation(ProductLocation location);
 
+    public abstract Map<RasterDataNode, TimeCoding> getRasterTimeMap();
+
     public static String variableToRasterName(String variableName, TimeCoding timeCoding) {
         final ProductData.UTC rasterStartTime = timeCoding.getStartTime();
         Guardian.assertNotNull("rasterStartTime", rasterStartTime);
-        final SimpleDateFormat dateFormat = new SimpleDateFormat(TimeSeriesImpl.DATE_FORMAT);
+        final SimpleDateFormat dateFormat = new SimpleDateFormat(TimeSeriesImpl.DATE_FORMAT, Locale.ENGLISH);
         return variableName + SEPARATOR + dateFormat.format(rasterStartTime.getAsDate());
     }
 
     public static String rasterToVariableName(String rasterName) {
         final int lastUnderscore = rasterName.lastIndexOf(SEPARATOR);
         return rasterName.substring(0, lastUnderscore);
-    }
-
-    void sortBands(List<Band> bandList) {
-        Collections.sort(bandList, new Comparator<Band>() {
-            @Override
-            public int compare(Band band1, Band band2) {
-                final Date date1 = rasterTimeMap.get(band1).getStartTime().getAsDate();
-                final Date date2 = rasterTimeMap.get(band2).getStartTime().getAsDate();
-                return date1.compareTo(date2);
-            }
-        });
-    }
-
-
-    public Map<RasterDataNode, TimeCoding> getRasterTimeMap() {
-        return rasterTimeMap;
     }
 }

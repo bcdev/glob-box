@@ -31,9 +31,12 @@ import java.util.List;
  */
 public class TimeSeriesFactory {
 
+    private TimeSeriesFactory() {
+    }
+
     /**
-     * Creates a new ITimeSeries from a given time series product. Since this
-     * product is already a complete time series, this method should only be called by the reader
+     * Creates a new TimeSeries from a given time series product. The given product has to be a time series product.
+     * This method should only be called by the reader
      *
      * @param product a time series product
      *
