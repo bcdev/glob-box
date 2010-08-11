@@ -53,7 +53,8 @@ public class ExportTimeBasedText extends ProgressMonitorSwingWorker<String, Void
     private final PrintWriter writer;
     private final StringBuffer clipboardText;
 
-    public ExportTimeBasedText(Component parentComponent, AbstractTimeSeries timeSeries, PrintWriter writer, StringBuffer clipboardText) {
+    private ExportTimeBasedText(Component parentComponent, AbstractTimeSeries timeSeries, PrintWriter writer,
+                                StringBuffer clipboardText) {
         super(parentComponent, DLG_TITLE);
         this.timeSeries = timeSeries;
         this.writer = writer;
@@ -70,7 +71,7 @@ public class ExportTimeBasedText extends ProgressMonitorSwingWorker<String, Void
         final PlacemarkGroup pinGroup = timeSeries.getTsProduct().getPinGroup();
         final ProductNode[] placemarkArray = pinGroup.toArray();
         if (placemarkArray.length == 0) {
-            return "There are no pins, which could be exported.";
+            return "There are no pins which could be exported.";
         } else {
             List<Placemark> placemarks = new ArrayList<Placemark>();
             for (ProductNode placemark : placemarkArray) {
@@ -93,7 +94,7 @@ public class ExportTimeBasedText extends ProgressMonitorSwingWorker<String, Void
         }
         if (errorMessage != null) {
             VisatApp.getApp().showErrorDialog(DLG_TITLE,
-                    ERR_MSG_BASE + errorMessage);
+                                              ERR_MSG_BASE + errorMessage);
         } else {
             if (clipboardText != null) {
                 SystemUtils.copyToClipboard(clipboardText.toString());
@@ -106,7 +107,7 @@ public class ExportTimeBasedText extends ProgressMonitorSwingWorker<String, Void
         // Get export method from user
         final String questionText = "How do you want to export the pixel values?\n"; /*I18N*/
         final int method = SelectExportMethodDialog.run(VisatApp.getApp().getMainFrame(),
-                DLG_TITLE, questionText, helpID);
+                                                        DLG_TITLE, questionText, helpID);
 
         final PrintWriter writer;
         final StringBuffer clipboardText;
@@ -127,7 +128,7 @@ public class ExportTimeBasedText extends ProgressMonitorSwingWorker<String, Void
                 fileWriter = new FileWriter(file);
             } catch (IOException e) {
                 VisatApp.getApp().showErrorDialog(DLG_TITLE,
-                        ERR_MSG_BASE + "Failed to create file '" + file + "':\n" + e.getMessage()); /*I18N*/
+                                                  ERR_MSG_BASE + "Failed to create file '" + file + "':\n" + e.getMessage()); /*I18N*/
                 return; // Error
             }
             writer = new PrintWriter(new BufferedWriter(fileWriter, initialBufferSize));

@@ -61,7 +61,6 @@ abstract class CsvExporter {
         builder.append("\n");
         try {
             out.print(builder.toString());
-            out.print(builder.toString());
             for (String row : rows) {
                 out.print(row);
                 out.print("\n");

@@ -109,9 +109,9 @@ class TimeSeriesGraphForm {
                 final VisatApp app = VisatApp.getApp();
                 final ProductSceneView view = app.getSelectedProductSceneView();
                 if (view != null &&
-                        view.getProduct() != null &&
-                        view.getProduct().getProductType().equals(AbstractTimeSeries.TIME_SERIES_PRODUCT_TYPE) &&
-                        TimeSeriesMapper.getInstance().getTimeSeries(view.getProduct()) != null) {
+                    view.getProduct() != null &&
+                    view.getProduct().getProductType().equals(AbstractTimeSeries.TIME_SERIES_PRODUCT_TYPE) &&
+                    TimeSeriesMapper.getInstance().getTimeSeries(view.getProduct()) != null) {
 
                     AbstractTimeSeries timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(view.getProduct());
                     if (timeSeries != null) {
@@ -120,7 +120,7 @@ class TimeSeriesGraphForm {
                 }
             }
         });
-        exportTimeSeriesButton.setToolTipText("Export time series of all pins to csv file");
+        exportTimeSeriesButton.setToolTipText("Export time series of all pins");
         exportTimeSeriesButton.setName("exportTimeSeriesButton");
         final ProductSceneView sceneView = VisatApp.getApp().getSelectedProductSceneView();
         if (sceneView != null) {
