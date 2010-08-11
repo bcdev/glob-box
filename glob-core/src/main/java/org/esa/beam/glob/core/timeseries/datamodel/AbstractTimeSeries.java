@@ -79,6 +79,10 @@ public abstract class AbstractTimeSeries {
 
     public abstract Map<RasterDataNode, TimeCoding> getRasterTimeMap();
 
+    public abstract TimeCoding getTimeCoding();
+
+    public abstract void setTimeCoding(TimeCoding timeCoding);
+
     public static String variableToRasterName(String variableName, TimeCoding timeCoding) {
         final ProductData.UTC rasterStartTime = timeCoding.getStartTime();
         Guardian.assertNotNull("rasterStartTime", rasterStartTime);
@@ -90,4 +94,5 @@ public abstract class AbstractTimeSeries {
         final int lastUnderscore = rasterName.lastIndexOf(SEPARATOR);
         return rasterName.substring(0, lastUnderscore);
     }
+
 }
