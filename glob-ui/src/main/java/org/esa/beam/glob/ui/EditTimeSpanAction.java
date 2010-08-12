@@ -16,7 +16,6 @@ import java.awt.Component;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Locale;
 
 class EditTimeSpanAction extends AbstractAction {
@@ -47,7 +46,6 @@ class EditTimeSpanAction extends AbstractAction {
 
     private static class EditTimeSpanDialog extends ModalDialog {
 
-        private final Calendar dateTimePrototype;
         private final SimpleDateFormat dateFormat;
         private AbstractTimeSeries timeSeries;
         private DateComboBox startTimeBox;
@@ -55,7 +53,6 @@ class EditTimeSpanAction extends AbstractAction {
 
         private EditTimeSpanDialog(Window window, AbstractTimeSeries timeSeries) {
             super(window, "Edit Time Span", ModalDialog.ID_OK_CANCEL, null);
-            dateTimePrototype = createCalendarPrototype();
             dateFormat = new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss", Locale.ENGLISH);
             this.timeSeries = timeSeries;
             createUserInterface();
@@ -100,20 +97,8 @@ class EditTimeSpanAction extends AbstractAction {
             setContent(content);
         }
 
-        private static Calendar createCalendarPrototype() {
-            final Calendar cal = Calendar.getInstance();
-            cal.set(Calendar.YEAR, 2000);
-            cal.set(Calendar.MONDAY, 8);
-            cal.set(Calendar.DAY_OF_MONTH, 30);
-            cal.set(Calendar.HOUR_OF_DAY, 23);
-            cal.set(Calendar.MINUTE, 59);
-            cal.set(Calendar.SECOND, 59);
-            return cal;
-        }
-
         private DateComboBox createDateComboBox() {
             final DateComboBox box = new DateComboBox();
-            box.setPrototypeDisplayValue(dateTimePrototype);
             box.setTimeDisplayed(true);
             box.setFormat(dateFormat);
             box.setShowNoneButton(false);
