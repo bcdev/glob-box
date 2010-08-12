@@ -146,15 +146,16 @@ class TimeSeriesGraphForm {
         gbc.gridy++;
         buttonPanel.add(exportTimeSeriesButton, gbc);
         gbc.gridy++;
-        buttonPanel.add(helpButton, gbc);
-        gbc.gridy++;
-
         gbc.insets.bottom = 0;
         gbc.fill = GridBagConstraints.VERTICAL;
         gbc.weighty = 1.0;
         gbc.gridwidth = 2;
         buttonPanel.add(new JLabel(" "), gbc); // filler
         gbc.fill = GridBagConstraints.NONE;
+        gbc.weighty = 0.0;
+        gbc.gridy = 10;
+        gbc.anchor = GridBagConstraints.EAST;
+        buttonPanel.add(helpButton, gbc);
 
         mainPanel.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
         mainPanel.add(BorderLayout.EAST, buttonPanel);
