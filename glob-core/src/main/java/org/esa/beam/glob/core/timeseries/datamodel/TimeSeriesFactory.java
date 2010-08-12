@@ -26,7 +26,7 @@ import java.util.List;
 
 /**
  * <p><i>Note that this class is not yet public API. Interface may chhange in future releases.</i></p>
- * 
+ *
  * @author Thomas Storm
  */
 public class TimeSeriesFactory {
@@ -79,7 +79,6 @@ public class TimeSeriesFactory {
                                               refProduct.getSceneRasterHeight());
         tsProduct.setDescription("A time series product");
         ProductUtils.copyGeoCoding(refProduct, tsProduct);
-
 
         final AbstractTimeSeries timeSeries = new TimeSeriesImpl(tsProduct, productLocations, variableNames);
         TimeSeriesMapper.getInstance().put(tsProduct, timeSeries);

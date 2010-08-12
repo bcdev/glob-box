@@ -5,7 +5,7 @@ import com.jidesoft.combobox.DateComboBox;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.ui.ModalDialog;
 import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
-import org.esa.beam.glob.core.timeseries.datamodel.DefaultTimeCoding;
+import org.esa.beam.glob.core.timeseries.datamodel.GridTimeCoding;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeCoding;
 
 import javax.swing.AbstractAction;
@@ -65,8 +65,7 @@ class EditTimeSpanAction extends AbstractAction {
         protected void onOK() {
             final ProductData.UTC startTime = ProductData.UTC.create(startTimeBox.getDate(), 0);
             final ProductData.UTC endTime = ProductData.UTC.create(endTimeBox.getDate(), 0);
-            timeSeries.setTimeCoding(new DefaultTimeCoding(startTime, endTime,
-                                                           timeSeries.getTsProduct().getSceneRasterHeight()));
+            timeSeries.setTimeCoding(new GridTimeCoding(startTime, endTime));
 
             super.onOK();
         }
@@ -74,7 +73,7 @@ class EditTimeSpanAction extends AbstractAction {
         @Override
         protected boolean verifyUserInput() {
             if (endTimeBox.getCalendar().compareTo(startTimeBox.getCalendar()) < 0) {
-                showErrorDialog("End time is before start time."); 
+                showErrorDialog("End time is before start time.");
                 return false;
             }
             return true;

@@ -20,6 +20,7 @@ import com.bc.ceres.glayer.support.ImageLayer;
 import com.bc.ceres.grender.Viewport;
 import org.esa.beam.framework.datamodel.Placemark;
 import org.esa.beam.framework.datamodel.PlacemarkGroup;
+import org.esa.beam.framework.datamodel.ProductNode;
 import org.esa.beam.framework.datamodel.ProductNodeEvent;
 import org.esa.beam.framework.datamodel.ProductNodeListener;
 import org.esa.beam.framework.datamodel.ProductNodeListenerAdapter;
@@ -87,7 +88,8 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
                                                    DEFAULT_RANGE_LABEL,
                                                    null, false, true, false);
         graphModel = new TimeSeriesGraphModel(chart.getXYPlot());
-        graphForm = new TimeSeriesGraphForm(chart, showSelectedPinAction, showAllPinAction, getDescriptor().getHelpId());
+        graphForm = new TimeSeriesGraphForm(chart, showSelectedPinAction, showAllPinAction,
+                                            getDescriptor().getHelpId());
 
         final VisatApp visatApp = VisatApp.getApp();
         visatApp.addInternalFrameListener(new TimeSeriesIFL());
@@ -106,9 +108,9 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
     private void maySetCurrentView(ProductSceneView view) {
         final String viewProductType = view.getProduct().getProductType();
         if (view != currentView &&
-                !view.isRGB() &&
-                viewProductType.equals(AbstractTimeSeries.TIME_SERIES_PRODUCT_TYPE) &&
-                TimeSeriesMapper.getInstance().getTimeSeries(view.getProduct()) != null) {
+            !view.isRGB() &&
+            viewProductType.equals(AbstractTimeSeries.TIME_SERIES_PRODUCT_TYPE) &&
+            TimeSeriesMapper.getInstance().getTimeSeries(view.getProduct()) != null) {
             setCurrentView(view);
         }
     }
@@ -261,15 +263,21 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
 
         @Override
         public void nodeAdded(ProductNodeEvent event) {
-            if (event.getSourceNode() instanceof Placemark) {
+            final ProductNode node = event.getSourceNode();
+            if (node instanceof Placemark) {
                 handlePlacemarkChanged();
+            } else if (node instanceof RasterDataNode && currentView != null) {
+                graphModel.adaptToTimeSeries(TimeSeriesMapper.getInstance().getTimeSeries(currentView.getProduct()));
             }
         }
 
         @Override
         public void nodeRemoved(ProductNodeEvent event) {
-            if (event.getSourceNode() instanceof Placemark) {
+            final ProductNode node = event.getSourceNode();
+            if (node instanceof Placemark) {
                 handlePlacemarkChanged();
+            } else if (node instanceof RasterDataNode && currentView != null) {
+                graphModel.adaptToTimeSeries(TimeSeriesMapper.getInstance().getTimeSeries(currentView.getProduct()));
             }
         }
 

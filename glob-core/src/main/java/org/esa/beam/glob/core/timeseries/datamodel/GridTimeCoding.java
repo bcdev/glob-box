@@ -17,61 +17,62 @@
 package org.esa.beam.glob.core.timeseries.datamodel;
 
 import org.esa.beam.framework.datamodel.PixelPos;
+import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 
 /**
  * <p><i>Note that this class is not yet public API. Interface may chhange in future releases.</i></p>
- * 
- * Default implementation of {@link org.esa.beam.glob.core.timeseries.datamodel.TimeCoding}. It simply interpolates line-wise
- * between start and end time.
+ * <p/>
+ * Grid implementation of {@link TimeCoding}. It simply return the central value of start and end time.
  */
-public class DefaultTimeCoding extends TimeCoding {
-
-    private int height;
+public class GridTimeCoding extends TimeCoding {
 
     /**
-     * Constructor for a DefaultTimeCoding.
+     * Constructor for a GridTimeCoding with only a single time point given.
+     * This means startTime == endTime == timePoint.
      *
-     * @param startTime the start time
-     * @param endTime   the end time
-     * @param height    the height
+     * @param timePoint the time point
      */
-    public DefaultTimeCoding(ProductData.UTC startTime, ProductData.UTC endTime, int height) {
-        super(startTime, endTime);
-        this.height = height;
+    private GridTimeCoding(ProductData.UTC timePoint) {
+        super(timePoint, timePoint);
     }
 
     /**
-     * Interpolates time line-wise
+     * Constructor for a GridTimeCoding.
+     *
+     * @param startTime the start time
+     * @param endTime   the end time
+     */
+    public GridTimeCoding(ProductData.UTC startTime, ProductData.UTC endTime) {
+        super(startTime, endTime);
+    }
+
+    /**
+     * Returns the central time of start and end time.
      *
      * @param pos the pixel position to retrieve time information for
      *
-     * @return the interpolated time at the given pixel position
-     *
-     * @throws IllegalArgumentException if pixel is out of bounds
+     * @return the  time at the given pixel position
      */
     @Override
     public ProductData.UTC getTime(PixelPos pos) {
         final ProductData.UTC startTime = getStartTime();
         final ProductData.UTC endTime = getEndTime();
 
-        if (startTime != null && endTime != null) {
-            final double dStart = startTime.getMJD();
-            final double dEnd = endTime.getMJD();
-            final double vPerLine = (dEnd - dStart) / (height - 1);
-            final double currentLine = vPerLine * pos.y + dStart;
-            return new ProductData.UTC(currentLine);
-        }
+        final double dStart = startTime.getMJD();
+        final double dEnd = endTime.getMJD();
+        final double dCentral = (dEnd - dStart) / 2;
+        return new ProductData.UTC(dCentral);
+    }
 
-        if (startTime != null) {
-            return new ProductData.UTC(startTime.getMJD());
-        }
-
+    static TimeCoding create(Product product) {
+        final ProductData.UTC startTime = product.getStartTime();
+        final ProductData.UTC endTime = product.getEndTime();
         if (endTime != null) {
-            return new ProductData.UTC(endTime.getMJD());
+            return new GridTimeCoding(startTime, endTime);
+        } else {
+            return new GridTimeCoding(startTime);
         }
-
-        return null;
     }
 
 }

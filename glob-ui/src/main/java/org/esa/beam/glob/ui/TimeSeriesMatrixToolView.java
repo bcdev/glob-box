@@ -17,7 +17,12 @@
 package org.esa.beam.glob.ui;
 
 import com.bc.ceres.glayer.support.ImageLayer;
+import com.bc.ceres.glayer.swing.LayerCanvas;
 import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.ProductNode;
+import org.esa.beam.framework.datamodel.ProductNodeEvent;
+import org.esa.beam.framework.datamodel.ProductNodeListener;
+import org.esa.beam.framework.datamodel.ProductNodeListenerAdapter;
 import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.framework.ui.GridBagUtils;
 import org.esa.beam.framework.ui.PixelPositionListener;
@@ -54,6 +59,7 @@ import java.awt.event.MouseWheelListener;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -70,6 +76,7 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
     private SceneViewListener sceneViewListener;
     private TimeSeriesPPL pixelPosListener;
     private MatrixMouseWheelListener mouseWheelListener;
+    private final ProductNodeListener productNodeListener;
     private MatrixPanel matrixPanel;
 
     private RasterDataNode currentRaster;
@@ -83,6 +90,7 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
         pixelPosListener = new TimeSeriesPPL();
         sceneViewListener = new SceneViewListener();
         mouseWheelListener = new MatrixMouseWheelListener();
+        productNodeListener = new TimeSeriesProductNodeListener();
     }
 
     @Override
@@ -91,18 +99,7 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
         VisatApp.getApp().addInternalFrameListener(sceneViewListener);
         final JPanel panel = new JPanel(new BorderLayout());
 
-        final SpinnerNumberModel spinnerModel = new SpinnerNumberModel(3, 1, 9, 2) {
-            @Override
-            public void setValue(Object value) {
-                if ((Integer) value % 2 == 1) {
-                    super.setValue(value);
-                } else {
-                    super.setValue(getValue());
-                }
-            }
-        };
-
-        configureSpinner = new JSpinner(spinnerModel);
+        configureSpinner = new JSpinner(new MatrixSpinnerModel());
         configureSpinner.setUI(new BasicSpinnerUI());
         configureSpinner.addChangeListener(new ChangeListener() {
             @Override
@@ -161,6 +158,7 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
         mainPanel.add(BorderLayout.NORTH, dateLabel);
         matrixPanel = new MatrixPanel(matrixSize);
         matrixPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));
+        matrixPanel.setEnabled(false);
         mainPanel.add(BorderLayout.CENTER, matrixPanel);
         return mainPanel;
     }
@@ -223,6 +221,7 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
     private void setCurrentView(ProductSceneView newView) {
         if (currentView != null) {
             currentView.removePixelPositionListener(pixelPosListener);
+            currentView.getProduct().removeProductNodeListener(productNodeListener);
             removeMouseWheelListener();
         }
         if (currentView == newView) {
@@ -231,6 +230,7 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
         currentView = newView;
         if (currentView != null) {
             currentView.addPixelPositionListener(pixelPosListener);
+            currentView.getProduct().addProductNodeListener(productNodeListener);
             addMouseWheelListener();
             timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(currentView.getProduct());
             currentRaster = currentView.getRaster();
@@ -243,7 +243,11 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
 
     private void addMouseWheelListener() {
         if (currentView != null) {
-            currentView.getLayerCanvas().addMouseWheelListener(mouseWheelListener);
+            final LayerCanvas layerCanvas = currentView.getLayerCanvas();
+            final List<MouseWheelListener> listeners = Arrays.asList(layerCanvas.getMouseWheelListeners());
+            if (!listeners.contains(mouseWheelListener)) {
+                layerCanvas.addMouseWheelListener(mouseWheelListener);
+            }
         }
     }
 
@@ -384,4 +388,52 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
         return currentRaster.getImageInfo().getColorPaletteDef().computeColor(currentRaster, sample);
     }
 
+    private class TimeSeriesProductNodeListener extends ProductNodeListenerAdapter {
+
+        @Override
+        public void nodeAdded(ProductNodeEvent event) {
+            final ProductNode node = event.getSourceNode();
+            if (node instanceof RasterDataNode && currentView != null) {
+                updateDateLabel();
+                updateMatrix();
+            }
+        }
+
+        @Override
+        public void nodeRemoved(ProductNodeEvent event) {
+            final ProductNode node = event.getSourceNode();
+            if (node instanceof RasterDataNode && currentView != null) {
+                updateDateLabel();
+                updateMatrix();
+            }
+        }
+    }
+
+    private static class MatrixSpinnerModel extends SpinnerNumberModel {
+
+        private static final int DEFAULT_VALUE = 3;
+        private static final int MINIMUM = 1;
+        private static final int MAXIMUM = 9;
+        private static final int STEP_SIZE = 2;
+
+        private MatrixSpinnerModel() {
+            super(DEFAULT_VALUE, MINIMUM, MAXIMUM, STEP_SIZE);
+        }
+
+        @Override
+        public void setValue(Object value) {
+            int iValue = (Integer) value;
+            if (iValue < MINIMUM) {
+                iValue = MINIMUM;
+            } else if (iValue > MAXIMUM) {
+                iValue = MAXIMUM;
+            }
+            if (iValue % 2 == 1) {
+                super.setValue(iValue);
+            } else {
+                // trigger repaint with model value
+                fireStateChanged();
+            }
+        }
+    }
 }
