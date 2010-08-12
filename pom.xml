@@ -49,13 +49,6 @@
         <module>beam-igbp-glcc-reader</module>
     </modules>
 
-    <dependencies>
-        <dependency>
-            <groupId>org.esa.beam</groupId>
-            <artifactId>beam-core</artifactId>
-        </dependency>
-    </dependencies>
-
     <dependencyManagement>
         <dependencies>
             <dependency>

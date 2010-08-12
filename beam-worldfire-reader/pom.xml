@@ -10,6 +10,7 @@
     <artifactId>beam-worldfire-reader</artifactId>
     <groupId>org.esa.beam</groupId>
     <name>ATSR World Fire Reader</name>
+    
     <dependencies>
         <dependency>
             <groupId>org.esa.beam</groupId>

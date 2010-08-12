@@ -11,6 +11,7 @@
 
     <artifactId>glob-export</artifactId>
     <name>GlobToolbox Data Export</name>
+
     <dependencies>
         <dependency>
             <groupId>org.esa.beam.glob</groupId>

@@ -11,11 +11,12 @@
 
     <artifactId>glob-ui</artifactId>
     <name>GlobToolbox User Interface</name>
+    
     <dependencies>
-        <!--<dependency>-->
-        <!--<groupId>org.esa.beam</groupId>-->
-        <!--<artifactId>beam-visat-rcp</artifactId>-->
-        <!--</dependency>-->
+        <dependency>
+            <groupId>org.esa.beam</groupId>
+            <artifactId>beam-visat-rcp</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.esa.beam.glob</groupId>
             <artifactId>glob-core</artifactId>

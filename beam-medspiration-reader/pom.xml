@@ -10,6 +10,7 @@
     <artifactId>beam-medspiration-reader</artifactId>
     <groupId>org.esa.beam</groupId>
     <name>Medspiration Reader</name>
+    
     <dependencies>
         <dependency>
             <groupId>org.esa.beam</groupId>
