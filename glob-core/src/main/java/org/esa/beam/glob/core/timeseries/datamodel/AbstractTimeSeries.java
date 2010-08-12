@@ -49,6 +49,7 @@ public abstract class AbstractTimeSeries {
     public static final String TIME_SERIES_ROOT_NAME = "TIME_SERIES";
     public static final String PRODUCT_LOCATIONS = "PRODUCT_LOCATIONS";
     public static final String VARIABLE_NAME = "NAME";
+    public static final String AUTO_ADJUSTING_TIME_CODING = "AUTO_ADJUSTING_TIME_CODING";
     public static final String VARIABLE_SELECTION = "SELECTION";
     public static final String PL_PATH = "PATH";
     public static final String PL_TYPE = "TYPE";
@@ -78,6 +79,10 @@ public abstract class AbstractTimeSeries {
     public abstract List<Band> getBandsForProductLocation(ProductLocation location);
 
     public abstract Map<RasterDataNode, TimeCoding> getRasterTimeMap();
+
+    public abstract boolean isAutoAdjustingTimeCoding();
+
+    public abstract void setAutoAdjustingTimeCoding(boolean autoAdjust);
 
     public abstract TimeCoding getTimeCoding();
 

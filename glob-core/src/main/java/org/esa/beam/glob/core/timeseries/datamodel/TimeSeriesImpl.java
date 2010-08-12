@@ -331,6 +331,24 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
     }
 
     @Override
+    public boolean isAutoAdjustingTimeCoding() {
+        final MetadataElement tsRootElement = tsProduct.getMetadataRoot().getElement(TIME_SERIES_ROOT_NAME);
+        final String autoAdjustString = tsRootElement.getAttributeString(AUTO_ADJUSTING_TIME_CODING);
+        return Boolean.parseBoolean(autoAdjustString);
+    }
+
+    @Override
+    public void setAutoAdjustingTimeCoding(boolean autoAdjust) {
+        final MetadataElement tsRootElement = tsProduct.getMetadataRoot().getElement(TIME_SERIES_ROOT_NAME);
+        tsRootElement.setAttributeString(AUTO_ADJUSTING_TIME_CODING, Boolean.toString(autoAdjust));
+    }
+
+
+    public boolean isTimeCodingSet() {
+        return tsProduct.getStartTime() != null;
+    }
+
+    @Override
     public TimeCoding getTimeCoding() {
         return GridTimeCoding.create(tsProduct);
     }
@@ -479,7 +497,8 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
             final ProductData.UTC rasterEndTime = rasterTimeCoding.getEndTime();
             Guardian.assertNotNull("rasterStartTime", rasterStartTime);
             final String bandName = variableToRasterName(nodeName, rasterTimeCoding);
-            if (!tsProduct.containsBand(bandName) && getTimeCoding().contains(rasterTimeCoding)) {
+            if (!tsProduct.containsBand(bandName) && (!isTimeCodingSet() || getTimeCoding().contains(
+                    rasterTimeCoding))) {
                 final Band band = new Band(bandName, raster.getDataType(), tsProduct.getSceneRasterWidth(),
                                            tsProduct.getSceneRasterHeight());
                 band.setSourceImage(raster.getSourceImage());
