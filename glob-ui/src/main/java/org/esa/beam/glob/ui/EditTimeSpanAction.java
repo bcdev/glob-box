@@ -9,12 +9,14 @@ import org.esa.beam.glob.core.timeseries.datamodel.GridTimeCoding;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeCoding;
 
 import javax.swing.AbstractAction;
+import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import java.awt.Component;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
 
@@ -50,6 +52,9 @@ class EditTimeSpanAction extends AbstractAction {
         private AbstractTimeSeries timeSeries;
         private DateComboBox startTimeBox;
         private DateComboBox endTimeBox;
+        private JLabel startTimeLabel;
+        private JLabel endTimeLabel;
+        private JCheckBox autoAdjustBox;
 
         private EditTimeSpanDialog(Window window, AbstractTimeSeries timeSeries) {
             super(window, "Edit Time Span", ModalDialog.ID_OK_CANCEL, null);
@@ -77,24 +82,42 @@ class EditTimeSpanAction extends AbstractAction {
         }
 
         private void createUserInterface() {
+            boolean isAutoAdjustingTimeCoding = timeSeries.isAutoAdjustingTimeCoding();
             final TableLayout tableLayout = new TableLayout(2);
             tableLayout.setTableAnchor(TableLayout.Anchor.NORTHWEST);
             tableLayout.setTableWeightX(1.0);
             tableLayout.setTableFill(TableLayout.Fill.BOTH);
             tableLayout.setTablePadding(4, 4);
+            tableLayout.setCellRowspan(2, 0, 2);
             JPanel content = new JPanel(tableLayout);
-            final JLabel startTimeLabel = new JLabel("Start time:");
+            startTimeLabel = new JLabel("Start time:");
             startTimeBox = createDateComboBox();
             final TimeCoding timeCoding = timeSeries.getTimeCoding();
             startTimeBox.setCalendar(timeCoding.getStartTime().getAsCalendar());
-            final JLabel endTimeLabel = new JLabel("End time:");
+            endTimeLabel = new JLabel("End time:");
             endTimeBox = createDateComboBox();
             endTimeBox.setCalendar(timeCoding.getEndTime().getAsCalendar());
             content.add(startTimeLabel);
             content.add(startTimeBox);
             content.add(endTimeLabel);
             content.add(endTimeBox);
+            autoAdjustBox = createAutoAdjustBox(isAutoAdjustingTimeCoding);
+            content.add(autoAdjustBox);
+            setEnabled(!isAutoAdjustingTimeCoding);
             setContent(content);
+        }
+
+        private JCheckBox createAutoAdjustBox(boolean autoAdjustingTimeCoding) {
+            final JCheckBox autoAdjustBox = new JCheckBox("Auto adjust time information", autoAdjustingTimeCoding);
+            autoAdjustBox.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    final boolean selected = autoAdjustBox.isSelected();
+                    setEnabled(!selected);
+                    timeSeries.setAutoAdjustingTimeCoding(selected);
+                }
+            });
+            return autoAdjustBox;
         }
 
         private DateComboBox createDateComboBox() {
@@ -108,7 +131,12 @@ class EditTimeSpanAction extends AbstractAction {
             return box;
         }
 
+        private void setEnabled(boolean enable) {
+            startTimeBox.setEnabled(enable);
+            startTimeLabel.setEnabled(enable);
+            endTimeBox.setEnabled(enable);
+            endTimeLabel.setEnabled(enable);
+        }
 
     }
-
 }
