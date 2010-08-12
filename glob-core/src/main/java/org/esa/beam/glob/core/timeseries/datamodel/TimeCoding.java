@@ -21,7 +21,7 @@ import org.esa.beam.framework.datamodel.ProductData;
 
 /**
  * <p><i>Note that this class is not yet public API. Interface may chhange in future releases.</i></p>
- * 
+ * <p/>
  * Abstract class representing a time-coding. A time-coding is defined by a start and an end time and thus represents
  * a time span. It maps time information to pixel-positions.
  */
@@ -85,6 +85,22 @@ public abstract class TimeCoding {
      */
     public void setEndTime(ProductData.UTC endTime) {
         this.endTime = endTime;
+    }
+
+    /**
+     * Checks if the given {@code time} is within the start and end time of this {@link TimeCoding}.
+     *
+     * @param time the time to check if it is within this {@code TimeCoding}
+     * @return whether this {@code TimeCoding} contains the given time
+     */
+    public boolean isWithin(ProductData.UTC time) {
+        if (getStartTime() == null || time.getAsCalendar().compareTo(getStartTime().getAsCalendar()) < 0) {
+            return false;
+        }
+        if (getEndTime() == null || time.getAsCalendar().compareTo(getEndTime().getAsCalendar()) > 0) {
+            return false;
+        }
+        return true;
     }
 
     @Override
