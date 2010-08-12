@@ -31,7 +31,6 @@ import org.esa.beam.glob.export.animations.AnimatedGifExport;
 
 import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -99,9 +98,9 @@ class TimeSeriesPlayerForm extends JPanel {
         JPanel firstPanel = new JPanel(createLayout());
         firstPanel.setPreferredSize(new Dimension(300, 150));
         final JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        final JPanel secondPanel = new JPanel();
-        BoxLayout boxLayout = new BoxLayout(secondPanel, BoxLayout.Y_AXIS);
-        secondPanel.setLayout(boxLayout);
+        final JPanel secondPanel = new JPanel(new BorderLayout());
+//        BoxLayout boxLayout = new BoxLayout(secondPanel, BoxLayout.Y_AXIS);
+//        secondPanel.setLayout(boxLayout);
 
         dateLabel = new JLabel("Date: ");
         timeSlider = createTimeSlider();
@@ -134,8 +133,8 @@ class TimeSeriesPlayerForm extends JPanel {
         buttonsPanel.add(plusButton);
         buttonsPanel.add(speedUnit);
         buttonsPanel.add(new JLabel("           "));
-        secondPanel.add(exportButton);
-        secondPanel.add(helpButton);
+        secondPanel.add(exportButton, BorderLayout.NORTH);
+        secondPanel.add(helpButton, BorderLayout.SOUTH);
 
         if (descriptor.getHelpId() != null) {
             HelpSys.enableHelpOnButton(helpButton, descriptor.getHelpId());
