@@ -98,6 +98,10 @@ public class MatrixPanel extends JPanel {
 
         @Override
         protected void paintComponent(Graphics g) {
+            if (!isEnabled()) {
+                label.setText("");
+                return;
+            }
             super.paintComponent(g);
             if (color != null) {
                 g.setColor(color);

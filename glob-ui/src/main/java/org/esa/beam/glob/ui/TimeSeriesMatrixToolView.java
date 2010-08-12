@@ -28,7 +28,6 @@ import org.esa.beam.framework.ui.tool.ToolButtonFactory;
 import org.esa.beam.glob.core.TimeSeriesMapper;
 import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeCoding;
-import org.esa.beam.glob.export.text.ExportTimeBasedText;
 import org.esa.beam.util.Guardian;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.visat.VisatApp;
@@ -49,8 +48,6 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.GridBagConstraints;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
@@ -66,7 +63,6 @@ import java.util.List;
 public class TimeSeriesMatrixToolView extends AbstractToolView {
 
     private JSpinner configureSpinner;
-    private AbstractButton exportTimeSeriesButton;
     private AbstractButton helpButton;
     private JLabel dateLabel;
     private ProductSceneView currentView;
@@ -117,15 +113,6 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
             }
         });
 
-        exportTimeSeriesButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/Export24.gif"), false);
-        exportTimeSeriesButton.setToolTipText("Export values");
-        exportTimeSeriesButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                ExportTimeBasedText.export(panel, timeSeries, getDescriptor().getHelpId());
-            }
-        });
-
         helpButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/Help24.gif"), false);
         helpButton.setToolTipText("Help");
 
@@ -140,8 +127,7 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
             maySetCurrentView(view);
         }
 
-        setUIEnabled(view != null &&
-                     !view.isRGB() &&
+        setUIEnabled(view != null && !view.isRGB() &&
                      view.getProduct().getProductType().equals(AbstractTimeSeries.TIME_SERIES_PRODUCT_TYPE) &&
                      TimeSeriesMapper.getInstance().getTimeSeries(view.getProduct()) != null);
 
@@ -193,31 +179,29 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
     private JPanel createButtonPanel() {
         JPanel buttonPanel = GridBagUtils.createPanel();
         final GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets.left = 4;
         gbc.anchor = GridBagConstraints.CENTER;
         gbc.fill = GridBagConstraints.NONE;
-        gbc.insets.top = 2;
+        gbc.insets.top = 14;
         gbc.gridy = 0;
         buttonPanel.add(configureSpinner, gbc);
         gbc.gridy++;
-        buttonPanel.add(exportTimeSeriesButton, gbc);
-        gbc.gridy++;
-        buttonPanel.add(helpButton, gbc);
-        gbc.gridy++;
-
         gbc.insets.bottom = 0;
         gbc.fill = GridBagConstraints.VERTICAL;
         gbc.weighty = 1.0;
         gbc.gridwidth = 2;
         buttonPanel.add(new JLabel(" "), gbc); // filler
         gbc.fill = GridBagConstraints.NONE;
+        gbc.weighty = 0.0;
+        gbc.gridy = 10;
+        gbc.anchor = GridBagConstraints.EAST;
+        buttonPanel.add(helpButton, gbc);
         return buttonPanel;
     }
 
     private void setUIEnabled(boolean enable) {
         dateLabel.setEnabled(enable);
         configureSpinner.setEnabled(enable);
-        helpButton.setEnabled(enable);
-        exportTimeSeriesButton.setEnabled(enable);
         matrixPanel.setEnabled(enable);
     }
 
@@ -241,19 +225,20 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
             currentView.removePixelPositionListener(pixelPosListener);
             removeMouseWheelListener();
         }
-        if (currentView != newView) {
-            currentView = newView;
-            if (currentView != null) {
-                currentView.addPixelPositionListener(pixelPosListener);
-                addMouseWheelListener();
-                timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(currentView.getProduct());
-                currentRaster = currentView.getRaster();
-                updateDateLabel();
-            } else {
-                timeSeries = null;
-            }
-            setUIEnabled(currentView != null);
+        if (currentView == newView) {
+            return;
         }
+        currentView = newView;
+        if (currentView != null) {
+            currentView.addPixelPositionListener(pixelPosListener);
+            addMouseWheelListener();
+            timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(currentView.getProduct());
+            currentRaster = currentView.getRaster();
+            updateDateLabel();
+        } else {
+            timeSeries = null;
+        }
+        setUIEnabled(currentView != null);
     }
 
     private void addMouseWheelListener() {
@@ -301,6 +286,7 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
         public void pixelPosChanged(ImageLayer imageLayer, int pixelX, int pixelY,
                                     int currentLevel, boolean pixelPosValid, MouseEvent e) {
             if (pixelPosValid && isVisible() && currentView != null) {
+                matrixPanel.setEnabled(true);
                 AffineTransform i2mTransform = currentView.getBaseImageLayer().getImageToModelTransform(currentLevel);
                 Point2D modelP = i2mTransform.transform(new Point2D.Double(pixelX + 0.5, pixelY + 0.5), null);
                 AffineTransform m2iTransform = currentView.getBaseImageLayer().getModelToImageTransform();
@@ -309,13 +295,13 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
                 currentLevelZeroY = (int) Math.floor(levelZeroP.getY());
                 updateMatrix();
             } else {
-                //todo clear matrix
+                matrixPanel.setEnabled(false);
             }
         }
 
         @Override
         public void pixelPosNotAvailable() {
-            //todo clear matrix
+            matrixPanel.setEnabled(false);
         }
     }
 
