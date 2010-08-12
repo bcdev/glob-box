@@ -25,8 +25,8 @@ import org.esa.beam.framework.datamodel.ProductNode;
 import org.esa.beam.framework.datamodel.ProductNodeEvent;
 import org.esa.beam.framework.datamodel.ProductNodeListenerAdapter;
 import org.esa.beam.framework.datamodel.RasterDataNode;
+import org.esa.beam.glob.core.TimeSeriesMapper;
 import org.esa.beam.util.Guardian;
-import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.StringUtils;
 import org.esa.beam.visat.VisatApp;
 
@@ -500,27 +500,45 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
             final ProductData.UTC rasterEndTime = rasterTimeCoding.getEndTime();
             Guardian.assertNotNull("rasterStartTime", rasterStartTime);
             final String bandName = variableToRasterName(nodeName, rasterTimeCoding);
-            if (!tsProduct.containsBand(bandName) && (!isTimeCodingSet() || getTimeCoding().contains(
-                    rasterTimeCoding))) {
-                final Band band = new Band(bandName, raster.getDataType(), tsProduct.getSceneRasterWidth(),
-                                           tsProduct.getSceneRasterHeight());
-                band.setSourceImage(raster.getSourceImage());
-                ProductUtils.copyRasterDataNodeProperties(raster, band);
-                // todo copy also referenced band in valid pixel expression
-                band.setValidPixelExpression(null);
-                rasterTimeMap.put(band, rasterTimeCoding);
-                tsProduct.addBand(band);
+            final AbstractTimeSeries timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(tsProduct);
 
-//                ProductData.UTC tsStartTime = tsProduct.getStartTime();
-//                if (tsStartTime == null || rasterStartTime.getAsDate().before(tsStartTime.getAsDate())) {
-//                    tsProduct.setStartTime(rasterStartTime);
+            if ((timeSeries.isAutoAdjustingTimeCoding() || !isTimeCodingSet()) && !tsProduct.containsBand(bandName)) {
+                if (!timeSeries.isAutoAdjustingTimeCoding() && !tsProduct.containsBand(
+                        bandName) && getTimeCoding().contains(rasterTimeCoding)) {
+                    // todo simplify
+                    // todo add band, that is, do code below
+                }
+            }
+
+//            if (!tsProduct.containsBand(bandName) && (!isTimeCodingSet() || timeSeries.isAutoAdjustingTimeCoding() ) ) {
+//                if( ( timeSeries != null && timeSeries.isAutoAdjustingTimeCoding() ) || getTimeCoding().contains(rasterTimeCoding)) {
+//                final Band band = new Band(bandName, raster.getDataType(), tsProduct.getSceneRasterWidth(),
+//                                           tsProduct.getSceneRasterHeight());
+//                band.setSourceImage(raster.getSourceImage());
+//                ProductUtils.copyRasterDataNodeProperties(raster, band);
+//                todo copy also referenced band in valid pixel expression
+//                band.setValidPixelExpression(null);
+//                rasterTimeMap.put(band, rasterTimeCoding);
+//                tsProduct.addBand(band);
+//
+//                autoAdjustTimeInformation(rasterStartTime, rasterEndTime);
 //                }
-//                ProductData.UTC tsEndTime = tsProduct.getEndTime();
-//                if (rasterEndTime != null) {
-//                    if (tsEndTime == null || rasterEndTime.getAsDate().after(tsEndTime.getAsDate())) {
-//                        tsProduct.setEndTime(rasterEndTime);
-//                    }
-//                }
+//            }
+        }
+    }
+
+    private void autoAdjustTimeInformation(ProductData.UTC rasterStartTime, ProductData.UTC rasterEndTime) {
+        final AbstractTimeSeries timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(tsProduct);
+        if (timeSeries != null && timeSeries.isAutoAdjustingTimeCoding()) {
+            ProductData.UTC tsStartTime = tsProduct.getStartTime();
+            if (tsStartTime == null || rasterStartTime.getAsDate().before(tsStartTime.getAsDate())) {
+                tsProduct.setStartTime(rasterStartTime);
+            }
+            ProductData.UTC tsEndTime = tsProduct.getEndTime();
+            if (rasterEndTime != null) {
+                if (tsEndTime == null || rasterEndTime.getAsDate().after(tsEndTime.getAsDate())) {
+                    tsProduct.setEndTime(rasterEndTime);
+                }
             }
         }
     }
