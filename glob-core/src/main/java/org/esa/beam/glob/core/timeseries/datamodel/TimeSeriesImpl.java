@@ -333,6 +333,9 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
     @Override
     public boolean isAutoAdjustingTimeCoding() {
         final MetadataElement tsRootElement = tsProduct.getMetadataRoot().getElement(TIME_SERIES_ROOT_NAME);
+        if (!tsRootElement.containsAttribute(AUTO_ADJUSTING_TIME_CODING)) {
+            setAutoAdjustingTimeCoding(true);
+        }
         final String autoAdjustString = tsRootElement.getAttributeString(AUTO_ADJUSTING_TIME_CODING);
         return Boolean.parseBoolean(autoAdjustString);
     }
