@@ -27,6 +27,7 @@ import org.esa.beam.framework.datamodel.ProductNodeListenerAdapter;
 import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.glob.core.TimeSeriesMapper;
 import org.esa.beam.util.Guardian;
+import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.StringUtils;
 import org.esa.beam.visat.VisatApp;
 
@@ -140,6 +141,7 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
         ProductLocation location = new ProductLocation(type, path);
         if (!productLocationList.contains(location)) {
             addProductLocationMetadata(location);
+            productLocationList.add(location);
             List<String> variables = getTimeVariables();
             for (Product product : location.getProducts()) {
                 if (product.getStartTime() != null) {
@@ -501,30 +503,39 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
             Guardian.assertNotNull("rasterStartTime", rasterStartTime);
             final String bandName = variableToRasterName(nodeName, rasterTimeCoding);
             final AbstractTimeSeries timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(tsProduct);
+            boolean autoAdjust = timeSeries == null || timeSeries.isAutoAdjustingTimeCoding();
 
-            if ((timeSeries.isAutoAdjustingTimeCoding() || !isTimeCodingSet()) && !tsProduct.containsBand(bandName)) {
-                if (!timeSeries.isAutoAdjustingTimeCoding() && !tsProduct.containsBand(
-                        bandName) && getTimeCoding().contains(rasterTimeCoding)) {
-                    // todo simplify
-                    // todo add band, that is, do code below
+            if (!tsProduct.containsBand(bandName)) {
+                // band not already contained
+                if (autoAdjust) {
+                    // automatically setting time coding
+                    addBand(raster, rasterTimeCoding, bandName);
+                    autoAdjustTimeInformation(rasterStartTime, rasterEndTime);
+                } else {
+                    if (getTimeCoding().contains(rasterTimeCoding)) {
+                        // add only bands which are in the time bounds
+                        addBand(raster, rasterTimeCoding, bandName);
+                        if (!isTimeCodingSet()) {
+                            // first band to add to time series; time bounds of this band will be used
+                            // as ts-product's time bounds, no matter if auto adjust is true or false
+                            autoAdjustTimeInformation(rasterStartTime, rasterEndTime);
+                        }
+                    }
+                    // todo no bands added message
                 }
             }
-
-//            if (!tsProduct.containsBand(bandName) && (!isTimeCodingSet() || timeSeries.isAutoAdjustingTimeCoding() ) ) {
-//                if( ( timeSeries != null && timeSeries.isAutoAdjustingTimeCoding() ) || getTimeCoding().contains(rasterTimeCoding)) {
-//                final Band band = new Band(bandName, raster.getDataType(), tsProduct.getSceneRasterWidth(),
-//                                           tsProduct.getSceneRasterHeight());
-//                band.setSourceImage(raster.getSourceImage());
-//                ProductUtils.copyRasterDataNodeProperties(raster, band);
-//                todo copy also referenced band in valid pixel expression
-//                band.setValidPixelExpression(null);
-//                rasterTimeMap.put(band, rasterTimeCoding);
-//                tsProduct.addBand(band);
-//
-//                autoAdjustTimeInformation(rasterStartTime, rasterEndTime);
-//                }
-//            }
         }
+    }
+
+    private void addBand(RasterDataNode raster, TimeCoding rasterTimeCoding, String bandName) {
+        final Band band = new Band(bandName, raster.getDataType(), tsProduct.getSceneRasterWidth(),
+                                   tsProduct.getSceneRasterHeight());
+        band.setSourceImage(raster.getSourceImage());
+        ProductUtils.copyRasterDataNodeProperties(raster, band);
+//                todo copy also referenced band in valid pixel expression
+        band.setValidPixelExpression(null);
+        rasterTimeMap.put(band, rasterTimeCoding);
+        tsProduct.addBand(band);
     }
 
     private void autoAdjustTimeInformation(ProductData.UTC rasterStartTime, ProductData.UTC rasterEndTime) {
