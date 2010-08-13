@@ -79,10 +79,10 @@ public abstract class TimeCoding {
      * @return whether this {@code TimeCoding} contains the given time coding
      */
     public boolean contains(TimeCoding timeCoding) {
-        if (getStartTime().getAsCalendar().compareTo(timeCoding.getStartTime().getAsCalendar()) > 0) {
+        if (getStartTime().getAsDate().after(timeCoding.getStartTime().getAsDate())) {
             return false;
         }
-        if (getEndTime().getAsCalendar().compareTo(timeCoding.getEndTime().getAsCalendar()) < 0) {
+        if (getEndTime().getAsDate().before(timeCoding.getEndTime().getAsDate())) {
             return false;
         }
         return true;
