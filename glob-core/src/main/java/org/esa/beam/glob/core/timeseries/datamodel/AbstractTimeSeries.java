@@ -23,17 +23,13 @@ import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.util.Guardian;
 
 import java.text.SimpleDateFormat;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.WeakHashMap;
 
 /**
  * <p><i>Note that this class is not yet public API. Interface may change in future releases.</i></p>
- * 
+ *
  * @author Thomas Storm
  */
 public abstract class AbstractTimeSeries {
@@ -70,8 +66,6 @@ public abstract class AbstractTimeSeries {
 
     public abstract boolean isVariableSelected(String variableName);
 
-    public abstract Band getSourceBand(String destBandName);
-
     public abstract Product getTsProduct();
 
     public abstract List<Band> getBandsForVariable(String variableName);
@@ -100,4 +94,9 @@ public abstract class AbstractTimeSeries {
         return rasterName.substring(0, lastUnderscore);
     }
 
+    public abstract void addTimeSeriesListener(TimeSeriesListener listener);
+
+    public abstract void removeTimeSeriesListener(TimeSeriesListener listener);
+
+    public abstract boolean isProductCompatible(Product product, String rasterName);
 }

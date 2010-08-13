@@ -29,6 +29,8 @@ import org.esa.beam.glob.core.TimeSeriesMapper;
 import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
 import org.esa.beam.glob.core.timeseries.datamodel.ProductLocation;
 import org.esa.beam.glob.core.timeseries.datamodel.ProductLocationType;
+import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesChangeEvent;
+import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesListener;
 import org.esa.beam.util.Debug;
 import org.esa.beam.visat.VisatApp;
 
@@ -59,6 +61,7 @@ class TimeSeriesManagerForm {
     private final PageComponentDescriptor descriptor;
     private final SimpleDateFormat dateFormat;
     private final JComponent control;
+    private final FrameClosingTimeSeriesListener frameClosingTimeSeriesListener;
     private JLabel nameField;
     private JLabel crsField;
     private JLabel startField;
@@ -75,6 +78,7 @@ class TimeSeriesManagerForm {
         this.descriptor = descriptor;
         dateFormat = new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss", Locale.ENGLISH);
         control = createControl();
+        frameClosingTimeSeriesListener = new FrameClosingTimeSeriesListener();
     }
 
     private JComponent createControl() {
@@ -112,6 +116,9 @@ class TimeSeriesManagerForm {
 
     public void updateFormControl(Product product) {
         currentTimeSeries = TimeSeriesMapper.getInstance().getTimeSeries(product);
+        if (currentTimeSeries != null) {
+            currentTimeSeries.addTimeSeriesListener(frameClosingTimeSeriesListener);
+        }
         timeSpanButton.setAction(new EditTimeSpanAction(currentTimeSeries));
         updateInfoPanel(currentTimeSeries);
         updateButtonPanel(currentTimeSeries);
@@ -199,7 +206,7 @@ class TimeSeriesManagerForm {
                     } else {
                         JPopupMenu viewPopup = new JPopupMenu("View variable");
                         for (String varName : variableNames) {
-                            viewPopup.add(new ViewTimeSeriesAction(currentTimeSeries, varName));
+                            viewPopup.add(new ViewTimeSeriesAction(varName));
                         }
                         final Rectangle buttonBounds = viewButton.getBounds();
                         viewPopup.show(viewButton, 1, buttonBounds.height + 1);
@@ -455,11 +462,9 @@ class TimeSeriesManagerForm {
     private class ViewTimeSeriesAction extends AbstractAction {
 
         private String variableName;
-        private AbstractTimeSeries timeSeries;
 
-        private ViewTimeSeriesAction(AbstractTimeSeries timeSeries, String variableName) {
+        private ViewTimeSeriesAction(String variableName) {
             super("View " + variableName);
-            this.timeSeries = timeSeries;
             this.variableName = variableName;
         }
 
@@ -469,4 +474,21 @@ class TimeSeriesManagerForm {
         }
     }
 
+    private static class FrameClosingTimeSeriesListener implements TimeSeriesListener {
+
+        @Override
+        public void timeSeriesChanged(TimeSeriesChangeEvent event) {
+
+            if (event.getEventType() == TimeSeriesChangeEvent.BAND_TO_BE_REMOVED) {
+                Band band = (Band) event.getValue();
+                VisatApp app = VisatApp.getApp();
+                JInternalFrame internalFrame = app.findInternalFrame(band);
+                if (internalFrame != null) {
+                    internalFrame.dispose();
+                }
+
+            }
+
+        }
+    }
 }

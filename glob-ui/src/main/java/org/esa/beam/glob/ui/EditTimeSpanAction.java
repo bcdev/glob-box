@@ -124,17 +124,19 @@ class EditTimeSpanAction extends AbstractAction {
                         for (ProductLocation productLocation : timeSeries.getProductLocations()) {
                             for (Product product : productLocation.getProducts()) {
                                 for (String variable : timeSeries.getTimeVariables()) {
-                                    if (timeSeries.isVariableSelected(variable)) {
-                                        TimeCoding varTimeCoding = GridTimeCoding.create(product);
-                                        if (autoStartTime == null) {
-                                            TimeCoding tsTimeCoding = timeSeries.getTimeCoding();
-                                            autoStartTime = tsTimeCoding.getStartTime();
-                                            autoEndTime = tsTimeCoding.getEndTime();
-                                        }
-                                        if (varTimeCoding != null) {
-                                            autoStartTime = getMinStartTime(autoStartTime,
-                                                                            varTimeCoding.getStartTime());
-                                            autoEndTime = getMaxEndTime(autoEndTime, varTimeCoding.getEndTime());
+                                    if (timeSeries.isProductCompatible(product, variable)) {
+                                        if (timeSeries.isVariableSelected(variable)) {
+                                            TimeCoding varTimeCoding = GridTimeCoding.create(product);
+                                            if (autoStartTime == null) {
+                                                TimeCoding tsTimeCoding = timeSeries.getTimeCoding();
+                                                autoStartTime = tsTimeCoding.getStartTime();
+                                                autoEndTime = tsTimeCoding.getEndTime();
+                                            }
+                                            if (varTimeCoding != null) {
+                                                autoStartTime = getMinStartTime(autoStartTime,
+                                                                                varTimeCoding.getStartTime());
+                                                autoEndTime = getMaxEndTime(autoEndTime, varTimeCoding.getEndTime());
+                                            }
                                         }
                                     }
                                 }
