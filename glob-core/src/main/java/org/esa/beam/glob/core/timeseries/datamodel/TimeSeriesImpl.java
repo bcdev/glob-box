@@ -25,7 +25,6 @@ import org.esa.beam.framework.datamodel.ProductNode;
 import org.esa.beam.framework.datamodel.ProductNodeEvent;
 import org.esa.beam.framework.datamodel.ProductNodeListenerAdapter;
 import org.esa.beam.framework.datamodel.RasterDataNode;
-import org.esa.beam.glob.core.TimeSeriesMapper;
 import org.esa.beam.util.Guardian;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.StringUtils;
@@ -502,27 +501,21 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
             final ProductData.UTC rasterEndTime = rasterTimeCoding.getEndTime();
             Guardian.assertNotNull("rasterStartTime", rasterStartTime);
             final String bandName = variableToRasterName(nodeName, rasterTimeCoding);
-            final AbstractTimeSeries timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(tsProduct);
-            boolean autoAdjust = timeSeries == null || timeSeries.isAutoAdjustingTimeCoding();
 
             if (!tsProduct.containsBand(bandName)) {
                 // band not already contained
-                if (autoAdjust) {
+                if (isAutoAdjustingTimeCoding() || !isTimeCodingSet()) {
                     // automatically setting time coding
-                    addBand(raster, rasterTimeCoding, bandName);
+                    // OR
+                    // first band to add to time series; time bounds of this band will be used
+                    // as ts-product's time bounds, no matter if auto adjust is true or false
                     autoAdjustTimeInformation(rasterStartTime, rasterEndTime);
-                } else {
-                    if (getTimeCoding().contains(rasterTimeCoding)) {
-                        // add only bands which are in the time bounds
-                        addBand(raster, rasterTimeCoding, bandName);
-                        if (!isTimeCodingSet()) {
-                            // first band to add to time series; time bounds of this band will be used
-                            // as ts-product's time bounds, no matter if auto adjust is true or false
-                            autoAdjustTimeInformation(rasterStartTime, rasterEndTime);
-                        }
-                    }
-                    // todo no bands added message
                 }
+                if (getTimeCoding().contains(rasterTimeCoding)) {
+                    // add only bands which are in the time bounds
+                    addBand(raster, rasterTimeCoding, bandName);
+                }
+                // todo no bands added message
             }
         }
     }
@@ -539,18 +532,13 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
     }
 
     private void autoAdjustTimeInformation(ProductData.UTC rasterStartTime, ProductData.UTC rasterEndTime) {
-        final AbstractTimeSeries timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(tsProduct);
-        if (timeSeries != null && timeSeries.isAutoAdjustingTimeCoding()) {
-            ProductData.UTC tsStartTime = tsProduct.getStartTime();
-            if (tsStartTime == null || rasterStartTime.getAsDate().before(tsStartTime.getAsDate())) {
-                tsProduct.setStartTime(rasterStartTime);
-            }
-            ProductData.UTC tsEndTime = tsProduct.getEndTime();
-            if (rasterEndTime != null) {
-                if (tsEndTime == null || rasterEndTime.getAsDate().after(tsEndTime.getAsDate())) {
-                    tsProduct.setEndTime(rasterEndTime);
-                }
-            }
+        ProductData.UTC tsStartTime = tsProduct.getStartTime();
+        if (tsStartTime == null || rasterStartTime.getAsDate().before(tsStartTime.getAsDate())) {
+            tsProduct.setStartTime(rasterStartTime);
+        }
+        ProductData.UTC tsEndTime = tsProduct.getEndTime();
+        if (tsEndTime == null || rasterEndTime.getAsDate().after(tsEndTime.getAsDate())) {
+            tsProduct.setEndTime(rasterEndTime);
         }
     }
 

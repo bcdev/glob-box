@@ -171,10 +171,7 @@ class TimeSeriesManagerForm {
         crsField.setText(tsProduct.getGeoCoding().getMapCRS().getName().getCode());
         final String startTime = dateFormat.format(tsProduct.getStartTime().getAsDate());
         startField.setText(startTime);
-        String endTime = startTime;
-        if (tsProduct.getEndTime() != null) {
-            endTime = dateFormat.format(tsProduct.getEndTime().getAsDate());
-        }
+        String endTime = dateFormat.format(tsProduct.getEndTime().getAsDate());
         endField.setText(endTime);
         final String dimensionString = tsProduct.getSceneRasterWidth() + " x " + tsProduct.getSceneRasterHeight();
         dimensionField.setText(dimensionString);

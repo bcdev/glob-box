@@ -65,7 +65,14 @@ public class GridTimeCoding extends TimeCoding {
         return new ProductData.UTC(dCentral);
     }
 
-    static TimeCoding create(Product product) {
+    /**
+     * Factory method for creating a GridTimeCoding-instance from a product.
+     *
+     * @param product the product to create the time coding from. Its start time must not be <code>null</code>.
+     *
+     * @return a TimeCoding instance
+     */
+    public static TimeCoding create(Product product) {
         final ProductData.UTC startTime = product.getStartTime();
         final ProductData.UTC endTime = product.getEndTime();
         if (endTime != null) {

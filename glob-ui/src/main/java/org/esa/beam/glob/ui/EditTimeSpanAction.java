@@ -2,10 +2,12 @@ package org.esa.beam.glob.ui;
 
 import com.bc.ceres.swing.TableLayout;
 import com.jidesoft.combobox.DateComboBox;
+import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.ui.ModalDialog;
 import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
 import org.esa.beam.glob.core.timeseries.datamodel.GridTimeCoding;
+import org.esa.beam.glob.core.timeseries.datamodel.ProductLocation;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeCoding;
 
 import javax.swing.AbstractAction;
@@ -17,6 +19,7 @@ import java.awt.Component;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
 
@@ -65,6 +68,7 @@ class EditTimeSpanAction extends AbstractAction {
 
         @Override
         protected void onOK() {
+            timeSeries.setAutoAdjustingTimeCoding(autoAdjustBox.isSelected());
             final ProductData.UTC startTime = ProductData.UTC.create(startTimeBox.getDate(), 0);
             final ProductData.UTC endTime = ProductData.UTC.create(endTimeBox.getDate(), 0);
             timeSeries.setTimeCoding(new GridTimeCoding(startTime, endTime));
@@ -114,10 +118,63 @@ class EditTimeSpanAction extends AbstractAction {
                 public void actionPerformed(ActionEvent e) {
                     final boolean selected = autoAdjustBox.isSelected();
                     setEnabled(!selected);
-                    timeSeries.setAutoAdjustingTimeCoding(selected);
+                    if (selected) {
+                        ProductData.UTC autoStartTime = null;
+                        ProductData.UTC autoEndTime = null;
+                        for (ProductLocation productLocation : timeSeries.getProductLocations()) {
+                            for (Product product : productLocation.getProducts()) {
+                                for (String variable : timeSeries.getTimeVariables()) {
+                                    if (timeSeries.isVariableSelected(variable)) {
+                                        TimeCoding varTimeCoding = GridTimeCoding.create(product);
+                                        if (autoStartTime == null) {
+                                            TimeCoding tsTimeCoding = timeSeries.getTimeCoding();
+                                            autoStartTime = tsTimeCoding.getStartTime();
+                                            autoEndTime = tsTimeCoding.getEndTime();
+                                        }
+                                        if (varTimeCoding != null) {
+                                            autoStartTime = getMinStartTime(autoStartTime,
+                                                                            varTimeCoding.getStartTime());
+                                            autoEndTime = getMaxEndTime(autoEndTime, varTimeCoding.getEndTime());
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        if (autoStartTime == null) {
+                            try {
+                                autoStartTime = ProductData.UTC.parse("1970-01-01", "yyyy-MM-dd");
+                                autoEndTime = autoStartTime;
+                            } catch (ParseException ignore) {
+                            }
+                        }
+                        //noinspection ConstantConditions
+                        startTimeBox.setDate(autoStartTime.getAsDate());
+                        //noinspection ConstantConditions
+                        endTimeBox.setDate(autoEndTime.getAsDate());
+                    }
                 }
             });
             return autoAdjustBox;
+        }
+
+        private ProductData.UTC getMaxEndTime(final ProductData.UTC endTime1, final ProductData.UTC endTime2) {
+            ProductData.UTC endTime;
+            if (endTime1.getAsDate().before(endTime2.getAsDate())) {
+                endTime = endTime2;
+            } else {
+                endTime = endTime1;
+            }
+            return endTime;
+        }
+
+        private ProductData.UTC getMinStartTime(final ProductData.UTC startTime1, final ProductData.UTC startTime2) {
+            ProductData.UTC startTime;
+            if (startTime1.getAsDate().after(startTime2.getAsDate())) {
+                startTime = startTime2;
+            } else {
+                startTime = startTime1;
+            }
+            return startTime;
         }
 
         private DateComboBox createDateComboBox() {
@@ -139,4 +196,5 @@ class EditTimeSpanAction extends AbstractAction {
         }
 
     }
+
 }
