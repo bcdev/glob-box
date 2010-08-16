@@ -390,7 +390,7 @@ class TimeSeriesGraphModel {
         private DisplayModel(AbstractTimeSeries timeSeries) {
             variablesToDisplay = new ArrayList<String>();
             variablename2colorMap = new HashMap<String, Paint>();
-            for (String variableName : timeSeries.getTimeVariables()) {
+            for (String variableName : timeSeries.getVariables()) {
                 if (timeSeries.isVariableSelected(variableName)) {
                     variablesToDisplay.add(variableName);
                     variablename2colorMap.put(variableName, getNextPaint());
@@ -407,7 +407,7 @@ class TimeSeriesGraphModel {
         }
 
         void adaptTo(AbstractTimeSeries timeSeries) {
-            for (String variableName : timeSeries.getTimeVariables()) {
+            for (String variableName : timeSeries.getVariables()) {
                 if (timeSeries.isVariableSelected(variableName)) {
                     if (!variablesToDisplay.contains(variableName)) {
                         variablesToDisplay.add(variableName);

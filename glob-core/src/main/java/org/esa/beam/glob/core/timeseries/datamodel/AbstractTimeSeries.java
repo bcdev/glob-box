@@ -54,7 +54,7 @@ public abstract class AbstractTimeSeries {
     public static final String PROPERTY_PRODUCT_LOCATIONS = "PROPERTY_PRODUCT_LOCATIONS";
     public static final String PROPERTY_VARIABLE_SELECTION = "PROPERTY_VARIABLE_SELECTION";
 
-    public abstract List<String> getTimeVariables();
+    public abstract List<String> getVariables();
 
     public abstract List<ProductLocation> getProductLocations();
 
@@ -85,7 +85,7 @@ public abstract class AbstractTimeSeries {
     public static String variableToRasterName(String variableName, TimeCoding timeCoding) {
         final ProductData.UTC rasterStartTime = timeCoding.getStartTime();
         Guardian.assertNotNull("rasterStartTime", rasterStartTime);
-        final SimpleDateFormat dateFormat = new SimpleDateFormat(TimeSeriesImpl.DATE_FORMAT, Locale.ENGLISH);
+        final SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT, Locale.ENGLISH);
         return variableName + SEPARATOR + dateFormat.format(rasterStartTime.getAsDate());
     }
 

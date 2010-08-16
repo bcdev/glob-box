@@ -64,7 +64,7 @@ public class ExportTimeBasedText extends ProgressMonitorSwingWorker<String, Void
     @Override
     protected String doInBackground(ProgressMonitor pm) throws Exception {
         List<List<Band>> bandList = new ArrayList<List<Band>>();
-        final List<String> timeVariables = timeSeries.getTimeVariables();
+        final List<String> timeVariables = timeSeries.getVariables();
         for (String timeVariable : timeVariables) {
             bandList.add(timeSeries.getBandsForVariable(timeVariable));
         }

@@ -325,12 +325,12 @@ class TimeSeriesManagerForm {
 
         @Override
         public int getSize() {
-            return timeSeries.getTimeVariables().size();
+            return timeSeries.getVariables().size();
         }
 
         @Override
         public Variable getElementAt(int index) {
-            final String varName = timeSeries.getTimeVariables().get(index);
+            final String varName = timeSeries.getVariables().get(index);
             return new Variable(varName, timeSeries.isVariableSelected(varName));
         }
 
@@ -344,7 +344,7 @@ class TimeSeriesManagerForm {
 
         @Override
         public void setSelectedVariableAt(int index, boolean selected) {
-            final String varName = timeSeries.getTimeVariables().get(index);
+            final String varName = timeSeries.getVariables().get(index);
             if (timeSeries.isVariableSelected(varName) != selected) {
                 if (!selected) {
                     closeAssociatedViews(varName);
@@ -371,7 +371,7 @@ class TimeSeriesManagerForm {
 
         @Override
         public List<String> getSelectedVariableNames() {
-            final List<String> allVars = timeSeries.getTimeVariables();
+            final List<String> allVars = timeSeries.getVariables();
             final List<String> selectedVars = new ArrayList<String>(allVars.size());
             for (String varName : allVars) {
                 if (timeSeries.isVariableSelected(varName)) {

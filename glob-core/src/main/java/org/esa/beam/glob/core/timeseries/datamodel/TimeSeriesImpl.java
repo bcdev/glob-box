@@ -111,7 +111,7 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
     }
 
     @Override
-    public List<String> getTimeVariables() {
+    public List<String> getVariables() {
         MetadataElement tsElem = tsProduct.getMetadataRoot().getElement(TIME_SERIES_ROOT_NAME);
         MetadataElement variablesListElem = tsElem.getElement(VARIABLES);
         MetadataElement[] variableElems = variablesListElem.getElements();
@@ -130,11 +130,10 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
         if (!productLocationList.contains(productLocation)) {
             addProductLocationMetadata(productLocation);
             productLocationList.add(productLocation);
-            List<String> variables = getTimeVariables();
+            List<String> variables = getVariables();
             for (Product product : productLocation.getProducts()) {
                 if (product.getStartTime() != null) {
                     addToVariableList(product);
-                    productTimeMap.put(formatTimeString(product), product);
                     for (String variable : variables) {
                         if (isVariableSelected(variable)) {
                             addSpecifiedBandOfGivenProduct(variable, product);
@@ -372,7 +371,7 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
             tsProduct.setEndTime(endTime);
             fireChangeEvent(new TimeSeriesChangeEvent(TimeSeriesChangeEvent.END_TIME_PROPERTY_NAME, endTime));
         }
-        List<String> variables = getTimeVariables();
+        List<String> variables = getVariables();
         for (ProductLocation productLocation : productLocationList) {
             for (Product product : productLocation.getProducts()) {
                 for (String variable : variables) {
@@ -447,7 +446,7 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
     }
 
     private void updateAutoGrouping() {
-        tsProduct.setAutoGrouping(StringUtils.join(getTimeVariables(), ":"));
+        tsProduct.setAutoGrouping(StringUtils.join(getVariables(), ":"));
     }
 
     private void setProductTimeCoding(Product tsProduct) {
@@ -501,12 +500,12 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
 
     private void addToVariableList(Product product) {
         final ArrayList<String> newVariables = new ArrayList<String>();
-        final List<String> timeVariables = getTimeVariables();
+        final List<String> variables = getVariables();
         final Band[] bands = product.getBands();
         for (Band band : bands) {
             final String bandName = band.getName();
             boolean varExist = false;
-            for (String variable : timeVariables) {
+            for (String variable : variables) {
                 varExist |= variable.equals(bandName);
             }
             if (!varExist) {
@@ -584,7 +583,7 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
     }
 
     private void initImageInfos() {
-        for (String variable : getTimeVariables()) {
+        for (String variable : getVariables()) {
             if (isVariableSelected(variable)) {
                 final List<Band> bandList = getBandsForVariable(variable);
                 adjustImageInfos(bandList.get(0));
