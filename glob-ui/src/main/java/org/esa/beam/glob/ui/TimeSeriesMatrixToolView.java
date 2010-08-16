@@ -21,8 +21,6 @@ import com.bc.ceres.glayer.swing.LayerCanvas;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.ProductNode;
 import org.esa.beam.framework.datamodel.ProductNodeEvent;
-import org.esa.beam.framework.datamodel.ProductNodeListener;
-import org.esa.beam.framework.datamodel.ProductNodeListenerAdapter;
 import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.framework.ui.GridBagUtils;
 import org.esa.beam.framework.ui.PixelPositionListener;
@@ -33,6 +31,7 @@ import org.esa.beam.framework.ui.tool.ToolButtonFactory;
 import org.esa.beam.glob.core.TimeSeriesMapper;
 import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeCoding;
+import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesListener;
 import org.esa.beam.util.Guardian;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.visat.VisatApp;
@@ -76,7 +75,7 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
     private SceneViewListener sceneViewListener;
     private TimeSeriesPPL pixelPosListener;
     private MatrixMouseWheelListener mouseWheelListener;
-    private final ProductNodeListener productNodeListener;
+    private final TimeSeriesListener timeSeriesMatrixTSL;
     private MatrixPanel matrixPanel;
 
     private RasterDataNode currentRaster;
@@ -90,7 +89,7 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
         pixelPosListener = new TimeSeriesPPL();
         sceneViewListener = new SceneViewListener();
         mouseWheelListener = new MatrixMouseWheelListener();
-        productNodeListener = new TimeSeriesProductNodeListener();
+        timeSeriesMatrixTSL = new TimeSeriesMatrixTSL();
     }
 
     @Override
@@ -221,7 +220,7 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
     private void setCurrentView(ProductSceneView newView) {
         if (currentView != null) {
             currentView.removePixelPositionListener(pixelPosListener);
-            currentView.getProduct().removeProductNodeListener(productNodeListener);
+            timeSeries.removeTimeSeriesListener(timeSeriesMatrixTSL);
             removeMouseWheelListener();
         }
         if (currentView == newView) {
@@ -230,9 +229,9 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
         currentView = newView;
         if (currentView != null) {
             currentView.addPixelPositionListener(pixelPosListener);
-            currentView.getProduct().addProductNodeListener(productNodeListener);
-            addMouseWheelListener();
             timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(currentView.getProduct());
+            timeSeries.addTimeSeriesListener(timeSeriesMatrixTSL);
+            addMouseWheelListener();
             currentRaster = currentView.getRaster();
             updateDateLabel();
         } else {
@@ -388,7 +387,7 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
         return currentRaster.getImageInfo().getColorPaletteDef().computeColor(currentRaster, sample);
     }
 
-    private class TimeSeriesProductNodeListener extends ProductNodeListenerAdapter {
+    private class TimeSeriesMatrixTSL extends TimeSeriesListener {
 
         @Override
         public void nodeAdded(ProductNodeEvent event) {

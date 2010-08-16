@@ -474,7 +474,7 @@ class TimeSeriesManagerForm {
         }
     }
 
-    private static class FrameClosingTimeSeriesListener implements TimeSeriesListener {
+    private static class FrameClosingTimeSeriesListener extends TimeSeriesListener {
 
         @Override
         public void timeSeriesChanged(TimeSeriesChangeEvent event) {

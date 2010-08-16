@@ -20,16 +20,16 @@ import com.bc.ceres.glayer.support.ImageLayer;
 import com.bc.ceres.grender.Viewport;
 import org.esa.beam.framework.datamodel.Placemark;
 import org.esa.beam.framework.datamodel.PlacemarkGroup;
+import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductNode;
 import org.esa.beam.framework.datamodel.ProductNodeEvent;
-import org.esa.beam.framework.datamodel.ProductNodeListener;
-import org.esa.beam.framework.datamodel.ProductNodeListenerAdapter;
 import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.framework.ui.PixelPositionListener;
 import org.esa.beam.framework.ui.application.support.AbstractToolView;
 import org.esa.beam.framework.ui.product.ProductSceneView;
 import org.esa.beam.glob.core.TimeSeriesMapper;
 import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
+import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesListener;
 import org.esa.beam.visat.VisatApp;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
@@ -58,7 +58,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
     private final TimeSeriesPPL pixelPosListener;
     private final PropertyChangeListener pinSelectionListener;
     private final PropertyChangeListener sliderListener;
-    private final ProductNodeListener productNodeListener;
+    private final TimeSeriesListener timeSeriesGraphTSL;
     private final Action showSelectedPinAction;
     private final Action showAllPinAction;
 
@@ -74,7 +74,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         pixelPosListener = new TimeSeriesPPL();
         pinSelectionListener = new PinSelectionListener();
         sliderListener = new SliderListener();
-        productNodeListener = new TimeSeriesProductNodeListener();
+        timeSeriesGraphTSL = new TimeSeriesGraphTSL();
         showSelectedPinAction = new ShowPinAction(true);
         showAllPinAction = new ShowPinAction(false);
     }
@@ -101,7 +101,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         return graphForm.getControl();
     }
 
-    /**
+    /*
      * Checks if the view displays a timeseries product.
      * If so it is set as the current view.
      */
@@ -117,7 +117,9 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
 
     private void setCurrentView(ProductSceneView newView) {
         if (currentView != null) {
-            currentView.getProduct().removeProductNodeListener(productNodeListener);
+            final AbstractTimeSeries timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(
+                    currentView.getProduct());
+            timeSeries.removeTimeSeriesListener(timeSeriesGraphTSL);
             currentView.removePixelPositionListener(pixelPosListener);
             currentView.removePropertyChangeListener(ProductSceneView.PROPERTY_NAME_SELECTED_PIN, pinSelectionListener);
             currentView.removePropertyChangeListener(TimeSeriesPlayerToolView.TIME_PROPERTY, sliderListener);
@@ -125,13 +127,14 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         currentView = newView;
         graphForm.setButtonsEnabled(currentView != null);
         if (currentView != null) {
-            currentView.getProduct().addProductNodeListener(productNodeListener);
+            final Product currentProduct = currentView.getProduct();
+            final AbstractTimeSeries timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(currentProduct);
+            timeSeries.addTimeSeriesListener(timeSeriesGraphTSL);
             currentView.addPixelPositionListener(pixelPosListener);
             currentView.addPropertyChangeListener(ProductSceneView.PROPERTY_NAME_SELECTED_PIN, pinSelectionListener);
             currentView.addPropertyChangeListener(TimeSeriesPlayerToolView.TIME_PROPERTY, sliderListener);
 
             final RasterDataNode raster = currentView.getRaster();
-            AbstractTimeSeries timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(currentView.getProduct());
             graphModel.adaptToTimeSeries(timeSeries);
 
             String variableName = rasterToVariableName(raster.getName());
@@ -140,7 +143,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
             graphModel.updateAnnotation(raster);
             updatePins(graphForm.isShowingSelectedPins());
             showSelectedPinAction.setEnabled(currentView.getSelectedPin() != null);
-            showAllPinAction.setEnabled(currentView.getProduct().getPinGroup().getNodeCount() > 0);
+            showAllPinAction.setEnabled(currentProduct.getPinGroup().getNodeCount() > 0);
         } else {
             graphModel.removeCursorTimeSeries();
             graphModel.removePinTimeSeries();
@@ -247,7 +250,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         }
     }
 
-    private class TimeSeriesProductNodeListener extends ProductNodeListenerAdapter {
+    private class TimeSeriesGraphTSL extends TimeSeriesListener {
 
 
         @Override

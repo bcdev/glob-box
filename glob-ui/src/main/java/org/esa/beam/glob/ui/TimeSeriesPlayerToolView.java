@@ -23,10 +23,9 @@ import com.bc.ceres.glayer.support.LayerUtils;
 import com.bc.ceres.glevel.MultiLevelSource;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.ImageInfo;
+import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductNode;
 import org.esa.beam.framework.datamodel.ProductNodeEvent;
-import org.esa.beam.framework.datamodel.ProductNodeListener;
-import org.esa.beam.framework.datamodel.ProductNodeListenerAdapter;
 import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.framework.ui.application.support.AbstractToolView;
 import org.esa.beam.framework.ui.product.ProductSceneImage;
@@ -34,6 +33,7 @@ import org.esa.beam.framework.ui.product.ProductSceneView;
 import org.esa.beam.glevel.BandImageMultiLevelSource;
 import org.esa.beam.glob.core.TimeSeriesMapper;
 import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
+import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesListener;
 import org.esa.beam.util.math.MathUtils;
 import org.esa.beam.visat.VisatApp;
 
@@ -54,14 +54,14 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
     public static final String TIME_PROPERTY = "timeProperty";
 
     private final SceneViewListener sceneViewListener;
-    private final ProductNodeListener productNodeListener;
+    private final TimeSeriesListener timeSeriesPlayerTSL;
 
     private ProductSceneView currentView;
     private TimeSeriesPlayerForm form;
 
     public TimeSeriesPlayerToolView() {
         sceneViewListener = new SceneViewListener();
-        productNodeListener = new TimeSeriesProductNodeListener();
+        timeSeriesPlayerTSL = new TimeSeriesPlayerTSL();
     }
 
     @Override
@@ -84,13 +84,17 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
     private void setCurrentView(ProductSceneView newView) {
         if (currentView != newView) {
             if (currentView != null) {
-                currentView.getProduct().removeProductNodeListener(productNodeListener);
+                final AbstractTimeSeries timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(
+                        currentView.getProduct());
+                timeSeries.removeTimeSeriesListener(timeSeriesPlayerTSL);
             }
             currentView = newView;
             form.setView(currentView);
             if (currentView != null) {
-                form.setTimeSeries(TimeSeriesMapper.getInstance().getTimeSeries(currentView.getProduct()));
-                currentView.getProduct().addProductNodeListener(productNodeListener);
+                final Product currentProduct = currentView.getProduct();
+                final AbstractTimeSeries timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(currentProduct);
+                timeSeries.addTimeSeriesListener(timeSeriesPlayerTSL);
+                form.setTimeSeries(timeSeries);
                 exchangeRasterInProductSceneView(currentView.getRaster());
                 reconfigureBaseImageLayer(currentView);
                 form.configureTimeSlider(currentView.getRaster());
@@ -236,7 +240,7 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
 
     }
 
-    private class TimeSeriesProductNodeListener extends ProductNodeListenerAdapter {
+    private class TimeSeriesPlayerTSL extends TimeSeriesListener {
 
         private volatile boolean adjustingImageInfos;
 

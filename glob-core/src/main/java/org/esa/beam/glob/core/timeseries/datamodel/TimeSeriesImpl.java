@@ -53,9 +53,6 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
     private Map<RasterDataNode, TimeCoding> rasterTimeMap = new WeakHashMap<RasterDataNode, TimeCoding>();
     private List<TimeSeriesListener> listeners = new ArrayList<TimeSeriesListener>();
 
-    private static final String START_TIME_PROPERTY_NAME = "startTime";
-    private static final String END_TIME_PROPERTY_NAME = "endTime";
-
     /**
      * Used to create a TimeSeries from within a ProductReader
      *
@@ -354,12 +351,12 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
         final ProductData.UTC startTime = timeCoding.getStartTime();
         if (tsProduct.getStartTime().getAsCalendar().compareTo(startTime.getAsCalendar()) != 0) {
             tsProduct.setStartTime(startTime);
-            tsProduct.fireProductNodeChanged(START_TIME_PROPERTY_NAME);
+            fireChangeEvent(new TimeSeriesChangeEvent(TimeSeriesChangeEvent.START_TIME_PROPERTY_NAME, startTime));            
         }
         final ProductData.UTC endTime = timeCoding.getEndTime();
         if (tsProduct.getEndTime().getAsCalendar().compareTo(endTime.getAsCalendar()) != 0) {
             tsProduct.setEndTime(endTime);
-            tsProduct.fireProductNodeChanged(END_TIME_PROPERTY_NAME);
+            fireChangeEvent(new TimeSeriesChangeEvent(TimeSeriesChangeEvent.END_TIME_PROPERTY_NAME, endTime));
         }
         List<String> variables = getTimeVariables();
         for (ProductLocation productLocation : productLocationList) {
@@ -540,12 +537,14 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
     public void addTimeSeriesListener(TimeSeriesListener listener) {
         if (!listeners.contains(listener)) {
             listeners.add(listener);
+            tsProduct.addProductNodeListener(listener);
         }
     }
 
     @Override
     public void removeTimeSeriesListener(TimeSeriesListener listener) {
         listeners.remove(listener);
+        tsProduct.removeProductNodeListener(listener);
     }
 
     private void fireChangeEvent(TimeSeriesChangeEvent event) {

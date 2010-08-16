@@ -20,10 +20,13 @@ import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductNode;
 import org.esa.beam.framework.datamodel.ProductNodeEvent;
 import org.esa.beam.framework.datamodel.ProductNodeGroup;
-import org.esa.beam.framework.datamodel.ProductNodeListenerAdapter;
 import org.esa.beam.framework.ui.AppContext;
 import org.esa.beam.framework.ui.application.support.AbstractToolView;
 import org.esa.beam.framework.ui.product.ProductTreeListenerAdapter;
+import org.esa.beam.glob.core.TimeSeriesMapper;
+import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
+import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesChangeEvent;
+import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesListener;
 import org.esa.beam.visat.VisatApp;
 
 import javax.swing.JComponent;
@@ -42,12 +45,12 @@ public class TimeSeriesManagerToolView extends AbstractToolView {
 
     private WeakHashMap<Product, TimeSeriesManagerForm> formMap;
     private TimeSeriesManagerForm activeForm;
-    private TSManagerPNL tsManagerPNL;
+    private TimeSeriesManagerTSL timeSeriesManagerTSL;
 
     public TimeSeriesManagerToolView() {
         formMap = new WeakHashMap<Product, TimeSeriesManagerForm>();
         appContext = VisatApp.getApp();
-        tsManagerPNL = new TSManagerPNL();
+        timeSeriesManagerTSL = new TimeSeriesManagerTSL();
     }
 
     protected JPanel getControlPanel() {
@@ -88,7 +91,10 @@ public class TimeSeriesManagerToolView extends AbstractToolView {
         Product oldProduct = selectedProduct;
         if (newProduct != oldProduct) {
             if (oldProduct != null) {
-                oldProduct.removeProductNodeListener(tsManagerPNL);
+                final AbstractTimeSeries timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(oldProduct);
+                if (timeSeries != null) {
+                    timeSeries.removeTimeSeriesListener(timeSeriesManagerTSL);
+                }
             }
 
             selectedProduct = newProduct;
@@ -96,7 +102,10 @@ public class TimeSeriesManagerToolView extends AbstractToolView {
             updateTitle();
 
             if (newProduct != null) {
-                selectedProduct.addProductNodeListener(tsManagerPNL);
+                final AbstractTimeSeries timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(newProduct);
+                if (timeSeries != null) {
+                    timeSeries.addTimeSeriesListener(timeSeriesManagerTSL);
+                }
             }
         }
     }
@@ -157,11 +166,20 @@ public class TimeSeriesManagerToolView extends AbstractToolView {
         }
     }
 
-    private class TSManagerPNL extends ProductNodeListenerAdapter {
+    private class TimeSeriesManagerTSL extends TimeSeriesListener {
+
+        @Override
+        public void timeSeriesChanged(TimeSeriesChangeEvent event) {
+            if (event.getEventType() == TimeSeriesChangeEvent.START_TIME_PROPERTY_NAME ||
+                event.getEventType() == TimeSeriesChangeEvent.END_TIME_PROPERTY_NAME) {
+                activeForm.updateFormControl(getSelectedProduct());
+            }
+        }
 
         @Override
         public void nodeChanged(ProductNodeEvent event) {
             activeForm.updateFormControl(getSelectedProduct());
         }
+
     }
 }
