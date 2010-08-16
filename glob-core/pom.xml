@@ -11,11 +11,11 @@
 
     <artifactId>glob-core</artifactId>
     <name>GlobToolbox Core Module</name>
-    
+
     <dependencies>
         <dependency>
             <groupId>org.esa.beam</groupId>
-            <artifactId>beam-visat-rcp</artifactId>
+            <artifactId>beam-core</artifactId>
         </dependency>
     </dependencies>
 
