@@ -21,6 +21,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 class EditTimeSpanAction extends AbstractAction {
@@ -107,7 +109,7 @@ class EditTimeSpanAction extends AbstractAction {
             content.add(endTimeBox);
             autoAdjustBox = createAutoAdjustBox(isAutoAdjustingTimeCoding);
             content.add(autoAdjustBox);
-            setEnabled(!isAutoAdjustingTimeCoding);
+            setUiEnabled(!isAutoAdjustingTimeCoding);
             setContent(content);
         }
 
@@ -117,46 +119,57 @@ class EditTimeSpanAction extends AbstractAction {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     final boolean selected = autoAdjustBox.isSelected();
-                    setEnabled(!selected);
-                    if (selected) {
-                        ProductData.UTC autoStartTime = null;
-                        ProductData.UTC autoEndTime = null;
-                        for (ProductLocation productLocation : timeSeries.getProductLocations()) {
-                            for (Product product : productLocation.getProducts()) {
-                                for (String variable : timeSeries.getTimeVariables()) {
-                                    if (timeSeries.isProductCompatible(product, variable)) {
-                                        if (timeSeries.isVariableSelected(variable)) {
-                                            TimeCoding varTimeCoding = GridTimeCoding.create(product);
-                                            if (autoStartTime == null) {
-                                                TimeCoding tsTimeCoding = timeSeries.getTimeCoding();
-                                                autoStartTime = tsTimeCoding.getStartTime();
-                                                autoEndTime = tsTimeCoding.getEndTime();
-                                            }
-                                            if (varTimeCoding != null) {
-                                                autoStartTime = getMinStartTime(autoStartTime,
-                                                                                varTimeCoding.getStartTime());
-                                                autoEndTime = getMaxEndTime(autoEndTime, varTimeCoding.getEndTime());
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        if (autoStartTime == null) {
-                            try {
-                                autoStartTime = ProductData.UTC.parse("1970-01-01", "yyyy-MM-dd");
-                                autoEndTime = autoStartTime;
-                            } catch (ParseException ignore) {
-                            }
-                        }
-                        //noinspection ConstantConditions
-                        startTimeBox.setDate(autoStartTime.getAsDate());
-                        //noinspection ConstantConditions
-                        endTimeBox.setDate(autoEndTime.getAsDate());
+                    setUiEnabled(!selected);
+                    if (!selected) {
+                        return;
                     }
+                    ProductData.UTC autoStartTime = null;
+                    ProductData.UTC autoEndTime = null;
+                    List<Product> compatibleProducts = getCompatibleProducts();
+                    for (Product product : compatibleProducts) {
+                        TimeCoding varTimeCoding = GridTimeCoding.create(product);
+                        if (autoStartTime == null) {
+                            TimeCoding tsTimeCoding = timeSeries.getTimeCoding();
+                            autoStartTime = tsTimeCoding.getStartTime();
+                            autoEndTime = tsTimeCoding.getEndTime();
+                        }
+                        if (varTimeCoding != null) {
+                            autoStartTime = getMinStartTime(autoStartTime,
+                                                            varTimeCoding.getStartTime());
+                            autoEndTime = getMaxEndTime(autoEndTime, varTimeCoding.getEndTime());
+                        }
+                    }
+
+                    if (autoStartTime == null) {
+                        try {
+                            autoStartTime = ProductData.UTC.parse("1970-01-01", "yyyy-MM-dd");
+                            autoEndTime = autoStartTime;
+                        } catch (ParseException ignore) {
+                        }
+                    }
+                    //noinspection ConstantConditions
+                    startTimeBox.setDate(autoStartTime.getAsDate());
+                    //noinspection ConstantConditions
+                    endTimeBox.setDate(autoEndTime.getAsDate());
                 }
             });
             return autoAdjustBox;
+        }
+
+        private List<Product> getCompatibleProducts() {
+            List<Product> result = new ArrayList<Product>();
+            for (ProductLocation productLocation : timeSeries.getProductLocations()) {
+                for (Product product : productLocation.getProducts()) {
+                    for (String variable : timeSeries.getTimeVariables()) {
+                        if (timeSeries.isProductCompatible(product, variable)) {
+                            if (timeSeries.isVariableSelected(variable)) {
+                                result.add(product);
+                            }
+                        }
+                    }
+                }
+            }
+            return result;
         }
 
         private ProductData.UTC getMaxEndTime(final ProductData.UTC endTime1, final ProductData.UTC endTime2) {
@@ -190,7 +203,7 @@ class EditTimeSpanAction extends AbstractAction {
             return box;
         }
 
-        private void setEnabled(boolean enable) {
+        private void setUiEnabled(boolean enable) {
             startTimeBox.setEnabled(enable);
             startTimeLabel.setEnabled(enable);
             endTimeBox.setEnabled(enable);
