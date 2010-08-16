@@ -556,14 +556,20 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
                 }
                 if (getTimeCoding().contains(rasterTimeCoding)) {
                     // add only bands which are in the time bounds
-                    addBand(raster, rasterTimeCoding, bandName);
+                    final Band addedBand = addBand(raster, rasterTimeCoding, bandName);
+                    final List<Band> bandsForVariable = getBandsForVariable(nodeName);
+                    if(!bandsForVariable.isEmpty()){
+                        final ImageInfo imageInfo = bandsForVariable.get(0).getImageInfo(ProgressMonitor.NULL);
+                        addedBand.setImageInfo(imageInfo.createDeepCopy());
+                    }
+
                 }
                 // todo no bands added message
             }
         }
     }
 
-    private void addBand(RasterDataNode raster, TimeCoding rasterTimeCoding, String bandName) {
+    private Band addBand(RasterDataNode raster, TimeCoding rasterTimeCoding, String bandName) {
         final Band band = new Band(bandName, raster.getDataType(), tsProduct.getSceneRasterWidth(),
                                    tsProduct.getSceneRasterHeight());
         band.setSourceImage(raster.getSourceImage());
@@ -572,6 +578,7 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
         band.setValidPixelExpression(null);
         rasterTimeMap.put(band, rasterTimeCoding);
         tsProduct.addBand(band);
+        return band;
     }
 
     private void autoAdjustTimeInformation(ProductData.UTC rasterStartTime, ProductData.UTC rasterEndTime) {
