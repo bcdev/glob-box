@@ -24,6 +24,9 @@ public class TimeSeriesChangeEvent {
     public static final int BAND_TO_BE_REMOVED = 1;
     public static final int START_TIME_PROPERTY_NAME = 2;
     public static final int END_TIME_PROPERTY_NAME = 3;
+    public static final int PROPERTY_PRODUCT_LOCATIONS = 4;
+    public static final int PROPERTY_VARIABLE_SELECTION = 5;
+
     private final int type;
     private final Object value;
 
@@ -32,7 +35,7 @@ public class TimeSeriesChangeEvent {
         this.value = value;
     }
 
-    public int getEventType() {
+    public int getType() {
         return type;
     }
 

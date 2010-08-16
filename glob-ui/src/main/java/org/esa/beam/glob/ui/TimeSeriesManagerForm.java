@@ -480,7 +480,7 @@ class TimeSeriesManagerForm {
         @Override
         public void timeSeriesChanged(TimeSeriesChangeEvent event) {
 
-            if (event.getEventType() == TimeSeriesChangeEvent.BAND_TO_BE_REMOVED) {
+            if (event.getType() == TimeSeriesChangeEvent.BAND_TO_BE_REMOVED) {
                 Band band = (Band) event.getValue();
                 VisatApp app = VisatApp.getApp();
                 JInternalFrame internalFrame = app.findInternalFrame(band);

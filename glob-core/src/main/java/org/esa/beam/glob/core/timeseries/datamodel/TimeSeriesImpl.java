@@ -143,7 +143,8 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
                     // todo log in gui as well as in console
                 }
             }
-            tsProduct.fireProductNodeChanged(PROPERTY_PRODUCT_LOCATIONS);
+            fireChangeEvent(new TimeSeriesChangeEvent(TimeSeriesChangeEvent.PROPERTY_PRODUCT_LOCATIONS,
+                                                      productLocationList));
         }
     }
 
@@ -179,7 +180,8 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
         productLocation.closeProducts();
         productLocationList.remove(productLocation);
 
-        tsProduct.fireProductNodeChanged(PROPERTY_PRODUCT_LOCATIONS);
+        fireChangeEvent(new TimeSeriesChangeEvent(TimeSeriesChangeEvent.PROPERTY_PRODUCT_LOCATIONS,
+                                                  productLocationList));
     }
 
     private Band getSourceBand(String destBandName) {
@@ -280,7 +282,8 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
                 }
             }
         }
-        tsProduct.fireProductNodeChanged(PROPERTY_VARIABLE_SELECTION);
+        fireChangeEvent(new TimeSeriesChangeEvent(TimeSeriesChangeEvent.PROPERTY_VARIABLE_SELECTION, null));
+
     }
 
     @Override

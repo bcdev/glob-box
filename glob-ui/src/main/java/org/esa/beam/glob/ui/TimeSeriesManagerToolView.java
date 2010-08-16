@@ -170,8 +170,8 @@ public class TimeSeriesManagerToolView extends AbstractToolView {
 
         @Override
         public void timeSeriesChanged(TimeSeriesChangeEvent event) {
-            if (event.getEventType() == TimeSeriesChangeEvent.START_TIME_PROPERTY_NAME ||
-                event.getEventType() == TimeSeriesChangeEvent.END_TIME_PROPERTY_NAME) {
+            if (event.getType() == TimeSeriesChangeEvent.START_TIME_PROPERTY_NAME ||
+                event.getType() == TimeSeriesChangeEvent.END_TIME_PROPERTY_NAME) {
                 activeForm.updateFormControl(getSelectedProduct());
             }
         }

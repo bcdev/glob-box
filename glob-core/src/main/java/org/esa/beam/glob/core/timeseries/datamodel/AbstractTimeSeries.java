@@ -51,9 +51,6 @@ public abstract class AbstractTimeSeries {
     public static final String PL_TYPE = "TYPE";
     public static final String VARIABLES = "VARIABLES";
 
-    public static final String PROPERTY_PRODUCT_LOCATIONS = "PROPERTY_PRODUCT_LOCATIONS";
-    public static final String PROPERTY_VARIABLE_SELECTION = "PROPERTY_VARIABLE_SELECTION";
-
     public abstract List<String> getVariables();
 
     public abstract List<ProductLocation> getProductLocations();

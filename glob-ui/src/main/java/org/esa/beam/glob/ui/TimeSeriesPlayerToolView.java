@@ -33,6 +33,7 @@ import org.esa.beam.framework.ui.product.ProductSceneView;
 import org.esa.beam.glevel.BandImageMultiLevelSource;
 import org.esa.beam.glob.core.TimeSeriesMapper;
 import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
+import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesChangeEvent;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesListener;
 import org.esa.beam.util.math.MathUtils;
 import org.esa.beam.visat.VisatApp;
@@ -242,6 +243,13 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
 
     private class TimeSeriesPlayerTSL extends TimeSeriesListener {
 
+        @Override
+        public void timeSeriesChanged(TimeSeriesChangeEvent event) {
+            if (event.getType() == TimeSeriesChangeEvent.PROPERTY_PRODUCT_LOCATIONS ||
+                event.getType() == TimeSeriesChangeEvent.PROPERTY_VARIABLE_SELECTION) {
+                form.configureTimeSlider(currentView.getRaster());
+            }
+        }
 
         @Override
         public void nodeAdded(ProductNodeEvent event) {
@@ -262,10 +270,6 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
         @Override
         public void nodeChanged(ProductNodeEvent event) {
             String propertyName = event.getPropertyName();
-            if (propertyName.equals(AbstractTimeSeries.PROPERTY_PRODUCT_LOCATIONS) ||
-                propertyName.equals(AbstractTimeSeries.PROPERTY_VARIABLE_SELECTION)) {
-                form.configureTimeSlider(currentView.getRaster());
-            }
             if (propertyName.equals(RasterDataNode.PROPERTY_NAME_IMAGE_INFO)) {
                 adjustImageInfos(event);
             }

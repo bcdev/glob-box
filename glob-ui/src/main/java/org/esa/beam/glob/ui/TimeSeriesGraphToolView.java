@@ -29,6 +29,7 @@ import org.esa.beam.framework.ui.application.support.AbstractToolView;
 import org.esa.beam.framework.ui.product.ProductSceneView;
 import org.esa.beam.glob.core.TimeSeriesMapper;
 import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
+import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesChangeEvent;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesListener;
 import org.esa.beam.visat.VisatApp;
 import org.jfree.chart.ChartFactory;
@@ -252,14 +253,19 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
 
     private class TimeSeriesGraphTSL extends TimeSeriesListener {
 
+        @Override
+        public void timeSeriesChanged(TimeSeriesChangeEvent event) {
+            if (event.getType() == TimeSeriesChangeEvent.PROPERTY_PRODUCT_LOCATIONS ||
+                event.getType() == TimeSeriesChangeEvent.PROPERTY_VARIABLE_SELECTION) {
+                handleBandsChanged();
+            }
+
+        }
 
         @Override
         public void nodeChanged(ProductNodeEvent event) {
             String propertyName = event.getPropertyName();
-            if (propertyName.equals(AbstractTimeSeries.PROPERTY_PRODUCT_LOCATIONS) ||
-                propertyName.equals(AbstractTimeSeries.PROPERTY_VARIABLE_SELECTION)) {
-                handleBandsChanged();
-            } else if (propertyName.equals(Placemark.PROPERTY_NAME_PIXELPOS)) {
+            if (propertyName.equals(Placemark.PROPERTY_NAME_PIXELPOS)) {
                 updatePins(graphForm.isShowingSelectedPins());
             }
         }
