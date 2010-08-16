@@ -242,7 +242,6 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
 
     private class TimeSeriesPlayerTSL extends TimeSeriesListener {
 
-        private volatile boolean adjustingImageInfos;
 
         @Override
         public void nodeAdded(ProductNodeEvent event) {
@@ -273,30 +272,17 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
         }
 
         private void adjustImageInfos(ProductNodeEvent event) {
+
             final ProductNode node = event.getSourceNode();
             if (node instanceof RasterDataNode) {
-                if (!adjustingImageInfos) {
-                    RasterDataNode rasterDataNode = (RasterDataNode) node;
-                    final TimeSeriesMapper tsMapper = TimeSeriesMapper.getInstance();
-                    final AbstractTimeSeries timeSeries = tsMapper.getTimeSeries(rasterDataNode.getProduct());
-                    final List<Band> bandList = timeSeries.getBandsForVariable(
-                            AbstractTimeSeries.rasterToVariableName(rasterDataNode.getName()));
-                    final ImageInfo imageInfo = rasterDataNode.getImageInfo();
-                    if (imageInfo != null) {
-                        adjustingImageInfos = true;
-                        for (Band band : bandList) {
-                            if (band != rasterDataNode) {
-                                band.setImageInfo(imageInfo.createDeepCopy());
-                            }
-                        }
-                        final ImageLayer baseImageLayer = currentView.getBaseImageLayer();
-                        if (baseImageLayer instanceof BlendImageLayer) {
-                            BlendImageLayer blendLayer = (BlendImageLayer) baseImageLayer;
-                            blendLayer.getBlendMultiLevelSource().setImageInfo(imageInfo.createDeepCopy());
-                        }
-                    }
-                    adjustingImageInfos = false;
+                final RasterDataNode raster = (RasterDataNode) node;
+                final ImageLayer baseImageLayer = currentView.getBaseImageLayer();
+                final ImageInfo imageInfo = raster.getImageInfo();
+                if (baseImageLayer instanceof BlendImageLayer) {
+                    BlendImageLayer blendLayer = (BlendImageLayer) baseImageLayer;
+                    blendLayer.getBlendMultiLevelSource().setImageInfo(imageInfo.createDeepCopy());
                 }
+
             }
         }
     }

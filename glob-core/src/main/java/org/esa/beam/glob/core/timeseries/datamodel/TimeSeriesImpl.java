@@ -16,7 +16,9 @@
 
 package org.esa.beam.glob.core.timeseries.datamodel;
 
+import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.ImageInfo;
 import org.esa.beam.framework.datamodel.MetadataAttribute;
 import org.esa.beam.framework.datamodel.MetadataElement;
 import org.esa.beam.framework.datamodel.Product;
@@ -52,6 +54,7 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
     private Map<String, Product> productTimeMap;
     private Map<RasterDataNode, TimeCoding> rasterTimeMap = new WeakHashMap<RasterDataNode, TimeCoding>();
     private List<TimeSeriesListener> listeners = new ArrayList<TimeSeriesListener>();
+    private volatile boolean isAdjustingImageInfos;
 
     /**
      * Used to create a TimeSeries from within a ProductReader
@@ -65,6 +68,7 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
         setSourceImages();
         fixBandTimeCodings();
         updateAutoGrouping();
+        initImageInfos();
     }
 
     /**
@@ -76,15 +80,15 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
      */
     TimeSeriesImpl(Product tsProduct, List<ProductLocation> productLocations, List<String> variableNames) {
         init(tsProduct);
-        productLocationList = new ArrayList<ProductLocation>(productLocations);
-        for (ProductLocation productLocation : productLocationList) {
-            addProductLocationMetadata(productLocation);
+        for (ProductLocation location : productLocations) {
+            addProductLocation(location);
         }
         storeProductsInMap();
         for (String variable : variableNames) {
             setVariableSelected(variable, true);
         }
         setProductTimeCoding(tsProduct);
+        initImageInfos();
     }
 
     @Override
@@ -119,13 +123,15 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
     }
 
     @Override
-    public void addProductLocation(ProductLocationType type, String path) {
-        ProductLocation location = new ProductLocation(type, path);
-        if (!productLocationList.contains(location)) {
-            addProductLocationMetadata(location);
-            productLocationList.add(location);
+    public void addProductLocation(ProductLocation productLocation) {
+        if (productLocationList == null) {
+            productLocationList = new ArrayList<ProductLocation>();
+        }
+        if (!productLocationList.contains(productLocation)) {
+            addProductLocationMetadata(productLocation);
+            productLocationList.add(productLocation);
             List<String> variables = getTimeVariables();
-            for (Product product : location.getProducts()) {
+            for (Product product : productLocation.getProducts()) {
                 if (product.getStartTime() != null) {
                     addToVariableList(product);
                     productTimeMap.put(formatTimeString(product), product);
@@ -229,6 +235,11 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
                         if (sourceBand != null) {
                             destBand.setSourceImage(sourceBand.getSourceImage());
                         }
+                    }
+                }
+                if (RasterDataNode.PROPERTY_NAME_IMAGE_INFO.equals(event.getPropertyName())) {
+                    if (event.getSourceNode() instanceof RasterDataNode) {
+                        adjustImageInfos((RasterDataNode) event.getSourceNode());
                     }
                 }
             }
@@ -337,8 +348,11 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
     }
 
 
-    public boolean isTimeCodingSet() {
-        return tsProduct.getStartTime() != null;
+    @Override
+    public boolean isProductCompatible(Product product, String rasterName) {
+        return product.getFileLocation() != null &&
+               product.containsRasterDataNode(rasterName) &&
+               tsProduct.isCompatibleProduct(product, 0.1e-6f);
     }
 
     @Override
@@ -351,7 +365,7 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
         final ProductData.UTC startTime = timeCoding.getStartTime();
         if (tsProduct.getStartTime().getAsCalendar().compareTo(startTime.getAsCalendar()) != 0) {
             tsProduct.setStartTime(startTime);
-            fireChangeEvent(new TimeSeriesChangeEvent(TimeSeriesChangeEvent.START_TIME_PROPERTY_NAME, startTime));            
+            fireChangeEvent(new TimeSeriesChangeEvent(TimeSeriesChangeEvent.START_TIME_PROPERTY_NAME, startTime));
         }
         final ProductData.UTC endTime = timeCoding.getEndTime();
         if (tsProduct.getEndTime().getAsCalendar().compareTo(endTime.getAsCalendar()) != 0) {
@@ -377,6 +391,49 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
         }
     }
 
+
+    @Override
+    public void addTimeSeriesListener(TimeSeriesListener listener) {
+        if (!listeners.contains(listener)) {
+            listeners.add(listener);
+            tsProduct.addProductNodeListener(listener);
+        }
+    }
+
+    @Override
+    public void removeTimeSeriesListener(TimeSeriesListener listener) {
+        listeners.remove(listener);
+        tsProduct.removeProductNodeListener(listener);
+    }
+
+
+    /////////////////////////////////////////////////////////////////////////////////
+    // private methods
+    /////////////////////////////////////////////////////////////////////////////////
+
+    private boolean isTimeCodingSet() {
+        return tsProduct.getStartTime() != null;
+    }
+
+    private void adjustImageInfos(RasterDataNode raster) {
+        if (!isAdjustingImageInfos) {
+            try {
+                isAdjustingImageInfos = true;
+                final String variableName = AbstractTimeSeries.rasterToVariableName(raster.getName());
+                final List<Band> bandList = getBandsForVariable(variableName);
+                final ImageInfo imageInfo = raster.getImageInfo(ProgressMonitor.NULL);
+                if (imageInfo != null) {
+                    for (Band band : bandList) {
+                        if (band != raster) {
+                            band.setImageInfo(imageInfo.createDeepCopy());
+                        }
+                    }
+                }
+            } finally {
+                isAdjustingImageInfos = false;
+            }
+        }
+    }
 
     private void sortBands(List<Band> bandList) {
         Collections.sort(bandList, new Comparator<Band>() {
@@ -526,29 +583,18 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
         }
     }
 
-    @Override
-    public boolean isProductCompatible(Product product, String rasterName) {
-        return product.getFileLocation() != null &&
-               product.containsRasterDataNode(rasterName) &&
-               tsProduct.isCompatibleProduct(product, 0.1e-6f);
-    }
-
-    @Override
-    public void addTimeSeriesListener(TimeSeriesListener listener) {
-        if (!listeners.contains(listener)) {
-            listeners.add(listener);
-            tsProduct.addProductNodeListener(listener);
+    private void initImageInfos() {
+        for (String variable : getTimeVariables()) {
+            if (isVariableSelected(variable)) {
+                final List<Band> bandList = getBandsForVariable(variable);
+                adjustImageInfos(bandList.get(0));
+            }
         }
     }
 
-    @Override
-    public void removeTimeSeriesListener(TimeSeriesListener listener) {
-        listeners.remove(listener);
-        tsProduct.removeProductNodeListener(listener);
-    }
-
     private void fireChangeEvent(TimeSeriesChangeEvent event) {
-        for (TimeSeriesListener listener : listeners) {
+        final TimeSeriesListener[] timeSeriesListeners = listeners.toArray(new TimeSeriesListener[listeners.size()]);
+        for (TimeSeriesListener listener : timeSeriesListeners) {
             listener.timeSeriesChanged(event);
         }
     }

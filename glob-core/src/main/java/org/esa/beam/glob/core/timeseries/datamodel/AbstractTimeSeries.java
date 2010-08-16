@@ -58,7 +58,7 @@ public abstract class AbstractTimeSeries {
 
     public abstract List<ProductLocation> getProductLocations();
 
-    public abstract void addProductLocation(ProductLocationType type, String path);
+    public abstract void addProductLocation(ProductLocation productLocation);
 
     public abstract void removeProductLocation(ProductLocation productLocation);
 
@@ -99,4 +99,5 @@ public abstract class AbstractTimeSeries {
     public abstract void removeTimeSeriesListener(TimeSeriesListener listener);
 
     public abstract boolean isProductCompatible(Product product, String rasterName);
+
 }

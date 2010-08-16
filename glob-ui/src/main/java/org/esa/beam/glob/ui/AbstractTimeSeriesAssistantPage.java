@@ -24,11 +24,13 @@ import org.esa.beam.framework.ui.assistant.AbstractAssistantPage;
 import org.esa.beam.glob.core.TimeSeriesMapper;
 import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesFactory;
+import org.esa.beam.util.Debug;
 import org.esa.beam.visat.VisatApp;
 
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import java.awt.Component;
+import java.util.concurrent.ExecutionException;
 
 abstract class AbstractTimeSeriesAssistantPage extends AbstractAssistantPage {
 
@@ -126,7 +128,12 @@ abstract class AbstractTimeSeriesAssistantPage extends AbstractAssistantPage {
 
         @Override
         protected void done() {
-            super.done();
+            try {
+                get();
+            } catch (Exception e) {
+                Debug.trace(e);
+                getContext().showErrorDialog(e.getMessage());
+            }
         }
     }
 }

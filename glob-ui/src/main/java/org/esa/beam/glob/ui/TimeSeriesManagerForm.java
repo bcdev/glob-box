@@ -413,7 +413,7 @@ class TimeSeriesManagerForm {
         public void addFiles(File... files) {
             final int startIndex = timeSeries.getProductLocations().size();
             for (File file : files) {
-                timeSeries.addProductLocation(ProductLocationType.FILE, file.getAbsolutePath());
+                timeSeries.addProductLocation(new ProductLocation(ProductLocationType.FILE, file.getAbsolutePath()));
             }
             final int stopIndex = timeSeries.getProductLocations().size() - 1;
             fireIntervalAdded(this, startIndex, stopIndex);
@@ -421,8 +421,9 @@ class TimeSeriesManagerForm {
 
         @Override
         public void addDirectory(File directory, boolean recursive) {
-            timeSeries.addProductLocation(recursive ? ProductLocationType.DIRECTORY_REC : ProductLocationType.DIRECTORY,
-                                          directory.getAbsolutePath());
+            timeSeries.addProductLocation(
+                    new ProductLocation(recursive ? ProductLocationType.DIRECTORY_REC : ProductLocationType.DIRECTORY,
+                                        directory.getAbsolutePath()));
             final int index = timeSeries.getProductLocations().size() - 1;
             fireIntervalAdded(this, index, index);
         }

@@ -60,29 +60,34 @@ public class TimeSeriesFactory {
      */
     public static AbstractTimeSeries create(String name, List<ProductLocation> productLocations,
                                             List<String> variableNames) {
-        Guardian.assertNotNull("productLocations", productLocations);
-        Guardian.assertGreaterThan("productLocations.size()", productLocations.size(), 0);
-        Guardian.assertNotNull("variables", variableNames);
-        Guardian.assertGreaterThan("variables.size()", variableNames.size(), 0);
-        Guardian.assertNotNullOrEmpty("name", name);
+        try {
+            Guardian.assertNotNull("productLocations", productLocations);
+            Guardian.assertGreaterThan("productLocations.size()", productLocations.size(), 0);
+            Guardian.assertNotNull("variables", variableNames);
+            Guardian.assertGreaterThan("variables.size()", variableNames.size(), 0);
+            Guardian.assertNotNullOrEmpty("name", name);
 
-        final List<Product> productList = new ArrayList<Product>();
-        for (ProductLocation productLocation : productLocations) {
-            productList.addAll(productLocation.getProducts());
-        }
-        if (productList.isEmpty()) {
-            return null;
-        }
-        Product refProduct = productList.get(0);
-        final Product tsProduct = new Product(name, TimeSeriesImpl.TIME_SERIES_PRODUCT_TYPE,
-                                              refProduct.getSceneRasterWidth(),
-                                              refProduct.getSceneRasterHeight());
-        tsProduct.setDescription("A time series product");
-        ProductUtils.copyGeoCoding(refProduct, tsProduct);
+            final List<Product> productList = new ArrayList<Product>();
+            for (ProductLocation productLocation : productLocations) {
+                productList.addAll(productLocation.getProducts());
+            }
+            if (productList.isEmpty()) {
+                return null;
+            }
+            Product refProduct = productList.get(0);
+            final Product tsProduct = new Product(name, TimeSeriesImpl.TIME_SERIES_PRODUCT_TYPE,
+                                                  refProduct.getSceneRasterWidth(),
+                                                  refProduct.getSceneRasterHeight());
+            tsProduct.setDescription("A time series product");
+            ProductUtils.copyGeoCoding(refProduct, tsProduct);
 
-        final AbstractTimeSeries timeSeries = new TimeSeriesImpl(tsProduct, productLocations, variableNames);
-        TimeSeriesMapper.getInstance().put(tsProduct, timeSeries);
-        return timeSeries;
+            final AbstractTimeSeries timeSeries = new TimeSeriesImpl(tsProduct, productLocations, variableNames);
+            TimeSeriesMapper.getInstance().put(tsProduct, timeSeries);
+            return timeSeries;
+        } catch (Throwable e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
 }
