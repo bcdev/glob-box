@@ -30,6 +30,11 @@
         </dependency>
         <dependency>
             <groupId>org.esa.beam</groupId>
+            <artifactId>beam-globcarbon-reader</artifactId>
+            <version>${pom.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.beam</groupId>
             <artifactId>beam-globaerosol-reader</artifactId>
             <version>${pom.version}</version>
         </dependency>

@@ -1,0 +1,49 @@
+<module>
+    <manifestVersion>1.0.0</manifestVersion>
+    <symbolicName>beam-globcarbon-reader</symbolicName>
+    <version>2.1</version>
+    <name>GlobCarbon Product Reader</name>
+
+    <description>
+        <![CDATA[
+        This module provides a product reader for importing GlobCarbon data products
+        </a> into BEAM/VISAT.
+        ]]>
+    </description>
+
+    <vendor>Brockmann Consult GmbH</vendor>
+    <contactAddress>Max Planck Str.2, 21502 Geesthacht (Germany)</contactAddress>
+    <copyright>(C) 2010 by Brockmann Consult GmbH</copyright>
+    <url>http://envisat.esa.int/beam</url>
+    <licenseUrl>http://www.gnu.org/licenses/gpl.html</licenseUrl>
+
+    <dependency>
+        <module>beam-core</module>
+    </dependency>
+    <dependency>
+        <module>beam-visat</module>
+        <optional>true</optional>
+    </dependency>
+
+    <categories>Reader,GlobCarbon</categories>
+
+    <extension point="beam-ui:actions">
+        <action>
+            <class>org.esa.beam.visat.actions.ProductImportAction</class>
+            <id>importGlobCarbonProduct</id>
+            <helpId>importGlobCarbonProduct</helpId>
+            <formatName>GlobCarbon</formatName>
+            <useAllFileFilter>true</useAllFileFilter>
+            <shortDescr>Import a GlobCarbon data product or product subset.</shortDescr>
+            <description>Import a GlobCarbon data product or product subset.</description>
+        </action>
+    </extension>
+
+    <extension point="beam-ui:helpSets">
+        <helpSet>
+            <parent>beam-help</parent>
+            <path>doc/help/globcarbon.hs</path>
+        </helpSet>
+    </extension>
+
+</module>
