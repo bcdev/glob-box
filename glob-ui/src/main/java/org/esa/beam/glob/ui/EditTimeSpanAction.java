@@ -115,44 +115,7 @@ class EditTimeSpanAction extends AbstractAction {
 
         private JCheckBox createAutoAdjustBox(boolean autoAdjustingTimeCoding) {
             final JCheckBox autoAdjustBox = new JCheckBox("Auto adjust time information", autoAdjustingTimeCoding);
-            autoAdjustBox.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    final boolean selected = autoAdjustBox.isSelected();
-                    setUiEnabled(!selected);
-                    if (!selected) {
-                        return;
-                    }
-                    ProductData.UTC autoStartTime = null;
-                    ProductData.UTC autoEndTime = null;
-                    List<Product> compatibleProducts = getCompatibleProducts();
-                    for (Product product : compatibleProducts) {
-                        TimeCoding varTimeCoding = GridTimeCoding.create(product);
-                        if (autoStartTime == null) {
-                            TimeCoding tsTimeCoding = timeSeries.getTimeCoding();
-                            autoStartTime = tsTimeCoding.getStartTime();
-                            autoEndTime = tsTimeCoding.getEndTime();
-                        }
-                        if (varTimeCoding != null) {
-                            autoStartTime = getMinStartTime(autoStartTime,
-                                                            varTimeCoding.getStartTime());
-                            autoEndTime = getMaxEndTime(autoEndTime, varTimeCoding.getEndTime());
-                        }
-                    }
-
-                    if (autoStartTime == null) {
-                        try {
-                            autoStartTime = ProductData.UTC.parse("1970-01-01", "yyyy-MM-dd");
-                            autoEndTime = autoStartTime;
-                        } catch (ParseException ignore) {
-                        }
-                    }
-                    //noinspection ConstantConditions
-                    startTimeBox.setDate(autoStartTime.getAsDate());
-                    //noinspection ConstantConditions
-                    endTimeBox.setDate(autoEndTime.getAsDate());
-                }
-            });
+            autoAdjustBox.addActionListener(new AutoAdjustBoxListener(autoAdjustBox));
             return autoAdjustBox;
         }
 
@@ -210,6 +173,51 @@ class EditTimeSpanAction extends AbstractAction {
             endTimeLabel.setEnabled(enable);
         }
 
+        private class AutoAdjustBoxListener implements ActionListener {
+
+            private final JCheckBox autoAdjustBox;
+
+            public AutoAdjustBoxListener(JCheckBox autoAdjustBox) {
+                this.autoAdjustBox = autoAdjustBox;
+            }
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                final boolean selected = autoAdjustBox.isSelected();
+                setUiEnabled(!selected);
+                if (!selected) {
+                    return;
+                }
+                ProductData.UTC autoStartTime = null;
+                ProductData.UTC autoEndTime = null;
+                List<Product> compatibleProducts = getCompatibleProducts();
+                for (Product product : compatibleProducts) {
+                    TimeCoding varTimeCoding = GridTimeCoding.create(product);
+                    if (autoStartTime == null) {
+                        TimeCoding tsTimeCoding = timeSeries.getTimeCoding();
+                        autoStartTime = tsTimeCoding.getStartTime();
+                        autoEndTime = tsTimeCoding.getEndTime();
+                    }
+                    if (varTimeCoding != null) {
+                        autoStartTime = getMinStartTime(autoStartTime,
+                                                        varTimeCoding.getStartTime());
+                        autoEndTime = getMaxEndTime(autoEndTime, varTimeCoding.getEndTime());
+                    }
+                }
+
+                if (autoStartTime == null) {
+                    try {
+                        autoStartTime = ProductData.UTC.parse("1970-01-01", "yyyy-MM-dd");
+                        autoEndTime = autoStartTime;
+                    } catch (ParseException ignore) {
+                    }
+                }
+                //noinspection ConstantConditions
+                startTimeBox.setDate(autoStartTime.getAsDate());
+                //noinspection ConstantConditions
+                endTimeBox.setDate(autoEndTime.getAsDate());
+            }
+        }
     }
 
 }
