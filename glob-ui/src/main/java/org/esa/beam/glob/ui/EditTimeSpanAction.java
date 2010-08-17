@@ -94,8 +94,9 @@ class EditTimeSpanAction extends AbstractAction {
             tableLayout.setTableWeightX(1.0);
             tableLayout.setTableFill(TableLayout.Fill.BOTH);
             tableLayout.setTablePadding(4, 4);
-            tableLayout.setCellRowspan(2, 0, 2);
+            tableLayout.setCellColspan(0, 0, 2);
             JPanel content = new JPanel(tableLayout);
+            autoAdjustBox = createAutoAdjustBox(isAutoAdjustingTimeCoding);
             startTimeLabel = new JLabel("Start time:");
             startTimeBox = createDateComboBox();
             final TimeCoding timeCoding = timeSeries.getTimeCoding();
@@ -103,12 +104,11 @@ class EditTimeSpanAction extends AbstractAction {
             endTimeLabel = new JLabel("End time:");
             endTimeBox = createDateComboBox();
             endTimeBox.setCalendar(timeCoding.getEndTime().getAsCalendar());
+            content.add(autoAdjustBox);
             content.add(startTimeLabel);
             content.add(startTimeBox);
             content.add(endTimeLabel);
             content.add(endTimeBox);
-            autoAdjustBox = createAutoAdjustBox(isAutoAdjustingTimeCoding);
-            content.add(autoAdjustBox);
             setUiEnabled(!isAutoAdjustingTimeCoding);
             setContent(content);
         }
