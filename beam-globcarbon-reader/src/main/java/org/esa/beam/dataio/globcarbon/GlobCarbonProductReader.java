@@ -21,13 +21,17 @@ import org.esa.beam.framework.dataio.AbstractProductReader;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.util.io.FileUtils;
 
+import java.io.File;
 import java.io.IOException;
 
 /**
  * @author Thomas Storm
  */
 public class GlobCarbonProductReader extends AbstractProductReader {
+
+    private static GlobCarbonProductReaderPlugIn readerPlugIn;
 
     /**
      * Constructs a new abstract product reader.
@@ -36,12 +40,27 @@ public class GlobCarbonProductReader extends AbstractProductReader {
      *                     implementations
      */
     protected GlobCarbonProductReader(GlobCarbonProductReaderPlugIn readerPlugIn) {
-        super(readerPlugIn);
+        super(GlobCarbonProductReader.readerPlugIn);
+        GlobCarbonProductReader.readerPlugIn = readerPlugIn;
     }
 
     @Override
     protected Product readProductNodesImpl() throws IOException {
+        File inputFile = new File(getInput().toString());
+        if (".zip".equalsIgnoreCase(FileUtils.getExtension(inputFile))) {
+            String[] files = readerPlugIn.getProductFiles(inputFile.getAbsolutePath());
+            for (String file : files) {
+                if (".hdr".equalsIgnoreCase(FileUtils.getExtension(file))) {
+                    parseHeader(file);
+                }
+            }
+        }
+
         return null;
+    }
+
+    private void parseHeader(String file) {
+
     }
 
     @Override

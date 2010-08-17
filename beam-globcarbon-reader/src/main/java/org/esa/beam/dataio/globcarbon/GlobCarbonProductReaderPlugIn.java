@@ -23,8 +23,7 @@ import org.esa.beam.util.io.BeamFileFilter;
 import org.esa.beam.util.io.FileUtils;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.IOException;
 import java.util.Locale;
 
 /**
@@ -46,6 +45,7 @@ public class GlobCarbonProductReaderPlugIn implements ProductReaderPlugIn {
      * {@link ProductReaderPlugIn}.
      */
     public static final String[] FILE_EXTENSIONS = new String[]{".hdr", ".ascii", ".zip"};
+    private static final String[] ALLOWED_PREFIXES = new String[]{"BAE_PLC_", "LAI_PLC_", "VGCP_PLC_", "FAPAR_PLC_"};
 
     @Override
     public ProductReader createReaderInstance() {
@@ -55,59 +55,27 @@ public class GlobCarbonProductReaderPlugIn implements ProductReaderPlugIn {
     @Override
     public DecodeQualification getDecodeQualification(Object input) {
         String fileName = input.toString();
+
+        boolean isAsciiFile = FileUtils.getExtension(fileName).equalsIgnoreCase(".ASCII");
+        boolean isZipFile = FileUtils.getExtension(fileName).equalsIgnoreCase(".ZIP");
+
         if (!isFileNameOk(fileName)) {
             return DecodeQualification.UNABLE;
         }
 
-        if (!(existsImgFile(fileName) || FileUtils.getExtension(fileName).equalsIgnoreCase("ASCII")) ||
-            FileUtils.getExtension(fileName).equalsIgnoreCase("ZIP")) {
+        if (isAsciiFile) {
+            return DecodeQualification.INTENDED;
+        }
+
+        if (!(isZipFile || existsImgFile(fileName))) {
+            return DecodeQualification.UNABLE;
+        }
+
+        if (isZipFile && !isZipComplete(input)) {
             return DecodeQualification.UNABLE;
         }
 
         return DecodeQualification.INTENDED;
-    }
-
-    boolean existsImgFile(Object input) {
-        String fileName = input.toString();
-        File[] filesInDir = new File(new File(fileName).getParent()).listFiles();
-        List<String> fileNamesInDir = new ArrayList<String>();
-        for (File file : filesInDir) {
-            fileNamesInDir.add(file.getName());
-        }
-        String fileNameWithoutExtension = FileUtils.getFilenameWithoutExtension(
-                FileUtils.getFileNameFromPath(fileName));
-
-        return fileNamesInDir.contains(fileNameWithoutExtension + ".img") ||
-               fileNamesInDir.contains(fileNameWithoutExtension + ".IMG");
-
-    }
-
-    boolean isFileNameOk(Object input) {
-        String fileName = FileUtils.getFileNameFromPath(input.toString());
-        boolean allowedPostFix = false;
-        for (String postFix : FILE_EXTENSIONS) {
-            allowedPostFix |= fileName.toLowerCase().endsWith(postFix);
-        }
-        if (!allowedPostFix) {
-            return false;
-        }
-
-        boolean allowedPrefix = false;
-        for (String allowed : getAllowedPrefixes()) {
-            allowedPrefix |= fileName.startsWith(allowed);
-        }
-        allowedPrefix |= fileName.startsWith("BAE") && fileName.endsWith("_ASCII.ascii");
-
-        return allowedPrefix;
-    }
-
-    private List<String> getAllowedPrefixes() {
-        List<String> allowedPrefixes = new ArrayList<String>();
-        allowedPrefixes.add("BAE_PLC_");
-        allowedPrefixes.add("LAI_PLC_");
-        allowedPrefixes.add("VGCP_PLC_");
-        allowedPrefixes.add("FAPAR_PLC_");
-        return allowedPrefixes;
     }
 
     @Override
@@ -133,5 +101,95 @@ public class GlobCarbonProductReaderPlugIn implements ProductReaderPlugIn {
     @Override
     public BeamFileFilter getProductFileFilter() {
         return new BeamFileFilter(FORMAT_NAME, getDefaultFileExtensions(), getDescription(null));
+    }
+
+    boolean existsImgFile(Object input) {
+        String fileName = input.toString();
+        String[] filesInDir;
+        try {
+            filesInDir = getProductFiles(fileName);
+        } catch (IOException e) {
+            return false;
+        }
+        String fileNameWithoutExtension = FileUtils.getFilenameWithoutExtension(fileName);
+
+        File image = getImageFile(filesInDir, fileNameWithoutExtension);
+        return image != null;
+    }
+
+    File getImageFile(String[] filesInDir, String fileNameWithoutExtension) {
+        for (String file : filesInDir) {
+            if (file.equalsIgnoreCase(fileNameWithoutExtension + ".img")) {
+                return new File(file);
+            }
+        }
+        return null;
+    }
+
+    boolean isFileNameOk(Object input) {
+        String fileName = FileUtils.getFileNameFromPath(input.toString());
+        boolean allowedPostFix = false;
+        for (String postFix : FILE_EXTENSIONS) {
+            allowedPostFix |= fileName.toLowerCase().endsWith(postFix);
+        }
+        if (!allowedPostFix) {
+            return false;
+        }
+
+        boolean allowedPrefix = false;
+        for (String allowed : ALLOWED_PREFIXES) {
+            allowedPrefix |= fileName.startsWith(allowed);
+        }
+        allowedPrefix |= fileName.startsWith("BAE") && fileName.endsWith("_ASCII.ascii");
+
+        return allowedPrefix;
+    }
+
+    String[] getProductFiles(String fileName) throws IOException {
+        int index = fileName.indexOf("!");
+        if (index != -1) {
+            fileName = fileName.substring(0, index);
+        }
+        if (fileName.toLowerCase().endsWith(".zip")) {
+            final VirtualDir productZip = VirtualDir.create(new File(fileName));
+            String[] zipEntries = productZip.list("");
+            if (zipEntries.length > 1) {
+                String basePath = productZip.getBasePath();
+                for (int i = 0; i < zipEntries.length; i++) {
+                    zipEntries[i] = basePath + "!" + zipEntries[i];
+                }
+                return zipEntries;
+            } else {
+                return getProductFiles(zipEntries[0]);
+            }
+        } else {
+            File dir = new File(fileName).getParentFile();
+            String[] fileNames = dir.list();
+            if (fileNames.length > 1) {
+                for (int i = 0; i < fileNames.length; i++) {
+                    fileNames[i] = dir + File.separator + fileNames[i];
+                }
+                return fileNames;
+            } else {
+                return getProductFiles(fileNames[0]);
+            }
+        }
+    }
+
+
+    // a zip is considered complete if it contains at least one pair of hdr and img file
+
+    private boolean isZipComplete(Object input) {
+        boolean isComplete = false;
+        try {
+            String[] productFiles = getProductFiles(input.toString());
+            for (String productFile : productFiles) {
+                isComplete |= ".hdr".equalsIgnoreCase(FileUtils.getExtension(productFile))
+                              && existsImgFile(productFile);
+            }
+        } catch (IOException e) {
+            return false;
+        }
+        return isComplete;
     }
 }

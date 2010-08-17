@@ -16,6 +16,7 @@
 
 package org.esa.beam.dataio.globcarbon;
 
+import org.esa.beam.framework.dataio.DecodeQualification;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -36,7 +37,16 @@ public class GlobCarbonProductReaderPlugInTest {
     }
 
     @Test
-    public void testImgFileExists() {
+    public void testDecodeQualificationForZipFile() {
+        File input = new File(getClass().getResource("FAPAR_PLC_10KM_AATSR_20030102.zip").getFile());
+        assertEquals(DecodeQualification.INTENDED, plugIn.getDecodeQualification(input));
+
+        input = new File(getClass().getResource("BAE_PLC_025D_199907.zip").getFile());
+        assertEquals(DecodeQualification.INTENDED, plugIn.getDecodeQualification(input));
+    }
+
+    @Test
+    public void testImgFileExists() throws Exception {
         File input = new File(getClass().getResource("VGCP_PLC_050D_AV_2005_DAFTER.hdr").getFile());
         assertEquals(true, plugIn.existsImgFile(input));
 
