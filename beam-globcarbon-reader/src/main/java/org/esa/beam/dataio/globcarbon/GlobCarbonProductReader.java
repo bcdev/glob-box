@@ -17,14 +17,26 @@
 package org.esa.beam.dataio.globcarbon;
 
 import com.bc.ceres.core.ProgressMonitor;
+import org.esa.beam.dataio.envi.EnviProductReaderPlugIn;
+import org.esa.beam.dataio.envi.Header;
 import org.esa.beam.framework.dataio.AbstractProductReader;
+import org.esa.beam.framework.dataio.ProductReader;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.util.Debug;
 import org.esa.beam.util.io.FileUtils;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Thomas Storm
@@ -32,6 +44,7 @@ import java.io.IOException;
 public class GlobCarbonProductReader extends AbstractProductReader {
 
     private static GlobCarbonProductReaderPlugIn readerPlugIn;
+    private Map<String, String> productDescriptionMap;
 
     /**
      * Constructs a new abstract product reader.
@@ -42,25 +55,86 @@ public class GlobCarbonProductReader extends AbstractProductReader {
     protected GlobCarbonProductReader(GlobCarbonProductReaderPlugIn readerPlugIn) {
         super(GlobCarbonProductReader.readerPlugIn);
         GlobCarbonProductReader.readerPlugIn = readerPlugIn;
+        initDescriptionMap();
     }
 
     @Override
     protected Product readProductNodesImpl() throws IOException {
-        File inputFile = new File(getInput().toString());
-        if (".zip".equalsIgnoreCase(FileUtils.getExtension(inputFile))) {
-            String[] files = readerPlugIn.getProductFiles(inputFile.getAbsolutePath());
-            for (String file : files) {
-                if (".hdr".equalsIgnoreCase(FileUtils.getExtension(file))) {
-                    parseHeader(file);
-                }
+        List<String> headerFiles = getHeaderFiles();
+        if (headerFiles.isEmpty()) {
+            // should never come here
+            throw new IllegalStateException("No header files specified.");
+        }
+        String firstHeaderFile = headerFiles.get(0);
+        Product product = createProduct(firstHeaderFile);
+
+        for (String headerFile : headerFiles) {
+            ProductReader delegate = new EnviProductReaderPlugIn().createReaderInstance();
+            Product temp = delegate.readProductNodes(headerFile, null);
+            if (product.getGeoCoding() == null) {
+                product.setGeoCoding(temp.getGeoCoding());
+            }
+            for (Band delegateBand : temp.getBands()) {
+                String fileName = FileUtils.getFilenameWithoutExtension(FileUtils.getFileNameFromPath(headerFile));
+                String bandName = fileName.substring(fileName.lastIndexOf('_') + 1);
+                Band band = product.addBand(bandName, delegateBand.getDataType());
+                band.setSourceImage(delegateBand.getSourceImage());
             }
         }
 
-        return null;
+        if (product.getStartTime() == null || product.getEndTime() == null) {
+            String fileName = FileUtils.getFilenameWithoutExtension(FileUtils.getFileNameFromPath(firstHeaderFile));
+            try {
+                ProductData.UTC[] timeInfos = parseTimeInformation(fileName);
+                product.setStartTime(timeInfos[0]);
+                product.setEndTime(timeInfos[1]);
+            } catch (ParseException e) {
+                Debug.trace("Could not parse date from filename: " + fileName + "\nCause: " + e.getMessage());
+            }
+        }
+        return product;
     }
 
-    private void parseHeader(String file) {
+    static ProductData.UTC[] parseTimeInformation(String fileName) throws ParseException {
+        String[] tokens = fileName.split("_");
+        String date = tokens[tokens.length - 2];
+        ProductData.UTC startTime;
+        Calendar endTimeCal;
+        switch (date.length()) {
+            case 4:
+                startTime = ProductData.UTC.parse(date, "yyyy");
+                endTimeCal = startTime.getAsCalendar();
+                endTimeCal.set(Calendar.DAY_OF_YEAR, endTimeCal.getActualMaximum(Calendar.DAY_OF_YEAR));
+                break;
+            case 6:
+                startTime = ProductData.UTC.parse(date, "yyyyMM");
+                endTimeCal = startTime.getAsCalendar();
+                endTimeCal.set(Calendar.DAY_OF_MONTH, endTimeCal.getActualMaximum(Calendar.DAY_OF_MONTH));
+                break;
+            case 8:
+                startTime = ProductData.UTC.parse(date, "yyyyMMdd");
+                endTimeCal = startTime.getAsCalendar();
+                break;
+            default:
+                throw new ParseException("Could not parse date: " + date + ".", -1);
+        }
+        endTimeCal.set(Calendar.HOUR_OF_DAY, endTimeCal.getActualMaximum(Calendar.HOUR_OF_DAY));
+        endTimeCal.set(Calendar.MINUTE, 59);
+        endTimeCal.set(Calendar.SECOND, 59);
+        return new ProductData.UTC[]{startTime, ProductData.UTC.create(endTimeCal.getTime(), 0)};
+    }
 
+    private Product createProduct(String headerFile) throws IOException {
+        Product product;
+        Header header = new Header(new BufferedReader(new FileReader(headerFile)));
+        String fileName = FileUtils.getFilenameWithoutExtension(FileUtils.getFileNameFromPath(headerFile));
+        String carbonType = fileName.split("_")[0];
+        String fileType = GlobCarbonProductReaderPlugIn.FORMAT_NAME + "_" + carbonType;
+        product = new Product(fileName, fileType, header.getNumSamples(), header.getNumLines());
+        product.setProductReader(this);
+        product.setFileLocation(new File(headerFile));
+        product.setDescription(productDescriptionMap.get(carbonType));
+        return product;
     }
 
     @Override
@@ -68,5 +142,27 @@ public class GlobCarbonProductReader extends AbstractProductReader {
                                           int sourceStepX, int sourceStepY, Band destBand, int destOffsetX,
                                           int destOffsetY, int destWidth, int destHeight, ProductData destBuffer,
                                           ProgressMonitor pm) throws IOException {
+        throw new IllegalStateException("Not expected to come here");
     }
+
+    private List<String> getHeaderFiles() throws IOException {
+        List<String> headerFiles = new ArrayList<String>();
+        File inputFile = new File(getInput().toString());
+        String[] files = readerPlugIn.getProductFiles(inputFile.getAbsolutePath());
+        for (String file : files) {
+            if (".hdr".equalsIgnoreCase(FileUtils.getExtension(file))) {
+                headerFiles.add(file);
+            }
+        }
+        return headerFiles;
+    }
+
+    private void initDescriptionMap() {
+        productDescriptionMap = new HashMap<String, String>();
+        productDescriptionMap.put("BAE", "Global monthly Burnt Area Estimates");
+        productDescriptionMap.put("LAI", "Global monthly Leaf Area Index");
+        productDescriptionMap.put("VGCP", "Global yearly Vegetation Growth Cycle Period");
+        productDescriptionMap.put("FAPAR", "Global daily Fraction of Absorbed Photosynthetically Active Radiation");
+    }
+
 }

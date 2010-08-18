@@ -35,19 +35,20 @@
     </properties>
 
     <modules>
-        <module>beam-worldfire-reader</module>
+        <module>beam-envi-reader</module>
+        <module>beam-arcbingrid-reader</module>
+        <module>beam-igbp-glcc-reader</module>
+        <module>beam-globaerosol-reader</module>
+        <module>beam-globcarbon-reader</module>
         <module>beam-globcover-reader</module>
         <module>beam-globcolour-reader</module>
-        <module>beam-globaerosol-reader</module>
         <module>beam-medspiration-reader</module>
-        <module>beam-arcbingrid-reader</module>
+        <module>beam-worldfire-reader</module>
         <module>glob-ui</module>
         <module>glob-help</module>
         <module>glob-export</module>
         <module>glob-core</module>
         <module>glob-bootstrap</module>
-        <module>beam-igbp-glcc-reader</module>
-        <module>beam-globcarbon-reader</module>
     </modules>
 
     <dependencyManagement>

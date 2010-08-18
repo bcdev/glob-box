@@ -114,5 +114,4 @@ public class GlobCarbonProductReaderPlugInTest {
         assertEquals(false, plugIn.isFileNameOk("FAPAR_IGH_01KM_200507_VALUE.HDR"));
     }
 
-
 }
