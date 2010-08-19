@@ -40,7 +40,7 @@ public class EnviProductReaderPluginTest extends TestCase {
         final String line = EnviConstants.FIRST_LINE + "dklfj\n234j\nsdf\tsdf\tsdaf\n";
         final ByteArrayInputStream bais = new ByteArrayInputStream(line.getBytes());
         final ImageInputStream stReader = new MemoryCacheImageInputStream(bais);
-        assertEquals(DecodeQualification.INTENDED, readerPlugIn.getDecodeQualification(stReader));
+        assertEquals(DecodeQualification.SUITABLE, readerPlugIn.getDecodeQualification(stReader));
     }
 
     public void testDecodeQualfication_Stream_fail_invalid() {
@@ -54,7 +54,7 @@ public class EnviProductReaderPluginTest extends TestCase {
         final String line = EnviConstants.FIRST_LINE + "dklfj\n234j\nsdf\tsdf\tsdaf\n";
         writeToTestFile(line);
 
-        assertEquals(DecodeQualification.INTENDED, readerPlugIn.getDecodeQualification(headerFile));
+        assertEquals(DecodeQualification.SUITABLE, readerPlugIn.getDecodeQualification(headerFile));
     }
 
     public void testDecodeQualification_File_failure() throws IOException {
@@ -67,7 +67,7 @@ public class EnviProductReaderPluginTest extends TestCase {
         final String line = EnviConstants.FIRST_LINE + "dklfj\n234j\nsdf\tsdf\tsdaf\n";
         writeToTestFile(line);
 
-        assertEquals(DecodeQualification.INTENDED, readerPlugIn.getDecodeQualification(headerFile.getName()));
+        assertEquals(DecodeQualification.SUITABLE, readerPlugIn.getDecodeQualification(headerFile.getName()));
     }
 
     public void testDecodeQualification_String_failure() throws IOException {
@@ -80,7 +80,7 @@ public class EnviProductReaderPluginTest extends TestCase {
         final String line = EnviConstants.FIRST_LINE + "dklfj\n234j\nsdf\tsdf\tsdaf\n";
         writeToZipTestFile(line, true);
 
-        assertEquals(DecodeQualification.INTENDED, readerPlugIn.getDecodeQualification(headerFile));
+        assertEquals(DecodeQualification.SUITABLE, readerPlugIn.getDecodeQualification(headerFile));
     }
 
     public void testDecodeQualification_ZipFile_failure() throws IOException {
