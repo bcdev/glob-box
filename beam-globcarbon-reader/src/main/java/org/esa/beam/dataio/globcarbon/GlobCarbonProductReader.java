@@ -31,12 +31,16 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.ZipFile;
 
 /**
  * @author Thomas Storm
@@ -125,12 +129,24 @@ public class GlobCarbonProductReader extends AbstractProductReader {
     }
 
     private Product createProduct(String headerFile) throws IOException {
-        Product product;
-        Header header = new Header(new BufferedReader(new FileReader(headerFile)));
+        Reader reader;
+        if (headerFile.contains("!")) {
+            // headerFile is in zip
+            String[] splittedHeaderFile = headerFile.split("!");
+            ZipFile zipFile = new ZipFile(new File(splittedHeaderFile[0]));
+            InputStream inputStream = zipFile.getInputStream(zipFile.getEntry(splittedHeaderFile[1]));
+            reader = new InputStreamReader(inputStream);
+        } else {
+            reader = new FileReader(headerFile);
+        }
+        Header header = new Header(new BufferedReader(reader));
         String fileName = FileUtils.getFilenameWithoutExtension(FileUtils.getFileNameFromPath(headerFile));
+        if (fileName.contains("!")) {
+            fileName = fileName.substring(fileName.indexOf("!") + 1, fileName.lastIndexOf("_"));
+        }
         String carbonType = fileName.split("_")[0];
         String fileType = GlobCarbonProductReaderPlugIn.FORMAT_NAME + "_" + carbonType;
-        product = new Product(fileName, fileType, header.getNumSamples(), header.getNumLines());
+        Product product = new Product(fileName, fileType, header.getNumSamples(), header.getNumLines());
         product.setProductReader(this);
         product.setFileLocation(new File(headerFile));
         product.setDescription(productDescriptionMap.get(carbonType));

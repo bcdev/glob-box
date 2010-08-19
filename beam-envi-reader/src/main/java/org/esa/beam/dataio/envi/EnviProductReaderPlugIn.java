@@ -25,8 +25,7 @@ public class EnviProductReaderPlugIn implements ProductReaderPlugIn {
         } else if (input instanceof File) {
             return checkDecodeQualificationOnFile((File) input);
         } else if (input instanceof String) {
-            final String fileName = (String) input;
-            return checkDecodeQualificationOnFile(new File(fileName));
+            return checkDecodeQualificationOnFile(new File(input.toString()));
         }
 
         return DecodeQualification.UNABLE;

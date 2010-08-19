@@ -3,7 +3,6 @@ package org.esa.beam.dataio.envi;
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.dataio.envi.Header.BeamProperties;
 import org.esa.beam.framework.dataio.AbstractProductReader;
-import org.esa.beam.framework.dataio.DecodeQualification;
 import org.esa.beam.framework.dataio.ProductReaderPlugIn;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.CrsGeoCoding;
@@ -17,6 +16,7 @@ import org.esa.beam.framework.dataop.maptransf.MapProjection;
 import org.esa.beam.framework.dataop.maptransf.MapTransform;
 import org.esa.beam.util.StringUtils;
 import org.esa.beam.util.TreeNode;
+import org.esa.beam.util.io.FileUtils;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.operation.TransformException;
@@ -71,12 +71,14 @@ public class EnviProductReader extends AbstractProductReader {
         final BufferedReader headerReader = getHeaderReader(headerFile);
 
         final String headerFileName = headerFile.getName();
-        final String productName = headerFileName.substring(0, headerFileName.indexOf('.'));
+        String[] splittedHeaderFileName = headerFileName.split("!");
+        String productName = splittedHeaderFileName.length > 1 ? splittedHeaderFileName[1] : splittedHeaderFileName[0];
+        productName = productName.substring(0, headerFileName.indexOf('.'));
 
         try {
-            if (getReaderPlugIn().getDecodeQualification(inputObject) == DecodeQualification.UNABLE) {
-                throw new IOException("Unsupported product format.");
-            }
+//            if (getReaderPlugIn().getDecodeQualification(inputObject) == DecodeQualification.UNABLE) {
+//                throw new IOException("Unsupported product format.");
+//            }
 
             final Header header;
             synchronized (headerReader) {
@@ -232,13 +234,26 @@ public class EnviProductReader extends AbstractProductReader {
     }
 
     private static ImageInputStream createImageStreamFromZip(File file) throws IOException {
-        final ZipFile productZip = new ZipFile(file, ZipFile.OPEN_READ);
+        String filePath = file.getAbsolutePath();
+        ZipFile productZip;
+        String fileName;
+        if (filePath.contains("!")) {
+            // headerFile is in zip
+            String[] splittedHeaderFile = filePath.split("!");
+            fileName = splittedHeaderFile[1];
+            productZip = new ZipFile(new File(splittedHeaderFile[0]));
+        } else {
+            productZip = new ZipFile(file, ZipFile.OPEN_READ);
+            fileName = file.getName();
+        }
+
+
         try {
             final Enumeration entries = productZip.entries();
             while (entries.hasMoreElements()) {
                 final ZipEntry zipEntry = (ZipEntry) entries.nextElement();
                 final String name = zipEntry.getName();
-                if (name.endsWith(".img")) {
+                if (name.equalsIgnoreCase(FileUtils.getFilenameWithoutExtension(fileName) + ".img")) {
                     final InputStream zipInputStream = productZip.getInputStream(zipEntry);
                     return new FileCacheImageInputStream(zipInputStream, null);
                 }
@@ -315,19 +330,23 @@ public class EnviProductReader extends AbstractProductReader {
      * Creates a buffered reader that is opened on the *.hdr file to read the header information.
      * This method works for both compressed and uncompressed ENVI files.
      *
-     * @param headerfile the input file
+     * @param headerFile the input file
      *
      * @return a reader on the header file
      *
      * @throws IOException on disk IO failures
      */
-    private BufferedReader getHeaderReader(File headerfile) throws IOException {
-        if (EnviProductReaderPlugIn.isCompressedFile(headerfile)) {
-            productZip = new ZipFile(headerfile, ZipFile.OPEN_READ);
-            final InputStream inStream = EnviProductReaderPlugIn.getHeaderStreamFromZip(productZip);
-            return new BufferedReader(new InputStreamReader(inStream));
+    private BufferedReader getHeaderReader(File headerFile) throws IOException {
+        if (EnviProductReaderPlugIn.isCompressedFile(headerFile)) {
+            String[] splittedHeaderFile = headerFile.getAbsolutePath().split("!");
+            ZipFile zipFile = new ZipFile(new File(splittedHeaderFile[0]));
+            InputStream inputStream = zipFile.getInputStream(zipFile.getEntry(splittedHeaderFile[1]));
+            return new BufferedReader(new InputStreamReader(inputStream));
+//            productZip = new ZipFile(headerFile, ZipFile.OPEN_READ);
+//            final InputStream inStream = EnviProductReaderPlugIn.getHeaderStreamFromZip(productZip);
+//            return new BufferedReader(new InputStreamReader(inStream));
         } else {
-            return new BufferedReader(new FileReader(headerfile));
+            return new BufferedReader(new FileReader(headerFile));
         }
     }
 
