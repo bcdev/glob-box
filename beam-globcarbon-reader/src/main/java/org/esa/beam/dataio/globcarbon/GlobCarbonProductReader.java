@@ -22,6 +22,7 @@ import org.esa.beam.dataio.envi.Header;
 import org.esa.beam.framework.dataio.AbstractProductReader;
 import org.esa.beam.framework.dataio.ProductReader;
 import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.FlagCoding;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.util.Debug;
@@ -78,11 +79,15 @@ public class GlobCarbonProductReader extends AbstractProductReader {
             if (product.getGeoCoding() == null) {
                 product.setGeoCoding(temp.getGeoCoding());
             }
-            for (Band delegateBand : temp.getBands()) {
-                String fileName = FileUtils.getFilenameWithoutExtension(FileUtils.getFileNameFromPath(headerFile));
-                String bandName = fileName.substring(fileName.lastIndexOf('_') + 1);
-                Band band = product.addBand(bandName, delegateBand.getDataType());
-                band.setSourceImage(delegateBand.getSourceImage());
+            Band delegateBand = temp.getBandAt(0); // GlobCarbon products consist of envi products containing one band
+            String fileName = FileUtils.getFilenameWithoutExtension(FileUtils.getFileNameFromPath(headerFile));
+            String bandName = fileName.substring(fileName.lastIndexOf('_') + 1);
+            Band band = product.addBand(bandName, delegateBand.getDataType());
+            band.setSourceImage(delegateBand.getSourceImage());
+            if (band.getName().toLowerCase().contains("flag")) {
+                FlagCoding flagCoding = new FlagCoding(band.getName());
+                band.setSampleCoding(flagCoding);
+                product.getFlagCodingGroup().add(flagCoding);
             }
         }
 
@@ -97,6 +102,14 @@ public class GlobCarbonProductReader extends AbstractProductReader {
             }
         }
         return product;
+    }
+
+    @Override
+    protected void readBandRasterDataImpl(int sourceOffsetX, int sourceOffsetY, int sourceWidth, int sourceHeight,
+                                          int sourceStepX, int sourceStepY, Band destBand, int destOffsetX,
+                                          int destOffsetY, int destWidth, int destHeight, ProductData destBuffer,
+                                          ProgressMonitor pm) throws IOException {
+        throw new IllegalStateException("Not expected to come here");
     }
 
     static ProductData.UTC[] parseTimeInformation(String fileName) throws ParseException {
@@ -151,14 +164,6 @@ public class GlobCarbonProductReader extends AbstractProductReader {
         product.setFileLocation(new File(headerFile));
         product.setDescription(productDescriptionMap.get(carbonType));
         return product;
-    }
-
-    @Override
-    protected void readBandRasterDataImpl(int sourceOffsetX, int sourceOffsetY, int sourceWidth, int sourceHeight,
-                                          int sourceStepX, int sourceStepY, Band destBand, int destOffsetX,
-                                          int destOffsetY, int destWidth, int destHeight, ProductData destBuffer,
-                                          ProgressMonitor pm) throws IOException {
-        throw new IllegalStateException("Not expected to come here");
     }
 
     private List<String> getHeaderFiles() throws IOException {

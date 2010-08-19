@@ -6,7 +6,7 @@ class DataTypeUtils {
 
     static int toBeam(int enviTypeId) {
         if (EnviConstants.TYPE_ID_BYTE == enviTypeId) {
-            return ProductData.TYPE_INT8;
+            return ProductData.TYPE_UINT8;
         } else if (EnviConstants.TYPE_ID_INT16 == enviTypeId) {
             return ProductData.TYPE_INT16;
         } else if (EnviConstants.TYPE_ID_INT32 == enviTypeId) {
