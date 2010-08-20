@@ -18,7 +18,6 @@ package org.esa.beam.dataio.globcarbon;
 
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.dataio.envi.EnviProductReaderPlugIn;
-import org.esa.beam.dataio.envi.Header;
 import org.esa.beam.framework.dataio.AbstractProductReader;
 import org.esa.beam.framework.dataio.ProductReader;
 import org.esa.beam.framework.datamodel.Band;
@@ -26,22 +25,17 @@ import org.esa.beam.framework.datamodel.FlagCoding;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.util.Debug;
+import org.esa.beam.util.StringUtils;
 import org.esa.beam.util.io.FileUtils;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.zip.ZipFile;
+import java.util.Properties;
 
 /**
  * @author Thomas Storm
@@ -49,7 +43,8 @@ import java.util.zip.ZipFile;
 public class GlobCarbonProductReader extends AbstractProductReader {
 
     private static GlobCarbonProductReaderPlugIn readerPlugIn;
-    private Map<String, String> productDescriptionMap;
+    private List<Product> delegateProductList;
+    private static final String PRODUCT_PROPERTIES_RESOURCE_PATTERN = "%s.%s.properties";
 
     /**
      * Constructs a new abstract product reader.
@@ -60,7 +55,6 @@ public class GlobCarbonProductReader extends AbstractProductReader {
     protected GlobCarbonProductReader(GlobCarbonProductReaderPlugIn readerPlugIn) {
         super(GlobCarbonProductReader.readerPlugIn);
         GlobCarbonProductReader.readerPlugIn = readerPlugIn;
-        initDescriptionMap();
     }
 
     @Override
@@ -70,38 +64,9 @@ public class GlobCarbonProductReader extends AbstractProductReader {
             // should never come here
             throw new IllegalStateException("No header files specified.");
         }
-        String firstHeaderFile = headerFiles.get(0);
-        Product product = createProduct(firstHeaderFile);
+        delegateProductList = initDelegateProductList(headerFiles);
 
-        for (String headerFile : headerFiles) {
-            ProductReader delegate = new EnviProductReaderPlugIn().createReaderInstance();
-            Product temp = delegate.readProductNodes(headerFile, null);
-            if (product.getGeoCoding() == null) {
-                product.setGeoCoding(temp.getGeoCoding());
-            }
-            Band delegateBand = temp.getBandAt(0); // GlobCarbon products consist of envi products containing one band
-            String fileName = FileUtils.getFilenameWithoutExtension(FileUtils.getFileNameFromPath(headerFile));
-            String bandName = fileName.substring(fileName.lastIndexOf('_') + 1);
-            Band band = product.addBand(bandName, delegateBand.getDataType());
-            band.setSourceImage(delegateBand.getSourceImage());
-            if (band.getName().toLowerCase().contains("flag")) {
-                FlagCoding flagCoding = new FlagCoding(band.getName());
-                band.setSampleCoding(flagCoding);
-                product.getFlagCodingGroup().add(flagCoding);
-            }
-        }
-
-        if (product.getStartTime() == null || product.getEndTime() == null) {
-            String fileName = FileUtils.getFilenameWithoutExtension(FileUtils.getFileNameFromPath(firstHeaderFile));
-            try {
-                ProductData.UTC[] timeInfos = parseTimeInformation(fileName);
-                product.setStartTime(timeInfos[0]);
-                product.setEndTime(timeInfos[1]);
-            } catch (ParseException e) {
-                Debug.trace("Could not parse date from filename: " + fileName + "\nCause: " + e.getMessage());
-            }
-        }
-        return product;
+        return createProduct(delegateProductList.get(0));
     }
 
     @Override
@@ -110,6 +75,15 @@ public class GlobCarbonProductReader extends AbstractProductReader {
                                           int destOffsetY, int destWidth, int destHeight, ProductData destBuffer,
                                           ProgressMonitor pm) throws IOException {
         throw new IllegalStateException("Not expected to come here");
+    }
+
+    @Override
+    public void close() throws IOException {
+        super.close();
+        for (Product delegateProduct : delegateProductList) {
+            delegateProduct.dispose();
+        }
+
     }
 
     static ProductData.UTC[] parseTimeInformation(String fileName) throws ParseException {
@@ -141,29 +115,108 @@ public class GlobCarbonProductReader extends AbstractProductReader {
         return new ProductData.UTC[]{startTime, ProductData.UTC.create(endTimeCal.getTime(), 0)};
     }
 
-    private Product createProduct(String headerFile) throws IOException {
-        Reader reader;
-        if (headerFile.contains("!")) {
-            // headerFile is in zip
-            String[] splittedHeaderFile = headerFile.split("!");
-            ZipFile zipFile = new ZipFile(new File(splittedHeaderFile[0]));
-            InputStream inputStream = zipFile.getInputStream(zipFile.getEntry(splittedHeaderFile[1]));
-            reader = new InputStreamReader(inputStream);
-        } else {
-            reader = new FileReader(headerFile);
+    private List<Product> initDelegateProductList(List<String> headerFiles) throws IOException {
+        List<Product> list = new ArrayList<Product>(headerFiles.size());
+        for (String headerFile : headerFiles) {
+            ProductReader delegateReader = new EnviProductReaderPlugIn().createReaderInstance();
+            list.add(delegateReader.readProductNodes(headerFile, null));
         }
-        Header header = new Header(new BufferedReader(reader));
-        String fileName = FileUtils.getFilenameWithoutExtension(FileUtils.getFileNameFromPath(headerFile));
+        return list;
+    }
+
+    private Product createProduct(Product templateProduct) {
+        final int rasterWidth = templateProduct.getSceneRasterWidth();
+        final int rasterHeight = templateProduct.getSceneRasterHeight();
+        final String filePath = templateProduct.getFileLocation().getPath();
+        String fileName = FileUtils.getFilenameWithoutExtension(FileUtils.getFileNameFromPath(filePath));
         if (fileName.contains("!")) {
-            fileName = fileName.substring(fileName.indexOf("!") + 1, fileName.lastIndexOf("_"));
+            fileName = fileName.substring(fileName.indexOf('!') + 1, fileName.lastIndexOf('_'));
         }
-        String carbonType = fileName.split("_")[0];
-        String fileType = GlobCarbonProductReaderPlugIn.FORMAT_NAME + "_" + carbonType;
-        Product product = new Product(fileName, fileType, header.getNumSamples(), header.getNumLines());
+        final String[] fileNameTokens = fileName.split("_");
+        String productType = GlobCarbonProductReaderPlugIn.FORMAT_NAME + "_" + fileNameTokens[0];
+        Product product = new Product(fileName, productType, rasterWidth, rasterHeight);
+        templateProduct.transferGeoCodingTo(product, null);
         product.setProductReader(this);
-        product.setFileLocation(new File(headerFile));
-        product.setDescription(productDescriptionMap.get(carbonType));
+        product.setFileLocation(templateProduct.getFileLocation().getParentFile());
+        if (product.getStartTime() == null || product.getEndTime() == null) {
+            try {
+                ProductData.UTC[] timeInfos = parseTimeInformation(fileName);
+                product.setStartTime(timeInfos[0]);
+                product.setEndTime(timeInfos[1]);
+            } catch (ParseException e) {
+                Debug.trace("Could not parse date from filename: " + fileName + "\nCause: " + e.getMessage());
+            }
+        }
+
+        String resolutionString = fileNameTokens[2];
+        final boolean isHighRes = resolutionString.contains("D");
+        Properties properties = loadProductProperties(product.getProductType(), isHighRes);
+        product.setDescription(properties.getProperty("productDescription"));
+
+        addBands(product, properties, delegateProductList);
+
         return product;
+
+    }
+
+    private void addBands(Product product, Properties properties, List<Product> delegateProductList) {
+        for (Product delegateProduct : delegateProductList) {
+            // GlobCarbon products consist of envi products containing one band
+            Band delegateBand = delegateProduct.getBandAt(0);
+            final String filePath = delegateProduct.getFileLocation().getPath();
+            String fileName = FileUtils.getFilenameWithoutExtension(FileUtils.getFileNameFromPath(filePath));
+            String bandName = fileName.substring(fileName.lastIndexOf('_') + 1);
+            Band band = product.addBand(bandName, delegateBand.getDataType());
+            band.setSourceImage(delegateBand.getSourceImage());
+
+            final String propertyKey = bandName.toLowerCase();
+            final String noData = properties.getProperty(propertyKey + ".noData");
+            if(noData != null) {
+                band.setNoDataValue(Integer.parseInt(noData));
+                band.setNoDataValueUsed(true);
+            }
+            final String scaling = properties.getProperty(propertyKey + ".scaling");
+            if(scaling != null) {
+                band.setScalingFactor(Double.parseDouble(scaling));
+            }
+            final String offset = properties.getProperty(propertyKey + ".offset");
+            if(offset != null) {
+                band.setScalingOffset(Double.parseDouble(offset));
+            }
+            band.setUnit(properties.getProperty(propertyKey + ".unit"));
+
+            if (band.getName().toLowerCase().contains("flag")) {
+                FlagCoding flagCoding = new FlagCoding(band.getName());
+                final String[] flagNames = StringUtils.csvToArray(properties.getProperty(propertyKey + ".flagNames"));
+                for (String flagName : flagNames) {
+                    final String maskString = properties.getProperty(propertyKey + "." + flagName + ".mask");
+                    final int flagMask = Integer.decode(maskString);
+                    flagCoding.addFlag(flagName, flagMask, "");
+                }
+                band.setSampleCoding(flagCoding);
+                product.getFlagCodingGroup().add(flagCoding);
+            }
+        }
+    }
+
+    private Properties loadProductProperties(String productType, boolean highRes) {
+        final Properties properties = new Properties();
+        final String resourceName = String.format(PRODUCT_PROPERTIES_RESOURCE_PATTERN,
+                                                  productType.toLowerCase(),
+                                                  (highRes ? "highRes" : "lowRes"));
+        final InputStream inStream = getClass().getResourceAsStream(resourceName);
+        try {
+            properties.load(inStream);
+        } catch (IOException e) {
+            Debug.trace("Could not load properties of product.");
+            Debug.trace(e);
+        } finally {
+            try {
+                inStream.close();
+            } catch (IOException ignored) {
+            }
+        }
+        return properties;
     }
 
     private List<String> getHeaderFiles() throws IOException {
@@ -177,13 +230,4 @@ public class GlobCarbonProductReader extends AbstractProductReader {
         }
         return headerFiles;
     }
-
-    private void initDescriptionMap() {
-        productDescriptionMap = new HashMap<String, String>();
-        productDescriptionMap.put("BAE", "Global monthly Burnt Area Estimates");
-        productDescriptionMap.put("LAI", "Global monthly Leaf Area Index");
-        productDescriptionMap.put("VGCP", "Global yearly Vegetation Growth Cycle Period");
-        productDescriptionMap.put("FAPAR", "Global daily Fraction of Absorbed Photosynthetically Active Radiation");
-    }
-
 }
