@@ -76,10 +76,6 @@ public class EnviProductReader extends AbstractProductReader {
         productName = productName.substring(0, headerFileName.indexOf('.'));
 
         try {
-//            if (getReaderPlugIn().getDecodeQualification(inputObject) == DecodeQualification.UNABLE) {
-//                throw new IOException("Unsupported product format.");
-//            }
-
             final Header header;
             synchronized (headerReader) {
                 header = new Header(headerReader);
