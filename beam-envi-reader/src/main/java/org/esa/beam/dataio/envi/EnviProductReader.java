@@ -7,18 +7,15 @@ import org.esa.beam.framework.dataio.ProductReaderPlugIn;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.CrsGeoCoding;
 import org.esa.beam.framework.datamodel.GeoCoding;
-import org.esa.beam.framework.datamodel.MapGeoCoding;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.framework.dataop.maptransf.Datum;
-import org.esa.beam.framework.dataop.maptransf.MapInfo;
-import org.esa.beam.framework.dataop.maptransf.MapProjection;
-import org.esa.beam.framework.dataop.maptransf.MapTransform;
+import org.esa.beam.framework.datamodel.ProductNode;
+import org.esa.beam.util.Debug;
 import org.esa.beam.util.StringUtils;
 import org.esa.beam.util.TreeNode;
-import org.esa.beam.util.io.FileUtils;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.referencing.FactoryException;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.TransformException;
 
 import javax.imageio.stream.FileCacheImageInputStream;
@@ -87,7 +84,7 @@ public class EnviProductReader extends AbstractProductReader {
             product.setFileLocation(headerFile);
             product.setDescription(header.getDescription());
 
-            initGeocoding(product, header);
+            initGeoCoding(product, header);
             initBands(product, header);
 
             applyBeamProperties(product, header.getBeamProperties());
@@ -123,11 +120,11 @@ public class EnviProductReader extends AbstractProductReader {
         final long bandOffset = bandStreamPositionMap.get(destBand.getName());
 
         final int elemSize = destBuffer.getElemSize();
-        int destPos = 0;
 
         pm.beginTask("Reading band '" + destBand.getName() + "'...", sourceMaxY - sourceMinY);
         // For each scan in the data source
         try {
+            int destPos = 0;
             for (int sourceY = sourceMinY; sourceY <= sourceMaxY; sourceY += sourceStepY) {
                 if (pm.isCanceled()) {
                     break;
@@ -238,18 +235,27 @@ public class EnviProductReader extends AbstractProductReader {
             innerHdrZipPath = file.getName();
         }
 
-
         try {
-            String innerImgZipPath = innerHdrZipPath.substring(0, innerHdrZipPath.length() -4) + ".img";
-            InputStream inputStream = productZip.getInputStream(productZip.getEntry(innerImgZipPath));
-            return new FileCacheImageInputStream(inputStream, null);
-        } catch (IOException e) {
+            String innerImgZipPath = innerHdrZipPath.substring(0, innerHdrZipPath.length() - 4) + ".img";
+            final Enumeration<? extends ZipEntry> enumeration = productZip.entries();
+            while (enumeration.hasMoreElements()) {
+                ZipEntry zipEntry = enumeration.nextElement();
+                if (zipEntry.getName().equalsIgnoreCase(innerImgZipPath)) {
+                    InputStream inputStream = productZip.getInputStream(productZip.getEntry(zipEntry.getName()));
+                    return new FileCacheImageInputStream(inputStream, null);
+                }
+            }
+        } catch (IOException ioe) {
             try {
+                // close stream only if exception occurred, otherwise band data is not readable
+                // it will be closed when the reader is closed
                 productZip.close();
             } catch (IOException ignored) {
             }
-            throw e;
+            throw ioe;
         }
+
+        throw new IOException("Not able to initialise band input stream.");
     }
 
     private static ImageInputStream createImageStreamFromFile(final File headerFile) throws IOException {
@@ -261,74 +267,88 @@ public class EnviProductReader extends AbstractProductReader {
         return new FileImageInputStream(imageFile);
     }
 
-    private static void initGeocoding(final Product product, final Header header) throws IOException {
+    private static void initGeoCoding(final Product product, final Header header) {
         final EnviMapInfo enviMapInfo = header.getMapInfo();
         if (enviMapInfo == null) {
             return;
         }
         final EnviProjectionInfo projectionInfo = header.getProjectionInfo();
+        CoordinateReferenceSystem crs = null;
         if (projectionInfo != null) {
-
-            final MapTransform transform = EnviMapTransformFactory.create(projectionInfo.getProjectionNumber(),
-                                                                          projectionInfo.getParameter());
-            final MapProjection projection = new MapProjection(transform.getDescriptor().getName(), transform);
-            final MapInfo mapInfo = new MapInfo(projection,
-                                                (float) enviMapInfo.getReferencePixelX(),
-                                                (float) enviMapInfo.getReferencePixelY(),
-                                                (float) enviMapInfo.getEasting(),
-                                                (float) enviMapInfo.getNorthing(),
-                                                (float) enviMapInfo.getPixelSizeX(),
-                                                (float) enviMapInfo.getPixelSizeY(),
-                                                Datum.WGS_84
-            );
-            mapInfo.setSceneWidth(product.getSceneRasterWidth());
-            mapInfo.setSceneHeight(product.getSceneRasterHeight());
-            MapGeoCoding mapGeoCoding = new MapGeoCoding(mapInfo);
-            product.setGeoCoding(mapGeoCoding);
-            return;
-        }
-
-        try {
-            GeoCoding geoCoding = null;
-            if (EnviConstants.PROJECTION_NAME_WGS84.equalsIgnoreCase(enviMapInfo.getProjectionName())) {
-                geoCoding = new CrsGeoCoding(DefaultGeographicCRS.WGS84,
-                                             product.getSceneRasterWidth(),
-                                             product.getSceneRasterHeight(),
-                                             enviMapInfo.getEasting(),
-                                             enviMapInfo.getNorthing(),
-                                             enviMapInfo.getPixelSizeX(),
-                                             enviMapInfo.getPixelSizeY(),
-                                             enviMapInfo.getReferencePixelX() - 1,
-                                             enviMapInfo.getReferencePixelY() - 1);
+            try {
+                crs = EnviCrsFactory.createCrs(projectionInfo.getProjectionNumber(), projectionInfo.getParameter());
+            } catch (IllegalArgumentException ignore) {
             }
-            product.setGeoCoding(geoCoding);
-        } catch (FactoryException ignore) {
-        } catch (TransformException ignore) {
+        }
+        if (EnviConstants.PROJECTION_NAME_WGS84.equalsIgnoreCase(enviMapInfo.getProjectionName())) {
+            crs = DefaultGeographicCRS.WGS84;
         }
 
+
+        if (crs != null) {
+            try {
+                GeoCoding geoCoding = new CrsGeoCoding(crs,
+                                                       product.getSceneRasterWidth(),
+                                                       product.getSceneRasterHeight(),
+                                                       enviMapInfo.getEasting(),
+                                                       enviMapInfo.getNorthing(),
+                                                       enviMapInfo.getPixelSizeX(),
+                                                       enviMapInfo.getPixelSizeY(),
+                                                       enviMapInfo.getReferencePixelX() - 1,
+                                                       enviMapInfo.getReferencePixelY() - 1);
+                product.setGeoCoding(geoCoding);
+            } catch (FactoryException fe) {
+                Debug.trace(fe);
+            } catch (TransformException te) {
+                Debug.trace(te);
+            }
+        }
 
     }
 
-    /**
+    /*
      * Creates a buffered reader that is opened on the *.hdr file to read the header information.
      * This method works for both compressed and uncompressed ENVI files.
      *
-     * @param headerFile the input file
+     * @param inputFile the input file
      *
      * @return a reader on the header file
      *
      * @throws IOException on disk IO failures
      */
-    private BufferedReader getHeaderReader(File headerFile) throws IOException {
-        if (EnviProductReaderPlugIn.isCompressedFile(headerFile)) {
-            String[] splittedHeaderFile = headerFile.getAbsolutePath().split("!");
-            ZipFile zipFile = new ZipFile(new File(splittedHeaderFile[0]));
-            final String innerZipPath = splittedHeaderFile[1].replace("\\", "/");
-            InputStream inputStream = zipFile.getInputStream(zipFile.getEntry(innerZipPath));
+    private BufferedReader getHeaderReader(File inputFile) throws IOException {
+        if (EnviProductReaderPlugIn.isCompressedFile(inputFile)) {
+            ZipFile zipFile;
+            ZipEntry zipEntry = null;
+
+            if (inputFile.getPath().toLowerCase().endsWith(".zip")) {
+                zipFile = new ZipFile(inputFile);
+                zipEntry = findFirstHeader(zipFile);
+            } else {
+                String[] splittedHeaderFile = inputFile.getAbsolutePath().split("!");
+                zipFile = new ZipFile(new File(splittedHeaderFile[0]));
+                final String innerZipPath = splittedHeaderFile[1].replace("\\", "/");
+                zipEntry = zipFile.getEntry(innerZipPath);
+            }
+            if (zipEntry == null) {
+                throw new IOException("No .hdr file found in zip file.");
+            }
+            InputStream inputStream = zipFile.getInputStream(zipEntry);
             return new BufferedReader(new InputStreamReader(inputStream));
         } else {
-            return new BufferedReader(new FileReader(headerFile));
+            return new BufferedReader(new FileReader(inputFile));
         }
+    }
+
+    private ZipEntry findFirstHeader(ZipFile zipFile) {
+        final Enumeration<? extends ZipEntry> entryEnum = zipFile.entries();
+        while (entryEnum.hasMoreElements()) {
+            ZipEntry entry = entryEnum.nextElement();
+            if(entry.getName().toLowerCase().endsWith(".hdr")) {
+                return entry;
+            }
+        }
+        return null;
     }
 
     private void initBands(Product product, Header header) {
@@ -345,7 +365,7 @@ public class EnviProductReader extends AbstractProductReader {
             final String originalBandName = bandNames[i];
             final String validBandName;
             final String description;
-            if (Product.isValidNodeName(originalBandName)) {
+            if (ProductNode.isValidNodeName(originalBandName)) {
                 validBandName = originalBandName;
                 description = "";
             } else {
