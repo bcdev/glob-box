@@ -128,23 +128,29 @@ public class GlobCarbonProductReader extends AbstractProductReader {
         final int rasterWidth = templateProduct.getSceneRasterWidth();
         final int rasterHeight = templateProduct.getSceneRasterHeight();
         final String filePath = templateProduct.getFileLocation().getPath();
-        String fileName = FileUtils.getFilenameWithoutExtension(FileUtils.getFileNameFromPath(filePath));
-        if (fileName.contains("!")) {
-            fileName = fileName.substring(fileName.indexOf('!') + 1, fileName.lastIndexOf('_'));
+        String productName = FileUtils.getFilenameWithoutExtension(FileUtils.getFileNameFromPath(filePath));
+        final File fileLocation;
+        if (productName.contains("!")) {
+            productName = productName.substring(productName.indexOf('!') + 1, productName.lastIndexOf('_'));
+            fileLocation = new File(filePath.substring(0, filePath.indexOf('!')));
+        } else {
+            productName = productName.substring(0, productName.lastIndexOf('_'));
+            fileLocation = templateProduct.getFileLocation().getParentFile();
         }
-        final String[] fileNameTokens = fileName.split("_");
+
+        final String[] fileNameTokens = productName.split("_");
         String productType = GlobCarbonProductReaderPlugIn.FORMAT_NAME + "_" + fileNameTokens[0];
-        Product product = new Product(fileName, productType, rasterWidth, rasterHeight);
+        Product product = new Product(productName, productType, rasterWidth, rasterHeight);
+        product.setFileLocation(fileLocation);
         templateProduct.transferGeoCodingTo(product, null);
         product.setProductReader(this);
-        product.setFileLocation(templateProduct.getFileLocation().getParentFile());
         if (product.getStartTime() == null || product.getEndTime() == null) {
             try {
-                ProductData.UTC[] timeInfos = parseTimeInformation(fileName);
+                ProductData.UTC[] timeInfos = parseTimeInformation(productName);
                 product.setStartTime(timeInfos[0]);
                 product.setEndTime(timeInfos[1]);
             } catch (ParseException e) {
-                Debug.trace("Could not parse date from filename: " + fileName + "\nCause: " + e.getMessage());
+                Debug.trace("Could not parse date from filename: " + productName + "\nCause: " + e.getMessage());
             }
         }
 
