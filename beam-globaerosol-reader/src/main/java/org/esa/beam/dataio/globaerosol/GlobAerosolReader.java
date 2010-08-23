@@ -85,16 +85,22 @@ public class GlobAerosolReader extends AbstractProductReader {
 
     @Override
     protected Product readProductNodesImpl() throws IOException {
-        ncfile = getInputNetcdfFile();
+        final File fileLocation = new File(getInput().toString());
+        ncfile = NetcdfFile.open(fileLocation.getPath());
         Attribute titleAttr = ncfile.findGlobalAttribute("title");
         if (titleAttr != null) {
             if (titleAttr.getStringValue().startsWith("Statistic")) {
+                ncfile.close();
                 delegateReader = new NetCdfReader(new NetCdfReaderPlugIn(), CF_PROFILE);
                 return delegateReader.readProductNodes(getInput(), getSubsetDef());
             }
         }
         accessorMap = new HashMap<Band, VariableAccessor1D>();
-        return createProduct();
+        Product product = createProduct();
+        product.setFileLocation(fileLocation);
+        product.setProductReader(this);
+        product.setModified(false);
+        return product;
     }
 
     @Override
@@ -306,22 +312,6 @@ public class GlobAerosolReader extends AbstractProductReader {
             band.setSampleCoding(indexCoding);
         }
         accessorMap.put(band, accessor);
-    }
-
-    private NetcdfFile getInputNetcdfFile() throws IOException {
-        final Object input = getInput();
-
-        if (!(input instanceof String || input instanceof File)) {
-            throw new IOException("Input object must either be a string or a file.");
-        }
-        final String path;
-        if (input instanceof String) {
-            path = (String) input;
-        } else {
-            path = ((File) input).getPath();
-        }
-
-        return NetcdfFile.open(path);
     }
 
     private RowInfo[] createRowInfos() throws IOException {
