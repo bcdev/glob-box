@@ -45,7 +45,7 @@ public class GlobCarbonProductReaderPlugIn implements ProductReaderPlugIn {
      * {@link ProductReaderPlugIn}.
      */
     public static final String[] FILE_EXTENSIONS = new String[]{".hdr", ".ascii", ".zip"};
-    private static final String[] ALLOWED_PREFIXES = new String[]{"BAE_PLC_", "LAI_PLC_", "VGCP_PLC_", "FAPAR_PLC_"};
+    private static final String[] TYPE_IDENTIFIER = new String[]{"BAE", "LAI", "VGCP", "FAPAR"};
 
     @Override
     public ProductReader createReaderInstance() {
@@ -129,6 +129,10 @@ public class GlobCarbonProductReaderPlugIn implements ProductReaderPlugIn {
     boolean isFileNameOk(Object input) {
         String fileName = FileUtils.getFileNameFromPath(input.toString());
         boolean allowedPostFix = false;
+        if(fileName.toUpperCase().contains("IGH")) {
+            return false;
+        }
+
         for (String postFix : FILE_EXTENSIONS) {
             allowedPostFix |= fileName.toLowerCase().endsWith(postFix);
         }
@@ -136,13 +140,16 @@ public class GlobCarbonProductReaderPlugIn implements ProductReaderPlugIn {
             return false;
         }
 
-        boolean allowedPrefix = false;
-        for (String allowed : ALLOWED_PREFIXES) {
-            allowedPrefix |= fileName.startsWith(allowed);
+        boolean isOk = false;
+        for (String allowed : TYPE_IDENTIFIER) {
+            isOk |= fileName.toUpperCase().contains(allowed);
         }
-        allowedPrefix |= fileName.startsWith("BAE") && fileName.endsWith("_ASCII.ascii");
+        
+        if(!isOk) {
+            return false;
+        }
 
-        return allowedPrefix;
+        return true;
     }
 
     String[] getProductFiles(String fileName) throws IOException {

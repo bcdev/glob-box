@@ -65,7 +65,7 @@ public class EnviProductReaderPlugIn implements ProductReaderPlugIn {
 
 
     static boolean isCompressedFile(File file) {
-        return file.getName().lastIndexOf('.' + EnviConstants.ZIP) > -1;
+        return file.getPath().lastIndexOf("." + EnviConstants.ZIP) > -1;
     }
 
     static InputStream getHeaderStreamFromZip(ZipFile productZip) throws IOException {

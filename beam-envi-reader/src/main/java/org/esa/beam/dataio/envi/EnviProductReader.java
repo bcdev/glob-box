@@ -73,7 +73,7 @@ public class EnviProductReader extends AbstractProductReader {
         final String headerFileName = headerFile.getName();
         String[] splittedHeaderFileName = headerFileName.split("!");
         String productName = splittedHeaderFileName.length > 1 ? splittedHeaderFileName[1] : splittedHeaderFileName[0];
-        productName = productName.substring(0, headerFileName.indexOf('.'));
+        productName = productName.substring(0, productName.indexOf('.'));
 
         try {
             final Header header;
@@ -92,8 +92,6 @@ public class EnviProductReader extends AbstractProductReader {
 
             applyBeamProperties(product, header.getBeamProperties());
 
-            initMetadata(product, headerFile);
-
             // imageInputStream must be initialized last
             initializeInputStreamForBandData(headerFile, header);
 
@@ -105,9 +103,6 @@ public class EnviProductReader extends AbstractProductReader {
         }
     }
 
-    protected void initMetadata(final Product product, final File inputFile) {
-
-    }
 
     @Override
     protected void readBandRasterDataImpl(final int sourceOffsetX, final int sourceOffsetY,
@@ -232,37 +227,29 @@ public class EnviProductReader extends AbstractProductReader {
     private static ImageInputStream createImageStreamFromZip(File file) throws IOException {
         String filePath = file.getAbsolutePath();
         ZipFile productZip;
-        String fileName;
+        String innerHdrZipPath;
         if (filePath.contains("!")) {
             // headerFile is in zip
             String[] splittedHeaderFile = filePath.split("!");
-            fileName = splittedHeaderFile[1];
+            innerHdrZipPath = splittedHeaderFile[1].replace("\\", "/");
             productZip = new ZipFile(new File(splittedHeaderFile[0]));
         } else {
             productZip = new ZipFile(file, ZipFile.OPEN_READ);
-            fileName = file.getName();
+            innerHdrZipPath = file.getName();
         }
 
 
         try {
-            final Enumeration entries = productZip.entries();
-            while (entries.hasMoreElements()) {
-                final ZipEntry zipEntry = (ZipEntry) entries.nextElement();
-                final String name = zipEntry.getName();
-                if (name.equalsIgnoreCase(FileUtils.getFilenameWithoutExtension(fileName) + ".img")) {
-                    final InputStream zipInputStream = productZip.getInputStream(zipEntry);
-                    return new FileCacheImageInputStream(zipInputStream, null);
-                }
-            }
+            String innerImgZipPath = innerHdrZipPath.substring(0, innerHdrZipPath.length() -4) + ".img";
+            InputStream inputStream = productZip.getInputStream(productZip.getEntry(innerImgZipPath));
+            return new FileCacheImageInputStream(inputStream, null);
         } catch (IOException e) {
             try {
                 productZip.close();
-            } catch (IOException e1) {
-                //ignore
+            } catch (IOException ignored) {
             }
             throw e;
         }
-        return null;
     }
 
     private static ImageInputStream createImageStreamFromFile(final File headerFile) throws IOException {
@@ -336,11 +323,9 @@ public class EnviProductReader extends AbstractProductReader {
         if (EnviProductReaderPlugIn.isCompressedFile(headerFile)) {
             String[] splittedHeaderFile = headerFile.getAbsolutePath().split("!");
             ZipFile zipFile = new ZipFile(new File(splittedHeaderFile[0]));
-            InputStream inputStream = zipFile.getInputStream(zipFile.getEntry(splittedHeaderFile[1]));
+            final String innerZipPath = splittedHeaderFile[1].replace("\\", "/");
+            InputStream inputStream = zipFile.getInputStream(zipFile.getEntry(innerZipPath));
             return new BufferedReader(new InputStreamReader(inputStream));
-//            productZip = new ZipFile(headerFile, ZipFile.OPEN_READ);
-//            final InputStream inStream = EnviProductReaderPlugIn.getHeaderStreamFromZip(productZip);
-//            return new BufferedReader(new InputStreamReader(inStream));
         } else {
             return new BufferedReader(new FileReader(headerFile));
         }

@@ -42,9 +42,10 @@ import java.util.Properties;
  */
 public class GlobCarbonProductReader extends AbstractProductReader {
 
-    private static GlobCarbonProductReaderPlugIn readerPlugIn;
-    private List<Product> delegateProductList;
     private static final String PRODUCT_PROPERTIES_RESOURCE_PATTERN = "%s.%s.properties";
+    private static final String HIGH_RES_IDENTIFIER = "01km";
+    private GlobCarbonProductReaderPlugIn readerPlugIn;
+    private List<Product> delegateProductList;
 
     /**
      * Constructs a new abstract product reader.
@@ -53,8 +54,8 @@ public class GlobCarbonProductReader extends AbstractProductReader {
      *                     implementations
      */
     protected GlobCarbonProductReader(GlobCarbonProductReaderPlugIn readerPlugIn) {
-        super(GlobCarbonProductReader.readerPlugIn);
-        GlobCarbonProductReader.readerPlugIn = readerPlugIn;
+        super(readerPlugIn);
+        this.readerPlugIn = readerPlugIn;
     }
 
     @Override
@@ -155,7 +156,7 @@ public class GlobCarbonProductReader extends AbstractProductReader {
         }
 
         String resolutionString = fileNameTokens[2];
-        final boolean isHighRes = resolutionString.contains("D");
+        final boolean isHighRes = HIGH_RES_IDENTIFIER.equalsIgnoreCase(resolutionString);
         Properties properties = loadProductProperties(product.getProductType(), isHighRes);
         product.setDescription(properties.getProperty("productDescription"));
 
@@ -180,6 +181,10 @@ public class GlobCarbonProductReader extends AbstractProductReader {
             if(noData != null) {
                 band.setNoDataValue(Integer.parseInt(noData));
                 band.setNoDataValueUsed(true);
+            }
+            final String validExpression = properties.getProperty(propertyKey + ".validExpression");
+            if(validExpression != null) {
+                band.setValidPixelExpression(validExpression);
             }
             final String scaling = properties.getProperty(propertyKey + ".scaling");
             if(scaling != null) {
@@ -218,7 +223,9 @@ public class GlobCarbonProductReader extends AbstractProductReader {
             Debug.trace(e);
         } finally {
             try {
-                inStream.close();
+                if (inStream != null) {
+                    inStream.close();
+                }
             } catch (IOException ignored) {
             }
         }
