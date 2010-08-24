@@ -4,6 +4,7 @@ import org.esa.beam.framework.dataio.DecodeQualification;
 import org.esa.beam.framework.dataio.ProductReader;
 import org.esa.beam.framework.dataio.ProductReaderPlugIn;
 import org.esa.beam.util.io.BeamFileFilter;
+import org.esa.beam.util.io.FileUtils;
 
 import javax.imageio.stream.FileImageInputStream;
 import javax.imageio.stream.ImageInputStream;
@@ -18,13 +19,17 @@ import java.util.zip.ZipFile;
 
 public class EnviProductReaderPlugIn implements ProductReaderPlugIn {
 
+    private static final String HDR_EXTENSION = ".hdr";
+    private static final String ZIP_EXTENSION = ".zip";
+
     @Override
     public DecodeQualification getDecodeQualification(Object input) {
         if (input instanceof ImageInputStream) {
             return checkDecodeQualificationOnStream((ImageInputStream) input);
-        } else {
+        } else if(input != null){
             return checkDecodeQualificationOnFile(new File(input.toString()));
         }
+        return DecodeQualification.UNABLE;
     }
 
     @Override
@@ -39,7 +44,7 @@ public class EnviProductReaderPlugIn implements ProductReaderPlugIn {
 
     @Override
     public String[] getDefaultFileExtensions() {
-        return new String[]{".hdr", ".zip"};
+        return new String[]{HDR_EXTENSION, ZIP_EXTENSION};
     }
 
     @Override
@@ -75,7 +80,7 @@ public class EnviProductReaderPlugIn implements ProductReaderPlugIn {
         while (entries.hasMoreElements()) {
             final ZipEntry zipEntry = (ZipEntry) entries.nextElement();
             final String name = zipEntry.getName();
-            if (name.indexOf(".hdr") > 0) {
+            if (name.indexOf(HDR_EXTENSION) > 0) {
                 return productZip.getInputStream(zipEntry);
             }
         }
@@ -100,10 +105,10 @@ public class EnviProductReaderPlugIn implements ProductReaderPlugIn {
     }
 
 
-    private static DecodeQualification checkDecodeQualificationOnFile(File headerFile) {
+    private DecodeQualification checkDecodeQualificationOnFile(File inputFile) {
         try {
-            if (isCompressedFile(headerFile)) {
-                final ZipFile productZip = new ZipFile(headerFile, ZipFile.OPEN_READ);
+            if (isCompressedFile(inputFile)) {
+                final ZipFile productZip = new ZipFile(inputFile, ZipFile.OPEN_READ);
 
                 if (productZip.size() != 2) {
                     productZip.close();
@@ -117,8 +122,8 @@ public class EnviProductReaderPlugIn implements ProductReaderPlugIn {
                     return result;
                 }
                 productZip.close();
-            } else {
-                ImageInputStream headerStream = new FileImageInputStream(headerFile);
+            } else if (HDR_EXTENSION.equalsIgnoreCase(FileUtils.getExtension(inputFile))) {
+                ImageInputStream headerStream = new FileImageInputStream(inputFile);
                 final DecodeQualification result = checkDecodeQualificationOnStream(headerStream);
                 headerStream.close();
                 return result;

@@ -59,16 +59,13 @@ public class GlobCarbonProductReaderPlugIn implements ProductReaderPlugIn {
         }
         String fileName = input.toString();
 
-        String fileExtension = FileUtils.getExtension(fileName);
-        if (fileExtension == null) {
-            return DecodeQualification.UNABLE;
-        }
-        boolean isAsciiFile = fileExtension.equalsIgnoreCase(".ASCII");
-        boolean isZipFile = fileExtension.equalsIgnoreCase(".ZIP");
-
         if (!isFileNameOk(fileName)) {
             return DecodeQualification.UNABLE;
         }
+
+        String extension = FileUtils.getExtension(fileName);
+        boolean isAsciiFile = ".ASCII".equalsIgnoreCase(extension);
+        boolean isZipFile = ".ZIP".equalsIgnoreCase(extension);
 
         if (isAsciiFile) {
             return DecodeQualification.INTENDED;
@@ -115,7 +112,7 @@ public class GlobCarbonProductReaderPlugIn implements ProductReaderPlugIn {
         String[] filesInDir;
         try {
             filesInDir = getProductFiles(fileName);
-        } catch (IOException e) {
+        } catch (IOException ignored) {
             return false;
         }
         String fileNameWithoutExtension = FileUtils.getFilenameWithoutExtension(fileName);
@@ -136,7 +133,7 @@ public class GlobCarbonProductReaderPlugIn implements ProductReaderPlugIn {
     boolean isFileNameOk(Object input) {
         String fileName = FileUtils.getFileNameFromPath(input.toString());
         boolean allowedPostFix = false;
-        if(fileName.toUpperCase().contains("IGH")) {
+        if (fileName.toUpperCase().contains("IGH")) {
             return false;
         }
 
@@ -151,16 +148,12 @@ public class GlobCarbonProductReaderPlugIn implements ProductReaderPlugIn {
         for (String allowed : TYPE_IDENTIFIER) {
             isOk |= fileName.toUpperCase().contains(allowed);
         }
-        
-        if(!isOk) {
-            return false;
-        }
+        return isOk;
 
-        return true;
     }
 
     String[] getProductFiles(String fileName) throws IOException {
-        int index = fileName.indexOf("!");
+        int index = fileName.indexOf('!');
         if (index != -1) {
             fileName = fileName.substring(0, index);
         }
@@ -201,7 +194,7 @@ public class GlobCarbonProductReaderPlugIn implements ProductReaderPlugIn {
                 isComplete |= ".hdr".equalsIgnoreCase(FileUtils.getExtension(productFile))
                               && existsImgFile(productFile);
             }
-        } catch (IOException e) {
+        } catch (IOException ignored) {
             return false;
         }
         return isComplete;
