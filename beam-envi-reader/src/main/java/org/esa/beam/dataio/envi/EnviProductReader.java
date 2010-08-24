@@ -13,6 +13,7 @@ import org.esa.beam.framework.datamodel.ProductNode;
 import org.esa.beam.util.Debug;
 import org.esa.beam.util.StringUtils;
 import org.esa.beam.util.TreeNode;
+import org.esa.beam.util.io.FileUtils;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
@@ -48,14 +49,14 @@ public class EnviProductReader extends AbstractProductReader {
         super(readerPlugIn);
     }
 
-    public static File createEnviImageFile(File headerFile) {
-        final String hdrName = headerFile.getName();
+    public static File createEnviImageFile(File file) {
+        final String hdrName = file.getName();
         final String imgName = hdrName.substring(0, hdrName.indexOf('.'));
         String bandName = imgName + ".img";
-        File imgFile = new File(headerFile.getParent(), bandName);
+        File imgFile = new File(file.getParent(), bandName);
         if (!imgFile.exists()) {
             bandName = imgName + ".bin";
-            imgFile = new File(headerFile.getParent(), bandName);
+            imgFile = new File(file.getParent(), bandName);
         }
         return imgFile;
     }
@@ -63,13 +64,13 @@ public class EnviProductReader extends AbstractProductReader {
     @Override
     protected Product readProductNodesImpl() throws IOException {
         final Object inputObject = getInput();
-        final File headerFile = EnviProductReaderPlugIn.getInputFile(inputObject);
+        final File inputFile = EnviProductReaderPlugIn.getInputFile(inputObject);
 
-        final BufferedReader headerReader = getHeaderReader(headerFile);
+        final BufferedReader headerReader = getHeaderReader(inputFile);
 
-        final String headerFileName = headerFile.getName();
-        String[] splittedHeaderFileName = headerFileName.split("!");
-        String productName = splittedHeaderFileName.length > 1 ? splittedHeaderFileName[1] : splittedHeaderFileName[0];
+        final String inputFileName = inputFile.getName();
+        String[] splittedInputFileName = inputFileName.split("!");
+        String productName = splittedInputFileName.length > 1 ? splittedInputFileName[1] : splittedInputFileName[0];
         productName = productName.substring(0, productName.indexOf('.'));
 
         try {
@@ -81,7 +82,7 @@ public class EnviProductReader extends AbstractProductReader {
             final Product product = new Product(productName, header.getSensorType(), header.getNumSamples(),
                                                 header.getNumLines());
             product.setProductReader(this);
-            product.setFileLocation(headerFile);
+            product.setFileLocation(inputFile);
             product.setDescription(header.getDescription());
 
             initGeoCoding(product, header);
@@ -90,7 +91,7 @@ public class EnviProductReader extends AbstractProductReader {
             applyBeamProperties(product, header.getBeamProperties());
 
             // imageInputStream must be initialized last
-            initializeInputStreamForBandData(headerFile, header);
+            initializeInputStreamForBandData(inputFile, header);
 
             return product;
         } finally {
@@ -187,11 +188,11 @@ public class EnviProductReader extends AbstractProductReader {
         }
     }
 
-    private void initializeInputStreamForBandData(File headerFile, Header header) throws IOException {
-        if (EnviProductReaderPlugIn.isCompressedFile(headerFile)) {
-            imageInputStream = createImageStreamFromZip(headerFile);
+    private void initializeInputStreamForBandData(File inputFile, Header header) throws IOException {
+        if (EnviProductReaderPlugIn.isCompressedFile(inputFile)) {
+            imageInputStream = createImageStreamFromZip(inputFile);
         } else {
-            imageInputStream = createImageStreamFromFile(headerFile);
+            imageInputStream = createImageStreamFromFile(inputFile);
         }
         imageInputStream.setByteOrder(header.getJavaByteOrder());
     }
@@ -221,23 +222,25 @@ public class EnviProductReader extends AbstractProductReader {
         }
     }
 
-    private static ImageInputStream createImageStreamFromZip(File file) throws IOException {
+    private ImageInputStream createImageStreamFromZip(File file) throws IOException {
         String filePath = file.getAbsolutePath();
-        ZipFile productZip;
         String innerHdrZipPath;
         if (filePath.contains("!")) {
             // headerFile is in zip
             String[] splittedHeaderFile = filePath.split("!");
-            innerHdrZipPath = splittedHeaderFile[1].replace("\\", "/");
             productZip = new ZipFile(new File(splittedHeaderFile[0]));
+            innerHdrZipPath = splittedHeaderFile[1].replace("\\", "/");
         } else {
             productZip = new ZipFile(file, ZipFile.OPEN_READ);
-            innerHdrZipPath = file.getName();
+            innerHdrZipPath = findFirstHeader(productZip).getName();
         }
 
         try {
-            String innerImgZipPath = innerHdrZipPath.substring(0, innerHdrZipPath.length() - 4) + ".img";
+
+            innerHdrZipPath = innerHdrZipPath.substring(0, innerHdrZipPath.length() - 4);
+            String innerImgZipPath = FileUtils.ensureExtension(innerHdrZipPath, ".img");
             final Enumeration<? extends ZipEntry> enumeration = productZip.entries();
+            // iterating over entries instead of using the path directly in order to compare paths ignoring case
             while (enumeration.hasMoreElements()) {
                 ZipEntry zipEntry = enumeration.nextElement();
                 if (zipEntry.getName().equalsIgnoreCase(innerImgZipPath)) {
@@ -258,8 +261,8 @@ public class EnviProductReader extends AbstractProductReader {
         throw new IOException("Not able to initialise band input stream.");
     }
 
-    private static ImageInputStream createImageStreamFromFile(final File headerFile) throws IOException {
-        final File imageFile = createEnviImageFile(headerFile);
+    private static ImageInputStream createImageStreamFromFile(final File file) throws IOException {
+        final File imageFile = createEnviImageFile(file);
 
         if (!imageFile.exists()) {
             throw new FileNotFoundException("file not found: <" + imageFile + ">");
@@ -340,11 +343,11 @@ public class EnviProductReader extends AbstractProductReader {
         }
     }
 
-    private ZipEntry findFirstHeader(ZipFile zipFile) {
+    private static ZipEntry findFirstHeader(ZipFile zipFile) {
         final Enumeration<? extends ZipEntry> entryEnum = zipFile.entries();
         while (entryEnum.hasMoreElements()) {
             ZipEntry entry = entryEnum.nextElement();
-            if(entry.getName().toLowerCase().endsWith(".hdr")) {
+            if (entry.getName().toLowerCase().endsWith(".hdr")) {
                 return entry;
             }
         }
