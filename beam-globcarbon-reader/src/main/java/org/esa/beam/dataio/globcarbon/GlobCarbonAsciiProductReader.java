@@ -6,7 +6,6 @@ import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 
-import javax.swing.JOptionPane;
 import java.io.IOException;
 
 public class GlobCarbonAsciiProductReader extends AbstractProductReader {
