@@ -7,11 +7,10 @@ import org.esa.beam.util.io.BeamFileFilter;
 
 import javax.imageio.stream.FileImageInputStream;
 import javax.imageio.stream.ImageInputStream;
-import java.io.BufferedReader;
+import javax.imageio.stream.MemoryCacheImageInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.Enumeration;
 import java.util.Locale;
 import java.util.zip.ZipEntry;
@@ -19,38 +18,41 @@ import java.util.zip.ZipFile;
 
 public class EnviProductReaderPlugIn implements ProductReaderPlugIn {
 
+    @Override
     public DecodeQualification getDecodeQualification(Object input) {
         if (input instanceof ImageInputStream) {
             return checkDecodeQualificationOnStream((ImageInputStream) input);
-        } else if (input instanceof File) {
-            return checkDecodeQualificationOnFile((File) input);
-        } else if (input instanceof String) {
+        } else {
             return checkDecodeQualificationOnFile(new File(input.toString()));
         }
-
-        return DecodeQualification.UNABLE;
     }
 
+    @Override
     public String[] getFormatNames() {
         return new String[]{EnviConstants.FORMAT_NAME};
     }
 
+    @Override
     public ProductReader createReaderInstance() {
         return new EnviProductReader(this);
     }
 
+    @Override
     public String[] getDefaultFileExtensions() {
         return new String[]{".hdr", ".zip"};
     }
 
+    @Override
     public Class[] getInputTypes() {
         return new Class[]{String.class, File.class};
     }
 
+    @Override
     public String getDescription(Locale locale) {
         return EnviConstants.DESCRIPTION;
     }
 
+    @Override
     public BeamFileFilter getProductFileFilter() {
         return new BeamFileFilter(getFormatNames()[0], getDefaultFileExtensions(), getDescription(null));
     }
@@ -80,6 +82,10 @@ public class EnviProductReaderPlugIn implements ProductReaderPlugIn {
         return null;
     }
 
+    private static DecodeQualification checkDecodeQualificationOnStream(InputStream headerStream) {
+        return checkDecodeQualificationOnStream(new MemoryCacheImageInputStream(headerStream));
+    }
+
     private static DecodeQualification checkDecodeQualificationOnStream(ImageInputStream headerStream) {
         try {
             final String line = headerStream.readLine();
@@ -90,20 +96,6 @@ public class EnviProductReaderPlugIn implements ProductReaderPlugIn {
         } catch (IOException ignore) {
             // intentionally nothing in here tb 20080409
         }
-        return DecodeQualification.UNABLE;
-    }
-
-    private static DecodeQualification checkDecodeQualificationOnStream(InputStream headerStream) {
-        try {
-            final BufferedReader inReader = new BufferedReader(new InputStreamReader(headerStream));
-            final String line = inReader.readLine();
-            if (line != null && line.startsWith(EnviConstants.FIRST_LINE)) {
-                return DecodeQualification.SUITABLE;
-            }
-        } catch (IOException ignore) {
-            // intentionally nothing in here tb 20080409
-        }
-
         return DecodeQualification.UNABLE;
     }
 
@@ -132,7 +124,7 @@ public class EnviProductReaderPlugIn implements ProductReaderPlugIn {
                 return result;
             }
         }
-        catch (IOException e) {
+        catch (IOException ignored) {
             // intentionally left empty - returns the same as the line below tb 20080409
         }
         return DecodeQualification.UNABLE;
