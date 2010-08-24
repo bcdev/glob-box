@@ -22,12 +22,15 @@ import org.esa.beam.framework.dataio.AbstractProductReader;
 import org.esa.beam.framework.dataio.ProductReader;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.FlagCoding;
+import org.esa.beam.framework.datamodel.Mask;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.datamodel.ProductNodeGroup;
 import org.esa.beam.util.Debug;
 import org.esa.beam.util.StringUtils;
 import org.esa.beam.util.io.FileUtils;
 
+import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -199,10 +202,18 @@ public class GlobCarbonProductReader extends AbstractProductReader {
             if (band.getName().toLowerCase().contains("flag")) {
                 FlagCoding flagCoding = new FlagCoding(band.getName());
                 final String[] flagNames = StringUtils.csvToArray(properties.getProperty(propertyKey + ".flagNames"));
-                for (String flagName : flagNames) {
+                final String[] flagColors = StringUtils.csvToArray(properties.getProperty(propertyKey + ".flagColors"));
+                final ProductNodeGroup<Mask> maskGroup = product.getMaskGroup();
+                for (int i = 0; i < flagNames.length; i++) {
+                    String flagName = flagNames[i];
+                    final Color flagColor = Color.decode(flagColors[i]);
                     final String maskString = properties.getProperty(propertyKey + "." + flagName + ".mask");
                     final int flagMask = Integer.decode(maskString);
                     flagCoding.addFlag(flagName, flagMask, "");
+                    maskGroup.add(Mask.BandMathsType.create(flagName, "",
+                                                            product.getSceneRasterWidth(),
+                                                            product.getSceneRasterHeight(),
+                                                            band.getName() + "." + flagName, flagColor, 0.5));
                 }
                 band.setSampleCoding(flagCoding);
                 product.getFlagCodingGroup().add(flagCoding);
