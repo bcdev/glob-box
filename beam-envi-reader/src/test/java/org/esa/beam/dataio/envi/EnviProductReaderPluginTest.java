@@ -128,7 +128,7 @@ public class EnviProductReaderPluginTest extends TestCase {
     }
 
     public void testGetDescription() {
-        assertEquals("BEAM ENVI product reader", readerPlugIn.getDescription(null));
+        assertEquals("ENVI Data Products", readerPlugIn.getDescription(null));
     }
 
     public void testGetProductFileFilter() {
@@ -138,7 +138,7 @@ public class EnviProductReaderPluginTest extends TestCase {
         final String[] extensions = beamFileFilter.getExtensions();
         assertEquals(".hdr", extensions[0]);
         assertEquals(".zip", extensions[1]);
-        assertEquals("BEAM ENVI product reader (*.hdr,*.zip)", beamFileFilter.getDescription());
+        assertEquals("ENVI Data Products (*.hdr,*.zip)", beamFileFilter.getDescription());
         assertEquals("ENVI", beamFileFilter.getFormatName());
     }
 
