@@ -77,6 +77,9 @@ public class BinnedProductReaderPlugIn implements ProductReaderPlugIn {
      */
     @Override
     public DecodeQualification getDecodeQualification(Object input) {
+        if (input == null) {
+            return DecodeQualification.UNABLE;
+        }
         final String path = input.toString();
         if (!path.toLowerCase().endsWith(FILE_EXTENSION)) {
             return DecodeQualification.UNABLE;

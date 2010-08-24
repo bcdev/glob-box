@@ -54,10 +54,17 @@ public class GlobCarbonProductReaderPlugIn implements ProductReaderPlugIn {
 
     @Override
     public DecodeQualification getDecodeQualification(Object input) {
+        if (input == null) {
+            return DecodeQualification.UNABLE;
+        }
         String fileName = input.toString();
 
-        boolean isAsciiFile = FileUtils.getExtension(fileName).equalsIgnoreCase(".ASCII");
-        boolean isZipFile = FileUtils.getExtension(fileName).equalsIgnoreCase(".ZIP");
+        String fileExtension = FileUtils.getExtension(fileName);
+        if (fileExtension == null) {
+            return DecodeQualification.UNABLE;
+        }
+        boolean isAsciiFile = fileExtension.equalsIgnoreCase(".ASCII");
+        boolean isZipFile = fileExtension.equalsIgnoreCase(".ZIP");
 
         if (!isFileNameOk(fileName)) {
             return DecodeQualification.UNABLE;
