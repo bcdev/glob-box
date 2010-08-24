@@ -18,7 +18,7 @@ class EnviConstants {
     static final String HEADER_KEY_DESCRIPTION = "description";
     static final String FIRST_LINE = "ENVI";
     static final String FORMAT_NAME = "ENVI";
-    static final String DESCRIPTION = "BEAM ENVI product reader";
+    static final String DESCRIPTION = "ENVI Data Products";
     static final String PROJECTION_NAME_WGS84 = "Geographic Lat/Lon";
 
     static final String ZIP = "zip";

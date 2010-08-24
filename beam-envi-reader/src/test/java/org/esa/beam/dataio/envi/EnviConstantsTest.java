@@ -22,7 +22,7 @@ public class EnviConstantsTest extends TestCase {
 
         assertEquals("ENVI", EnviConstants.FIRST_LINE);
         assertEquals("ENVI", EnviConstants.FORMAT_NAME);
-        assertEquals("BEAM ENVI product reader", EnviConstants.DESCRIPTION);
+        assertEquals("ENVI Data Products", EnviConstants.DESCRIPTION);
         assertEquals("zip", EnviConstants.ZIP);
 
         assertEquals(1, EnviConstants.TYPE_ID_BYTE);
