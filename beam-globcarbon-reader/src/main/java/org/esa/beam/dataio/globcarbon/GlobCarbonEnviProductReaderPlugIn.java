@@ -29,13 +29,13 @@ import java.util.Locale;
 /**
  * @author Thomas Storm
  */
-public class GlobCarbonProductReaderPlugIn implements ProductReaderPlugIn {
+public class GlobCarbonEnviProductReaderPlugIn implements ProductReaderPlugIn {
 
     /**
      * The name of the file format associated with this
      * {@link ProductReaderPlugIn}.
      */
-    public static final String FORMAT_NAME = "GlobCarbon";
+    public static final String FORMAT_NAME = "GLOBCARBON";
     /**
      * The textual description of this {@link ProductReaderPlugIn}.
      */
@@ -44,12 +44,12 @@ public class GlobCarbonProductReaderPlugIn implements ProductReaderPlugIn {
      * The extension of the file format associated with this
      * {@link ProductReaderPlugIn}.
      */
-    public static final String[] FILE_EXTENSIONS = new String[]{".hdr", ".ascii", ".zip"};
+    public static final String[] FILE_EXTENSIONS = new String[]{".hdr", ".zip"};
     private static final String[] TYPE_IDENTIFIER = new String[]{"BAE", "LAI", "VGCP", "FAPAR"};
 
     @Override
     public ProductReader createReaderInstance() {
-        return new GlobCarbonProductReader(this);
+        return new GlobCarbonEnviProductReader(this);
     }
 
     @Override
@@ -64,12 +64,8 @@ public class GlobCarbonProductReaderPlugIn implements ProductReaderPlugIn {
         }
 
         String extension = FileUtils.getExtension(fileName);
-        boolean isAsciiFile = ".ASCII".equalsIgnoreCase(extension);
-        boolean isZipFile = ".ZIP".equalsIgnoreCase(extension);
 
-        if (isAsciiFile) {
-            return DecodeQualification.INTENDED;
-        }
+        boolean isZipFile = ".ZIP".equalsIgnoreCase(extension);
 
         if (!(isZipFile || existsImgFile(fileName))) {
             return DecodeQualification.UNABLE;
@@ -130,8 +126,8 @@ public class GlobCarbonProductReaderPlugIn implements ProductReaderPlugIn {
         return null;
     }
 
-    boolean isFileNameOk(Object input) {
-        String fileName = FileUtils.getFileNameFromPath(input.toString());
+    boolean isFileNameOk(String filePath) {
+        String fileName = FileUtils.getFileNameFromPath(filePath);
         boolean allowedPostFix = false;
         if (fileName.toUpperCase().contains("IGH")) {
             return false;
@@ -166,8 +162,6 @@ public class GlobCarbonProductReaderPlugIn implements ProductReaderPlugIn {
                     zipEntries[i] = basePath + "!" + zipEntries[i];
                 }
                 return zipEntries;
-            } else {
-                return getProductFiles(zipEntries[0]);
             }
         } else {
             File dir = new File(fileName).getParentFile();
@@ -181,6 +175,7 @@ public class GlobCarbonProductReaderPlugIn implements ProductReaderPlugIn {
                 return getProductFiles(fileNames[0]);
             }
         }
+        return new String[0];
     }
 
 

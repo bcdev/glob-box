@@ -21,7 +21,7 @@ import org.junit.Test;
 
 import java.text.ParseException;
 
-import static org.esa.beam.dataio.globcarbon.GlobCarbonProductReader.*;
+import static org.esa.beam.dataio.globcarbon.GlobCarbonEnviProductReader.*;
 import static org.junit.Assert.*;
 
 /**

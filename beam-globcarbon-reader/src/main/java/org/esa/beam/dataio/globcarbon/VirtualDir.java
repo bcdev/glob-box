@@ -169,7 +169,7 @@ public abstract class VirtualDir {
         private final ZipFile zipFile;
         private File tempZipFileDir;
 
-        private Zip(ZipFile zipFile) throws IOException {
+        private Zip(ZipFile zipFile) {
             this.zipFile = zipFile;
         }
 

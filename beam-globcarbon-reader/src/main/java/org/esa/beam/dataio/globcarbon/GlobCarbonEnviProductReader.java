@@ -40,14 +40,11 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Properties;
 
-/**
- * @author Thomas Storm
- */
-public class GlobCarbonProductReader extends AbstractProductReader {
+public class GlobCarbonEnviProductReader extends AbstractProductReader {
 
     private static final String PRODUCT_PROPERTIES_RESOURCE_PATTERN = "%s.%s.properties";
     private static final String HIGH_RES_IDENTIFIER = "01km";
-    private GlobCarbonProductReaderPlugIn readerPlugIn;
+    private GlobCarbonEnviProductReaderPlugIn readerPlugIn;
     private List<Product> delegateProductList;
 
     /**
@@ -56,7 +53,7 @@ public class GlobCarbonProductReader extends AbstractProductReader {
      * @param readerPlugIn the reader plug-in which created this reader, can be <code>null</code> for internal reader
      *                     implementations
      */
-    protected GlobCarbonProductReader(GlobCarbonProductReaderPlugIn readerPlugIn) {
+    protected GlobCarbonEnviProductReader(GlobCarbonEnviProductReaderPlugIn readerPlugIn) {
         super(readerPlugIn);
         this.readerPlugIn = readerPlugIn;
     }
@@ -143,7 +140,7 @@ public class GlobCarbonProductReader extends AbstractProductReader {
         }
 
         final String[] fileNameTokens = productName.split("_");
-        String productType = GlobCarbonProductReaderPlugIn.FORMAT_NAME + "_" + fileNameTokens[0];
+        String productType = GlobCarbonEnviProductReaderPlugIn.FORMAT_NAME + "_" + fileNameTokens[0];
         Product product = new Product(productName, productType, rasterWidth, rasterHeight);
         product.setFileLocation(fileLocation);
         templateProduct.transferGeoCodingTo(product, null);

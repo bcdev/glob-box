@@ -29,11 +29,11 @@ import static org.junit.Assert.*;
  */
 public class GlobCarbonProductReaderPlugInTest {
 
-    private GlobCarbonProductReaderPlugIn plugIn;
+    private GlobCarbonEnviProductReaderPlugIn plugIn;
 
     @Before
     public void setUp() {
-        plugIn = new GlobCarbonProductReaderPlugIn();
+        plugIn = new GlobCarbonEnviProductReaderPlugIn();
     }
 
     @Test
@@ -64,54 +64,66 @@ public class GlobCarbonProductReaderPlugInTest {
     @SuppressWarnings({"OverlyLongMethod"})
     @Test
     public void testFileNameOk() throws Exception {
-        assertEquals(true, plugIn.isFileNameOk("BAE_199807_ASCII.ascii"));
-        assertEquals(true, plugIn.isFileNameOk("BAE_PLC_200007_ASCII_COMB.ascii"));
-        assertEquals(true, plugIn.isFileNameOk("BAE_PLC_200007_ASCII_COMB.zip"));
-        assertEquals(true, plugIn.isFileNameOk("BAE_PLC_01KM_200507_DOD.HDR"));
-        assertEquals(true, plugIn.isFileNameOk("BAE_PLC_01KM_200507_NUMALGO.HDR"));
-        assertEquals(true, plugIn.isFileNameOk("BAE_PLC_01KM_200507_VALUE.HDR"));
+        assertEquals(true, plugIn.isFileNameOk("BAE_PLC_200007_ASCII_COMB.zip".toString()));
+        assertEquals(true, plugIn.isFileNameOk("BAE_PLC_01KM_200507_DOD.HDR".toString()));
+        assertEquals(true, plugIn.isFileNameOk("BAE_PLC_01KM_200507_NUMALGO.HDR".toString()));
+        assertEquals(true, plugIn.isFileNameOk("BAE_PLC_01KM_200507_VALUE.HDR".toString()));
 
-        assertEquals(true, plugIn.isFileNameOk("LAI_PLC_01KM_AV_199807_FLAG.HDR"));
-        assertEquals(true, plugIn.isFileNameOk("LAI_PLC_01KM_AV_199807_LOW20.HDR"));
-        assertEquals(true, plugIn.isFileNameOk("LAI_PLC_01KM_AV_199807_NUMVEG.HDR"));
-        assertEquals(true, plugIn.isFileNameOk("LAI_PLC_01KM_AV_199807_VALUE.HDR"));
+        assertEquals(true, plugIn.isFileNameOk("LAI_PLC_01KM_AV_199807_FLAG.HDR".toString()));
+        assertEquals(true, plugIn.isFileNameOk("LAI_PLC_01KM_AV_199807_LOW20.HDR".toString()));
+        assertEquals(true, plugIn.isFileNameOk("LAI_PLC_01KM_AV_199807_NUMVEG.HDR".toString()));
+        assertEquals(true, plugIn.isFileNameOk("LAI_PLC_01KM_AV_199807_VALUE.HDR".toString()));
 
-        assertEquals(true, plugIn.isFileNameOk("VGCP_PLC_050D_AV_2005_DAFTER.hdr"));
-        assertEquals(true, plugIn.isFileNameOk("VGCP_PLC_050D_AV_2005_DAFTERSD.hdr"));
-        assertEquals(true, plugIn.isFileNameOk("VGCP_PLC_050D_AV_2005_GRMLAISD.hdr"));
-        assertEquals(true, plugIn.isFileNameOk("VGCP_PLC_050D_AV_2005_LFOFFSD.hdr"));
+        assertEquals(true, plugIn.isFileNameOk("VGCP_PLC_050D_AV_2005_DAFTER.hdr".toString()));
+        assertEquals(true, plugIn.isFileNameOk("VGCP_PLC_050D_AV_2005_DAFTERSD.hdr".toString()));
+        assertEquals(true, plugIn.isFileNameOk("VGCP_PLC_050D_AV_2005_GRMLAISD.hdr".toString()));
+        assertEquals(true, plugIn.isFileNameOk("VGCP_PLC_050D_AV_2005_LFOFFSD.hdr".toString()));
 
-        assertEquals(true, plugIn.isFileNameOk(new File("BAE_199807_ASCII.ascii")));
-        assertEquals(true, plugIn.isFileNameOk(new File("BAE_PLC_200007_ASCII_COMB.ascii")));
-        assertEquals(true, plugIn.isFileNameOk(new File("BAE_PLC_200007_ASCII_COMB.zip")));
-        assertEquals(true, plugIn.isFileNameOk(new File("BAE_PLC_01KM_200507_DOD.HDR")));
-        assertEquals(true, plugIn.isFileNameOk(new File("BAE_PLC_01KM_200507_NUMALGO.HDR")));
-        assertEquals(true, plugIn.isFileNameOk(new File("BAE_PLC_01KM_200507_VALUE.HDR")));
+        final File input10 = new File("BAE_PLC_200007_ASCII_COMB.zip");
+        assertEquals(true, plugIn.isFileNameOk(input10.toString()));
+        final File input2 = new File("BAE_PLC_01KM_200507_DOD.HDR");
+        assertEquals(true, plugIn.isFileNameOk(input2.toString()));
+        final File input5 = new File("BAE_PLC_01KM_200507_NUMALGO.HDR");
+        assertEquals(true, plugIn.isFileNameOk(input5.toString()));
+        final File input14 = new File("BAE_PLC_01KM_200507_VALUE.HDR");
+        assertEquals(true, plugIn.isFileNameOk(input14.toString()));
 
-        assertEquals(true, plugIn.isFileNameOk(new File("LAI_PLC_01KM_AV_199807_FLAG.HDR")));
-        assertEquals(true, plugIn.isFileNameOk(new File("LAI_PLC_01KM_AV_199807_LOW20.HDR")));
-        assertEquals(true, plugIn.isFileNameOk(new File("LAI_PLC_01KM_AV_199807_NUMVEG.HDR")));
-        assertEquals(true, plugIn.isFileNameOk(new File("LAI_PLC_01KM_AV_199807_VALUE.HDR")));
+        final File input1 = new File("LAI_PLC_01KM_AV_199807_FLAG.HDR");
+        assertEquals(true, plugIn.isFileNameOk(input1.toString()));
+        final File input8 = new File("LAI_PLC_01KM_AV_199807_LOW20.HDR");
+        assertEquals(true, plugIn.isFileNameOk(input8.toString()));
+        final File input4 = new File("LAI_PLC_01KM_AV_199807_NUMVEG.HDR");
+        assertEquals(true, plugIn.isFileNameOk(input4.toString()));
+        final File input11 = new File("LAI_PLC_01KM_AV_199807_VALUE.HDR");
+        assertEquals(true, plugIn.isFileNameOk(input11.toString()));
 
-        assertEquals(true, plugIn.isFileNameOk(new File("VGCP_PLC_050D_AV_2005_DAFTER.hdr")));
-        assertEquals(true, plugIn.isFileNameOk(new File("VGCP_PLC_050D_AV_2005_DAFTERSD.hdr")));
-        assertEquals(true, plugIn.isFileNameOk(new File("VGCP_PLC_050D_AV_2005_GRMLAISD.hdr")));
-        assertEquals(true, plugIn.isFileNameOk(new File("VGCP_PLC_050D_AV_2005_LFOFFSD.hdr")));
+        final File input7 = new File("VGCP_PLC_050D_AV_2005_DAFTER.hdr");
+        assertEquals(true, plugIn.isFileNameOk(input7.toString()));
+        final File input9 = new File("VGCP_PLC_050D_AV_2005_DAFTERSD.hdr");
+        assertEquals(true, plugIn.isFileNameOk(input9.toString()));
+        final File input6 = new File("VGCP_PLC_050D_AV_2005_GRMLAISD.hdr");
+        assertEquals(true, plugIn.isFileNameOk(input6.toString()));
+        final File input12 = new File("VGCP_PLC_050D_AV_2005_LFOFFSD.hdr");
+        assertEquals(true, plugIn.isFileNameOk(input12.toString()));
 
-        assertEquals(true, plugIn.isFileNameOk(new File("FAPAR_PLC_025D_VGT_19980505_AAD.hdr")));
-        assertEquals(true, plugIn.isFileNameOk(new File("FAPAR_PLC_025D_VGT_19980505_SZASD.hdr")));
-        assertEquals(true, plugIn.isFileNameOk(new File("FAPAR_PLC_025D_VGT_19980505.zip")));
-        assertEquals(true, plugIn.isFileNameOk(new File("FAPAR_PLC_025D_VGT_19980514.zip")));
+        final File input = new File("FAPAR_PLC_025D_VGT_19980505_AAD.hdr");
+        assertEquals(true, plugIn.isFileNameOk(input.toString()));
+        final File input13 = new File("FAPAR_PLC_025D_VGT_19980505_SZASD.hdr");
+        assertEquals(true, plugIn.isFileNameOk(input13.toString()));
+        final File input3 = new File("FAPAR_PLC_025D_VGT_19980505.zip");
+        assertEquals(true, plugIn.isFileNameOk(input3.toString()));
+        final File input15 = new File("FAPAR_PLC_025D_VGT_19980514.zip");
+        assertEquals(true, plugIn.isFileNameOk(input15.toString()));
     }
 
     @Test
     public void testFileNameNotOk() {
-        assertEquals(false, plugIn.isFileNameOk("BAE_199807_ASCII.img"));
-        assertEquals(false, plugIn.isFileNameOk("BAE_IGH_200007_ASCII_COMB.ascii"));
-        assertEquals(false, plugIn.isFileNameOk("VGCP_PLC_050D_AV_2005_DAFTER.img"));
-        assertEquals(false, plugIn.isFileNameOk("FAPAR_PLC_050D_AV_2005_DAFTER.img"));
-        assertEquals(false, plugIn.isFileNameOk("BAE_IGH_01KM_200507_NUMALGO.HDR"));
-        assertEquals(false, plugIn.isFileNameOk("FAPAR_IGH_01KM_200507_VALUE.HDR"));
+        assertEquals(false, plugIn.isFileNameOk("BAE_199807_ASCII.img".toString()));
+        assertEquals(false, plugIn.isFileNameOk("BAE_IGH_200007_ASCII_COMB.ascii".toString()));
+        assertEquals(false, plugIn.isFileNameOk("VGCP_PLC_050D_AV_2005_DAFTER.img".toString()));
+        assertEquals(false, plugIn.isFileNameOk("FAPAR_PLC_050D_AV_2005_DAFTER.img".toString()));
+        assertEquals(false, plugIn.isFileNameOk("BAE_IGH_01KM_200507_NUMALGO.HDR".toString()));
+        assertEquals(false, plugIn.isFileNameOk("FAPAR_IGH_01KM_200507_VALUE.HDR".toString()));
     }
 
 }
