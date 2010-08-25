@@ -118,6 +118,9 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
     }
 
     private void setCurrentView(ProductSceneView newView) {
+        if (currentView == newView) {
+            return;
+        }
         if (currentView != null) {
             final AbstractTimeSeries timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(
                     currentView.getProduct());
