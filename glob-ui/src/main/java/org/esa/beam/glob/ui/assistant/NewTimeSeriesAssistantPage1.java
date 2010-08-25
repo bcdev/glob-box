@@ -14,7 +14,7 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package org.esa.beam.glob.ui;
+package org.esa.beam.glob.ui.assistant;
 
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
@@ -22,6 +22,9 @@ import com.bc.ceres.swing.progress.ProgressMonitorSwingWorker;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.ui.assistant.AssistantPage;
 import org.esa.beam.glob.core.timeseries.datamodel.ProductLocation;
+import org.esa.beam.glob.ui.ProductLocationsPane;
+import org.esa.beam.glob.ui.ProductLocationsPaneModel;
+import org.esa.beam.glob.ui.Variable;
 
 import java.awt.Component;
 import java.util.List;

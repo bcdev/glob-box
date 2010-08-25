@@ -14,7 +14,7 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package org.esa.beam.glob.ui;
+package org.esa.beam.glob.ui.assistant;
 
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.swing.progress.ProgressMonitorSwingWorker;
@@ -24,13 +24,14 @@ import org.esa.beam.framework.ui.assistant.AbstractAssistantPage;
 import org.esa.beam.glob.core.TimeSeriesMapper;
 import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesFactory;
+import org.esa.beam.glob.ui.ProductLocationsPaneModel;
+import org.esa.beam.glob.ui.VariableSelectionPaneModel;
 import org.esa.beam.util.Debug;
 import org.esa.beam.visat.VisatApp;
 
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import java.awt.Component;
-import java.util.concurrent.ExecutionException;
 
 abstract class AbstractTimeSeriesAssistantPage extends AbstractAssistantPage {
 

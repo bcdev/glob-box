@@ -14,7 +14,7 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package org.esa.beam.glob.ui;
+package org.esa.beam.glob.ui.player;
 
 import com.bc.ceres.glayer.support.ImageLayer;
 import com.bc.ceres.glevel.MultiLevelSource;
@@ -30,20 +30,20 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.RenderedImage;
 
-public class BlendImageLayer extends ImageLayer {
+class BlendImageLayer extends ImageLayer {
 
     private ImageLayer baseLayer;
     private ImageLayer blendLayer;
     private float blendFactor;
 
-    public BlendImageLayer(MultiLevelSource baseMultiLevelSource, MultiLevelSource blendMultiLevelSource) {
+    BlendImageLayer(MultiLevelSource baseMultiLevelSource, MultiLevelSource blendMultiLevelSource) {
         super(DefaultMultiLevelSource.NULL);
         blendFactor = 0.0f;
         baseLayer = new ImageLayer(baseMultiLevelSource);
         blendLayer = new ImageLayer(blendMultiLevelSource);
     }
 
-    public void setBlendFactor(float factor) {
+    void setBlendFactor(float factor) {
         blendFactor = factor;
     }
 

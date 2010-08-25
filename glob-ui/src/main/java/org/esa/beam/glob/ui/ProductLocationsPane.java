@@ -47,7 +47,7 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.Iterator;
 
-class ProductLocationsPane extends JPanel {
+public class ProductLocationsPane extends JPanel {
     private static final String PROPERTY_KEY_LAST_OPEN_TS_DIR = "glob.file.lastOpenDir";
 
     private ProductLocationsPaneModel model;
@@ -55,11 +55,11 @@ class ProductLocationsPane extends JPanel {
     private AbstractButton addButton;
     private AbstractButton removeButton;
 
-    ProductLocationsPane() {
+    public ProductLocationsPane() {
         this(new DefaultProductLocationsPaneModel());
     }
 
-    ProductLocationsPane(ProductLocationsPaneModel model) {
+    public ProductLocationsPane(ProductLocationsPaneModel model) {
         this.model = model;
         createPane();
     }

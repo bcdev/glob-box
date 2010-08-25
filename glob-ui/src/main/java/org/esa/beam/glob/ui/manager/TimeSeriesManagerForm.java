@@ -14,7 +14,7 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package org.esa.beam.glob.ui;
+package org.esa.beam.glob.ui.manager;
 
 import com.bc.ceres.swing.TableLayout;
 import com.jidesoft.swing.TitledSeparator;
@@ -31,6 +31,14 @@ import org.esa.beam.glob.core.timeseries.datamodel.ProductLocation;
 import org.esa.beam.glob.core.timeseries.datamodel.ProductLocationType;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesChangeEvent;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesListener;
+import org.esa.beam.glob.ui.DefaultProductLocationsPaneModel;
+import org.esa.beam.glob.ui.DefaultVariableSelectionPaneModel;
+import org.esa.beam.glob.ui.ProductLocationsPane;
+import org.esa.beam.glob.ui.ProductLocationsPaneModel;
+import org.esa.beam.glob.ui.Variable;
+import org.esa.beam.glob.ui.VariableSelectionPane;
+import org.esa.beam.glob.ui.VariableSelectionPaneModel;
+import org.esa.beam.glob.ui.assistant.NewTimeSeriesAssistantAction;
 import org.esa.beam.util.Debug;
 import org.esa.beam.visat.VisatApp;
 

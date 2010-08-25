@@ -16,15 +16,15 @@
 
 package org.esa.beam.glob.ui;
 
-class Variable {
+public class Variable {
     private String name;
     private boolean selected;
 
-    Variable(String name) {
+    public Variable(String name) {
         this(name, false);
     }
 
-    Variable(String name, boolean selected) {
+    public Variable(String name, boolean selected) {
         this.name = name;
         this.selected = selected;
     }

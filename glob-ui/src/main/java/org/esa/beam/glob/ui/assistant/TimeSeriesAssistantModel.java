@@ -14,7 +14,12 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package org.esa.beam.glob.ui;
+package org.esa.beam.glob.ui.assistant;
+
+import org.esa.beam.glob.ui.DefaultProductLocationsPaneModel;
+import org.esa.beam.glob.ui.DefaultVariableSelectionPaneModel;
+import org.esa.beam.glob.ui.ProductLocationsPaneModel;
+import org.esa.beam.glob.ui.VariableSelectionPaneModel;
 
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;

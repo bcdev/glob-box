@@ -14,7 +14,7 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package org.esa.beam.glob.ui;
+package org.esa.beam.glob.ui.matrix;
 
 import com.bc.ceres.glayer.support.ImageLayer;
 import com.bc.ceres.glayer.swing.LayerCanvas;
@@ -34,6 +34,7 @@ import org.esa.beam.glob.core.timeseries.datamodel.TimeCoding;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesListener;
 import org.esa.beam.util.Guardian;
 import org.esa.beam.util.ProductUtils;
+import org.esa.beam.util.math.MathUtils;
 import org.esa.beam.visat.VisatApp;
 
 import javax.swing.AbstractButton;
@@ -42,14 +43,18 @@ import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSpinner;
+import javax.swing.JTable;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.InternalFrameAdapter;
 import javax.swing.event.InternalFrameEvent;
 import javax.swing.plaf.basic.BasicSpinnerUI;
+import javax.swing.table.AbstractTableModel;
+import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Container;
 import java.awt.GridBagConstraints;
 import java.awt.event.MouseEvent;
@@ -57,10 +62,12 @@ import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * @author Thomas Storm
@@ -76,20 +83,20 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
     private TimeSeriesPPL pixelPosListener;
     private MatrixMouseWheelListener mouseWheelListener;
     private final TimeSeriesListener timeSeriesMatrixTSL;
-    private MatrixPanel matrixPanel;
+    private JTable matrixTable;
 
-    private RasterDataNode currentRaster;
-    private int currentLevelZeroX;
-    private int currentLevelZeroY;
     private int matrixSize = 3; // default value; value must be uneven
 
     private static final String DATE_PREFIX = "Date: ";
+    private TimeSeriesMatrixToolView.MatrixTableModel matrixModel;
+    private SimpleDateFormat dateFormat;
 
     public TimeSeriesMatrixToolView() {
         pixelPosListener = new TimeSeriesPPL();
         sceneViewListener = new SceneViewListener();
         mouseWheelListener = new MatrixMouseWheelListener();
         timeSeriesMatrixTSL = new TimeSeriesMatrixTSL();
+        dateFormat = new SimpleDateFormat("dd-MMM-yyyy hh:mm:ss", Locale.getDefault());
     }
 
     @Override
@@ -104,8 +111,7 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
             @Override
             public void stateChanged(ChangeEvent e) {
                 matrixSize = (Integer) configureSpinner.getModel().getValue();
-                matrixPanel.setMatrixSize(matrixSize);
-                updateMatrix();
+                matrixModel.setMatrixSize(matrixSize);
             }
         });
 
@@ -155,10 +161,12 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
         String startDateString = getStartDateString();
         dateLabel = new JLabel(String.format(DATE_PREFIX + " %s", startDateString));
         mainPanel.add(BorderLayout.NORTH, dateLabel);
-        matrixPanel = new MatrixPanel(matrixSize);
-        matrixPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));
-        matrixPanel.setEnabled(false);
-        mainPanel.add(BorderLayout.CENTER, matrixPanel);
+        matrixModel = new MatrixTableModel(matrixSize);
+        matrixTable = new JTable(matrixModel);
+        matrixTable.setDefaultRenderer(Double.class, new MatrixCellRenderer(matrixModel));
+        matrixTable.setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));
+        matrixTable.setEnabled(false);
+        mainPanel.add(BorderLayout.CENTER, matrixTable);
         return mainPanel;
     }
 
@@ -167,8 +175,7 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
         if (currentView != null && timeSeries != null) {
             final TimeCoding timeCoding = timeSeries.getRasterTimeMap().get(currentView.getRaster());
             Date startDate = timeCoding.getStartTime().getAsDate();
-            SimpleDateFormat formatter = new SimpleDateFormat("dd-MMM-yyyy hh:mm:ss");
-            startDateString = formatter.format(startDate);
+            startDateString = dateFormat.format(startDate);
         }
         return startDateString;
     }
@@ -199,7 +206,7 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
     private void setUIEnabled(boolean enable) {
         dateLabel.setEnabled(enable);
         configureSpinner.setEnabled(enable);
-        matrixPanel.setEnabled(enable);
+        matrixTable.setEnabled(enable);
     }
 
     /*
@@ -232,13 +239,49 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
             timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(currentView.getProduct());
             timeSeries.addTimeSeriesListener(timeSeriesMatrixTSL);
             addMouseWheelListener();
-            currentRaster = currentView.getRaster();
-            updateDateLabel();
+            final RasterDataNode raster = currentView.getRaster();
+            if (raster instanceof Band) {
+                matrixModel.setBand((Band) raster);
+                updateDateLabel((Band) currentView.getRaster());
+            }
         } else {
             timeSeries = null;
         }
         setUIEnabled(currentView != null);
     }
+
+    private void updateDateLabel(Band band) {
+        if (band != null) {
+            final TimeCoding timeCoding = timeSeries.getRasterTimeMap().get(band);
+            final Date startTime = timeCoding.getStartTime().getAsDate();
+            dateLabel.setText(String.format(DATE_PREFIX + " %s", dateFormat.format(startTime)));
+        } else {
+            dateLabel.setText("");
+        }
+    }
+
+    // Depending on the direction value this method returns the next
+    // band in the list of available bands in the time series.
+    // Negative value of direction means previous band.
+    // If there is no next band the current band is returned.
+
+    private Band getNextBand(Band currentBand, int direction) {
+        final String varName = AbstractTimeSeries.rasterToVariableName(currentBand.getName());
+        final List<Band> bandList = timeSeries.getBandsForVariable(varName);
+        final int currentIndex = bandList.indexOf(currentBand);
+
+        if (direction < 0) {
+            if (currentIndex > 0) {
+                return bandList.get(currentIndex - 1);
+            }
+        } else {
+            if (currentIndex + 1 < bandList.size()) {
+                return bandList.get(currentIndex + 1);
+            }
+        }
+        return currentBand;
+    }
+
 
     private void addMouseWheelListener() {
         if (currentView != null) {
@@ -289,22 +332,21 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
         public void pixelPosChanged(ImageLayer imageLayer, int pixelX, int pixelY,
                                     int currentLevel, boolean pixelPosValid, MouseEvent e) {
             if (pixelPosValid && isVisible() && currentView != null) {
-                matrixPanel.setEnabled(true);
+                matrixTable.setEnabled(true);
                 AffineTransform i2mTransform = currentView.getBaseImageLayer().getImageToModelTransform(currentLevel);
                 Point2D modelP = i2mTransform.transform(new Point2D.Double(pixelX + 0.5, pixelY + 0.5), null);
                 AffineTransform m2iTransform = currentView.getBaseImageLayer().getModelToImageTransform();
                 Point2D levelZeroP = m2iTransform.transform(modelP, null);
-                currentLevelZeroX = (int) Math.floor(levelZeroP.getX());
-                currentLevelZeroY = (int) Math.floor(levelZeroP.getY());
-                updateMatrix();
+                matrixModel.setCenterPixel(MathUtils.floorInt(levelZeroP.getX()),
+                                           MathUtils.floorInt(levelZeroP.getY()));
             } else {
-                matrixPanel.setEnabled(false);
+                matrixTable.setEnabled(false);
             }
         }
 
         @Override
         public void pixelPosNotAvailable() {
-            matrixPanel.setEnabled(false);
+            matrixTable.setEnabled(false);
         }
     }
 
@@ -312,98 +354,33 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
 
         @Override
         public void mouseWheelMoved(MouseWheelEvent e) {
-            RasterDataNode nextRaster = null;
             if (e.isAltDown()) {
-                final String varName = AbstractTimeSeries.rasterToVariableName(currentRaster.getName());
-                final List<Band> bandList = timeSeries.getBandsForVariable(varName);
-                final int currentIndex = bandList.indexOf(currentRaster);
-
-                if (e.getWheelRotation() < 0) {
-                    if (currentIndex > 0) {
-                        nextRaster = bandList.get(currentIndex - 1);
-                    }
-                    if (nextRaster == currentRaster) {
-                        return;
-                    }
-                } else {
-                    if (currentIndex + 1 < bandList.size()) {
-                        nextRaster = bandList.get(currentIndex + 1);
-                    }
-                    if (nextRaster == currentRaster) {
-                        return;
-                    }
+                Band nextBand = getNextBand(matrixModel.getBand(), e.getWheelRotation());
+                if (nextBand != null) {
+                    matrixModel.setBand(nextBand);
+                    updateDateLabel(nextBand);
                 }
             }
-            if (nextRaster != null) {
-                currentRaster = nextRaster;
-                updateDateLabel();
-                updateMatrix();
-            }
-        }
-    }
 
-    private void updateDateLabel() {
-        final TimeCoding timeCoding = timeSeries.getRasterTimeMap().get(currentRaster);
-        final Date startTime = timeCoding.getStartTime().getAsDate();
-        SimpleDateFormat sdf = new SimpleDateFormat("dd-MMM-yyyy hh:mm:ss");
-        dateLabel.setText(String.format(DATE_PREFIX + " %s", sdf.format(startTime)));
-    }
-
-    private void updateMatrix() {
-        int x = currentLevelZeroX;
-        int y = currentLevelZeroY;
-
-        final Color[][] colors = new Color[matrixSize][matrixSize];
-        final double[][] values = new double[matrixSize][matrixSize];
-
-        for (int i = 0; i < matrixSize; i++) {
-            for (int j = 0; j < matrixSize; j++) {
-                int xIndex = x - (int) Math.floor(matrixSize / 2.0) + i;
-                int yIndex = y - (int) Math.floor(matrixSize / 2.0) + j;
-                values[j][i] = getValue(xIndex, yIndex);
-                colors[j][i] = getColor(values[j][i]);
-            }
         }
 
-        matrixPanel.setValues(colors, values);
-        matrixPanel.repaint();
-    }
-
-    private double getValue(int x, int y) {
-        if (currentRaster == null) {
-            return Double.NaN;
-        }
-        if (currentRaster.isPixelValid(x, y)) {
-            return ProductUtils.getGeophysicalSampleDouble((Band) currentRaster, x, y, 0);
-        } else {
-            return Double.NaN;
-        }
-    }
-
-    private Color getColor(double sample) {
-        if (currentRaster == null || Double.isNaN(sample)) {
-            return null;
-        }
-        return currentRaster.getImageInfo().getColorPaletteDef().computeColor(currentRaster, sample);
     }
 
     private class TimeSeriesMatrixTSL extends TimeSeriesListener {
 
         @Override
-        public void nodeAdded(ProductNodeEvent event) {
-            final ProductNode node = event.getSourceNode();
-            if (node instanceof RasterDataNode && currentView != null) {
-                updateDateLabel();
-                updateMatrix();
-            }
-        }
-
-        @Override
         public void nodeRemoved(ProductNodeEvent event) {
             final ProductNode node = event.getSourceNode();
-            if (node instanceof RasterDataNode && currentView != null) {
-                updateDateLabel();
-                updateMatrix();
+            if (node == matrixModel.getBand()) {
+                final Band band = matrixModel.getBand();
+                Band nextBand = getNextBand(band, 1);
+                if (nextBand == band) {
+                    nextBand = getNextBand(band, -1);
+                }
+                if (nextBand == band) {
+                    nextBand = null;
+                }
+                updateDateLabel(nextBand);
             }
         }
     }
@@ -411,8 +388,8 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
     private static class MatrixSpinnerModel extends SpinnerNumberModel {
 
         private static final int DEFAULT_VALUE = 3;
-        private static final int MINIMUM = 1;
-        private static final int MAXIMUM = 9;
+        private static final int MINIMUM = 3;
+        private static final int MAXIMUM = 15;
         private static final int STEP_SIZE = 2;
 
         private MatrixSpinnerModel() {
@@ -430,9 +407,112 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
             if (iValue % 2 == 1) {
                 super.setValue(iValue);
             } else {
-                // trigger repaint with model value
                 fireStateChanged();
             }
+        }
+    }
+
+    private static class MatrixTableModel extends AbstractTableModel {
+
+        private int size;
+        private Band band;
+        private int centerPixelX;
+        private int centerPixelY;
+
+        private MatrixTableModel(int matrixSize) {
+            this.size = matrixSize;
+            band = null;
+            centerPixelX = -1;
+            centerPixelY = -1;
+        }
+
+        @Override
+        public int getRowCount() {
+            return size;
+        }
+
+        @Override
+        public int getColumnCount() {
+            return size;
+        }
+
+        @Override
+        public Class<?> getColumnClass(int columnIndex) {
+            return Double.class;
+        }
+
+        @Override
+        public Object getValueAt(int rowIndex, int columnIndex) {
+            final int centerOffset = MathUtils.floorInt(size / 2.0);
+            int pixelX = centerPixelX - centerOffset + columnIndex;
+            int pixelY = centerPixelY - centerOffset + rowIndex;
+
+            if (band != null && band.isPixelValid(pixelX, pixelY)) {
+                return ProductUtils.getGeophysicalSampleDouble(band, pixelX, pixelY, 0);
+            } else {
+                return Double.NaN;
+            }
+        }
+
+        public void setMatrixSize(int matrixSize) {
+            if (this.size != matrixSize) {
+                this.size = matrixSize;
+                fireTableStructureChanged();
+            }
+        }
+
+        public void setBand(Band band) {
+            if (this.band != band) {
+                this.band = band;
+                fireTableDataChanged();
+            }
+        }
+
+        public Band getBand() {
+            return band;
+        }
+
+        /**
+         * Sets the center pixel position of the matrix
+         *
+         * @param pixelX center x position
+         * @param pixelY center y position
+         */
+        public void setCenterPixel(int pixelX, int pixelY) {
+            if (this.centerPixelX != pixelX || this.centerPixelY != pixelY) {
+                this.centerPixelX = pixelX;
+                this.centerPixelY = pixelY;
+                fireTableDataChanged();
+            }
+        }
+    }
+
+    private static class MatrixCellRenderer extends DefaultTableCellRenderer {
+
+        private TimeSeriesMatrixToolView.MatrixTableModel tableModel;
+        private DecimalFormat valueFormatter;
+
+        private MatrixCellRenderer(MatrixTableModel tableModel) {
+            this.tableModel = tableModel;
+            valueFormatter = new DecimalFormat("0.0000");
+        }
+
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
+                                                       int row, int column) {
+            final JLabel label = (JLabel) super.getTableCellRendererComponent(table, value,
+                                                                              isSelected, hasFocus,
+                                                                              row, column);
+            double rasterValue = (Double) value;
+            final RasterDataNode raster = tableModel.getBand();
+            Color bgColor = Color.WHITE;
+            if (raster != null) {
+                bgColor = raster.getImageInfo().getColorPaletteDef().computeColor(raster, rasterValue);
+            }
+            label.setBackground(bgColor);
+            label.setText(valueFormatter.format(rasterValue));
+            return label;
+
         }
     }
 }

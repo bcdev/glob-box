@@ -14,13 +14,14 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package org.esa.beam.glob.ui;
+package org.esa.beam.glob.ui.assistant;
 
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductNode;
 import org.esa.beam.framework.ui.AppContext;
 import org.esa.beam.framework.ui.command.CommandEvent;
+import org.esa.beam.glob.ui.Variable;
 import org.esa.beam.visat.VisatApp;
 
 public class NewTimeSeriesFromBandAssistantAction extends AbstractTimeSeriesAssistantAction {

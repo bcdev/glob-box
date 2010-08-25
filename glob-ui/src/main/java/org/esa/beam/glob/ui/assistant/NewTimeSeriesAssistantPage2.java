@@ -14,9 +14,12 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package org.esa.beam.glob.ui;
+package org.esa.beam.glob.ui.assistant;
 
 import org.esa.beam.framework.ui.assistant.AssistantPage;
+import org.esa.beam.glob.ui.Variable;
+import org.esa.beam.glob.ui.VariableSelectionPane;
+import org.esa.beam.glob.ui.VariableSelectionPaneModel;
 
 import java.awt.Component;
 

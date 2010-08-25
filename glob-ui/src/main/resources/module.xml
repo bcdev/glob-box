@@ -40,7 +40,7 @@
 
         <toolView>
             <id>timeSeriesPlayerToolView</id>
-            <class>org.esa.beam.glob.ui.TimeSeriesPlayerToolView</class>
+            <class>org.esa.beam.glob.ui.player.TimeSeriesPlayerToolView</class>
             <title>Time Series Player</title>
             <tabTitle>Time Series</tabTitle>
             <mnemonic>T</mnemonic>
@@ -57,7 +57,7 @@
 
         <toolView>
             <id>timeSeriesManagerToolView</id>
-            <class>org.esa.beam.glob.ui.TimeSeriesManagerToolView</class>
+            <class>org.esa.beam.glob.ui.manager.TimeSeriesManagerToolView</class>
             <title>Time Series Manager</title>
             <tabTitle>Time Series Manager</tabTitle>
             <description>Time Series Manager</description>
@@ -74,7 +74,7 @@
 
         <toolView>
             <id>timeSeriesGraphToolView</id>
-            <class>org.esa.beam.glob.ui.TimeSeriesGraphToolView</class>
+            <class>org.esa.beam.glob.ui.graph.TimeSeriesGraphToolView</class>
             <title>Time Series Graph</title>
             <tabTitle>Time Series Graph</tabTitle>
             <description>Time Series Graph</description>
@@ -91,7 +91,7 @@
 
         <toolView>
             <id>timeSeriesMatrixToolView</id>
-            <class>org.esa.beam.glob.ui.TimeSeriesMatrixToolView</class>
+            <class>org.esa.beam.glob.ui.matrix.TimeSeriesMatrixToolView</class>
             <title>Time Series Matrix</title>
             <tabTitle>Time Series Matrix</tabTitle>
             <description>Time Series Matrix</description>
@@ -121,7 +121,7 @@
         <action>
             <id>newTimeSeriesFromBandAssistantAction</id>
             <parent>TimeSeriesGroup</parent>
-            <class>org.esa.beam.glob.ui.NewTimeSeriesFromBandAssistantAction</class>
+            <class>org.esa.beam.glob.ui.assistant.NewTimeSeriesFromBandAssistantAction</class>
             <text>Create Time Series...</text>
             <shortDescr>Create a new time series based on the selected raster</shortDescr>
             <context>band, tiePointGrid</context>
@@ -130,7 +130,7 @@
         <action>
             <id>newTimeSeriesAssistantAction</id>
             <parent>file</parent>
-            <class>org.esa.beam.glob.ui.NewTimeSeriesAssistantAction</class>
+            <class>org.esa.beam.glob.ui.assistant.NewTimeSeriesAssistantAction</class>
             <text>New Time Series...</text>
             <smallIcon>icons/New16.gif</smallIcon>
             <largeIcon>icons/New24.gif</largeIcon>

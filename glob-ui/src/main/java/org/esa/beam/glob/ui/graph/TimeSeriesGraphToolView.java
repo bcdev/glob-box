@@ -14,7 +14,7 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package org.esa.beam.glob.ui;
+package org.esa.beam.glob.ui.graph;
 
 import com.bc.ceres.glayer.support.ImageLayer;
 import com.bc.ceres.grender.Viewport;
@@ -31,6 +31,7 @@ import org.esa.beam.glob.core.TimeSeriesMapper;
 import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesChangeEvent;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesListener;
+import org.esa.beam.glob.ui.player.TimeSeriesPlayerToolView;
 import org.esa.beam.visat.VisatApp;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;

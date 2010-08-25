@@ -14,7 +14,7 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package org.esa.beam.glob.ui;
+package org.esa.beam.glob.ui.player;
 
 import com.bc.ceres.swing.TableLayout;
 import org.esa.beam.framework.datamodel.Band;

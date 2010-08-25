@@ -1,4 +1,4 @@
-package org.esa.beam.glob.ui;
+package org.esa.beam.glob.ui.manager;
 
 import com.bc.ceres.swing.TableLayout;
 import com.jidesoft.combobox.DateComboBox;

@@ -14,22 +14,14 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package org.esa.beam.glob.ui;
+package org.esa.beam.glob.ui.assistant;
 
-import org.esa.beam.framework.ui.assistant.AssistantPane;
-import org.esa.beam.framework.ui.command.CommandEvent;
-import org.esa.beam.visat.actions.AbstractVisatAction;
+public class NewTimeSeriesAssistantAction extends AbstractTimeSeriesAssistantAction {
 
-public abstract class AbstractTimeSeriesAssistantAction extends AbstractVisatAction {
+    public static final String ID = "newTimeSeriesAssistantAction";
 
     @Override
-    public void actionPerformed(CommandEvent event) {
-        super.actionPerformed(event);
-        final TimeSeriesAssistantModel assistantModel = createModel();
-        final AssistantPane assistant = new AssistantPane(getAppContext().getApplicationWindow(), "New Time Series");
-        assistant.show(new NewTimeSeriesAssistantPage1(assistantModel));
+    protected TimeSeriesAssistantModel createModel() {
+        return new TimeSeriesAssistantModel();
     }
-
-    protected abstract TimeSeriesAssistantModel createModel();
-
 }

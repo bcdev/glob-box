@@ -14,23 +14,22 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package org.esa.beam.glob.ui;
+package org.esa.beam.glob.ui.assistant;
 
-import org.jfree.data.time.TimeSeries;
+import org.esa.beam.framework.ui.assistant.AssistantPane;
+import org.esa.beam.framework.ui.command.CommandEvent;
+import org.esa.beam.visat.actions.AbstractVisatAction;
 
-import java.util.ArrayList;
-import java.util.List;
-
-public class TimeSeriesCollection extends org.jfree.data.time.TimeSeriesCollection {
+public abstract class AbstractTimeSeriesAssistantAction extends AbstractVisatAction {
 
     @Override
-    public List<TimeSeries> getSeries() {
-        final ArrayList<TimeSeries> result = new ArrayList<TimeSeries>();
-        final List seriesList = super.getSeries();
-        for (Object oneSeries : seriesList) {
-            result.add((TimeSeries) oneSeries);
-        }
-        return result;
+    public void actionPerformed(CommandEvent event) {
+        super.actionPerformed(event);
+        final TimeSeriesAssistantModel assistantModel = createModel();
+        final AssistantPane assistant = new AssistantPane(getAppContext().getApplicationWindow(), "New Time Series");
+        assistant.show(new NewTimeSeriesAssistantPage1(assistantModel));
     }
+
+    protected abstract TimeSeriesAssistantModel createModel();
 
 }
