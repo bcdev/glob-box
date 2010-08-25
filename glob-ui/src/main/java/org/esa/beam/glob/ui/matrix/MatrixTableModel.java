@@ -5,6 +5,7 @@ import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.math.MathUtils;
 
 import javax.swing.table.AbstractTableModel;
+import java.awt.Rectangle;
 
 class MatrixTableModel extends AbstractTableModel {
 
@@ -40,12 +41,14 @@ class MatrixTableModel extends AbstractTableModel {
         final int centerOffset = MathUtils.floorInt(size / 2.0);
         int pixelX = centerPixelX - centerOffset + columnIndex;
         int pixelY = centerPixelY - centerOffset + rowIndex;
-
-        if (band != null && band.isPixelValid(pixelX, pixelY)) {
-            return ProductUtils.getGeophysicalSampleDouble(band, pixelX, pixelY, 0);
-        } else {
-            return Double.NaN;
+        if(band == null) {
+            return null;
         }
+        final Rectangle imageRectangle = new Rectangle(band.getSceneRasterWidth(), band.getSceneRasterHeight());
+        if(!imageRectangle.contains(pixelX,pixelY)) {
+            return null;
+        }
+        return ProductUtils.getGeophysicalSampleDouble(band, pixelX, pixelY, 0);
     }
 
     public void setMatrixSize(int matrixSize) {
