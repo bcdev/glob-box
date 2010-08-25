@@ -18,6 +18,7 @@ package org.esa.beam.glob.ui.matrix;
 
 import com.bc.ceres.glayer.support.ImageLayer;
 import com.bc.ceres.glayer.swing.LayerCanvas;
+import com.jidesoft.grid.JideTable;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.ProductNode;
 import org.esa.beam.framework.datamodel.ProductNodeEvent;
@@ -42,7 +43,6 @@ import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSpinner;
-import javax.swing.JTable;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -78,7 +78,7 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
     private TimeSeriesPPL pixelPosListener;
     private MatrixMouseWheelListener mouseWheelListener;
     private final TimeSeriesListener timeSeriesMatrixTSL;
-    private JTable matrixTable;
+    private JideTable matrixTable;
 
     private int matrixSize = 3; // default value; value must be uneven
 
@@ -155,7 +155,9 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
         dateLabel = new JLabel(String.format(DATE_PREFIX + " %s", startDateString));
         mainPanel.add(BorderLayout.NORTH, dateLabel);
         matrixModel = new MatrixTableModel(matrixSize);
-        matrixTable = new JTable(matrixModel);
+        matrixTable = new JideTable(matrixModel);
+        matrixTable.setRowResizable(true);
+        matrixTable.setRowAutoResizes(true);
         matrixTable.setDefaultRenderer(Double.class, new MatrixCellRenderer(matrixModel));
         matrixTable.setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));
         matrixTable.setEnabled(false);

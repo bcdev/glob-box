@@ -4,9 +4,11 @@ import org.esa.beam.framework.datamodel.RasterDataNode;
 
 import javax.swing.JLabel;
 import javax.swing.JTable;
+import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.text.DecimalFormat;
 
 import static java.lang.Math.*;
@@ -42,6 +44,16 @@ class MatrixCellRenderer extends DefaultTableCellRenderer {
         label.setBackground(bgColor);
         label.setForeground(findForegroundColor(bgColor));
         label.setText(labelText);
+        label.setHorizontalAlignment(SwingConstants.CENTER);
+        label.setVerticalAlignment(SwingConstants.CENTER);
+
+        int availableSpace = table.getParent().getBounds().height - 16;
+        availableSpace = availableSpace >= 1 ? availableSpace : table.getRowHeight() * table.getRowCount();
+        int rowHeight = availableSpace / table.getRowCount();
+        label.setMinimumSize(new Dimension(label.getPreferredSize().width, 16));
+        label.setPreferredSize(new Dimension(label.getPreferredSize().width, rowHeight));
+        label.setSize(new Dimension(label.getPreferredSize().width, rowHeight));
+
         return label;
 
     }
@@ -62,9 +74,19 @@ class MatrixCellRenderer extends DefaultTableCellRenderer {
     private Color findForegroundColor(Color bgColor) {
         final int colorDiffWhite = getColorDiff(Color.WHITE, bgColor);
         final int colorBrightDiffWhite = getColorBrightDiff(Color.WHITE, bgColor);
-        if(colorDiffWhite >= 500 && colorBrightDiffWhite >= 125) {
+        final int colorDiffBlack = getColorDiff(Color.BLACK, bgColor);
+        final int colorBrightDiffBlack = getColorBrightDiff(Color.BLACK, bgColor);
+        if (colorDiffWhite >= 500 && colorBrightDiffWhite >= 125) {
             return Color.WHITE;
         }
+        if (colorDiffBlack >= 500 && colorBrightDiffBlack >= 125) {
+            return Color.BLACK;
+        }
+
+        if (colorDiffWhite + colorBrightDiffWhite > colorDiffBlack + colorBrightDiffBlack) {
+            return Color.WHITE;
+        }
+
         return Color.BLACK;
     }
 
@@ -80,6 +102,5 @@ class MatrixCellRenderer extends DefaultTableCellRenderer {
                max(color1.getGreen(), color2.getGreen()) - min(color1.getGreen(), color2.getGreen()) +
                max(color1.getBlue(), color2.getBlue()) - min(color1.getBlue(), color2.getBlue());
     }
-
 
 }
