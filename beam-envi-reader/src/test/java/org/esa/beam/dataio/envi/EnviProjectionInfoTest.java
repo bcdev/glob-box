@@ -2,6 +2,8 @@ package org.esa.beam.dataio.envi;
 
 import junit.framework.TestCase;
 
+import java.util.Arrays;
+
 public class EnviProjectionInfoTest extends TestCase {
 
     public void testSetGetProjectionNumber() {
@@ -19,7 +21,7 @@ public class EnviProjectionInfoTest extends TestCase {
         final double[] parameter = new double[]{1.9, 2.5, 3.1};
 
         info.setParameter(parameter);
-        assertEquals(parameter, info.getParameter());
+        assertTrue(Arrays.equals(parameter, info.getParameter()));
     }
 
     public void testSetGetDatum() {
