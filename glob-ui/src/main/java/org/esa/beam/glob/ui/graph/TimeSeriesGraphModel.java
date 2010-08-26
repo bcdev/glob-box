@@ -34,8 +34,6 @@ import org.jfree.chart.annotations.XYAnnotation;
 import org.jfree.chart.annotations.XYLineAnnotation;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.axis.ValueAxis;
-import org.jfree.chart.event.PlotChangeEvent;
-import org.jfree.chart.event.PlotChangeListener;
 import org.jfree.chart.plot.DefaultDrawingSupplier;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
@@ -89,12 +87,6 @@ class TimeSeriesGraphModel {
 
     TimeSeriesGraphModel(XYPlot plot) {
         timeSeriesPlot = plot;
-        timeSeriesPlot.addChangeListener(new PlotChangeListener() {
-            @Override
-            public void plotChanged(PlotChangeEvent plotChangeEvent) {
-//                updateAnnotation();
-            }
-        });
         variableBands = new ArrayList<List<Band>>();
         displayModelMap = new WeakHashMap<AbstractTimeSeries, DisplayModel>();
         pinDatasets = new ArrayList<TimeSeriesCollection>();
@@ -337,7 +329,6 @@ class TimeSeriesGraphModel {
             if (version.get() != myVersion) {
                 return;
             }
-//                getTimeSeriesPlot().removeAnnotation(loadingMessage);
             if (cursor) {
                 removeCursorTimeSeries();
             }
