@@ -31,8 +31,8 @@ import java.io.IOException;
 
 class IgbpGlccOpImage extends SingleBandedOpImage {
 
-    private File file;
-    private int sourceWidth;
+    private final File file;
+    private final int sourceWidth;
 
     IgbpGlccOpImage(int sourceWidth, int sourceHeight, ResolutionLevel level, File file) {
         super(DataBuffer.TYPE_BYTE, sourceWidth, sourceHeight,

@@ -44,7 +44,7 @@ public class GlobCarbonEnviProductReader extends AbstractProductReader {
 
     private static final String PRODUCT_PROPERTIES_RESOURCE_PATTERN = "%s.%s.properties";
     private static final String HIGH_RES_IDENTIFIER = "01km";
-    private GlobCarbonEnviProductReaderPlugIn readerPlugIn;
+    private final GlobCarbonEnviProductReaderPlugIn readerPlugIn;
     private List<Product> delegateProductList;
 
     /**

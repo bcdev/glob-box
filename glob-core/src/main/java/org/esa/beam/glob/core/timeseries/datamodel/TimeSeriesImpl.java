@@ -52,8 +52,8 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
     private Product tsProduct;
     private List<ProductLocation> productLocationList;
     private Map<String, Product> productTimeMap;
-    private Map<RasterDataNode, TimeCoding> rasterTimeMap = new WeakHashMap<RasterDataNode, TimeCoding>();
-    private List<TimeSeriesListener> listeners = new ArrayList<TimeSeriesListener>();
+    private final Map<RasterDataNode, TimeCoding> rasterTimeMap = new WeakHashMap<RasterDataNode, TimeCoding>();
+    private final List<TimeSeriesListener> listeners = new ArrayList<TimeSeriesListener>();
     private volatile boolean isAdjustingImageInfos;
 
     /**

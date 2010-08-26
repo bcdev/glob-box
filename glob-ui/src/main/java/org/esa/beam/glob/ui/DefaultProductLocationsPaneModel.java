@@ -26,7 +26,7 @@ import java.util.List;
 
 public class DefaultProductLocationsPaneModel extends AbstractListModel implements ProductLocationsPaneModel {
 
-    private List<ProductLocation> productLocationList;
+    private final List<ProductLocation> productLocationList;
 
     public DefaultProductLocationsPaneModel() {
         productLocationList = new ArrayList<ProductLocation>();

@@ -23,7 +23,6 @@ import org.esa.beam.util.io.BeamFileFilter;
 
 import java.io.File;
 import java.util.Locale;
-import java.util.regex.Pattern;
 
 public class IgbpGlccProductReaderPlugIn implements ProductReaderPlugIn{
 

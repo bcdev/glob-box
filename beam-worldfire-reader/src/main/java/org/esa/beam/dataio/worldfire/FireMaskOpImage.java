@@ -40,7 +40,7 @@ public class FireMaskOpImage extends SingleBandedOpImage {
     private static final byte FALSE = (byte) 0;
     private static final byte TRUE = (byte) 255;
     private final ColorModel colorModel;
-    private Placemark[] fireList;
+    private final Placemark[] fireList;
 
     public FireMaskOpImage(List<Placemark> fireList,
                            int width, int height,

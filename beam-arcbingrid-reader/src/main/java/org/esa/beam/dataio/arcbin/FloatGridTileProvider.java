@@ -58,7 +58,7 @@ class FloatGridTileProvider implements GridTileProvider {
                     tileOffset += 4;
                     data.setElemFloatAt(i, value);
                 }
-            } catch (Exception e) {
+            } catch (Exception ignored) {
                 fillBuffer(data, nodataValue);
             }
         }

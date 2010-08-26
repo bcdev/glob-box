@@ -4,6 +4,9 @@ import org.esa.beam.framework.datamodel.ProductData;
 
 class DataTypeUtils {
 
+    private DataTypeUtils() {
+    }
+
     static int toBeam(int enviTypeId) {
         if (EnviConstants.TYPE_ID_BYTE == enviTypeId) {
             return ProductData.TYPE_UINT8;

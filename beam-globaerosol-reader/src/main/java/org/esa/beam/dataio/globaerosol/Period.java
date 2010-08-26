@@ -25,8 +25,8 @@ enum Period {
     MONTHLY(Calendar.MONTH, 1),
     YEAR(Calendar.YEAR, 1);
 
-    private int calendarFieldIndex;
-    private int amount;
+    private final int calendarFieldIndex;
+    private final int amount;
 
     Period(int calendarFieldIndex, int amount) {
         this.calendarFieldIndex = calendarFieldIndex;

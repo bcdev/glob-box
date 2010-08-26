@@ -67,7 +67,7 @@ import java.util.zip.ZipOutputStream;
 public class ExportTimeBasedKmz extends ExecCommand {
 
     private static final String IMAGE_EXPORT_DIR_PREFERENCES_KEY = "user.image.export.dir";
-    private BeamFileFilter kmzFileFilter = new BeamFileFilter("KMZ", "kmz", "KMZ - Google Earth File Format");
+    private final BeamFileFilter kmzFileFilter = new BeamFileFilter("KMZ", "kmz", "KMZ - Google Earth File Format");
     private int level = 2;
     private ProductSceneView view;
 

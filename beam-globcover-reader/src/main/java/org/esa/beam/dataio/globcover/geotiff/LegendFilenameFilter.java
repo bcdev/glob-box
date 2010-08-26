@@ -23,7 +23,7 @@ import java.util.List;
 
 class LegendFilenameFilter implements FilenameFilter {
 
-    private List<String> regionLegendNames;
+    private final List<String> regionLegendNames;
 
 
     LegendFilenameFilter() {

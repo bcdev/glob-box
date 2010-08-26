@@ -36,7 +36,7 @@ import java.awt.Component;
 abstract class AbstractTimeSeriesAssistantPage extends AbstractAssistantPage {
 
     private final TimeSeriesAssistantModel assistantModel;
-    protected AbstractTimeSeriesAssistantPage.MyChangeListener changeListener;
+    private final AbstractTimeSeriesAssistantPage.MyChangeListener changeListener;
 
     AbstractTimeSeriesAssistantPage(String pageTitle, TimeSeriesAssistantModel model) {
         super(pageTitle);
@@ -52,7 +52,7 @@ abstract class AbstractTimeSeriesAssistantPage extends AbstractAssistantPage {
     @Override
     public boolean performFinish() {
         TimeSeriesAssistantModel model = getAssistantModel();
-        new TimeSeriesCreator(model, this.getPageComponent(), "Creating Time Series...").executeWithBlocking();
+        new TimeSeriesCreator(model, this.getPageComponent()).executeWithBlocking();
         removeModeListener();
         return true;
     }
@@ -87,7 +87,7 @@ abstract class AbstractTimeSeriesAssistantPage extends AbstractAssistantPage {
 
         private Product tsProduct;
 
-        public CloseListener(Product tsProduct) {
+        private CloseListener(Product tsProduct) {
             this.tsProduct = tsProduct;
         }
 
@@ -114,10 +114,10 @@ abstract class AbstractTimeSeriesAssistantPage extends AbstractAssistantPage {
 
     private class TimeSeriesCreator extends ProgressMonitorSwingWorker<Void, TimeSeriesAssistantModel> {
 
-        private TimeSeriesAssistantModel model;
+        private final TimeSeriesAssistantModel model;
 
-        private TimeSeriesCreator(TimeSeriesAssistantModel model, Component parentComponent, String title) {
-            super(parentComponent, title);
+        private TimeSeriesCreator(TimeSeriesAssistantModel model, Component parentComponent) {
+            super(parentComponent, "Creating Time Series...");
             this.model = model;
         }
 

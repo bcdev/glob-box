@@ -68,19 +68,19 @@ class TimeSeriesPlayerForm extends JPanel {
     private final ImageIcon plusIcon = UIUtils.loadImageIcon("icons/Add16.png");
     private final ImageIcon exportIcon = UIUtils.loadImageIcon("icons/Export24.gif");
 
-    private JSlider timeSlider;
-    private AbstractButton playButton;
-    private AbstractButton stopButton;
-    private JLabel dateLabel;
-    private JSlider speedSlider;
-    private JLabel speedLabel;
-    private JLabel speedUnit;
-    private AbstractButton blendButton;
+    private final JSlider timeSlider;
+    private final AbstractButton playButton;
+    private final AbstractButton stopButton;
+    private final JLabel dateLabel;
+    private final JSlider speedSlider;
+    private final JLabel speedLabel;
+    private final JLabel speedUnit;
+    private final AbstractButton blendButton;
     private Timer timer;
-    private AbstractButton repeatButton;
-    private AbstractButton minusButton;
-    private AbstractButton plusButton;
-    private AbstractButton exportButton;
+    private final AbstractButton repeatButton;
+    private final AbstractButton minusButton;
+    private final AbstractButton plusButton;
+    private final AbstractButton exportButton;
 
     private int stepsPerTimespan = 1;
     private int timerDelay = 1250;

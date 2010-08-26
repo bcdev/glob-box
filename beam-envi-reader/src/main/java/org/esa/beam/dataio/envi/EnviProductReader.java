@@ -39,7 +39,7 @@ import java.util.zip.ZipFile;
 // @todo 2 tb/** evaluate file type information and react accordingly
 // @todo 2 tb/** evaluate data type information and react accordingly
 
-public class EnviProductReader extends AbstractProductReader {
+class EnviProductReader extends AbstractProductReader {
 
     private HashMap<String, Long> bandStreamPositionMap = null;
     private ImageInputStream imageInputStream = null;
@@ -163,6 +163,7 @@ public class EnviProductReader extends AbstractProductReader {
         super.close();
     }
 
+    @Override
     public TreeNode<File> getProductComponents() {
         try {
             final File headerFile = EnviProductReaderPlugIn.getInputFile(getInput());
@@ -183,7 +184,7 @@ public class EnviProductReader extends AbstractProductReader {
 
             return root;
 
-        } catch (IOException e) {
+        } catch (IOException ignored) {
             return null;
         }
     }
@@ -322,7 +323,7 @@ public class EnviProductReader extends AbstractProductReader {
     private BufferedReader getHeaderReader(File inputFile) throws IOException {
         if (EnviProductReaderPlugIn.isCompressedFile(inputFile)) {
             ZipFile zipFile;
-            ZipEntry zipEntry = null;
+            ZipEntry zipEntry;
 
             if (inputFile.getPath().toLowerCase().endsWith(".zip")) {
                 zipFile = new ZipFile(inputFile);

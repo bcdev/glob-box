@@ -73,14 +73,14 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
     private JLabel dateLabel;
     private ProductSceneView currentView;
     private AbstractTimeSeries timeSeries;
-    private SceneViewListener sceneViewListener;
-    private TimeSeriesPPL pixelPosListener;
-    private MatrixMouseWheelListener mouseWheelListener;
+    private final SceneViewListener sceneViewListener;
+    private final TimeSeriesPPL pixelPosListener;
+    private final MatrixMouseWheelListener mouseWheelListener;
     private final TimeSeriesListener timeSeriesMatrixTSL;
 
     private static final String DATE_PREFIX = "Date: ";
     private MatrixTableModel matrixModel;
-    private SimpleDateFormat dateFormat;
+    private final SimpleDateFormat dateFormat;
     private MatrixCellRenderer matrixCellRenderer;
 
     public TimeSeriesMatrixToolView() {

@@ -28,7 +28,7 @@ import java.util.Locale;
 public class GlobCoverGeoTiffProductReaderPlugIn implements ProductReaderPlugIn {
 
     private final GeoTiffProductReaderPlugIn geoTiffPlugIn;
-    private LegendFilenameFilter legendFileFilter;
+    private final LegendFilenameFilter legendFileFilter;
     private static final String[] FORMAT_NAMES = {"GeoTIFF-GC"};
 
     public GlobCoverGeoTiffProductReaderPlugIn() {

@@ -111,14 +111,14 @@ public class BinnedProductReaderPlugIn implements ProductReaderPlugIn {
                     "globcolour")) {
                 return DecodeQualification.UNABLE;
             }
-        } catch (IOException e) {
+        } catch (IOException ignored) {
             return DecodeQualification.UNABLE;
         } finally {
             try {
                 if (ncfile != null) {
                     ncfile.close();
                 }
-            } catch (IOException e) {
+            } catch (IOException ignored) {
                 // OK, ignored
             }
         }
@@ -152,7 +152,7 @@ public class BinnedProductReaderPlugIn implements ProductReaderPlugIn {
 
     /**
      * Returns an array of the default file extensions associated with each format
-     * name returned by the <code>{@link#getFormatNames}</code> method.
+     * name returned by the <code>{@link #getFormatNames}</code> method.
      * <p/>
      * The array returned has the same length as the array returned by the
      * <code>{@link #getFormatNames}</code> method.

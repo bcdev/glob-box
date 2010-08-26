@@ -59,7 +59,7 @@ class RasterStatistics {
         DataContext context;
         try {
             context = dataFormat.createContext(file, "r");
-        } catch (FileNotFoundException e) {
+        } catch (FileNotFoundException ignored) {
             return null;
         }
         CompoundData data = context.createData();

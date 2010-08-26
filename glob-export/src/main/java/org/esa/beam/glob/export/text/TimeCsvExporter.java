@@ -30,8 +30,10 @@ import org.esa.beam.visat.VisatApp;
 import java.io.PrintWriter;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * @author Thomas Storm
@@ -41,17 +43,18 @@ class TimeCsvExporter extends CsvExporter {
     private final List<List<Band>> variablesList;
     private final List<Placemark> pins;
     private final int level;
-    private boolean exportImageCoords = true;
-    private boolean exportLonLat = true;
-    private boolean exportUnit = true;
+    private final boolean exportImageCoords = true;
+    private final boolean exportLonLat = true;
+    private final boolean exportUnit = true;
 
     TimeCsvExporter(List<List<Band>> rasterList, List<Placemark> pins, PrintWriter writer) {
         super(writer);
-        this.variablesList = rasterList;
-        this.pins = pins;
+        this.variablesList = new ArrayList<List<Band>>(rasterList);
+        this.pins = new ArrayList<Placemark>(pins);
         this.level = 0;
     }
 
+    @Override
     void setUpHeader() {
         if (!variablesList.isEmpty()) {
 
@@ -101,7 +104,7 @@ class TimeCsvExporter extends CsvExporter {
                     TimeCoding timeCoding = timeSeries.getRasterTimeMap().get(band);
                     if (timeCoding != null) {
                         final Date date = timeCoding.getStartTime().getAsDate();
-                        SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
+                        SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault());
                         columns.add(sdf.format(date));
                     }
                 }

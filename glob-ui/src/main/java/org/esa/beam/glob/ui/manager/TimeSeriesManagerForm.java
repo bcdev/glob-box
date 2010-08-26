@@ -470,7 +470,7 @@ class TimeSeriesManagerForm {
 
     private class ViewTimeSeriesAction extends AbstractAction {
 
-        private String variableName;
+        private final String variableName;
 
         private ViewTimeSeriesAction(String variableName) {
             super("View " + variableName);

@@ -47,7 +47,7 @@ public class MedspirationFlagCodingPart extends ProfilePart {
     public void read(ProfileReadContext ctx, Product p) throws IOException {
         final Variable[] variables = ctx.getRasterDigest().getRasterVariables();
         for (Variable variable : variables) {
-            List<MetadataAttribute> attributes = new ArrayList<MetadataAttribute>(0);
+            List<MetadataAttribute> attributes;
 
             Attribute commentAttribute = variable.findAttribute("comment");
             if (commentAttribute != null && !commentAttribute.getStringValue().isEmpty()) {

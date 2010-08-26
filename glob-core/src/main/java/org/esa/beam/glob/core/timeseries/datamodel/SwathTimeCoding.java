@@ -27,7 +27,7 @@ import org.esa.beam.framework.datamodel.ProductData;
  */
 public class SwathTimeCoding extends TimeCoding {
 
-    private int height;
+    private final int height;
 
     /**
      * Constructor for a SwathTimeCoding.

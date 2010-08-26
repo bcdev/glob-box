@@ -177,7 +177,7 @@ class EditTimeSpanAction extends AbstractAction {
 
             private final JCheckBox autoAdjustBox;
 
-            public AutoAdjustBoxListener(JCheckBox autoAdjustBox) {
+            private AutoAdjustBoxListener(JCheckBox autoAdjustBox) {
                 this.autoAdjustBox = autoAdjustBox;
             }
 

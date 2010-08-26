@@ -30,20 +30,20 @@ import java.util.List;
 
 class TimeSeriesAssistantModel {
 
-    private ProductLocationsPaneModel productLocationsModel;
-    private VariableSelectionPaneModel variableSelectionPaneModel;
+    private final ProductLocationsPaneModel productLocationsModel;
+    private final VariableSelectionPaneModel variableSelectionPaneModel;
     private String timeSeriesName;
     private List<ChangeListener> changeListenerList;
 
     TimeSeriesAssistantModel() {
-        this("TimeSeries", new DefaultProductLocationsPaneModel(), new DefaultVariableSelectionPaneModel());
+        this(new DefaultProductLocationsPaneModel(), new DefaultVariableSelectionPaneModel());
     }
 
-    private TimeSeriesAssistantModel(String timeSeriesName, ProductLocationsPaneModel productLocationsModel,
+    private TimeSeriesAssistantModel(ProductLocationsPaneModel productLocationsModel,
                                      VariableSelectionPaneModel variableSelectionPaneModel) {
         this.productLocationsModel = productLocationsModel;
         this.variableSelectionPaneModel = variableSelectionPaneModel;
-        this.timeSeriesName = timeSeriesName;
+        this.timeSeriesName = "TimeSeries";
         final ListDataListenerDelegate dataListenerDelegate = new ListDataListenerDelegate();
         productLocationsModel.addListDataListener(dataListenerDelegate);
         variableSelectionPaneModel.addListDataListener(dataListenerDelegate);

@@ -15,9 +15,9 @@ import static java.lang.Math.*;
 
 class MatrixCellRenderer extends DefaultTableCellRenderer {
 
-    private MatrixTableModel tableModel;
-    private DecimalFormat valueFormatter;
-    private Font boldFont;
+    private final MatrixTableModel tableModel;
+    private final DecimalFormat valueFormatter;
+    private final Font boldFont;
     private Color invalidColor;
 
     MatrixCellRenderer(MatrixTableModel tableModel) {

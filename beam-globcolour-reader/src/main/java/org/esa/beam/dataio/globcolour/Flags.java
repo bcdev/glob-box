@@ -76,10 +76,10 @@ enum Flags {
      */
     MERIS(0x8000, "Measurement is based on MERIS data", Color.green);
 
-    private int mask;
-    private Color color;
-    private float transparency;
-    private String description;
+    private final int mask;
+    private final Color color;
+    private final float transparency;
+    private final String description;
 
     Flags(final int mask, final String description, final Color color) {
         this(mask, description, color, 0.5f);

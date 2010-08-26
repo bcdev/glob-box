@@ -5,19 +5,18 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteOrder;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Properties;
 import java.util.StringTokenizer;
 
-public class Header {
+class Header {
 
     static final String UNKNOWN_SENSOR_TYPE = "Unknown Sensor Type";
     static final String SENSING_START = "sensingStart";
     static final String SENSING_STOP = "sensingStop";
     static final String BEAM_PROPERTIES = "beamProperties";
 
-    public Header(final BufferedReader reader) throws IOException {
+    Header(final BufferedReader reader) throws IOException {
         // @todo 2 tb/tb exception handling - for ANY parse operation
 
         for (String line = reader.readLine(); line != null; line = reader.readLine()) {
@@ -52,11 +51,7 @@ public class Header {
             } else if (line.startsWith(EnviConstants.HEADER_KEY_DESCRIPTION)) {
                 line = assembleMultilineString(reader, line);
                 description = line.substring(line.indexOf('{') + 1, line.lastIndexOf('}')).trim();
-                try {
-                    parseBeamProperties(description);
-                } catch (ParseException e) {
-                    //@todo handle this
-                }
+                parseBeamProperties(description);
             }
         }
         // @todo 2 se/** after reading the headerFile validate the HeaderConstraints
@@ -218,7 +213,7 @@ public class Header {
         }
     }
 
-    private void parseBeamProperties(final String txt) throws IOException, ParseException {
+    private void parseBeamProperties(final String txt) throws IOException {
         if (txt.contains(BEAM_PROPERTIES)) {
             final int propsIdx = txt.indexOf(BEAM_PROPERTIES);
             final int openIdx = txt.indexOf('[', propsIdx);

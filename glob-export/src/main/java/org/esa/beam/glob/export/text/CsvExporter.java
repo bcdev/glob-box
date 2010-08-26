@@ -28,9 +28,9 @@ import java.util.List;
 
 abstract class CsvExporter {
 
-    List<String> header;
-    List<String> columns;
-    List<String> rows;
+    final List<String> header;
+    final List<String> columns;
+    final List<String> rows;
 
     private final PrintWriter out;
 

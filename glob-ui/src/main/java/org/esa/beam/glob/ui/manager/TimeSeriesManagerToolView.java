@@ -38,14 +38,14 @@ import java.util.WeakHashMap;
 
 public class TimeSeriesManagerToolView extends AbstractToolView {
 
-    private AppContext appContext;
+    private final AppContext appContext;
     private JPanel controlPanel;
     private Product selectedProduct;
     private String prefixTitle;
 
-    private WeakHashMap<Product, TimeSeriesManagerForm> formMap;
+    private final WeakHashMap<Product, TimeSeriesManagerForm> formMap;
     private TimeSeriesManagerForm activeForm;
-    private TimeSeriesManagerTSL timeSeriesManagerTSL;
+    private final TimeSeriesManagerTSL timeSeriesManagerTSL;
 
     public TimeSeriesManagerToolView() {
         formMap = new WeakHashMap<Product, TimeSeriesManagerForm>();

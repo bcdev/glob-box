@@ -89,14 +89,14 @@ public class MappedProductReaderPlugIn implements ProductReaderPlugIn {
                     "globcolour")) {
                 return DecodeQualification.UNABLE;
             }
-        } catch (IOException e) {
+        } catch (IOException ignored) {
             return DecodeQualification.UNABLE;
         } finally {
             try {
                 if (ncFile != null) {
                     ncFile.close();
                 }
-            } catch (IOException e) {
+            } catch (IOException ignored) {
                 // OK, ignored
             }
         }

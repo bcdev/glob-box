@@ -23,7 +23,7 @@ import java.util.List;
 
 public class DefaultVariableSelectionPaneModel extends AbstractListModel implements VariableSelectionPaneModel {
 
-    private List<Variable> variableList;
+    private final List<Variable> variableList;
 
     public DefaultVariableSelectionPaneModel() {
         variableList = new ArrayList<Variable>();

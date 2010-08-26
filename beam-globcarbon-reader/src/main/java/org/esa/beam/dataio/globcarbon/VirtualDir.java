@@ -119,7 +119,7 @@ public abstract class VirtualDir {
         }
         try {
             return new Zip(new ZipFile(file));
-        } catch (IOException e) {
+        } catch (IOException ignored) {
             return null;
         }
     }
@@ -234,7 +234,7 @@ public abstract class VirtualDir {
         public void close() {
             try {
                 zipFile.close();
-            } catch (IOException e) {
+            } catch (IOException ignored) {
                 // ok
             }
             if (tempZipFileDir != null) {

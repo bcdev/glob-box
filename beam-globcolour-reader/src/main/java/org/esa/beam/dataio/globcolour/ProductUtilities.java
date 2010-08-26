@@ -47,6 +47,9 @@ public class ProductUtilities {
             "yyyyMMdd",
     };
 
+    private ProductUtilities() {
+    }
+
     static boolean setFlagCodingsAndBitmaskDefs(final Product product) {
         final FlagCoding flagCoding = new FlagCoding("GLOBCOLOUR");
 
@@ -172,9 +175,9 @@ public class ProductUtilities {
             try {
                 utc = ProductData.UTC.parse(timeString, pattern);
                 break; // utc is never null here
-            } catch (ParseException e) {
+            } catch (ParseException ignored) {
                 // ignore
-            } catch (IllegalArgumentException e) {
+            } catch (IllegalArgumentException ignored) {
                 // ignore
             }
         }

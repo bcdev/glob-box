@@ -72,14 +72,13 @@ public class ExportTimeBasedText extends ProgressMonitorSwingWorker<String, Void
         final ProductNode[] placemarkArray = pinGroup.toArray();
         if (placemarkArray.length == 0) {
             return "There are no pins which could be exported.";
-        } else {
-            List<Placemark> placemarks = new ArrayList<Placemark>();
-            for (ProductNode placemark : placemarkArray) {
-                placemarks.add((Placemark) placemark);
-            }
-            CsvExporter exporter = new TimeCsvExporter(bandList, placemarks, writer);
-            exporter.exportCsv(pm);
         }
+        List<Placemark> placemarks = new ArrayList<Placemark>();
+        for (ProductNode placemark : placemarkArray) {
+            placemarks.add((Placemark) placemark);
+        }
+        CsvExporter exporter = new TimeCsvExporter(bandList, placemarks, writer);
+        exporter.exportCsv(pm);
         return null;
     }
 

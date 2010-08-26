@@ -78,6 +78,7 @@ class BlendImageLayer extends ImageLayer {
         return baseLayer.getImage(level);
     }
 
+    @Override
     public int getLevel(Viewport vp) {
         return getLevel(getBaseMultiLevelSource().getModel(), vp);
     }
