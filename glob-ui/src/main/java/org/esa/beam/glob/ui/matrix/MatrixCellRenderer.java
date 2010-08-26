@@ -84,14 +84,27 @@ class MatrixCellRenderer extends DefaultTableCellRenderer {
         final int colorBrightDiffWhite = getColorBrightnessDifference(Color.WHITE, bgColor);
         final int colorDiffBlack = getColorDifference(Color.BLACK, bgColor);
         final int colorBrightDiffBlack = getColorBrightnessDifference(Color.BLACK, bgColor);
-        if (colorDiffWhite >= 500 && colorBrightDiffWhite >= 125) {
+        final boolean colorDiffWhiteGood = colorDiffWhite >= 500;
+        final boolean colorDiffBlackGood = colorDiffBlack >= 500;
+        final boolean colorBrightDiffWhiteGood = colorBrightDiffWhite >= 125;
+        final boolean colorBrightDiffBlackGood = colorBrightDiffBlack >= 125;
+
+        // test if both values are good
+        if (colorDiffWhiteGood && colorBrightDiffWhiteGood) {
             return Color.WHITE;
         }
-        if (colorDiffBlack >= 500 && colorBrightDiffBlack >= 125) {
+        if (colorDiffBlackGood && colorBrightDiffBlackGood) {
+            return Color.BLACK;
+        }
+        // test if at least one value is good
+        if (colorDiffWhiteGood || colorBrightDiffWhiteGood) {
+            return Color.WHITE;
+        }
+        if (colorDiffBlackGood || colorBrightDiffBlackGood) {
             return Color.BLACK;
         }
 
-        // if both do not exceed their thresholds use the the color with the greater sum.
+        // if non of above applies use the best.
         if (colorDiffWhite + colorBrightDiffWhite > colorDiffBlack + colorBrightDiffBlack) {
             return Color.WHITE;
         }
