@@ -1,7 +1,6 @@
 package org.esa.beam.glob.ui.matrix;
 
 import org.esa.beam.framework.datamodel.RasterDataNode;
-import org.esa.beam.visat.VisatApp;
 
 import javax.swing.JLabel;
 import javax.swing.JTable;
@@ -19,11 +18,16 @@ class MatrixCellRenderer extends DefaultTableCellRenderer {
     private MatrixTableModel tableModel;
     private DecimalFormat valueFormatter;
     private Font boldFont;
+    private Color invalidColor;
 
     MatrixCellRenderer(MatrixTableModel tableModel) {
         this.tableModel = tableModel;
         valueFormatter = new DecimalFormat("0.0000");
         boldFont = getFont().deriveFont(Font.BOLD);
+    }
+
+    public void setInvalidColor(Color invalidColor) {
+        this.invalidColor = invalidColor;
     }
 
     @Override
@@ -38,7 +42,7 @@ class MatrixCellRenderer extends DefaultTableCellRenderer {
         Color bgColor;
         if (raster != null && rasterValue != null) {
             if (Double.isNaN(rasterValue)) { // value is invalid
-                bgColor = VisatApp.getApp().getPreferences().getPropertyColor("image.background.color");
+                bgColor = invalidColor;
                 labelText = "NaN";
             } else {
                 bgColor = raster.getImageInfo().getColorPaletteDef().computeColor(raster, rasterValue);

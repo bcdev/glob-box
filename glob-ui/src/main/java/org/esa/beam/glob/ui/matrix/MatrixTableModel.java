@@ -81,4 +81,8 @@ class MatrixTableModel extends AbstractTableModel {
             fireTableDataChanged();
         }
     }
+
+    public void clearMatrix() {
+        setCenterPixel(Integer.MIN_VALUE, Integer.MIN_VALUE);
+    }
 }

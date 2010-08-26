@@ -82,6 +82,7 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
     private static final String DATE_PREFIX = "Date: ";
     private MatrixTableModel matrixModel;
     private SimpleDateFormat dateFormat;
+    private MatrixCellRenderer matrixCellRenderer;
 
     public TimeSeriesMatrixToolView() {
         pixelPosListener = new TimeSeriesPPL();
@@ -150,7 +151,8 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
         mainPanel.add(BorderLayout.NORTH, dateLabel);
         matrixModel = new MatrixTableModel();
         JideTable matrixTable = new JideTable(matrixModel);
-        matrixTable.setDefaultRenderer(Double.class, new MatrixCellRenderer(matrixModel));
+        matrixCellRenderer = new MatrixCellRenderer(matrixModel);
+        matrixTable.setDefaultRenderer(Double.class, matrixCellRenderer);
         matrixTable.setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));
         mainPanel.add(BorderLayout.CENTER, matrixTable);
         return mainPanel;
@@ -213,6 +215,7 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
             if (raster instanceof Band) {
                 matrixModel.setBand((Band) raster);
                 matrixModel.setMatrixSize((Integer) matrixSizeSpinner.getValue());
+                matrixCellRenderer.setInvalidColor(currentView.getLayerCanvas().getBackground());
                 updateDateLabel((Band) currentView.getRaster());
             }
         } else {
@@ -222,13 +225,13 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
     }
 
     private void updateDateLabel(Band band) {
+        String dateString = "";
         if (band != null) {
             final TimeCoding timeCoding = timeSeries.getRasterTimeMap().get(band);
             final Date startTime = timeCoding.getStartTime().getAsDate();
-            dateLabel.setText(String.format(DATE_PREFIX + " %s", dateFormat.format(startTime)));
-        } else {
-            dateLabel.setText("");
+            dateString = dateFormat.format(startTime);
         }
+        dateLabel.setText(String.format(DATE_PREFIX + " %s", dateString));
     }
 
     // Depending on the direction value this method returns the next
@@ -317,6 +320,7 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
 
         @Override
         public void pixelPosNotAvailable() {
+           matrixModel.clearMatrix();
         }
     }
 
