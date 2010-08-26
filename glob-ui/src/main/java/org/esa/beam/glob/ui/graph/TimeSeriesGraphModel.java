@@ -70,7 +70,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 class TimeSeriesGraphModel {
 
-    private final static String DEFAULT_FONT_NAME = "Verdana";
+    private static final String DEFAULT_FONT_NAME = "Verdana";
     private static final Color DEFAULT_FOREGROUND_COLOR = Color.BLACK;
     private static final Color DEFAULT_BACKGROUND_COLOR = new Color(180, 180, 180);
     private static final String NO_DATA_MESSAGE = "No data to display";
