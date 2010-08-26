@@ -16,8 +16,8 @@
 
 package org.esa.beam.glob.ui.graph;
 
+import com.bc.ceres.swing.TableLayout;
 import org.esa.beam.framework.help.HelpSys;
-import org.esa.beam.framework.ui.GridBagUtils;
 import org.esa.beam.framework.ui.UIUtils;
 import org.esa.beam.framework.ui.product.ProductSceneView;
 import org.esa.beam.framework.ui.tool.ToolButtonFactory;
@@ -32,11 +32,9 @@ import javax.swing.AbstractButton;
 import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.JComponent;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
-import java.awt.BorderLayout;
+import javax.swing.border.BevelBorder;
 import java.awt.Dimension;
-import java.awt.GridBagConstraints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -44,34 +42,39 @@ import java.awt.event.ActionListener;
 class TimeSeriesGraphForm {
 
 
-    private final JComponent mainPanel;
-    private final AbstractButton showTimeSeriesForSelectedPinsButton;
-    private final AbstractButton showTimeSeriesForAllPinsButton;
-    private final AbstractButton exportTimeSeriesButton;
-//    private final AbstractButton filterButton;
+    private JComponent mainPanel;
+    private AbstractButton showTimeSeriesForSelectedPinsButton;
+    private AbstractButton showTimeSeriesForAllPinsButton;
+    private AbstractButton exportTimeSeriesButton;
 
     TimeSeriesGraphForm(JFreeChart chart, Action showSelectedPinsAction, Action showAllPinsAction,
                         final String helpID) {
-        mainPanel = new JPanel(new BorderLayout(4, 4));
-        ChartPanel chartPanel = new ChartPanel(chart);
-        chartPanel.setPreferredSize(new Dimension(300, 200));
+        createUI(chart, showSelectedPinsAction, showAllPinsAction, helpID);
+    }
 
-        mainPanel.setBorder(BorderFactory.createEmptyBorder(6, 6, 6, 6));
-        mainPanel.add(chartPanel, BorderLayout.CENTER);
+    private void createUI(JFreeChart chart, Action showSelectedPinsAction, Action showAllPinsAction, String helpID) {
+        final TableLayout tableLayout = new TableLayout(2);
+        tableLayout.setTablePadding(4, 4);
+        tableLayout.setTableAnchor(TableLayout.Anchor.NORTHWEST);
+        tableLayout.setTableFill(TableLayout.Fill.BOTH);
+        tableLayout.setTableWeightY(1.0);
+        tableLayout.setColumnWeightX(0, 1.0);
+        tableLayout.setColumnWeightX(1, 0.0);
+
+        mainPanel = new JPanel(tableLayout);
         mainPanel.setPreferredSize(new Dimension(320, 200));
 
-//        filterButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/Filter24.gif"),
-//                                                      false);
-//        filterButton.setName("filterButton");
-//        filterButton.setToolTipText("Choose which variables to display");
-//        filterButton.setEnabled(true);
-//        filterButton.addActionListener(new ActionListener() {
-//            @Override
-//            public void actionPerformed(ActionEvent e) {
-//                choose variables to display
-//            }
-//        });
-        //////////////////////////////////////////
+
+        ChartPanel chartPanel = new ChartPanel(chart);
+        chartPanel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createBevelBorder(BevelBorder.LOWERED),
+                BorderFactory.createEmptyBorder(2, 2, 2, 2)));
+        JPanel buttonPanel = createButtonPanel(showSelectedPinsAction, showAllPinsAction, helpID);
+        mainPanel.add(chartPanel);
+        mainPanel.add(buttonPanel);
+    }
+
+    private JPanel createButtonPanel(Action showSelectedPinsAction, Action showAllPinsAction, final String helpID) {
         showTimeSeriesForSelectedPinsButton = ToolButtonFactory.createButton(
                 UIUtils.loadImageIcon("icons/SelectedPinSpectra24.gif"), true);
         showTimeSeriesForSelectedPinsButton.addActionListener(showSelectedPinsAction);
@@ -132,38 +135,24 @@ class TimeSeriesGraphForm {
         AbstractButton helpButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/Help24.gif"), false);
         helpButton.setToolTipText("Help");
 
-        JPanel buttonPanel = GridBagUtils.createPanel();
-        final GridBagConstraints gbc = new GridBagConstraints();
-        gbc.anchor = GridBagConstraints.CENTER;
-        gbc.fill = GridBagConstraints.NONE;
-        gbc.insets.top = 2;
-        gbc.gridy = 0;
-//        buttonPanel.add(filterButton, gbc);
-//        gbc.gridy++;
-        buttonPanel.add(showTimeSeriesForSelectedPinsButton, gbc);
-        gbc.gridy++;
-        buttonPanel.add(showTimeSeriesForAllPinsButton, gbc);
-        gbc.gridy++;
-        buttonPanel.add(exportTimeSeriesButton, gbc);
-        gbc.gridy++;
-        gbc.insets.bottom = 0;
-        gbc.fill = GridBagConstraints.VERTICAL;
-        gbc.weighty = 1.0;
-        gbc.gridwidth = 2;
-        buttonPanel.add(new JLabel(" "), gbc); // filler
-        gbc.fill = GridBagConstraints.NONE;
-        gbc.weighty = 0.0;
-        gbc.gridy = 10;
-        gbc.anchor = GridBagConstraints.EAST;
-        buttonPanel.add(helpButton, gbc);
+        final TableLayout tableLayout = new TableLayout(1);
+        tableLayout.setTablePadding(4, 4);
+        tableLayout.setTableAnchor(TableLayout.Anchor.NORTHWEST);
+        tableLayout.setTableFill(TableLayout.Fill.HORIZONTAL);
+        tableLayout.setTableWeightX(1.0);
+        tableLayout.setTableWeightY(0.0);
+        JPanel buttonPanel = new JPanel(tableLayout);
 
-        mainPanel.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
-        mainPanel.add(BorderLayout.EAST, buttonPanel);
-
+        buttonPanel.add(showTimeSeriesForSelectedPinsButton);
+        buttonPanel.add(showTimeSeriesForAllPinsButton);
+        buttonPanel.add(exportTimeSeriesButton);
+        buttonPanel.add(tableLayout.createVerticalSpacer());
+        buttonPanel.add(helpButton);
         if (helpID != null) {
             HelpSys.enableHelpOnButton(helpButton, helpID);
             HelpSys.enableHelpKey(buttonPanel, helpID);
         }
+        return buttonPanel;
     }
 
     JComponent getControl() {

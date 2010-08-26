@@ -77,8 +77,8 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         pinSelectionListener = new PinSelectionListener();
         sliderListener = new SliderListener();
         timeSeriesGraphTSL = new TimeSeriesGraphTSL();
-        showSelectedPinAction = new ShowPinAction(true);
-        showAllPinAction = new ShowPinAction(false);
+        showSelectedPinAction = new ShowPinAction(false);
+        showAllPinAction = new ShowPinAction(true);
     }
 
     @Override
@@ -159,17 +159,17 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         }
     }
 
-    private void updatePins(boolean selected) {
+    private void updatePins(boolean showAll) {
         graphModel.removePinTimeSeries();
         boolean showing;
         Placemark[] pins;
-        if (selected) {
-            showing = graphForm.isShowingSelectedPins();
-            pins = currentView.getSelectedPins();
-        } else {
+        if (showAll) {
             showing = graphForm.isShowingAllPins();
             PlacemarkGroup pinGroup = currentView.getProduct().getPinGroup();
             pins = pinGroup.toArray(new Placemark[pinGroup.getNodeCount()]);
+        } else {
+            showing = graphForm.isShowingSelectedPins();
+            pins = currentView.getSelectedPins();
         }
         if (showing) {
             for (Placemark pin : pins) {
@@ -188,15 +188,15 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
 
     private class ShowPinAction extends AbstractAction {
 
-        private final boolean selected;
+        private final boolean showAll;
 
-        private ShowPinAction(boolean selected) {
-            this.selected = selected;
+        private ShowPinAction(boolean showAllPins) {
+            this.showAll = showAllPins;
         }
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            updatePins(selected);
+            updatePins(showAll);
         }
     }
 

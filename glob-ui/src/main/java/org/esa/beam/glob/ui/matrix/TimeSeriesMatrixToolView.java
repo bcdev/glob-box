@@ -18,12 +18,12 @@ package org.esa.beam.glob.ui.matrix;
 
 import com.bc.ceres.glayer.support.ImageLayer;
 import com.bc.ceres.glayer.swing.LayerCanvas;
+import com.bc.ceres.swing.TableLayout;
 import com.jidesoft.grid.JideTable;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.ProductNode;
 import org.esa.beam.framework.datamodel.ProductNodeEvent;
 import org.esa.beam.framework.datamodel.RasterDataNode;
-import org.esa.beam.framework.ui.GridBagUtils;
 import org.esa.beam.framework.ui.PixelPositionListener;
 import org.esa.beam.framework.ui.UIUtils;
 import org.esa.beam.framework.ui.application.support.AbstractToolView;
@@ -50,7 +50,7 @@ import javax.swing.event.InternalFrameEvent;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Container;
-import java.awt.GridBagConstraints;
+import java.awt.Insets;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
@@ -70,7 +70,6 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
     private static final int MATRIX_STEP_SIZE = 2;
 
     private JSpinner matrixSizeSpinner;
-    private AbstractButton helpButton;
     private JLabel dateLabel;
     private ProductSceneView currentView;
     private AbstractTimeSeries timeSeries;
@@ -95,8 +94,8 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
     @Override
     protected JComponent createControl() {
         VisatApp.getApp().addInternalFrameListener(sceneViewListener);
-        final JPanel panel = new JPanel(new BorderLayout());
 
+        dateLabel = new JLabel(String.format(DATE_PREFIX + " %s", getStartDateString()));
         matrixSizeSpinner = new JSpinner(new SpinnerNumberModel(MATRIX_DEFAULT_VALUE,
                                                                 MATRIX_MINIMUM, MATRIX_MAXIMUM,
                                                                 MATRIX_STEP_SIZE));
@@ -111,14 +110,23 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
             }
         });
 
-        helpButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/Help24.gif"), false);
-        helpButton.setToolTipText("Help");
+        final TableLayout tableLayout = new TableLayout(2);
+        tableLayout.setTablePadding(4, 4);
+        tableLayout.setTableFill(TableLayout.Fill.BOTH);
+        tableLayout.setTableAnchor(TableLayout.Anchor.NORTHWEST);
+        tableLayout.setTableWeightX(0.0);
+        tableLayout.setTableWeightY(0.0);
+        tableLayout.setColumnWeightX(0, 1.0);
+        tableLayout.setRowWeightY(1, 1.0);
+        tableLayout.setCellColspan(0, 0, 2);
 
-        JPanel buttonPanel = createButtonPanel();
-
-        panel.add(createMainPanel(), BorderLayout.CENTER);
+        JPanel panel = new JPanel(tableLayout);
         panel.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
-        panel.add(buttonPanel, BorderLayout.EAST);
+        JPanel buttonPanel = createButtonPanel();
+        JPanel tablePanel = createTablePanel();
+        panel.add(dateLabel);
+        panel.add(tablePanel);
+        panel.add(buttonPanel);
 
         setCurrentView(VisatApp.getApp().getSelectedProductSceneView());
         return panel;
@@ -144,11 +152,8 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
         removeMouseWheelListener();
     }
 
-    private JPanel createMainPanel() {
+    private JPanel createTablePanel() {
         JPanel mainPanel = new JPanel(new BorderLayout(4, 4));
-        String startDateString = getStartDateString();
-        dateLabel = new JLabel(String.format(DATE_PREFIX + " %s", startDateString));
-        mainPanel.add(BorderLayout.NORTH, dateLabel);
         matrixModel = new MatrixTableModel();
         JideTable matrixTable = new JideTable(matrixModel);
         matrixCellRenderer = new MatrixCellRenderer(matrixModel);
@@ -169,25 +174,20 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
     }
 
     private JPanel createButtonPanel() {
-        JPanel buttonPanel = GridBagUtils.createPanel();
-        final GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets.left = 4;
-        gbc.anchor = GridBagConstraints.CENTER;
-        gbc.fill = GridBagConstraints.NONE;
-        gbc.insets.top = 14;
-        gbc.gridy = 0;
-        buttonPanel.add(matrixSizeSpinner, gbc);
-        gbc.gridy++;
-        gbc.insets.bottom = 0;
-        gbc.fill = GridBagConstraints.VERTICAL;
-        gbc.weighty = 1.0;
-        gbc.gridwidth = 2;
-        buttonPanel.add(new JLabel(" "), gbc); // filler
-        gbc.fill = GridBagConstraints.NONE;
-        gbc.weighty = 0.0;
-        gbc.gridy = 10;
-        gbc.anchor = GridBagConstraints.EAST;
-        buttonPanel.add(helpButton, gbc);
+        final TableLayout tableLayout = new TableLayout(1);
+        tableLayout.setTablePadding(4, 4);
+        tableLayout.setRowPadding(0, new Insets(0, 4, 4, 4));
+        tableLayout.setTableAnchor(TableLayout.Anchor.NORTHWEST);
+        tableLayout.setTableFill(TableLayout.Fill.HORIZONTAL);
+        tableLayout.setTableWeightX(1.0);
+        tableLayout.setTableWeightY(0.0);
+        JPanel buttonPanel = new JPanel(tableLayout);
+
+        AbstractButton helpButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/Help24.gif"), false);
+        helpButton.setToolTipText("Help");
+        buttonPanel.add(matrixSizeSpinner);
+        buttonPanel.add(tableLayout.createVerticalSpacer());
+        buttonPanel.add(helpButton);
         return buttonPanel;
     }
 
@@ -320,7 +320,7 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
 
         @Override
         public void pixelPosNotAvailable() {
-           matrixModel.clearMatrix();
+            matrixModel.clearMatrix();
         }
     }
 
