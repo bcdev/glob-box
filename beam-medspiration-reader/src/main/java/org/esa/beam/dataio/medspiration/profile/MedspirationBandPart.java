@@ -21,6 +21,7 @@ import org.esa.beam.dataio.netcdf.metadata.ProfileReadContext;
 import org.esa.beam.dataio.netcdf.metadata.ProfileWriteContext;
 import org.esa.beam.dataio.netcdf.metadata.profiles.cf.CfBandPart;
 import org.esa.beam.dataio.netcdf.util.DataTypeUtils;
+import org.esa.beam.dataio.netcdf.util.NetcdfMultiLevelImage;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
@@ -47,6 +48,7 @@ public class MedspirationBandPart extends ProfilePart {
         for (Variable variable : variables) {
             final Band band = p.addBand(variable.getName(), getRasterDataType(variable));
             CfBandPart.readCfBandAttributes(variable, band);
+            band.setSourceImage(new NetcdfMultiLevelImage(band, variable, ctx));
         }
     }
 
