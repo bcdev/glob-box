@@ -14,11 +14,11 @@ class MatrixTableModel extends AbstractTableModel {
     private int centerPixelX;
     private int centerPixelY;
 
-    MatrixTableModel(int matrixSize) {
-        this.size = matrixSize;
+    MatrixTableModel() {
+        size = 0;
         band = null;
-        centerPixelX = -1;
-        centerPixelY = -1;
+        centerPixelX = Integer.MIN_VALUE;
+        centerPixelY = Integer.MIN_VALUE;
     }
 
     @Override
@@ -37,18 +37,23 @@ class MatrixTableModel extends AbstractTableModel {
     }
 
     @Override
-    public Object getValueAt(int rowIndex, int columnIndex) {
+    public Double getValueAt(int rowIndex, int columnIndex) {
+        if (band == null) {
+            return null;
+        }
+
         final int centerOffset = MathUtils.floorInt(size / 2.0);
         int pixelX = centerPixelX - centerOffset + columnIndex;
         int pixelY = centerPixelY - centerOffset + rowIndex;
-        if(band == null) {
+        if (band.isPixelValid(pixelX, pixelY)) {
+            return ProductUtils.getGeophysicalSampleDouble(band, pixelX, pixelY, 0);
+        } else {
+            final Rectangle imageRectangle = new Rectangle(band.getSceneRasterWidth(), band.getSceneRasterHeight());
+            if (imageRectangle.contains(pixelX, pixelY)) {
+                return Double.NaN;
+            }
             return null;
         }
-        final Rectangle imageRectangle = new Rectangle(band.getSceneRasterWidth(), band.getSceneRasterHeight());
-        if(!imageRectangle.contains(pixelX,pixelY)) {
-            return null;
-        }
-        return ProductUtils.getGeophysicalSampleDouble(band, pixelX, pixelY, 0);
     }
 
     public void setMatrixSize(int matrixSize) {
@@ -69,12 +74,6 @@ class MatrixTableModel extends AbstractTableModel {
         return band;
     }
 
-    /**
-     * Sets the center pixel position of the matrix
-     *
-     * @param pixelX center x position
-     * @param pixelY center y position
-     */
     public void setCenterPixel(int pixelX, int pixelY) {
         if (this.centerPixelX != pixelX || this.centerPixelY != pixelY) {
             this.centerPixelX = pixelX;

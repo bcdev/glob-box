@@ -1,6 +1,7 @@
 package org.esa.beam.glob.ui.matrix;
 
 import org.esa.beam.framework.datamodel.RasterDataNode;
+import org.esa.beam.visat.VisatApp;
 
 import javax.swing.JLabel;
 import javax.swing.JTable;
@@ -8,7 +9,7 @@ import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Dimension;
+import java.awt.Font;
 import java.text.DecimalFormat;
 
 import static java.lang.Math.*;
@@ -17,10 +18,12 @@ class MatrixCellRenderer extends DefaultTableCellRenderer {
 
     private MatrixTableModel tableModel;
     private DecimalFormat valueFormatter;
+    private Font boldFont;
 
     MatrixCellRenderer(MatrixTableModel tableModel) {
         this.tableModel = tableModel;
         valueFormatter = new DecimalFormat("0.0000");
+        boldFont = getFont().deriveFont(Font.BOLD);
     }
 
     @Override
@@ -34,9 +37,14 @@ class MatrixCellRenderer extends DefaultTableCellRenderer {
         final String labelText;
         Color bgColor;
         if (raster != null && rasterValue != null) {
-            bgColor = raster.getImageInfo().getColorPaletteDef().computeColor(raster, rasterValue);
-            labelText = valueFormatter.format(rasterValue);
-        } else {
+            if (Double.isNaN(rasterValue)) { // value is invalid
+                bgColor = VisatApp.getApp().getPreferences().getPropertyColor("image.background.color");
+                labelText = "NaN";
+            } else {
+                bgColor = raster.getImageInfo().getColorPaletteDef().computeColor(raster, rasterValue);
+                labelText = valueFormatter.format(rasterValue);
+            }
+        } else { // outside of image or no raster set
             bgColor = Color.WHITE;
             labelText = "";
         }
@@ -46,16 +54,9 @@ class MatrixCellRenderer extends DefaultTableCellRenderer {
         label.setText(labelText);
         label.setHorizontalAlignment(SwingConstants.CENTER);
         label.setVerticalAlignment(SwingConstants.CENTER);
-
-        int availableSpace = table.getParent().getBounds().height - 16;
-        availableSpace = availableSpace >= 1 ? availableSpace : table.getRowHeight() * table.getRowCount();
-        int rowHeight = availableSpace / table.getRowCount();
-        label.setMinimumSize(new Dimension(label.getPreferredSize().width, 16));
-        label.setPreferredSize(new Dimension(label.getPreferredSize().width, rowHeight));
-        label.setSize(new Dimension(label.getPreferredSize().width, rowHeight));
+        label.setFont(boldFont);
 
         return label;
-
     }
 
     // From: http://www.w3.org/TR/AERT#color-contrast
@@ -65,17 +66,20 @@ class MatrixCellRenderer extends DefaultTableCellRenderer {
     // ((Red value X 299) + (Green value X 587) + (Blue value X 114)) / 1000
     // Note: This algorithm is taken from a formula for converting RGB values to YIQ values. This brightness
     // value gives a perceived brightness for a color.
+    //
     // Color difference is determined by the following formula:
     //   (maximum (Red value 1, Red value 2) - minimum (Red value 1, Red value 2)) +
     //   (maximum (Green value 1, Green value 2) - minimum (Green value 1, Green value 2)) +
     //   (maximum (Blue value 1, Blue value 2) - minimum (Blue value 1, Blue value 2))
     //
     // The threshold for color brightness difference is 125. The threshold for color difference is 500.
+    // Both values should be over their threshold.
+    // Good page to experiment with colors: http://contrast-a.dasplankton.com/
     private Color findForegroundColor(Color bgColor) {
-        final int colorDiffWhite = getColorDiff(Color.WHITE, bgColor);
-        final int colorBrightDiffWhite = getColorBrightDiff(Color.WHITE, bgColor);
-        final int colorDiffBlack = getColorDiff(Color.BLACK, bgColor);
-        final int colorBrightDiffBlack = getColorBrightDiff(Color.BLACK, bgColor);
+        final int colorDiffWhite = getColorDifference(Color.WHITE, bgColor);
+        final int colorBrightDiffWhite = getColorBrightnessDifference(Color.WHITE, bgColor);
+        final int colorDiffBlack = getColorDifference(Color.BLACK, bgColor);
+        final int colorBrightDiffBlack = getColorBrightnessDifference(Color.BLACK, bgColor);
         if (colorDiffWhite >= 500 && colorBrightDiffWhite >= 125) {
             return Color.WHITE;
         }
@@ -83,21 +87,20 @@ class MatrixCellRenderer extends DefaultTableCellRenderer {
             return Color.BLACK;
         }
 
+        // if both do not exceed their thresholds use the the color with the greater sum.
         if (colorDiffWhite + colorBrightDiffWhite > colorDiffBlack + colorBrightDiffBlack) {
             return Color.WHITE;
         }
-
         return Color.BLACK;
     }
 
-    // ((Red value X 299) + (Green value X 587) + (Blue value X 114)) / 1000
-    private int getColorBrightDiff(Color color1, Color color2) {
+    private int getColorBrightnessDifference(Color color1, Color color2) {
         int colorBright1 = (color1.getRed() * 299 + color1.getGreen() * 587 + color1.getBlue() * 114) / 1000;
         int colorBright2 = (color2.getRed() * 299 + color2.getGreen() * 587 + color2.getBlue() * 114) / 1000;
         return abs(colorBright1 - colorBright2);
     }
 
-    private static int getColorDiff(Color color1, Color color2) {
+    private static int getColorDifference(Color color1, Color color2) {
         return max(color1.getRed(), color2.getRed()) - min(color1.getRed(), color2.getRed()) +
                max(color1.getGreen(), color2.getGreen()) - min(color1.getGreen(), color2.getGreen()) +
                max(color1.getBlue(), color2.getBlue()) - min(color1.getBlue(), color2.getBlue());

@@ -33,7 +33,6 @@ import org.esa.beam.glob.core.TimeSeriesMapper;
 import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeCoding;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesListener;
-import org.esa.beam.util.Guardian;
 import org.esa.beam.util.math.MathUtils;
 import org.esa.beam.visat.VisatApp;
 
@@ -48,7 +47,6 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.InternalFrameAdapter;
 import javax.swing.event.InternalFrameEvent;
-import javax.swing.plaf.basic.BasicSpinnerUI;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Container;
@@ -64,12 +62,14 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-/**
- * @author Thomas Storm
- */
 public class TimeSeriesMatrixToolView extends AbstractToolView {
 
-    private JSpinner configureSpinner;
+    private static final int MATRIX_MINIMUM = 3;
+    private static final int MATRIX_DEFAULT_VALUE = MATRIX_MINIMUM;
+    private static final int MATRIX_MAXIMUM = 15;
+    private static final int MATRIX_STEP_SIZE = 2;
+
+    private JSpinner matrixSizeSpinner;
     private AbstractButton helpButton;
     private JLabel dateLabel;
     private ProductSceneView currentView;
@@ -78,9 +78,6 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
     private TimeSeriesPPL pixelPosListener;
     private MatrixMouseWheelListener mouseWheelListener;
     private final TimeSeriesListener timeSeriesMatrixTSL;
-    private JideTable matrixTable;
-
-    private int matrixSize = 3; // default value; value must be uneven
 
     private static final String DATE_PREFIX = "Date: ";
     private MatrixTableModel matrixModel;
@@ -96,17 +93,20 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
 
     @Override
     protected JComponent createControl() {
-        Guardian.assertEquals("Specified matrix size must be uneven", matrixSize % 2 == 1, true);
         VisatApp.getApp().addInternalFrameListener(sceneViewListener);
         final JPanel panel = new JPanel(new BorderLayout());
 
-        configureSpinner = new JSpinner(new MatrixSpinnerModel());
-        configureSpinner.setUI(new BasicSpinnerUI());
-        configureSpinner.addChangeListener(new ChangeListener() {
+        matrixSizeSpinner = new JSpinner(new SpinnerNumberModel(MATRIX_DEFAULT_VALUE,
+                                                                MATRIX_MINIMUM, MATRIX_MAXIMUM,
+                                                                MATRIX_STEP_SIZE));
+        final JComponent editor = matrixSizeSpinner.getEditor();
+        if (editor instanceof JSpinner.DefaultEditor) {
+            ((JSpinner.DefaultEditor) editor).getTextField().setEditable(false);
+        }
+        matrixSizeSpinner.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent e) {
-                matrixSize = (Integer) configureSpinner.getModel().getValue();
-                matrixModel.setMatrixSize(matrixSize);
+                matrixModel.setMatrixSize((Integer) matrixSizeSpinner.getModel().getValue());
             }
         });
 
@@ -119,13 +119,7 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
         panel.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
         panel.add(buttonPanel, BorderLayout.EAST);
 
-        ProductSceneView view = VisatApp.getApp().getSelectedProductSceneView();
-        final boolean isTimeSeriesView = isTimeSeriesView(view);
-        if (isTimeSeriesView) {
-            setCurrentView(view);
-        }
-        setUIEnabled(isTimeSeriesView);
-
+        setCurrentView(VisatApp.getApp().getSelectedProductSceneView());
         return panel;
     }
 
@@ -150,17 +144,14 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
     }
 
     private JPanel createMainPanel() {
-        JPanel mainPanel = new JPanel(new BorderLayout());
+        JPanel mainPanel = new JPanel(new BorderLayout(4, 4));
         String startDateString = getStartDateString();
         dateLabel = new JLabel(String.format(DATE_PREFIX + " %s", startDateString));
         mainPanel.add(BorderLayout.NORTH, dateLabel);
-        matrixModel = new MatrixTableModel(matrixSize);
-        matrixTable = new JideTable(matrixModel);
-        matrixTable.setRowResizable(true);
-        matrixTable.setRowAutoResizes(true);
+        matrixModel = new MatrixTableModel();
+        JideTable matrixTable = new JideTable(matrixModel);
         matrixTable.setDefaultRenderer(Double.class, new MatrixCellRenderer(matrixModel));
         matrixTable.setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));
-        matrixTable.setEnabled(false);
         mainPanel.add(BorderLayout.CENTER, matrixTable);
         return mainPanel;
     }
@@ -183,7 +174,7 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
         gbc.fill = GridBagConstraints.NONE;
         gbc.insets.top = 14;
         gbc.gridy = 0;
-        buttonPanel.add(configureSpinner, gbc);
+        buttonPanel.add(matrixSizeSpinner, gbc);
         gbc.gridy++;
         gbc.insets.bottom = 0;
         gbc.fill = GridBagConstraints.VERTICAL;
@@ -196,12 +187,6 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
         gbc.anchor = GridBagConstraints.EAST;
         buttonPanel.add(helpButton, gbc);
         return buttonPanel;
-    }
-
-    private void setUIEnabled(boolean enable) {
-        dateLabel.setEnabled(enable);
-        configureSpinner.setEnabled(enable);
-        matrixTable.setEnabled(enable);
     }
 
     /*
@@ -219,7 +204,7 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
             removeMouseWheelListener();
         }
         currentView = newView;
-        if (currentView != null) {
+        if (isTimeSeriesView(currentView)) {
             currentView.addPixelPositionListener(pixelPosListener);
             timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(currentView.getProduct());
             timeSeries.addTimeSeriesListener(timeSeriesMatrixTSL);
@@ -227,12 +212,13 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
             final RasterDataNode raster = currentView.getRaster();
             if (raster instanceof Band) {
                 matrixModel.setBand((Band) raster);
+                matrixModel.setMatrixSize((Integer) matrixSizeSpinner.getValue());
                 updateDateLabel((Band) currentView.getRaster());
             }
         } else {
             timeSeries = null;
+            matrixModel.setMatrixSize(0);
         }
-        setUIEnabled(currentView != null);
     }
 
     private void updateDateLabel(Band band) {
@@ -301,10 +287,7 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
         public void internalFrameActivated(InternalFrameEvent e) {
             final Container contentPane = e.getInternalFrame().getContentPane();
             if (contentPane instanceof ProductSceneView) {
-                ProductSceneView view = (ProductSceneView) contentPane;
-                if (isTimeSeriesView(view)) {
-                    setCurrentView(view);
-                }
+                setCurrentView((ProductSceneView) contentPane);
             }
         }
 
@@ -322,22 +305,18 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
         @Override
         public void pixelPosChanged(ImageLayer imageLayer, int pixelX, int pixelY,
                                     int currentLevel, boolean pixelPosValid, MouseEvent e) {
-            if (pixelPosValid && isVisible() && currentView != null) {
-                matrixTable.setEnabled(true);
-                AffineTransform i2mTransform = currentView.getBaseImageLayer().getImageToModelTransform(currentLevel);
+            if (isVisible() && currentView != null) {
+                AffineTransform i2mTransform = imageLayer.getImageToModelTransform(currentLevel);
                 Point2D modelP = i2mTransform.transform(new Point2D.Double(pixelX + 0.5, pixelY + 0.5), null);
-                AffineTransform m2iTransform = currentView.getBaseImageLayer().getModelToImageTransform();
+                AffineTransform m2iTransform = imageLayer.getModelToImageTransform();
                 Point2D levelZeroP = m2iTransform.transform(modelP, null);
                 matrixModel.setCenterPixel(MathUtils.floorInt(levelZeroP.getX()),
                                            MathUtils.floorInt(levelZeroP.getY()));
-            } else {
-                matrixTable.setEnabled(false);
             }
         }
 
         @Override
         public void pixelPosNotAvailable() {
-            matrixTable.setEnabled(false);
         }
     }
 
@@ -370,33 +349,6 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
                     nextBand = null;
                 }
                 updateDateLabel(nextBand);
-            }
-        }
-    }
-
-    private static class MatrixSpinnerModel extends SpinnerNumberModel {
-
-        private static final int DEFAULT_VALUE = 3;
-        private static final int MINIMUM = 3;
-        private static final int MAXIMUM = 15;
-        private static final int STEP_SIZE = 2;
-
-        private MatrixSpinnerModel() {
-            super(DEFAULT_VALUE, MINIMUM, MAXIMUM, STEP_SIZE);
-        }
-
-        @Override
-        public void setValue(Object value) {
-            int iValue = (Integer) value;
-            if (iValue < MINIMUM) {
-                iValue = MINIMUM;
-            } else if (iValue > MAXIMUM) {
-                iValue = MAXIMUM;
-            }
-            if (iValue % 2 == 1) {
-                super.setValue(iValue);
-            } else {
-                fireStateChanged();
             }
         }
     }
