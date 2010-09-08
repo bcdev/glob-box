@@ -87,8 +87,8 @@ public abstract class AbstractTimeSeries {
     }
 
     public static String rasterToVariableName(String rasterName) {
-        final int lastUnderscore = rasterName.lastIndexOf(SEPARATOR);
-        return rasterName.substring(0, lastUnderscore);
+        final int lastSeparator = rasterName.lastIndexOf(SEPARATOR);
+        return rasterName.substring(0, lastSeparator);
     }
 
     public abstract void addTimeSeriesListener(TimeSeriesListener listener);

@@ -23,6 +23,7 @@ import com.bc.ceres.glayer.support.LayerUtils;
 import com.bc.ceres.glevel.MultiLevelSource;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.ImageInfo;
+import org.esa.beam.framework.datamodel.Mask;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductNode;
 import org.esa.beam.framework.datamodel.ProductNodeEvent;
@@ -254,7 +255,7 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
         @Override
         public void nodeAdded(ProductNodeEvent event) {
             final ProductNode productNode = event.getSourceNode();
-            if (productNode instanceof RasterDataNode && currentView != null) {
+            if (isValidProductNode(productNode) && currentView != null) {
                 form.configureTimeSlider((RasterDataNode) productNode);
             }
         }
@@ -262,7 +263,7 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
         @Override
         public void nodeRemoved(ProductNodeEvent event) {
             final ProductNode productNode = event.getSourceNode();
-            if (productNode instanceof RasterDataNode && currentView != null) {
+            if (isValidProductNode(productNode) && currentView != null) {
                 form.configureTimeSlider((RasterDataNode) productNode);
             }
         }
@@ -275,10 +276,15 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
             }
         }
 
+
+        private boolean isValidProductNode(ProductNode productNode) {
+            return productNode instanceof RasterDataNode && !(productNode instanceof Mask);
+        }
+
         private void adjustImageInfos(ProductNodeEvent event) {
 
             final ProductNode node = event.getSourceNode();
-            if (node instanceof RasterDataNode) {
+            if (isValidProductNode(node)) {
                 final RasterDataNode raster = (RasterDataNode) node;
                 final ImageLayer baseImageLayer = currentView.getBaseImageLayer();
                 final ImageInfo imageInfo = raster.getImageInfo();
@@ -290,4 +296,5 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
             }
         }
     }
+
 }
