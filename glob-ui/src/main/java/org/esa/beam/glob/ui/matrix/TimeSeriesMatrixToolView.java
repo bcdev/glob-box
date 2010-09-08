@@ -202,8 +202,10 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
         }
         if (currentView != null) {
             currentView.removePixelPositionListener(pixelPosListener);
-            timeSeries.removeTimeSeriesListener(timeSeriesMatrixTSL);
             removeMouseWheelListener();
+            if (timeSeries != null) {
+                timeSeries.removeTimeSeriesListener(timeSeriesMatrixTSL);
+            }
         }
         currentView = newView;
         if (isTimeSeriesView(currentView)) {

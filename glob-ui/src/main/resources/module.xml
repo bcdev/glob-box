@@ -113,23 +113,6 @@
     <extension point="beam-ui:actions">
 
         <action>
-            <id>TimeSeriesGroup</id>
-            <parent>analysis</parent>
-            <class>org.esa.beam.visat.actions.ActionGroup</class>
-            <text>Time Series</text>
-            <mnemonic>T</mnemonic>
-        </action>
-
-        <action>
-            <id>newTimeSeriesFromBandAssistantAction</id>
-            <parent>TimeSeriesGroup</parent>
-            <class>org.esa.beam.glob.ui.assistant.NewTimeSeriesFromBandAssistantAction</class>
-            <text>Create Time Series...</text>
-            <shortDescr>Create a new time series based on the selected raster</shortDescr>
-            <context>band, tiePointGrid</context>
-            <helpId>newTimeSeriesFromBandAssistantAction</helpId>
-        </action>
-        <action>
             <id>newTimeSeriesAssistantAction</id>
             <parent>file</parent>
             <class>org.esa.beam.glob.ui.assistant.NewTimeSeriesAssistantAction</class>
