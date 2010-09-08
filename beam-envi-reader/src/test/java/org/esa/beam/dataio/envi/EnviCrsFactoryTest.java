@@ -15,7 +15,7 @@ public class EnviCrsFactoryTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testThrowsIllegalArgumentExceptionOnUnregisteredProjection() {
-        EnviCrsFactory.createCrs(-11, new double[0]);
+        EnviCrsFactory.createCrs(-11, new double[0], EnviConstants.DATUM_NAME_WGS84, "Meters");
     }
 
     @Test
@@ -30,7 +30,7 @@ public class EnviCrsFactoryTest {
                 7.0,    // sp1  latitude of intersection 1
                 8.0,    // sp2  latitude of intersection 2
         };
-        final CoordinateReferenceSystem crs = EnviCrsFactory.createCrs(9, parameter);
+        final CoordinateReferenceSystem crs = EnviCrsFactory.createCrs(9, parameter, EnviConstants.DATUM_NAME_WGS84, "Meters");
         final ParameterValueGroup parameterValues = CRS.getMapProjection(crs).getParameterValues();
         final List<GeneralParameterValue> valueList = parameterValues.values();
         double[] actualValues = new double[8];

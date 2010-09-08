@@ -5,6 +5,10 @@ import org.geotools.referencing.ReferencingFactoryFinder;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.geotools.referencing.crs.DefaultProjectedCRS;
 import org.geotools.referencing.cs.DefaultCartesianCS;
+import org.geotools.referencing.cs.DefaultEllipsoidalCS;
+import org.geotools.referencing.datum.DefaultEllipsoid;
+import org.geotools.referencing.datum.DefaultGeodeticDatum;
+import org.geotools.referencing.datum.DefaultPrimeMeridian;
 import org.opengis.parameter.GeneralParameterDescriptor;
 import org.opengis.parameter.ParameterValueGroup;
 import org.opengis.referencing.FactoryException;
@@ -12,16 +16,22 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.MathTransformFactory;
 
+import javax.measure.quantity.Length;
+import javax.measure.unit.NonSI;
+import javax.measure.unit.SI;
+import javax.measure.unit.Unit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class EnviCrsFactory {
 
+    private static final HashMap<Integer, int[]> axisMap;
     private static final HashMap<Integer, String> projectionMethodMap;
     private static final HashMap<Integer, Map<String, Integer>> projectionParameterMaps;
 
     static {
+        axisMap = new HashMap<Integer, int[]>();
         projectionMethodMap = new HashMap<Integer, String>();
         projectionParameterMaps = new HashMap<Integer, Map<String, Integer>>();
 
@@ -36,6 +46,7 @@ public class EnviCrsFactory {
         params9.put("false_easting", 4);
         params9.put("false_northing", 5);
         projectionParameterMaps.put(9, params9);
+        axisMap.put(9, new int[]{0,1});
 
         projectionMethodMap.put(16, "OGC:Sinusoidal");
         final HashMap<String, Integer> params16 = new HashMap<String, Integer>();
@@ -45,13 +56,14 @@ public class EnviCrsFactory {
         params16.put("false_easting", 2);
         params16.put("false_northing", 3);
         projectionParameterMaps.put(16, params16);
+        axisMap.put(16, new int[]{0,0});
     }
 
     private EnviCrsFactory() {
     }
 
 
-    public static CoordinateReferenceSystem createCrs(int enviProjectionNumber, double[] parameter) {
+    public static CoordinateReferenceSystem createCrs(int enviProjectionNumber, double[] parameter, String datumString, String unitString) {
         if (projectionMethodMap.containsKey(enviProjectionNumber)) {
             String method = projectionMethodMap.get(enviProjectionNumber);
             try {
@@ -66,11 +78,25 @@ public class EnviCrsFactory {
                         parameters.parameter(paramName).setValue(parameter[index]);
                     }
                 }
-
                 MathTransform mathTransform = transformFactory.createParameterizedTransform(parameters);
+                DefaultGeographicCRS base;
+                if (EnviConstants.DATUM_NAME_WGS84.equals(datumString)) {
+                    base = DefaultGeographicCRS.WGS84;
+                } else {
+                    int[] indices = axisMap.get(enviProjectionNumber);
+                    if (indices != null) {
+                        double semiMajorAxis = parameter[indices[0]];
+                        double semiMinorAxis = parameter[indices[1]];
+                        DefaultEllipsoid ellipsoid = DefaultEllipsoid.createEllipsoid("SPHERE", semiMajorAxis, semiMinorAxis, SI.METER);
+                        DefaultGeodeticDatum datum = new DefaultGeodeticDatum(datumString, ellipsoid, DefaultPrimeMeridian.GREENWICH);
+                        base = new DefaultGeographicCRS(datum, DefaultEllipsoidalCS.GEODETIC_2D);
+                    } else {
+                        base = DefaultGeographicCRS.WGS84;
+                    }
+                }
 
                 return new DefaultProjectedCRS(parameters.getDescriptor().getName().getCode() + " / WGS84",
-                                               DefaultGeographicCRS.WGS84,
+                        base,
                                                mathTransform, DefaultCartesianCS.PROJECTED);
             } catch (FactoryException fe) {
                 Debug.trace(fe);

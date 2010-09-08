@@ -282,7 +282,7 @@ class EnviProductReader extends AbstractProductReader {
         CoordinateReferenceSystem crs = null;
         if (projectionInfo != null) {
             try {
-                crs = EnviCrsFactory.createCrs(projectionInfo.getProjectionNumber(), projectionInfo.getParameter());
+                crs = EnviCrsFactory.createCrs(projectionInfo.getProjectionNumber(), projectionInfo.getParameter(), enviMapInfo.getDatum(), enviMapInfo.getUnit());
             } catch (IllegalArgumentException ignore) {
             }
         }

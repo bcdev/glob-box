@@ -20,6 +20,7 @@ class EnviConstants {
     public static final String FORMAT_NAME = "ENVI";
     public static final String DESCRIPTION = "ENVI Data Products";
     public static final String PROJECTION_NAME_WGS84 = "Geographic Lat/Lon";
+    public static final String DATUM_NAME_WGS84 = "WGS-84";
 
     public static final String HDR_EXTENSION = ".hdr";
     public static final String IMG_EXTENSION = ".img";
