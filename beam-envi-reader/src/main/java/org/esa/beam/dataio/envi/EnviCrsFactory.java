@@ -18,24 +18,33 @@ import java.util.Map;
 
 public class EnviCrsFactory {
 
-    private static final HashMap<Integer, String> projectionNameMap;
-    private static final HashMap<Integer, Map<String, Integer>> parameterMaps;
+    private static final HashMap<Integer, String> projectionMethodMap;
+    private static final HashMap<Integer, Map<String, Integer>> projectionParameterMaps;
 
     static {
-        projectionNameMap = new HashMap<Integer, String>();
-        parameterMaps = new HashMap<Integer, Map<String, Integer>>();
+        projectionMethodMap = new HashMap<Integer, String>();
+        projectionParameterMaps = new HashMap<Integer, Map<String, Integer>>();
 
-        projectionNameMap.put(9, "Albers_Equal_Area_Conic");
-        final HashMap<String, Integer> params = new HashMap<String, Integer>();
-        params.put("semi_major", 0);
-        params.put("semi_minor", 1);
-        params.put("latitude_of_origin", 2);
-        params.put("central_meridian", 3);
-        params.put("standard_parallel_1", 6);
-        params.put("standard_parallel_2", 7);
-        params.put("false_easting", 4);
-        params.put("false_northing", 5);
-        parameterMaps.put(9, params);
+        projectionMethodMap.put(9, "EPSG:9822");
+        final HashMap<String, Integer> params9 = new HashMap<String, Integer>();
+        params9.put("semi_major", 0);
+        params9.put("semi_minor", 1);
+        params9.put("latitude_of_origin", 2);
+        params9.put("central_meridian", 3);
+        params9.put("standard_parallel_1", 6);
+        params9.put("standard_parallel_2", 7);
+        params9.put("false_easting", 4);
+        params9.put("false_northing", 5);
+        projectionParameterMaps.put(9, params9);
+
+        projectionMethodMap.put(16, "OGC:Sinusoidal");
+        final HashMap<String, Integer> params16 = new HashMap<String, Integer>();
+        params16.put("semi_major", 0);
+        params16.put("semi_minor", 0);
+        params16.put("central_meridian", 1);
+        params16.put("false_easting", 2);
+        params16.put("false_northing", 3);
+        projectionParameterMaps.put(16, params16);
     }
 
     private EnviCrsFactory() {
@@ -43,17 +52,19 @@ public class EnviCrsFactory {
 
 
     public static CoordinateReferenceSystem createCrs(int enviProjectionNumber, double[] parameter) {
-        if (enviProjectionNumber == 9) {
+        if (projectionMethodMap.containsKey(enviProjectionNumber)) {
+            String method = projectionMethodMap.get(enviProjectionNumber);
             try {
-                // Albers Equal Area Conic
                 final MathTransformFactory transformFactory = ReferencingFactoryFinder.getMathTransformFactory(null);
-                final ParameterValueGroup parameters = transformFactory.getDefaultParameters("EPSG:9822");
-                final Map<String, Integer> map = parameterMaps.get(enviProjectionNumber);
+                final ParameterValueGroup parameters = transformFactory.getDefaultParameters(method);
+                final Map<String, Integer> map = projectionParameterMaps.get(enviProjectionNumber);
                 final List<GeneralParameterDescriptor> parameterDescriptors = parameters.getDescriptor().descriptors();
                 for (GeneralParameterDescriptor parameterDescriptor : parameterDescriptors) {
                     final String paramName = parameterDescriptor.getName().getCode();
-                    final Integer index = map.get(paramName);
-                    parameters.parameter(paramName).setValue(parameter[index]);
+                    if (map.containsKey(paramName)) {
+                        final Integer index = map.get(paramName);
+                        parameters.parameter(paramName).setValue(parameter[index]);
+                    }
                 }
 
                 MathTransform mathTransform = transformFactory.createParameterizedTransform(parameters);
