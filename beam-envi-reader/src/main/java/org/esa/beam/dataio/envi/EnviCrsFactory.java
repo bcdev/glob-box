@@ -16,10 +16,7 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.MathTransformFactory;
 
-import javax.measure.quantity.Length;
-import javax.measure.unit.NonSI;
 import javax.measure.unit.SI;
-import javax.measure.unit.Unit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -95,9 +92,8 @@ public class EnviCrsFactory {
                     }
                 }
 
-                return new DefaultProjectedCRS(parameters.getDescriptor().getName().getCode() + " / WGS84",
-                        base,
-                                               mathTransform, DefaultCartesianCS.PROJECTED);
+                return new DefaultProjectedCRS(parameters.getDescriptor().getName().getCode() + " / " + datumString,
+                                               base, mathTransform, DefaultCartesianCS.PROJECTED);
             } catch (FactoryException fe) {
                 Debug.trace(fe);
             }
