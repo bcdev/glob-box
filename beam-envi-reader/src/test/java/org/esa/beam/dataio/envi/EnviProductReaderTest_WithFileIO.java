@@ -12,7 +12,6 @@ public class EnviProductReaderTest_WithFileIO extends TestCase {
 
     @Override
     protected void setUp() throws Exception {
-        super.setUp();
         final String workingDir = SystemUtils.getCurrentWorkingDir().getAbsolutePath();
         tempDir = new File(workingDir, "tempEnviProductReaderTest");
         assertEquals(true, tempDir.mkdir());
@@ -20,7 +19,6 @@ public class EnviProductReaderTest_WithFileIO extends TestCase {
 
     @Override
     protected void tearDown() throws Exception {
-        super.tearDown();
         TestUtils.deleteFileTree(tempDir);
     }
 

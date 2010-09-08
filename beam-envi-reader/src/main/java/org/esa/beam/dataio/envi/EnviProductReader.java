@@ -51,12 +51,14 @@ class EnviProductReader extends AbstractProductReader {
 
     public static File createEnviImageFile(File file) {
         final String hdrName = file.getName();
-        final String imgName = hdrName.substring(0, hdrName.indexOf('.'));
-        String bandName = imgName + ".img";
-        File imgFile = new File(file.getParent(), bandName);
+        final String imgName = hdrName.substring(0, hdrName.lastIndexOf(EnviConstants.HDR_EXTENSION));
+        String bandName = imgName;
+        if (imgName.endsWith(EnviConstants.IMG_EXTENSION)) {
+            bandName = imgName.substring(0, imgName.lastIndexOf(EnviConstants.IMG_EXTENSION));
+        }
+        File imgFile = new File(file.getParent(), bandName + EnviConstants.IMG_EXTENSION);
         if (!imgFile.exists()) {
-            bandName = imgName + ".bin";
-            imgFile = new File(file.getParent(), bandName);
+            imgFile = new File(file.getParent(), bandName + EnviConstants.BIN_EXTENSION);
         }
         return imgFile;
     }
@@ -71,13 +73,13 @@ class EnviProductReader extends AbstractProductReader {
         final String inputFileName = inputFile.getName();
         String[] splittedInputFileName = inputFileName.split("!");
         String productName = splittedInputFileName.length > 1 ? splittedInputFileName[1] : splittedInputFileName[0];
-        productName = productName.substring(0, productName.indexOf('.'));
+        int dotIndex = productName.lastIndexOf('.');
+        if (dotIndex > -1) {
+            productName = productName.substring(0, dotIndex);
+        }
 
         try {
-            final Header header;
-            synchronized (headerReader) {
-                header = new Header(headerReader);
-            }
+            final Header header = new Header(headerReader);
 
             final Product product = new Product(productName, header.getSensorType(), header.getNumSamples(),
                                                 header.getNumLines());
@@ -239,7 +241,7 @@ class EnviProductReader extends AbstractProductReader {
         try {
 
             innerHdrZipPath = innerHdrZipPath.substring(0, innerHdrZipPath.length() - 4);
-            String innerImgZipPath = FileUtils.ensureExtension(innerHdrZipPath, ".img");
+            String innerImgZipPath = FileUtils.ensureExtension(innerHdrZipPath, EnviConstants.IMG_EXTENSION);
             final Enumeration<? extends ZipEntry> enumeration = productZip.entries();
             // iterating over entries instead of using the path directly in order to compare paths ignoring case
             while (enumeration.hasMoreElements()) {
@@ -325,7 +327,7 @@ class EnviProductReader extends AbstractProductReader {
             ZipFile zipFile;
             ZipEntry zipEntry;
 
-            if (inputFile.getPath().toLowerCase().endsWith(".zip")) {
+            if (inputFile.getPath().toLowerCase().endsWith(EnviConstants.ZIP_EXTENSION)) {
                 zipFile = new ZipFile(inputFile);
                 zipEntry = findFirstHeader(zipFile);
             } else {
@@ -348,7 +350,7 @@ class EnviProductReader extends AbstractProductReader {
         final Enumeration<? extends ZipEntry> entryEnum = zipFile.entries();
         while (entryEnum.hasMoreElements()) {
             ZipEntry entry = entryEnum.nextElement();
-            if (entry.getName().toLowerCase().endsWith(".hdr")) {
+            if (entry.getName().toLowerCase().endsWith(EnviConstants.HDR_EXTENSION)) {
                 return entry;
             }
         }

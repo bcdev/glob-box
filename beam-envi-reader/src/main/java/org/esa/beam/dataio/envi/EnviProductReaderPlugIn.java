@@ -19,9 +19,6 @@ import java.util.zip.ZipFile;
 
 public class EnviProductReaderPlugIn implements ProductReaderPlugIn {
 
-    private static final String HDR_EXTENSION = ".hdr";
-    private static final String ZIP_EXTENSION = ".zip";
-
     @Override
     public DecodeQualification getDecodeQualification(Object input) {
         if (input instanceof ImageInputStream) {
@@ -44,7 +41,7 @@ public class EnviProductReaderPlugIn implements ProductReaderPlugIn {
 
     @Override
     public String[] getDefaultFileExtensions() {
-        return new String[]{HDR_EXTENSION, ZIP_EXTENSION};
+        return new String[]{EnviConstants.HDR_EXTENSION, EnviConstants.ZIP_EXTENSION};
     }
 
     @Override
@@ -72,7 +69,7 @@ public class EnviProductReaderPlugIn implements ProductReaderPlugIn {
 
 
     static boolean isCompressedFile(File file) {
-        return file.getPath().lastIndexOf("." + EnviConstants.ZIP) > -1;
+        return file.getPath().lastIndexOf(EnviConstants.ZIP_EXTENSION) > -1;
     }
 
     static InputStream getHeaderStreamFromZip(ZipFile productZip) throws IOException {
@@ -80,7 +77,7 @@ public class EnviProductReaderPlugIn implements ProductReaderPlugIn {
         while (entries.hasMoreElements()) {
             final ZipEntry zipEntry = (ZipEntry) entries.nextElement();
             final String name = zipEntry.getName();
-            if (name.indexOf(HDR_EXTENSION) > 0) {
+            if (name.indexOf(EnviConstants.HDR_EXTENSION) > 0) {
                 return productZip.getInputStream(zipEntry);
             }
         }
@@ -122,7 +119,7 @@ public class EnviProductReaderPlugIn implements ProductReaderPlugIn {
                     return result;
                 }
                 productZip.close();
-            } else if (HDR_EXTENSION.equalsIgnoreCase(FileUtils.getExtension(inputFile))) {
+            } else if (EnviConstants.HDR_EXTENSION.equalsIgnoreCase(FileUtils.getExtension(inputFile))) {
                 ImageInputStream headerStream = new FileImageInputStream(inputFile);
                 final DecodeQualification result = checkDecodeQualificationOnStream(headerStream);
                 headerStream.close();
