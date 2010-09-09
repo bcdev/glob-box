@@ -21,6 +21,9 @@
         <module>beam-core</module>
     </dependency>
     <dependency>
+        <module>beam-envi-reader</module>
+    </dependency>
+    <dependency>
         <module>beam-visat</module>
         <optional>true</optional>
     </dependency>
@@ -38,13 +41,13 @@
             <description>Import a GlobCarbon data product or product subset.</description>
         </action>
         <!--<action>-->
-            <!--<class>org.esa.beam.visat.actions.ProductImportAction</class>-->
-            <!--<id>importGlobCarbonAsciiProduct</id>-->
-            <!--<helpId>importGlobCarbonAsciiProduct</helpId>-->
-            <!--<formatName>GLOBCARBON-ASCII</formatName>-->
-            <!--<useAllFileFilter>true</useAllFileFilter>-->
-            <!--<shortDescr>Import a GlobCarbon Ascii data product.</shortDescr>-->
-            <!--<description>Import a GlobCarbon Ascii data product or product subset.</description>-->
+        <!--<class>org.esa.beam.visat.actions.ProductImportAction</class>-->
+        <!--<id>importGlobCarbonAsciiProduct</id>-->
+        <!--<helpId>importGlobCarbonAsciiProduct</helpId>-->
+        <!--<formatName>GLOBCARBON-ASCII</formatName>-->
+        <!--<useAllFileFilter>true</useAllFileFilter>-->
+        <!--<shortDescr>Import a GlobCarbon Ascii data product.</shortDescr>-->
+        <!--<description>Import a GlobCarbon Ascii data product or product subset.</description>-->
         <!--</action>-->
     </extension>
 
