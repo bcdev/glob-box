@@ -45,22 +45,29 @@ class EnviProductReader extends AbstractProductReader {
     private ImageInputStream imageInputStream = null;
     private ZipFile productZip = null;
 
-    public EnviProductReader(ProductReaderPlugIn readerPlugIn) {
+    EnviProductReader(ProductReaderPlugIn readerPlugIn) {
         super(readerPlugIn);
     }
 
-    public static File createEnviImageFile(File file) {
-        final String hdrName = file.getName();
-        final String imgName = hdrName.substring(0, hdrName.lastIndexOf(EnviConstants.HDR_EXTENSION));
+    static File getEnviImageFile(File hdrFile) {
+        final String imgName = FileUtils.getFilenameWithoutExtension(hdrFile);
         String bandName = imgName;
-        if (imgName.endsWith(EnviConstants.IMG_EXTENSION)) {
-            bandName = imgName.substring(0, imgName.lastIndexOf(EnviConstants.IMG_EXTENSION));
+        if (imgName.toLowerCase().endsWith(EnviConstants.IMG_EXTENSION)) {
+            bandName = FileUtils.getFilenameWithoutExtension(imgName);
         }
-        File imgFile = new File(file.getParent(), bandName + EnviConstants.IMG_EXTENSION);
-        if (!imgFile.exists()) {
-            imgFile = new File(file.getParent(), bandName + EnviConstants.BIN_EXTENSION);
+        File[] possibleImageFiles = new File[4];
+        possibleImageFiles[0] = new File(hdrFile.getParent(), bandName + EnviConstants.IMG_EXTENSION);
+        possibleImageFiles[1] = new File(hdrFile.getParent(), bandName + EnviConstants.IMG_EXTENSION.toUpperCase());
+        possibleImageFiles[2] = new File(hdrFile.getParent(), bandName + EnviConstants.BIN_EXTENSION);
+        possibleImageFiles[3] = new File(hdrFile.getParent(), bandName + EnviConstants.BIN_EXTENSION.toUpperCase());
+        for (File possibleImageFile : possibleImageFiles) {
+            if(possibleImageFile.exists()){
+                return possibleImageFile;
+            }
         }
-        return imgFile;
+
+        // doesn't care which one to return, none of the possible images exists
+        return possibleImageFiles[0];
     }
 
     @Override
@@ -178,7 +185,7 @@ class EnviProductReader extends AbstractProductReader {
             root.addChild(header);
 
             if (productZip == null) {
-                final File imageFile = createEnviImageFile(headerFile);
+                final File imageFile = getEnviImageFile(headerFile);
                 final TreeNode<File> image = new TreeNode<File>(imageFile.getName());
                 image.setContent(imageFile);
                 root.addChild(image);
@@ -265,7 +272,7 @@ class EnviProductReader extends AbstractProductReader {
     }
 
     private static ImageInputStream createImageStreamFromFile(final File file) throws IOException {
-        final File imageFile = createEnviImageFile(file);
+        final File imageFile = getEnviImageFile(file);
 
         if (!imageFile.exists()) {
             throw new FileNotFoundException("file not found: <" + imageFile + ">");
@@ -282,7 +289,8 @@ class EnviProductReader extends AbstractProductReader {
         CoordinateReferenceSystem crs = null;
         if (projectionInfo != null) {
             try {
-                crs = EnviCrsFactory.createCrs(projectionInfo.getProjectionNumber(), projectionInfo.getParameter(), enviMapInfo.getDatum(), enviMapInfo.getUnit());
+                crs = EnviCrsFactory.createCrs(projectionInfo.getProjectionNumber(), projectionInfo.getParameter(),
+                                               enviMapInfo.getDatum(), enviMapInfo.getUnit());
             } catch (IllegalArgumentException ignore) {
             }
         }
