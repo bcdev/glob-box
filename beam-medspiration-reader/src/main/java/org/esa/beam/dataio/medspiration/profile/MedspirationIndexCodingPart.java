@@ -62,10 +62,6 @@ public class MedspirationIndexCodingPart implements ProfilePartReader {
         }
     }
 
-    @Override
-    public void postDecode(ProfileReadContext ctx, Product p) throws IOException {
-    }
-
     static List<MetadataAttribute> getIndexAttributes(String comment) {
         if (comment.contains(";")) {
             String[] split = comment.split(";");

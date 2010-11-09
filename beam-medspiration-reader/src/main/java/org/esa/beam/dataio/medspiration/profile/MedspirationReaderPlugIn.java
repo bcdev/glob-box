@@ -16,16 +16,9 @@
 
 package org.esa.beam.dataio.medspiration.profile;
 
-import org.esa.beam.dataio.netcdf.AbstractNetCdfReaderPlugIn;
 import org.esa.beam.dataio.netcdf.metadata.ProfileInitPartReader;
 import org.esa.beam.dataio.netcdf.metadata.ProfilePartReader;
-import org.esa.beam.dataio.netcdf.metadata.profiles.cf.CfDescriptionPart;
-import org.esa.beam.dataio.netcdf.metadata.profiles.cf.CfGeocodingPart;
-import org.esa.beam.dataio.netcdf.metadata.profiles.cf.CfMetadataPart;
 import org.esa.beam.dataio.netcdf.metadata.profiles.cf.CfNetCdfReaderPlugIn;
-import org.esa.beam.dataio.netcdf.metadata.profiles.cf.CfTiePointGridPart;
-import org.esa.beam.dataio.netcdf.metadata.profiles.cf.CfTimePart;
-import org.esa.beam.dataio.netcdf.util.RasterDigest;
 import org.esa.beam.framework.dataio.DecodeQualification;
 import ucar.nc2.Attribute;
 import ucar.nc2.NetcdfFile;

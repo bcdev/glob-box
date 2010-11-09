@@ -86,10 +86,6 @@ public class MedspirationFlagCodingPart implements ProfilePartReader {
         }
     }
 
-    @Override
-    public void postDecode(ProfileReadContext ctx, Product p) throws IOException {
-    }
-
     static List<MetadataAttribute> getFlagAttributes(String comment, String separator) {
         String[] split;
         if (comment.contains(separator)) {

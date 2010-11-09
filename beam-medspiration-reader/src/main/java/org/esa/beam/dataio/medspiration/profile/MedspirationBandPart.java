@@ -50,10 +50,6 @@ public class MedspirationBandPart implements ProfilePartReader {
         }
     }
 
-    @Override
-    public void postDecode(ProfileReadContext ctx, Product p) throws IOException {
-    }
-
     private int getRasterDataType(Variable variable) {
         DataType dataType = variable.getDataType();
         int rasterDataType;
