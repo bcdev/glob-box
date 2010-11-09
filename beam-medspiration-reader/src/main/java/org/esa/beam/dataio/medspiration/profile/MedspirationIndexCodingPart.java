@@ -16,9 +16,8 @@
 
 package org.esa.beam.dataio.medspiration.profile;
 
-import org.esa.beam.dataio.netcdf.metadata.ProfilePart;
-import org.esa.beam.dataio.netcdf.metadata.ProfileReadContext;
-import org.esa.beam.dataio.netcdf.metadata.ProfileWriteContext;
+import org.esa.beam.dataio.netcdf.ProfileReadContext;
+import org.esa.beam.dataio.netcdf.metadata.ProfilePartReader;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.IndexCoding;
 import org.esa.beam.framework.datamodel.MetadataAttribute;
@@ -37,15 +36,14 @@ import java.util.regex.Pattern;
 /**
  * @author Thomas Storm
  */
-public class MedspirationIndexCodingPart extends ProfilePart {
+public class MedspirationIndexCodingPart implements ProfilePartReader {
 
     @Override
-    public void define(ProfileWriteContext ctx, Product p) throws IOException {
-        // we merely read here; nothing to define
+    public void preDecode(ProfileReadContext ctx, Product p) throws IOException {
     }
 
     @Override
-    public void read(ProfileReadContext ctx, Product p) throws IOException {
+    public void decode(ProfileReadContext ctx, Product p) throws IOException {
         final Variable[] variables = ctx.getRasterDigest().getRasterVariables();
         for (Variable variable : variables) {
             Attribute commentAttribute = variable.findAttribute("comment");
@@ -64,12 +62,16 @@ public class MedspirationIndexCodingPart extends ProfilePart {
         }
     }
 
+    @Override
+    public void postDecode(ProfileReadContext ctx, Product p) throws IOException {
+    }
+
     static List<MetadataAttribute> getIndexAttributes(String comment) {
         if (comment.contains(";")) {
             String[] split = comment.split(";");
             return createAttributes(split, "(\\d+)\\s+(.+)", false);
         }
-        return Collections.EMPTY_LIST;
+        return Collections.emptyList();
     }
 
     private static List<MetadataAttribute> createAttributes(String[] split, String regex, boolean isFlag) {
@@ -92,4 +94,5 @@ public class MedspirationIndexCodingPart extends ProfilePart {
         }
         return attributes;
     }
+
 }

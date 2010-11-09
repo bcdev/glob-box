@@ -16,8 +16,7 @@
 package org.esa.beam.dataio.globcolour;
 
 import com.bc.ceres.core.ProgressMonitor;
-import org.esa.beam.dataio.netcdf.NetCdfReader;
-import org.esa.beam.dataio.netcdf.NetCdfReaderPlugIn;
+import org.esa.beam.dataio.netcdf.metadata.profiles.cf.CfNetCdfReaderPlugIn;
 import org.esa.beam.framework.dataio.AbstractProductReader;
 import org.esa.beam.framework.dataio.ProductReader;
 import org.esa.beam.framework.datamodel.Band;
@@ -50,7 +49,7 @@ public class MappedProductReader extends AbstractProductReader {
      */
     public MappedProductReader(MappedProductReaderPlugIn productReaderPlugIn) {
         super(productReaderPlugIn);
-        delegateReader = new NetCdfReader(new NetCdfReaderPlugIn(), MappedProductReaderPlugIn.CF_PROFILE);
+        delegateReader = new CfNetCdfReaderPlugIn().createReaderInstance();
     }
 
     /**

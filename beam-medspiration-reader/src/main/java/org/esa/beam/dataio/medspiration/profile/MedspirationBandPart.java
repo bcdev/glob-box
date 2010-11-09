@@ -16,9 +16,8 @@
 
 package org.esa.beam.dataio.medspiration.profile;
 
-import org.esa.beam.dataio.netcdf.metadata.ProfilePart;
-import org.esa.beam.dataio.netcdf.metadata.ProfileReadContext;
-import org.esa.beam.dataio.netcdf.metadata.ProfileWriteContext;
+import org.esa.beam.dataio.netcdf.ProfileReadContext;
+import org.esa.beam.dataio.netcdf.metadata.ProfilePartReader;
 import org.esa.beam.dataio.netcdf.metadata.profiles.cf.CfBandPart;
 import org.esa.beam.dataio.netcdf.util.DataTypeUtils;
 import org.esa.beam.dataio.netcdf.util.NetcdfMultiLevelImage;
@@ -35,21 +34,24 @@ import java.io.IOException;
  *
  * @author Thomas Storm
  */
-public class MedspirationBandPart extends ProfilePart {
+public class MedspirationBandPart implements ProfilePartReader {
 
     @Override
-    public void define(ProfileWriteContext ctx, Product p) throws IOException {
-        // solely read; do nothing here
+    public void preDecode(ProfileReadContext ctx, Product p) throws IOException {
     }
 
     @Override
-    public void read(ProfileReadContext ctx, Product p) throws IOException {
+    public void decode(ProfileReadContext ctx, Product p) throws IOException {
         final Variable[] variables = ctx.getRasterDigest().getRasterVariables();
         for (Variable variable : variables) {
             final Band band = p.addBand(variable.getName(), getRasterDataType(variable));
             CfBandPart.readCfBandAttributes(variable, band);
             band.setSourceImage(new NetcdfMultiLevelImage(band, variable, ctx));
         }
+    }
+
+    @Override
+    public void postDecode(ProfileReadContext ctx, Product p) throws IOException {
     }
 
     private int getRasterDataType(Variable variable) {
@@ -62,4 +64,5 @@ public class MedspirationBandPart extends ProfilePart {
         }
         return rasterDataType;
     }
+
 }

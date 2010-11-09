@@ -15,7 +15,7 @@
  */
 package org.esa.beam.dataio.globcolour;
 
-import org.esa.beam.dataio.netcdf.NetCdfReaderPlugIn;
+import org.esa.beam.dataio.netcdf.metadata.profiles.cf.CfNetCdfReaderPlugIn;
 import org.esa.beam.framework.dataio.DecodeQualification;
 import org.esa.beam.framework.dataio.ProductReader;
 import org.esa.beam.framework.dataio.ProductReaderPlugIn;
@@ -35,7 +35,6 @@ import java.util.Locale;
  * @version $Revision: 1566 $ $Date: 2007-12-14 13:39:40 +0100 (Fr, 14. Dez 2007) $
  */
 public class MappedProductReaderPlugIn implements ProductReaderPlugIn {
-    static final String CF_PROFILE = "org.esa.beam.dataio.netcdf.metadata.profiles.cf.CfProfileSpi";
     /**
      * The name of the file format associated with this
      * {@link ProductReaderPlugIn}.
@@ -51,7 +50,7 @@ public class MappedProductReaderPlugIn implements ProductReaderPlugIn {
      */
     public static final String FILE_EXTENSION = ".nc";
 
-    private final ProductReaderPlugIn netcdfReaderPlugIn = new NetCdfReaderPlugIn(CF_PROFILE);
+    private final ProductReaderPlugIn netcdfReaderPlugIn = new CfNetCdfReaderPlugIn();
 
     /**
      * Creates and returns an instance of the actual  {@link ProductReader}.

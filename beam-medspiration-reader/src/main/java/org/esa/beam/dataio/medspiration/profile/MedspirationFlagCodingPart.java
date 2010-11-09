@@ -16,9 +16,8 @@
 
 package org.esa.beam.dataio.medspiration.profile;
 
-import org.esa.beam.dataio.netcdf.metadata.ProfilePart;
-import org.esa.beam.dataio.netcdf.metadata.ProfileReadContext;
-import org.esa.beam.dataio.netcdf.metadata.ProfileWriteContext;
+import org.esa.beam.dataio.netcdf.ProfileReadContext;
+import org.esa.beam.dataio.netcdf.metadata.ProfilePartReader;
 import org.esa.beam.framework.datamodel.FlagCoding;
 import org.esa.beam.framework.datamodel.MetadataAttribute;
 import org.esa.beam.framework.datamodel.Product;
@@ -36,15 +35,15 @@ import java.util.regex.Pattern;
  * @author Marco Zühlke
  * @author Thomas Storm
  */
-public class MedspirationFlagCodingPart extends ProfilePart {
+public class MedspirationFlagCodingPart implements ProfilePartReader {
+
 
     @Override
-    public void define(ProfileWriteContext ctx, Product p) throws IOException {
-        // we solely read here; nothing to define
+    public void preDecode(ProfileReadContext ctx, Product p) throws IOException {
     }
 
     @Override
-    public void read(ProfileReadContext ctx, Product p) throws IOException {
+    public void decode(ProfileReadContext ctx, Product p) throws IOException {
         final Variable[] variables = ctx.getRasterDigest().getRasterVariables();
         for (Variable variable : variables) {
             List<MetadataAttribute> attributes;
@@ -87,6 +86,10 @@ public class MedspirationFlagCodingPart extends ProfilePart {
         }
     }
 
+    @Override
+    public void postDecode(ProfileReadContext ctx, Product p) throws IOException {
+    }
+
     static List<MetadataAttribute> getFlagAttributes(String comment, String separator) {
         String[] split;
         if (comment.contains(separator)) {
@@ -117,6 +120,5 @@ public class MedspirationFlagCodingPart extends ProfilePart {
         }
         return attributes;
     }
-
 
 }

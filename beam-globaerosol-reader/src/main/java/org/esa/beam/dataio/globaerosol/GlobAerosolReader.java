@@ -18,13 +18,13 @@ package org.esa.beam.dataio.globaerosol;
 
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.dataio.merisl3.ISINGrid;
-import org.esa.beam.dataio.netcdf.NetCdfReader;
-import org.esa.beam.dataio.netcdf.NetCdfReaderPlugIn;
 import org.esa.beam.dataio.netcdf.metadata.profiles.cf.CfBandPart;
 import org.esa.beam.dataio.netcdf.metadata.profiles.cf.CfIndexCodingPart;
+import org.esa.beam.dataio.netcdf.metadata.profiles.cf.CfNetCdfReaderPlugIn;
 import org.esa.beam.dataio.netcdf.util.DataTypeUtils;
 import org.esa.beam.dataio.netcdf.util.MetadataUtils;
 import org.esa.beam.framework.dataio.AbstractProductReader;
+import org.esa.beam.framework.dataio.ProductReader;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.CrsGeoCoding;
 import org.esa.beam.framework.datamodel.IndexCoding;
@@ -77,7 +77,7 @@ public class GlobAerosolReader extends AbstractProductReader {
     private int width;
     private int height;
 
-    private NetCdfReader delegateReader;
+    private ProductReader delegateReader;
     private boolean isSorted = true;
 
     protected GlobAerosolReader(GlobAerosolReaderPlugIn readerPlugIn) {
@@ -92,7 +92,8 @@ public class GlobAerosolReader extends AbstractProductReader {
         if (titleAttr != null) {
             if (titleAttr.getStringValue().startsWith("Statistic")) {
                 ncfile.close();
-                delegateReader = new NetCdfReader(new NetCdfReaderPlugIn(), CF_PROFILE);
+                new CfNetCdfReaderPlugIn().createReaderInstance();
+                delegateReader = new CfNetCdfReaderPlugIn().createReaderInstance();
                 return delegateReader.readProductNodes(getInput(), getSubsetDef());
             }
         }
