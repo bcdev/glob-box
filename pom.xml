@@ -5,7 +5,7 @@
     <groupId>org.esa.beam.glob</groupId>
     <artifactId>glob-box</artifactId>
     <packaging>pom</packaging>
-    <version>2.0</version>
+    <version>2.1-SNAPSHOT</version>
     <name>GlobToolbox</name>
 
     <organization>
@@ -29,31 +29,27 @@
            TODO: Move the sourceEncoding property to the build tag if version 3.0 is released
            -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <beam.version>4.8</beam.version>
-        <ceres.version>0.11</ceres.version>
+        <geotools.version>2.6.5</geotools.version>
+        <beam.version>4.9-SNAPSHOT</beam.version>
+        <ceres.version>0.12-SNAPSHOT</ceres.version>
     </properties>
 
     <modules>
-        <module>beam-worldfire-reader</module>
+        <module>beam-envi-reader</module>
+        <module>beam-arcbingrid-reader</module>
+        <module>beam-igbp-glcc-reader</module>
+        <module>beam-globaerosol-reader</module>
+        <module>beam-globcarbon-reader</module>
         <module>beam-globcover-reader</module>
         <module>beam-globcolour-reader</module>
-        <module>beam-globaerosol-reader</module>
         <module>beam-medspiration-reader</module>
-        <module>beam-arcbingrid-reader</module>
+        <module>beam-worldfire-reader</module>
         <module>glob-ui</module>
         <module>glob-help</module>
         <module>glob-export</module>
         <module>glob-core</module>
         <module>glob-bootstrap</module>
-        <module>beam-igbp-glcc-reader</module>
     </modules>
-
-    <dependencies>
-        <dependency>
-            <groupId>org.esa.beam</groupId>
-            <artifactId>beam-core</artifactId>
-        </dependency>
-    </dependencies>
 
     <dependencyManagement>
         <dependencies>
@@ -80,7 +76,7 @@
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-netcdf</artifactId>
-                <version>1.0</version>
+                <version>1.0.101-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>org.esa.beam</groupId>
@@ -90,7 +86,7 @@
             <dependency> <!-- used to read Dbase files (*.dbf) -->
                 <groupId>org.geotools</groupId>
                 <artifactId>gt-shapefile</artifactId>
-                <version>2.6.1</version>
+                <version>${geotools.version}</version>
             </dependency>
             <dependency>
                 <groupId>net.sourceforge.jexcelapi</groupId>
@@ -160,14 +156,16 @@
 
     <distributionManagement>
         <repository>
-            <id>bc-mvn-repo</id>
+            <id>bc-mvn-repo-public</id>
             <name>Public Maven Repository at Brockmann Consult</name>
-            <url>scp://apache.bc.local/bc-mvn-repo/os</url>
+            <url>scp://www.brockmann-consult.de/var/www/www.brockmann-consult.de/mvn/os</url>
+            <uniqueVersion>false</uniqueVersion>
         </repository>
         <snapshotRepository>
-            <id>bc-mvn-repo</id>
-            <name>Public Maven Repository at Brockmann Consult</name>
-            <url>scp://apache.bc.local/bc-mvn-repo/os</url>
+            <id>bc-mvn-repo-public</id>
+            <name>Public Maven Snapshot Repository at Brockmann Consult</name>
+            <url>scp://www.brockmann-consult.de/var/www/www.brockmann-consult.de/mvn/os</url>
+            <uniqueVersion>false</uniqueVersion>
         </snapshotRepository>
     </distributionManagement>
 

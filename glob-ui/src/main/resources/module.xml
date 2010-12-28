@@ -2,13 +2,20 @@
     <manifestVersion>1.0.0</manifestVersion>
 
     <symbolicName>glob-ui</symbolicName>
-    <version>2.0</version>
+    <version>2.1</version>
     <name>GlobToolbox UI</name>
 
-    <description>Provides user interface components for the GlobToolbox.</description>
+    <description>
+        <![CDATA[
+        This module provides the user interface components for the GlobToolbox. In particular, these are
+        the <i>Time Series Manager</i>, the <i>Time Series Player</i> and the <i>Time Series Graph</i>.
+        ]]>
+    </description>
 
     <changelog>
         <![CDATA[
+        <p>Changes in 2.1<br/>
+          [GLOB-007] When adding geometries to time series, an ArrayIndexOutOfBoundsException is thrown<br/>                
                 ]]>
     </changelog>
 
@@ -35,7 +42,7 @@
 
         <toolView>
             <id>timeSeriesPlayerToolView</id>
-            <class>org.esa.beam.glob.ui.TimeSeriesPlayerToolView</class>
+            <class>org.esa.beam.glob.ui.player.TimeSeriesPlayerToolView</class>
             <title>Time Series Player</title>
             <tabTitle>Time Series</tabTitle>
             <mnemonic>T</mnemonic>
@@ -52,7 +59,7 @@
 
         <toolView>
             <id>timeSeriesManagerToolView</id>
-            <class>org.esa.beam.glob.ui.TimeSeriesManagerToolView</class>
+            <class>org.esa.beam.glob.ui.manager.TimeSeriesManagerToolView</class>
             <title>Time Series Manager</title>
             <tabTitle>Time Series Manager</tabTitle>
             <description>Time Series Manager</description>
@@ -69,7 +76,7 @@
 
         <toolView>
             <id>timeSeriesGraphToolView</id>
-            <class>org.esa.beam.glob.ui.TimeSeriesGraphToolView</class>
+            <class>org.esa.beam.glob.ui.graph.TimeSeriesGraphToolView</class>
             <title>Time Series Graph</title>
             <tabTitle>Time Series Graph</tabTitle>
             <description>Time Series Graph</description>
@@ -84,31 +91,31 @@
             <toolBarId>GlobToolbox</toolBarId>
         </toolView>
 
+        <toolView>
+            <id>timeSeriesMatrixToolView</id>
+            <class>org.esa.beam.glob.ui.matrix.TimeSeriesMatrixToolView</class>
+            <title>Time Series Matrix</title>
+            <tabTitle>Time Series Matrix</tabTitle>
+            <description>Time Series Matrix</description>
+            <mnemonic>M</mnemonic>
+            <accelerator>ctrl alt M</accelerator>
+            <smallIcon>/org/esa/beam/glob/ui/icons/TimeSeriesMatrix16.png</smallIcon>
+            <largeIcon>/org/esa/beam/glob/ui/icons/TimeSeriesMatrix24.png</largeIcon>
+            <initState>FLOATING</initState>
+            <initSide>EAST</initSide>
+            <initIndex>4</initIndex>
+            <helpId>timeSeriesMatrix</helpId>
+            <toolBarId>GlobToolbox</toolBarId>
+        </toolView>
+
     </extension>
 
     <extension point="beam-ui:actions">
 
         <action>
-            <id>TimeSeriesGroup</id>
-            <parent>analysis</parent>
-            <class>org.esa.beam.visat.actions.ActionGroup</class>
-            <text>Time Series</text>
-            <mnemonic>T</mnemonic>
-        </action>
-
-        <action>
-            <id>newTimeSeriesFromBandAssistantAction</id>
-            <parent>TimeSeriesGroup</parent>
-            <class>org.esa.beam.glob.ui.NewTimeSeriesFromBandAssistantAction</class>
-            <text>Create Time Series...</text>
-            <shortDescr>Create a new time series based on the selected raster</shortDescr>
-            <context>band, tiePointGrid</context>
-            <helpId>newTimeSeriesFromBandAssistantAction</helpId>
-        </action>
-        <action>
             <id>newTimeSeriesAssistantAction</id>
             <parent>file</parent>
-            <class>org.esa.beam.glob.ui.NewTimeSeriesAssistantAction</class>
+            <class>org.esa.beam.glob.ui.assistant.NewTimeSeriesAssistantAction</class>
             <text>New Time Series...</text>
             <smallIcon>icons/New16.gif</smallIcon>
             <largeIcon>icons/New24.gif</largeIcon>

@@ -27,31 +27,34 @@ import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeCoding;
 import org.esa.beam.visat.VisatApp;
 
-import java.io.File;
+import java.io.PrintWriter;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * @author Thomas Storm
  */
-public class TimeCsvExporter extends CsvExporter {
+class TimeCsvExporter extends CsvExporter {
 
-    List<List<Band>> variablesList;
-    List<Placemark> pins;
-    int level;
-    boolean exportImageCoords = true;
-    boolean exportLonLat = true;
-    boolean exportUnit = true;
+    private final List<List<Band>> variablesList;
+    private final List<Placemark> pins;
+    private final int level;
+    private final boolean exportImageCoords = true;
+    private final boolean exportLonLat = true;
+    private final boolean exportUnit = true;
 
-    public TimeCsvExporter(List<List<Band>> rasterList, List<Placemark> pins, File outputFile) {
-        super(outputFile);
-        this.variablesList = rasterList;
-        this.pins = pins;
+    TimeCsvExporter(List<List<Band>> rasterList, List<Placemark> pins, PrintWriter writer) {
+        super(writer);
+        this.variablesList = new ArrayList<List<Band>>(rasterList);
+        this.pins = new ArrayList<Placemark>(pins);
         this.level = 0;
     }
 
+    @Override
     void setUpHeader() {
         if (!variablesList.isEmpty()) {
 
@@ -101,7 +104,7 @@ public class TimeCsvExporter extends CsvExporter {
                     TimeCoding timeCoding = timeSeries.getRasterTimeMap().get(band);
                     if (timeCoding != null) {
                         final Date date = timeCoding.getStartTime().getAsDate();
-                        SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
+                        SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault());
                         columns.add(sdf.format(date));
                     }
                 }

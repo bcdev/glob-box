@@ -18,18 +18,18 @@ package org.esa.beam.glob.core.timeseries.datamodel;
 
 import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.util.Guardian;
 
 /**
  * <p><i>Note that this class is not yet public API. Interface may chhange in future releases.</i></p>
- * 
+ * <p/>
  * Abstract class representing a time-coding. A time-coding is defined by a start and an end time and thus represents
  * a time span. It maps time information to pixel-positions.
  */
 public abstract class TimeCoding {
 
-    private ProductData.UTC startTime;
-
-    private ProductData.UTC endTime;
+    private final ProductData.UTC startTime;
+    private final ProductData.UTC endTime;
 
     /**
      * Constructor creates a new TimeCoding-instance with a given start and end time.
@@ -38,6 +38,8 @@ public abstract class TimeCoding {
      * @param endTime   the end time of the time span represented by the time-coding
      */
     protected TimeCoding(ProductData.UTC startTime, ProductData.UTC endTime) {
+        Guardian.assertNotNull("startTime", startTime);
+        Guardian.assertNotNull("endTime", endTime);
         this.startTime = startTime;
         this.endTime = endTime;
     }
@@ -70,21 +72,20 @@ public abstract class TimeCoding {
     }
 
     /**
-     * Setter for the start time
+     * Checks if the given {@code timeCoding} is within the start and end time of this {@link TimeCoding}.
      *
-     * @param startTime the start time to set
-     */
-    public void setStartTime(ProductData.UTC startTime) {
-        this.startTime = startTime;
-    }
-
-    /**
-     * Setter for the end time
+     * @param timeCoding the time coding to check if it is within this {@code TimeCoding}
      *
-     * @param endTime the end time to set
+     * @return whether this {@code TimeCoding} contains the given time coding
      */
-    public void setEndTime(ProductData.UTC endTime) {
-        this.endTime = endTime;
+    public boolean contains(TimeCoding timeCoding) {
+        if (getStartTime().getAsDate().after(timeCoding.getStartTime().getAsDate())) {
+            return false;
+        }
+        if (getEndTime().getAsDate().before(timeCoding.getEndTime().getAsDate())) {
+            return false;
+        }
+        return true;
     }
 
     @Override
@@ -104,22 +105,12 @@ public abstract class TimeCoding {
     }
 
     private boolean areEqual(ProductData.UTC time1, ProductData.UTC time2) {
-        if (time1 == null && time2 == null) {
-            return true;
-        }
-
-        if (time1 == null || time2 == null) {
-            return false;
-        }
-
         return time1.getAsDate().getTime() == time2.getAsDate().getTime();
 
     }
 
     @Override
     public int hashCode() {
-        int result = startTime != null ? startTime.hashCode() : 0;
-        result = 31 * result + (endTime != null ? endTime.hashCode() : 0);
-        return result;
+        return 31 * startTime.hashCode() + endTime.hashCode();
     }
 }

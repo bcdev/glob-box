@@ -26,14 +26,17 @@ import java.util.List;
 
 /**
  * <p><i>Note that this class is not yet public API. Interface may chhange in future releases.</i></p>
- * 
+ *
  * @author Thomas Storm
  */
 public class TimeSeriesFactory {
 
+    private TimeSeriesFactory() {
+    }
+
     /**
-     * Creates a new ITimeSeries from a given time series product. Since this
-     * product is already a complete time series, this method should only be called by the reader
+     * Creates a new TimeSeries from a given time series product. The given product has to be a time series product.
+     * This method should only be called by the reader
      *
      * @param product a time series product
      *
@@ -57,30 +60,34 @@ public class TimeSeriesFactory {
      */
     public static AbstractTimeSeries create(String name, List<ProductLocation> productLocations,
                                             List<String> variableNames) {
-        Guardian.assertNotNull("productLocations", productLocations);
-        Guardian.assertGreaterThan("productLocations.size()", productLocations.size(), 0);
-        Guardian.assertNotNull("variables", variableNames);
-        Guardian.assertGreaterThan("variables.size()", variableNames.size(), 0);
-        Guardian.assertNotNullOrEmpty("name", name);
+        try {
+            Guardian.assertNotNull("productLocations", productLocations);
+            Guardian.assertGreaterThan("productLocations.size()", productLocations.size(), 0);
+            Guardian.assertNotNull("variables", variableNames);
+            Guardian.assertGreaterThan("variables.size()", variableNames.size(), 0);
+            Guardian.assertNotNullOrEmpty("name", name);
 
-        final List<Product> productList = new ArrayList<Product>();
-        for (ProductLocation productLocation : productLocations) {
-            productList.addAll(productLocation.getProducts());
+            final List<Product> productList = new ArrayList<Product>();
+            for (ProductLocation productLocation : productLocations) {
+                productList.addAll(productLocation.getProducts());
+            }
+            if (productList.isEmpty()) {
+                return null;
+            }
+            Product refProduct = productList.get(0);
+            final Product tsProduct = new Product(name, TimeSeriesImpl.TIME_SERIES_PRODUCT_TYPE,
+                                                  refProduct.getSceneRasterWidth(),
+                                                  refProduct.getSceneRasterHeight());
+            tsProduct.setDescription("A time series product");
+            ProductUtils.copyGeoCoding(refProduct, tsProduct);
+
+            final AbstractTimeSeries timeSeries = new TimeSeriesImpl(tsProduct, productLocations, variableNames);
+            TimeSeriesMapper.getInstance().put(tsProduct, timeSeries);
+            return timeSeries;
+        } catch (Throwable e) {
+            e.printStackTrace();
         }
-        if (productList.isEmpty()) {
-            return null;
-        }
-        Product refProduct = productList.get(0);
-        final Product tsProduct = new Product(name, TimeSeriesImpl.TIME_SERIES_PRODUCT_TYPE,
-                                              refProduct.getSceneRasterWidth(),
-                                              refProduct.getSceneRasterHeight());
-        tsProduct.setDescription("A time series product");
-        ProductUtils.copyGeoCoding(refProduct, tsProduct);
-
-
-        final AbstractTimeSeries timeSeries = new TimeSeriesImpl(tsProduct, productLocations, variableNames);
-        TimeSeriesMapper.getInstance().put(tsProduct, timeSeries);
-        return timeSeries;
+        return null;
     }
 
 }

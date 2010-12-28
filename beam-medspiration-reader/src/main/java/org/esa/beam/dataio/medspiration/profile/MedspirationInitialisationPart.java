@@ -16,22 +16,20 @@
 
 package org.esa.beam.dataio.medspiration.profile;
 
-import org.esa.beam.dataio.netcdf.metadata.ProfileInitPart;
-import org.esa.beam.dataio.netcdf.metadata.ProfileReadContext;
+import org.esa.beam.dataio.netcdf.ProfileReadContext;
+import org.esa.beam.dataio.netcdf.metadata.ProfileInitPartReader;
 import org.esa.beam.dataio.netcdf.util.Constants;
 import org.esa.beam.framework.dataio.ProductIOException;
 import org.esa.beam.framework.datamodel.Product;
 import ucar.nc2.Dimension;
-import ucar.nc2.NetcdfFileWriteable;
 
 import java.io.IOException;
 
 
-public class MedspirationInitialisationPart implements ProfileInitPart {
-
+public class MedspirationInitialisationPart implements ProfileInitPartReader {
 
     @Override
-    public Product readProductBody(ProfileReadContext ctx) throws ProductIOException {
+    public Product readProductBody(ProfileReadContext ctx) throws IOException {
         Dimension xDim = null;
         Dimension yDim = null;
         for (Dimension dimension : ctx.getNetcdfFile().getDimensions()) {
@@ -46,14 +44,10 @@ public class MedspirationInitialisationPart implements ProfileInitPart {
             throw new ProductIOException("Illegal Dimensions: Dimensions named (x,lon,ni) and (y,lat,nj) expected.");
         }
         return new Product(
-                (String) ctx.getProperty(Constants.PRODUCT_NAME_PROPERTY_NAME),
+                (String) ctx.getProperty(Constants.PRODUCT_FILENAME_PROPERTY),
                 "Medspiration",
                 xDim.getLength(),
                 yDim.getLength()
         );
-    }
-
-    @Override
-    public void writeProductBody(NetcdfFileWriteable writeable, Product p) throws IOException {
     }
 }

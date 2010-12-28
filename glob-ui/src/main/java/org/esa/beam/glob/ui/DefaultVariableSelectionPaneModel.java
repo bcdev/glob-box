@@ -21,11 +21,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-class DefaultVariableSelectionPaneModel extends AbstractListModel implements VariableSelectionPaneModel {
+public class DefaultVariableSelectionPaneModel extends AbstractListModel implements VariableSelectionPaneModel {
 
-    private List<Variable> variableList;
+    private final List<Variable> variableList;
 
-    DefaultVariableSelectionPaneModel() {
+    public DefaultVariableSelectionPaneModel() {
         variableList = new ArrayList<Variable>();
     }
 

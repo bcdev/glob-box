@@ -26,7 +26,7 @@ import java.util.WeakHashMap;
 
 public class TimeSeriesMapper {
 
-    private Map<Product, AbstractTimeSeries> map = new WeakHashMap<Product, AbstractTimeSeries>();
+    private final Map<Product, AbstractTimeSeries> map = new WeakHashMap<Product, AbstractTimeSeries>();
 
     private TimeSeriesMapper() {
     }
@@ -38,6 +38,9 @@ public class TimeSeriesMapper {
     private static class Holder {
 
         private static final TimeSeriesMapper instance = new TimeSeriesMapper();
+
+        private Holder() {
+        }
     }
 
     public void put(Product product, AbstractTimeSeries timeSeries) {

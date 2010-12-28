@@ -23,22 +23,19 @@ import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.util.Guardian;
 
 import java.text.SimpleDateFormat;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
-import java.util.WeakHashMap;
 
 /**
- * <p><i>Note that this class is not yet public API. Interface may chhange in future releases.</i></p>
- * 
+ * <p><i>Note that this class is not yet public API. Interface may change in future releases.</i></p>
+ *
  * @author Thomas Storm
  */
 public abstract class AbstractTimeSeries {
 
     /**
-     * may NOT contain SEPARATOR
+     * must NOT contain SEPARATOR
      */
     static final String DATE_FORMAT = "yyyyMMdd.HHmmss.SSS";
 
@@ -48,20 +45,17 @@ public abstract class AbstractTimeSeries {
     public static final String TIME_SERIES_ROOT_NAME = "TIME_SERIES";
     public static final String PRODUCT_LOCATIONS = "PRODUCT_LOCATIONS";
     public static final String VARIABLE_NAME = "NAME";
+    public static final String AUTO_ADJUSTING_TIME_CODING = "AUTO_ADJUSTING_TIME_CODING";
     public static final String VARIABLE_SELECTION = "SELECTION";
     public static final String PL_PATH = "PATH";
     public static final String PL_TYPE = "TYPE";
     public static final String VARIABLES = "VARIABLES";
 
-    public static final String PROPERTY_PRODUCT_LOCATIONS = "PROPERTY_PRODUCT_LOCATIONS";
-    public static final String PROPERTY_VARIABLE_SELECTION = "PROPERTY_VARIABLE_SELECTION";
-    protected Map<RasterDataNode, TimeCoding> rasterTimeMap = new WeakHashMap<RasterDataNode, TimeCoding>();
-
-    public abstract List<String> getTimeVariables();
+    public abstract List<String> getVariables();
 
     public abstract List<ProductLocation> getProductLocations();
 
-    public abstract void addProductLocation(ProductLocationType type, String path);
+    public abstract void addProductLocation(ProductLocation productLocation);
 
     public abstract void removeProductLocation(ProductLocation productLocation);
 
@@ -69,39 +63,38 @@ public abstract class AbstractTimeSeries {
 
     public abstract boolean isVariableSelected(String variableName);
 
-    public abstract Band getSourceBand(String destBandName);
-
     public abstract Product getTsProduct();
 
     public abstract List<Band> getBandsForVariable(String variableName);
 
     public abstract List<Band> getBandsForProductLocation(ProductLocation location);
 
+    public abstract Map<RasterDataNode, TimeCoding> getRasterTimeMap();
+
+    public abstract boolean isAutoAdjustingTimeCoding();
+
+    public abstract void setAutoAdjustingTimeCoding(boolean autoAdjust);
+
+    public abstract TimeCoding getTimeCoding();
+
+    public abstract void setTimeCoding(TimeCoding timeCoding);
+
     public static String variableToRasterName(String variableName, TimeCoding timeCoding) {
         final ProductData.UTC rasterStartTime = timeCoding.getStartTime();
         Guardian.assertNotNull("rasterStartTime", rasterStartTime);
-        final SimpleDateFormat dateFormat = new SimpleDateFormat(TimeSeriesImpl.DATE_FORMAT);
+        final SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT, Locale.ENGLISH);
         return variableName + SEPARATOR + dateFormat.format(rasterStartTime.getAsDate());
     }
 
     public static String rasterToVariableName(String rasterName) {
-        final int lastUnderscore = rasterName.lastIndexOf(SEPARATOR);
-        return rasterName.substring(0, lastUnderscore);
+        final int lastSeparator = rasterName.lastIndexOf(SEPARATOR);
+        return rasterName.substring(0, lastSeparator);
     }
 
-    void sortBands(List<Band> bandList) {
-        Collections.sort(bandList, new Comparator<Band>() {
-            @Override
-            public int compare(Band band1, Band band2) {
-                final Date date1 = rasterTimeMap.get(band1).getStartTime().getAsDate();
-                final Date date2 = rasterTimeMap.get(band2).getStartTime().getAsDate();
-                return date1.compareTo(date2);
-            }
-        });
-    }
+    public abstract void addTimeSeriesListener(TimeSeriesListener listener);
 
+    public abstract void removeTimeSeriesListener(TimeSeriesListener listener);
 
-    public Map<RasterDataNode, TimeCoding> getRasterTimeMap() {
-        return rasterTimeMap;
-    }
+    public abstract boolean isProductCompatible(Product product, String rasterName);
+
 }

@@ -2,10 +2,10 @@
     <manifestVersion>1.0.0</manifestVersion>
 
     <symbolicName>glob-core</symbolicName>
-    <version>2.0</version>
+    <version>2.1</version>
     <name>GlobToolbox Core</name>
 
-    <description>Provides core components for the GlobToolbox.</description>
+    <description>This module provides core components for the GlobToolbox.</description>
 
     <changelog>
         <![CDATA[
@@ -19,7 +19,7 @@
     <licenseUrl>http://www.gnu.org/licenses/gpl.html</licenseUrl>
 
 
-    <categories>Core</categories>
+    <categories>System,Core</categories>
 
     <dependency>
         <module>beam-core</module>

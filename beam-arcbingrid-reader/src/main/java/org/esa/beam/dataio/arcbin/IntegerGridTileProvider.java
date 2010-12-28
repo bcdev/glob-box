@@ -81,13 +81,13 @@ class IntegerGridTileProvider implements GridTileProvider {
                         handleRaw4Bit(dataBuffer, rawTileData, min, tileOffset);
                         break;
                     case ArcBinGridConstants.RAW_8BIT:
-                        tileOffset = handleRaw8Bit(dataBuffer, rawTileData, min, tileOffset);
+                        handleRaw8Bit(dataBuffer, rawTileData, min, tileOffset);
                         break;
                     case ArcBinGridConstants.RAW_16BIT:
-                        tileOffset = handleRaw16Bit(dataBuffer, rawTileData, min, tileOffset);
+                        handleRaw16Bit(dataBuffer, rawTileData, min, tileOffset);
                         break;
                     case ArcBinGridConstants.RAW_32BIT:
-                        tileOffset = handleRaw32Bit(dataBuffer, rawTileData, min, tileOffset);
+                        handleRaw32Bit(dataBuffer, rawTileData, min, tileOffset);
                         break;
                     case ArcBinGridConstants.RLE_4BIT:
                     case ArcBinGridConstants.RLE_8BIT:
@@ -115,7 +115,7 @@ class IntegerGridTileProvider implements GridTileProvider {
                         fillBuffer(dataBuffer, nodataValue);
                         break;
                 }
-            } catch (IOException e) {
+            } catch (IOException ignored) {
                 fillBuffer(dataBuffer, nodataValue);
             }
         }
@@ -235,29 +235,26 @@ class IntegerGridTileProvider implements GridTileProvider {
         }
     }
 
-    private int handleRaw32Bit(ProductData dataBuffer, byte[] rawTileData, int min, int tileOffset) {
+    private void handleRaw32Bit(ProductData dataBuffer, byte[] rawTileData, int min, int tileOffset) {
         for (int i = 0; i < size; i++) {
             int value = byteArrayCodec.getInt(rawTileData, tileOffset);
             tileOffset += 4;
             dataBuffer.setElemIntAt(i, value + min);
         }
-        return tileOffset;
     }
 
-    private int handleRaw16Bit(ProductData dataBuffer, byte[] rawTileData, int min, int tileOffset) {
+    private void handleRaw16Bit(ProductData dataBuffer, byte[] rawTileData, int min, int tileOffset) {
         for (int i = 0; i < size; i++) {
             short value = byteArrayCodec.getShort(rawTileData, tileOffset);
             tileOffset += 2;
             dataBuffer.setElemIntAt(i, value + min);
         }
-        return tileOffset;
     }
 
-    private int handleRaw8Bit(ProductData dataBuffer, byte[] rawTileData, int min, int tileOffset) {
+    private void handleRaw8Bit(ProductData dataBuffer, byte[] rawTileData, int min, int tileOffset) {
         for (int i = 0; i < size; i++) {
             dataBuffer.setElemIntAt(i, rawTileData[tileOffset++] + min);
         }
-        return tileOffset;
     }
 
     private void handleRaw4Bit(ProductData dataBuffer, byte[] rawTileData, int min, int tileOffset) {
@@ -308,11 +305,11 @@ class IntegerGridTileProvider implements GridTileProvider {
             }
             if (bytes[4] > 127) {
                 if (minSize == 2) {
-                    min = min - 65536;
+                    min -= 65536;
                 } else if (minSize == 1) {
-                    min = min - 256;
+                    min -= 256;
                 } else if (minSize == 3) {
-                    min = min - 256 * 256 * 256;
+                    min -= 256 * 256 * 256;
                 }
             }
         }
@@ -335,7 +332,7 @@ class IntegerGridTileProvider implements GridTileProvider {
         return buffer;
     }
 
-    static final class TIFFFaxDecompressorExtension extends TIFFFaxDecompressor {
+    private static final class TIFFFaxDecompressorExtension extends TIFFFaxDecompressor {
 
         TIFFFaxDecompressorExtension(int tileOffset, int tileDataSize) {
             this.compression = 2;

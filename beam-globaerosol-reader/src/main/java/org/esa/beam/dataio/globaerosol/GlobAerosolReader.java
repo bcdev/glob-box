@@ -18,13 +18,13 @@ package org.esa.beam.dataio.globaerosol;
 
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.dataio.merisl3.ISINGrid;
-import org.esa.beam.dataio.netcdf.NetCdfReader;
-import org.esa.beam.dataio.netcdf.NetCdfReaderPlugIn;
 import org.esa.beam.dataio.netcdf.metadata.profiles.cf.CfBandPart;
 import org.esa.beam.dataio.netcdf.metadata.profiles.cf.CfIndexCodingPart;
+import org.esa.beam.dataio.netcdf.metadata.profiles.cf.CfNetCdfReaderPlugIn;
 import org.esa.beam.dataio.netcdf.util.DataTypeUtils;
 import org.esa.beam.dataio.netcdf.util.MetadataUtils;
 import org.esa.beam.framework.dataio.AbstractProductReader;
+import org.esa.beam.framework.dataio.ProductReader;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.CrsGeoCoding;
 import org.esa.beam.framework.datamodel.IndexCoding;
@@ -77,7 +77,8 @@ public class GlobAerosolReader extends AbstractProductReader {
     private int width;
     private int height;
 
-    private NetCdfReader delegateReader;
+    private ProductReader delegateReader;
+    private boolean isSorted = true;
 
     protected GlobAerosolReader(GlobAerosolReaderPlugIn readerPlugIn) {
         super(readerPlugIn);
@@ -85,16 +86,23 @@ public class GlobAerosolReader extends AbstractProductReader {
 
     @Override
     protected Product readProductNodesImpl() throws IOException {
-        ncfile = getInputNetcdfFile();
+        final File fileLocation = new File(getInput().toString());
+        ncfile = NetcdfFile.open(fileLocation.getPath());
         Attribute titleAttr = ncfile.findGlobalAttribute("title");
         if (titleAttr != null) {
             if (titleAttr.getStringValue().startsWith("Statistic")) {
-                delegateReader = new NetCdfReader(new NetCdfReaderPlugIn(), CF_PROFILE);
+                ncfile.close();
+                new CfNetCdfReaderPlugIn().createReaderInstance();
+                delegateReader = new CfNetCdfReaderPlugIn().createReaderInstance();
                 return delegateReader.readProductNodes(getInput(), getSubsetDef());
             }
         }
         accessorMap = new HashMap<Band, VariableAccessor1D>();
-        return createProduct();
+        Product product = createProduct();
+        product.setFileLocation(fileLocation);
+        product.setProductReader(this);
+        product.setModified(false);
+        return product;
     }
 
     @Override
@@ -109,11 +117,18 @@ public class GlobAerosolReader extends AbstractProductReader {
         }
 
         synchronized (this) {
-            if (rowInfos == null) {
+            if (rowInfos == null && isSorted) {
                 rowInfos = createRowInfos();
             }
         }
+        if (isSorted) {
+            readSortedData(sourceOffsetX, sourceOffsetY, sourceWidth, sourceHeight, destBand, destBuffer, pm);
+        } else {
+            readUnsortedData(sourceOffsetX, sourceOffsetY, sourceWidth, sourceHeight, destBand, destBuffer, pm);
+        }
+    }
 
+    private void readSortedData(int sourceOffsetX, int sourceOffsetY, int sourceWidth, int sourceHeight, Band destBand, ProductData destBuffer, ProgressMonitor pm) throws IOException {
         pm.beginTask("Reading band '" + destBand.getName() + "'...", sourceHeight);
         try {
             for (int y = sourceOffsetY; y < sourceOffsetY + sourceHeight; y++) {
@@ -154,6 +169,53 @@ public class GlobAerosolReader extends AbstractProductReader {
             pm.done();
         }
     }
+
+    private void readUnsortedData(int sourceOffsetX, int sourceOffsetY, int sourceWidth, int sourceHeight, Band destBand, ProductData destBuffer, ProgressMonitor pm) throws IOException {
+        pm.beginTask("Reading band '" + destBand.getName() + "'...", sourceHeight);
+        try {
+            final float[] latValues;
+            final float[] lonValues;
+            Array bandData;
+            synchronized (ncfile) {
+                final Variable latVariable = ncfile.getRootGroup().findVariable("lat");
+                latValues = (float[]) latVariable.read().getStorage();
+                final Variable lonVariable = ncfile.getRootGroup().findVariable("lon");
+                lonValues = (float[]) lonVariable.read().getStorage();
+                VariableAccessor1D accessor = accessorMap.get(destBand);
+                bandData = accessor.readAll();
+            }
+            if (destBand.isNoDataValueUsed()) {
+                double noDataValue = destBand.getNoDataValue();
+                int numElems = destBuffer.getNumElems();
+                for (int i = 0; i < numElems; i++) {
+                    destBuffer.setElemDoubleAt(i, noDataValue);
+                }
+            }
+            double deltaLat = isinGrid.getDeltaLat();
+            int dataSize = (int) bandData.getSize();
+            for (int dataIndex = 0; dataIndex < dataSize; dataIndex++) {
+                double lat = latValues[dataIndex];
+                double lon = lonValues[dataIndex] + 180;
+                int rowIndex = (int) Math.round(((lat + 90.0) / deltaLat) + 0.5);
+
+                final int y = (height - 1) - rowIndex;
+                if (y >= sourceOffsetY && y < sourceOffsetY + sourceHeight) {
+                    int colIndex = isinGrid.getColIndex(rowIndex, lon);
+
+                    int rowLength = isinGrid.getRowLength(rowIndex);
+                    int x = isinGrid.getRowCount() - (rowLength / 2) + colIndex;
+
+                    if (x >= sourceOffsetX && x < sourceOffsetX + sourceWidth) {
+                        final int rasterIndex = sourceWidth * (y - sourceOffsetY) + (x - sourceOffsetX);
+                        destBuffer.setElemDoubleAt(rasterIndex, bandData.getDouble(dataIndex));
+                    }
+                }
+            }
+        } finally {
+            pm.done();
+        }
+    }
+
 
     private Array read(Band band, RowInfo rowInfo) throws IOException {
         VariableAccessor1D accessor = accessorMap.get(band);
@@ -292,7 +354,7 @@ public class GlobAerosolReader extends AbstractProductReader {
                     final int rasterDataType = DataTypeUtils.getRasterDataType(variable);
                     final Band band = product.addBand(variable.getName(), rasterDataType);
                     CfBandPart.readCfBandAttributes(variable, band);
-                    Map<Integer, Integer> dimSelection = Collections.EMPTY_MAP;
+                    Map<Integer, Integer> dimSelection = Collections.emptyMap();
                     handleBand(band, variable, cellDimemsionIndex, indexCoding, dimSelection);
                 }
             }
@@ -308,22 +370,6 @@ public class GlobAerosolReader extends AbstractProductReader {
         accessorMap.put(band, accessor);
     }
 
-    private NetcdfFile getInputNetcdfFile() throws IOException {
-        final Object input = getInput();
-
-        if (!(input instanceof String || input instanceof File)) {
-            throw new IOException("Input object must either be a string or a file.");
-        }
-        final String path;
-        if (input instanceof String) {
-            path = (String) input;
-        } else {
-            path = ((File) input).getPath();
-        }
-
-        return NetcdfFile.open(path);
-    }
-
     private RowInfo[] createRowInfos() throws IOException {
         final RowInfo[] binLines = new RowInfo[height];
         final Variable latVariable = ncfile.getRootGroup().findVariable("lat");
@@ -337,8 +383,10 @@ public class GlobAerosolReader extends AbstractProductReader {
 
             final double lat = latValues[i];
             if (lat < lastLatValue) {
-                throw new IOException(
-                        "Unrecognized level-3 format. Bins numbers expected to appear in ascending order.");
+                isSorted = false;
+                return null;
+//                throw new IOException(
+//                        "Unrecognized level-3 format. Bins numbers expected to appear in ascending order.");
             }
             if (lastLatValue == lat) {
                 lineLength++;
@@ -388,6 +436,15 @@ public class GlobAerosolReader extends AbstractProductReader {
             this.indexDim = indexDim;
             this.dimSelection = dimSelection;
             this.rank = variable.getRank();
+        }
+
+        public Array readAll() throws IOException {
+            try {
+                Section section = getSection(0, variable.getShape(indexDim));
+                return variable.read(section).reduce();
+            } catch (InvalidRangeException e) {
+                throw new IOException(e);
+            }
         }
 
         public Array read(RowInfo rowInfo) throws IOException {

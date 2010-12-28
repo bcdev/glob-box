@@ -1,0 +1,10 @@
+ENVI
+map info = { Geographic Lat/Lon, 1, 1, -180.0044642857, 89.9955357143, 0.50, 0.50, WGS-84, units=Degrees }
+samples = 720
+lines = 360
+bands = 1
+header offset = 0
+file type = ENVI Standard
+data type = 12
+interleave = BILL
+byte order = 0

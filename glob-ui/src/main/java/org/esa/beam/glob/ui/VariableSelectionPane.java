@@ -32,17 +32,17 @@ import java.awt.Component;
 import java.util.ArrayList;
 import java.util.List;
 
-class VariableSelectionPane extends JPanel {
+public class VariableSelectionPane extends JPanel {
 
     private VariableSelectionPaneModel model;
     private CheckBoxList variableList;
     private VariableSelectionPane.CheckBoxSelectionListener checkBoxSelectionListener;
 
-    VariableSelectionPane() {
+    public VariableSelectionPane() {
         this(new DefaultVariableSelectionPaneModel());
     }
 
-    VariableSelectionPane(VariableSelectionPaneModel variableSelectionPaneModel) {
+    public VariableSelectionPane(VariableSelectionPaneModel variableSelectionPaneModel) {
         model = variableSelectionPaneModel;
         createPane();
     }

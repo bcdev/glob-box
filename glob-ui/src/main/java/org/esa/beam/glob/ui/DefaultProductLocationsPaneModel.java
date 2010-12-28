@@ -24,11 +24,11 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-class DefaultProductLocationsPaneModel extends AbstractListModel implements ProductLocationsPaneModel {
+public class DefaultProductLocationsPaneModel extends AbstractListModel implements ProductLocationsPaneModel {
 
-    private List<ProductLocation> productLocationList;
+    private final List<ProductLocation> productLocationList;
 
-    DefaultProductLocationsPaneModel() {
+    public DefaultProductLocationsPaneModel() {
         productLocationList = new ArrayList<ProductLocation>();
     }
 

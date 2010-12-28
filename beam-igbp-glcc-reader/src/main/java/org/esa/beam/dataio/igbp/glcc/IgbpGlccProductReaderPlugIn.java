@@ -23,16 +23,17 @@ import org.esa.beam.util.io.BeamFileFilter;
 
 import java.io.File;
 import java.util.Locale;
-import java.util.regex.Pattern;
 
 public class IgbpGlccProductReaderPlugIn implements ProductReaderPlugIn{
 
     @Override
     public DecodeQualification getDecodeQualification(Object input) {
-        File inputFile = new File( input.toString() );
-        final String inputFileName = inputFile.getName().toLowerCase();
-        if( inputFileName.matches("g(.*)2_0ll\\.img") ) {
-            return DecodeQualification.INTENDED;
+        if (input != null) {
+            File inputFile = new File( input.toString() );
+            final String inputFileName = inputFile.getName().toLowerCase();
+            if( inputFileName.matches("g(.*)2_0ll\\.img") ) {
+                return DecodeQualification.INTENDED;
+            }
         }
         return DecodeQualification.UNABLE;
     }

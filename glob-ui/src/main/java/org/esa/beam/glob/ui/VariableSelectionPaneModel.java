@@ -23,9 +23,6 @@ import java.util.List;
 public interface VariableSelectionPaneModel extends ListModel, Serializable {
 
     @Override
-    int getSize();
-
-    @Override
     Variable getElementAt(int index);
 
     void set(Variable... variables);

@@ -35,11 +35,12 @@ public class GlobAerosolReaderPlugIn implements ProductReaderPlugIn {
 
     @Override
     public DecodeQualification getDecodeQualification(Object input) {
-        final File file = new File(input.toString());
-        if (file.getName().matches("GLOBAER_.*\\.nc(\\.gz)?")) {
-            return DecodeQualification.INTENDED;
+        if (input != null) {
+            final File file = new File(input.toString());
+            if (file.getName().matches("GLOBAER_.*\\.nc(\\.gz)?")) {
+                return DecodeQualification.INTENDED;
+            }
         }
-
         return DecodeQualification.UNABLE;
     }
 

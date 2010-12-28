@@ -20,7 +20,7 @@ import java.awt.geom.Point2D;
 
 public class KmlPlacemark extends KmlFeature {
 
-    private Point2D position;
+    private final Point2D position;
 
     public KmlPlacemark(String name, String description, Point2D position) {
         super(name, description);

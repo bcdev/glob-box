@@ -84,7 +84,7 @@ public class ArcBinGridReader extends AbstractProductReader {
         product.setPreferredTileSize(imageTileSize);
 
         final AffineTransform i2m = createAffineTransform(georefBounds, header, height);
-        product.setGeoCoding(createGeoCoding(width, height, product, i2m));
+        product.setGeoCoding(createGeoCoding(width, height, i2m));
 
         int productDataType = getDataType(header, rasterStatistics);
         final Band band = product.addBand(BAND_NAME, productDataType);
@@ -139,9 +139,8 @@ public class ArcBinGridReader extends AbstractProductReader {
         return product;
     }
 
-    private GeoCoding createGeoCoding(int width, int height, Product product, AffineTransform i2m) {
+    private GeoCoding createGeoCoding(int width, int height, AffineTransform i2m) {
         // TODO parse projection from prj.adf file. For now we assume WGS84 (applicable for GlobToolBox products) (mz, 2010-02-24)
-        //CoordinateReferenceSystem crs = ProjectionReader.parsePrjFile(getCaseInsensitiveFile(dir, "prj.adf"));
         Rectangle imageBounds = new Rectangle(width, height);
         try {
             final DefaultGeographicCRS crs = DefaultGeographicCRS.WGS84;

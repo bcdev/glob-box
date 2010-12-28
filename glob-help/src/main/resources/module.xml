@@ -2,14 +2,14 @@
     <manifestVersion>1.0.0</manifestVersion>
 
     <symbolicName>glob-help</symbolicName>
-    <version>2.0</version>
+    <version>2.1</version>
     <name>GlobToolbox Help</name>
 
-    <description>Provides the software user manual for the GlobToolbox.</description>
+    <description>This module provides the software user manual for the GlobToolbox.</description>
 
     <changelog>
         <![CDATA[
-        ]]>
+                ]]>
     </changelog>
 
     <vendor>Brockmann Consult GmbH</vendor>

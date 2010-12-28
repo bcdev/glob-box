@@ -26,9 +26,6 @@ import java.util.List;
 public interface ProductLocationsPaneModel extends ListModel, Serializable {
 
     @Override
-    int getSize();
-
-    @Override
     ProductLocation getElementAt(int index);
 
     void addFiles(File... files);

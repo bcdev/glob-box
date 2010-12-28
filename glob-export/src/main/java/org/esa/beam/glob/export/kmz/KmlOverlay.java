@@ -20,7 +20,7 @@ import java.awt.image.RenderedImage;
 
 public abstract class KmlOverlay extends KmlFeature {
 
-    private RenderedImage overlay;
+    private final RenderedImage overlay;
     private String iconName;
     private static final String ICON_EXTENSION = ".png";
 

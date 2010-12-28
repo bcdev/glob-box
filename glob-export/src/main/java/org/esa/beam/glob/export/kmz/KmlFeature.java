@@ -21,8 +21,8 @@ import com.bc.ceres.core.Assert;
 
 public abstract class KmlFeature {
 
-    private String name;
-    private String description;
+    private final String name;
+    private final String description;
 
     protected KmlFeature(String name, String description) {
         Assert.notNull(name, "name");

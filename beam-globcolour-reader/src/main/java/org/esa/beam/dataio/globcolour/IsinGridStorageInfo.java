@@ -69,7 +69,7 @@ class IsinGridStorageInfo {
 
         this.maxRow = minRow + offsets.length - 1;
         this.binCount = binCount;
-        this.offsets = offsets;
+        this.offsets = offsets.clone();
     }
 
     /**

@@ -2,8 +2,23 @@
 
 This file contains all significant changes for each GlobToolbox release.
 
+    o xx.xx.2010: Version 2.1    
     o 29.07.2010: Version 2.0
     o 03.03.2010: Version 1.0
+
+
+ Changes from 2.0 to 2.1
+_____________________________________________________________________________
+
+1) New Features
+
+o Matrix Toolview
+
+2) List of GlobToolbox 2.1 bug fixes
+
+Bugs
+GBOX-7 - When adding geometries to time series, an ArrayIndexOutOfBoundsException is thrown
+
 
  _____________________________________________________________________________
 
@@ -26,9 +41,11 @@ o A number of tools tackling the time dimension have been introduced. First of a
 2) List of GlobToolbox 2.0 bug fixes
 
 Bugs
+GBOX-7 - When adding geometries to time series, an ArrayIndexOutOfBoundsException is thrown
 GBOX-3 - Pins in Worldfire product are misplaced
 GBOX-2 - Pins in Worldfire product slow down VISAT
 GBOX-1 - 'Arc/Info Binary Grid Reader' does not work
+
 
  _____________________________________________________________________________
 

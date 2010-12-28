@@ -1,10 +1,14 @@
 <module>
     <manifestVersion>1.0.0</manifestVersion>
     <symbolicName>beam-medspiration-reader</symbolicName>
-    <version>2.0</version>
+    <version>2.1</version>
     <name>Medspiration Reader</name>
 
-    <description>Enables BEAM to read Medspiration data products.</description>
+    <description>
+        <![CDATA[
+        This module provides product readers for importing Medspiration data productsinto BEAM/VISAT.
+        ]]>
+    </description>
 
     <vendor>Brockmann Consult GmbH</vendor>
     <contactAddress>Max Planck Str.2, 21502 Geesthacht (Germany)</contactAddress>
@@ -35,8 +39,7 @@
             <class>org.esa.beam.visat.actions.ProductImportAction</class>
             <id>importMedspirationProduct</id>
             <helpId>importMedspirationProduct</helpId>
-            <formatName>NetCDF</formatName>
-            <profileClassName>org.esa.beam.dataio.medspiration.profile.MedspirationSpi</profileClassName>
+            <formatName>Medspiration</formatName>
             <useAllFileFilter>false</useAllFileFilter>
             <text>Import Medspiration Product...</text>
             <mnemonic/>

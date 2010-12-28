@@ -54,7 +54,7 @@ import java.util.List;
 
 public class AnimatedGifExport extends ProgressMonitorSwingWorker<Void, Void> {
 
-    private File outputFile;
+    private final File outputFile;
     private static final String EXPORT_DIR_PREFERENCES_KEY = "user.export.dir";
     private RenderedImage[] frames;
     private int level;
@@ -124,14 +124,14 @@ public class AnimatedGifExport extends ProgressMonitorSwingWorker<Void, Void> {
         Node child = root.getFirstChild();
         while (child != null) {
             if ("GraphicControlExtension".equals(child.getNodeName())) {
+                IIOMetadataNode gce = (IIOMetadataNode) child;
+                gce.setAttribute("userInputFlag", "FALSE");
+                gce.setAttribute("delayTime", delayTime);
                 break;
             }
             child = child.getNextSibling();
         }
 
-        IIOMetadataNode gce = (IIOMetadataNode) child;
-        gce.setAttribute("userInputFlag", "FALSE");
-        gce.setAttribute("delayTime", delayTime);
 
         //only the first node needs the ApplicationExtensions node
         if (imageIndex == 0) {

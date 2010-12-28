@@ -16,7 +16,9 @@
 
 package org.esa.beam.glob.core.timeseries.datamodel;
 
+import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.ImageInfo;
 import org.esa.beam.framework.datamodel.MetadataAttribute;
 import org.esa.beam.framework.datamodel.MetadataElement;
 import org.esa.beam.framework.datamodel.Product;
@@ -31,103 +33,70 @@ import org.esa.beam.util.StringUtils;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.WeakHashMap;
 
 /**
- * <p><i>Note that this class is not yet public API. Interface may chhange in future releases.</i></p>
+ * <p><i>Note that this class is not yet public API. Interface may change in future releases.</i></p>
  *
  * @author Thomas Storm
  */
-class TimeSeriesImpl extends AbstractTimeSeries {
+final class TimeSeriesImpl extends AbstractTimeSeries {
 
     private Product tsProduct;
     private List<ProductLocation> productLocationList;
     private Map<String, Product> productTimeMap;
+    private final Map<RasterDataNode, TimeCoding> rasterTimeMap = new WeakHashMap<RasterDataNode, TimeCoding>();
+    private final List<TimeSeriesListener> listeners = new ArrayList<TimeSeriesListener>();
+    private volatile boolean isAdjustingImageInfos;
 
+    /**
+     * Used to create a TimeSeries from within a ProductReader
+     *
+     * @param tsProduct the product read
+     */
     TimeSeriesImpl(Product tsProduct) {
         init(tsProduct);
         productLocationList = getProductLocations();
-        handleProductLocations(false);
+        storeProductsInMap();
         setSourceImages();
         fixBandTimeCodings();
-        updateAutogrouping();
+        updateAutoGrouping();
+        initImageInfos();
     }
 
-    private void setSourceImages() {
-        for (Band destBand : tsProduct.getBands()) {
-            final Band raster = getSourceBand(destBand.getName());
-            if (raster != null) {
-                destBand.setSourceImage(raster.getSourceImage());
-            }
-        }
-    }
-
-    private void fixBandTimeCodings() {
-        for (Band destBand : tsProduct.getBands()) {
-            final Band raster = getSourceBand(destBand.getName());
-            final ProductData.UTC startTime = raster.getProduct().getStartTime();
-            final ProductData.UTC endTime = raster.getProduct().getEndTime();
-            rasterTimeMap.put(destBand, new DefaultTimeCoding(startTime, endTime, raster.getSceneRasterHeight()));
-        }
-    }
-
+    /**
+     * Used to create a new TimeSeries from the user interface.
+     *
+     * @param tsProduct        the newly created time series product
+     * @param productLocations the product location to be used
+     * @param variableNames    the currently selected names of variables
+     */
     TimeSeriesImpl(Product tsProduct, List<ProductLocation> productLocations, List<String> variableNames) {
         init(tsProduct);
-        productLocationList = productLocations;
-        handleProductLocations(true);
+        for (ProductLocation location : productLocations) {
+            addProductLocation(location);
+        }
+        storeProductsInMap();
         for (String variable : variableNames) {
             setVariableSelected(variable, true);
         }
+        setProductTimeCoding(tsProduct);
+        initImageInfos();
     }
 
-    private void init(Product product) {
-        this.tsProduct = product;
-        productTimeMap = new HashMap<String, Product>();
-        createTimeSeriesMetadataStructure(product);
-
-        // to recontruct the source image which will be nulled when
-        // a product is reopened after saving
-        tsProduct.addProductNodeListener(new ProductNodeListenerAdapter() {
-            @Override
-            public void nodeChanged(ProductNodeEvent event) {
-                if (event.getPropertyName().equals("sourceImage") &&
-                    event.getOldValue() != null &&
-                    event.getNewValue() == null) {
-                    ProductNode productNode = event.getSourceNode();
-                    if (productNode instanceof Band) {
-                        Band destBand = (Band) productNode;
-                        final Band sourceBand = getSourceBand(destBand.getName());
-                        if (sourceBand != null) {
-                            destBand.setSourceImage(sourceBand.getSourceImage());
-                        }
-                    }
-                }
-            }
-        });
-    }
-
-    public Band getSourceBand(String destBandName) {
-        final int lastUnderscore = destBandName.lastIndexOf(SEPARATOR);
-        String normalizedBandName = destBandName.substring(0, lastUnderscore);
-        String timePart = destBandName.substring(lastUnderscore + 1);
-        Product srcProduct = productTimeMap.get(timePart);
-        if (srcProduct == null) {
-            return null;
-        }
-        for (Band band : srcProduct.getBands()) {
-            if (normalizedBandName.equals(band.getName())) {
-                return band;
-            }
-        }
-        return null;
-    }
-
+    @Override
     public Product getTsProduct() {
         return tsProduct;
     }
 
+    @Override
     public List<ProductLocation> getProductLocations() {
         MetadataElement tsElem = tsProduct.getMetadataRoot().getElement(TIME_SERIES_ROOT_NAME);
         MetadataElement productListElem = tsElem.getElement(PRODUCT_LOCATIONS);
@@ -141,10 +110,9 @@ class TimeSeriesImpl extends AbstractTimeSeries {
         return productLocations;
     }
 
-    public List<String> getTimeVariables() {
-        MetadataElement tsElem = tsProduct.getMetadataRoot().getElement(TIME_SERIES_ROOT_NAME);
-        MetadataElement variablesListElem = tsElem.getElement(VARIABLES);
-        MetadataElement[] variableElems = variablesListElem.getElements();
+    @Override
+    public List<String> getVariables() {
+        MetadataElement[] variableElems = getVariableMetadataElements();
         List<String> variables = new ArrayList<String>();
         for (MetadataElement varElem : variableElems) {
             variables.add(varElem.getAttributeString(VARIABLE_NAME));
@@ -152,15 +120,18 @@ class TimeSeriesImpl extends AbstractTimeSeries {
         return variables;
     }
 
-    public void addProductLocation(ProductLocationType type, String path) {
-        ProductLocation location = new ProductLocation(type, path);
-        if (!productLocationList.contains(location)) {
-            addProductLocationMetadata(location);
-            List<String> variables = getTimeVariables();
-            for (Product product : location.getProducts()) {
+    @Override
+    public void addProductLocation(ProductLocation productLocation) {
+        if (productLocationList == null) {
+            productLocationList = new ArrayList<ProductLocation>();
+        }
+        if (!productLocationList.contains(productLocation)) {
+            addProductLocationMetadata(productLocation);
+            productLocationList.add(productLocation);
+            List<String> variables = getVariables();
+            for (Product product : productLocation.getProducts()) {
                 if (product.getStartTime() != null) {
                     addToVariableList(product);
-                    productTimeMap.put(formatTimeString(product), product);
                     for (String variable : variables) {
                         if (isVariableSelected(variable)) {
                             addSpecifiedBandOfGivenProduct(variable, product);
@@ -170,10 +141,12 @@ class TimeSeriesImpl extends AbstractTimeSeries {
                     // todo log in gui as well as in console
                 }
             }
-            tsProduct.fireProductNodeChanged(PROPERTY_PRODUCT_LOCATIONS);
+            fireChangeEvent(new TimeSeriesChangeEvent(TimeSeriesChangeEvent.PROPERTY_PRODUCT_LOCATIONS,
+                                                      productLocationList));
         }
     }
 
+    @Override
     public void removeProductLocation(ProductLocation productLocation) {
         // remove metadata
         MetadataElement productLocationsElement = tsProduct.getMetadataRoot().
@@ -189,7 +162,7 @@ class TimeSeriesImpl extends AbstractTimeSeries {
         }
         productLocationsElement.removeElement(removeElem);
         // remove variables for this productLocation
-        updateAutogrouping(); // TODO ???
+        updateAutoGrouping(); // TODO ???
 
         List<Product> products = productLocation.getProducts();
         final Band[] bands = tsProduct.getBands();
@@ -205,42 +178,71 @@ class TimeSeriesImpl extends AbstractTimeSeries {
         productLocation.closeProducts();
         productLocationList.remove(productLocation);
 
-        tsProduct.fireProductNodeChanged(PROPERTY_PRODUCT_LOCATIONS);
+        fireChangeEvent(new TimeSeriesChangeEvent(TimeSeriesChangeEvent.PROPERTY_PRODUCT_LOCATIONS,
+                                                  productLocationList));
     }
 
-    private void handleProductLocations(boolean addToMetadata) {
-        for (ProductLocation productLocation : productLocationList) {
-            if (addToMetadata) {
-                addProductLocationMetadata(productLocation);
+    private Band getSourceBand(String destBandName) {
+        final int lastUnderscore = destBandName.lastIndexOf(SEPARATOR);
+        String normalizedBandName = destBandName.substring(0, lastUnderscore);
+        String timePart = destBandName.substring(lastUnderscore + TimeSeriesChangeEvent.BAND_TO_BE_REMOVED);
+        Product srcProduct = productTimeMap.get(timePart);
+        if (srcProduct == null) {
+            return null;
+        }
+        for (Band band : srcProduct.getBands()) {
+            if (normalizedBandName.equals(band.getName())) {
+                return band;
             }
-            for (Product product : productLocation.getProducts()) {
-                if (product.getStartTime() != null) {
-                    productTimeMap.put(formatTimeString(product), product);
-                    if (addToMetadata) {
-                        addToVariableList(product);
-                    }
-                } else {
-                    // todo log in gui as well as in console
-                }
+        }
+        return null;
+    }
+
+    private void setSourceImages() {
+        for (Band destBand : tsProduct.getBands()) {
+            final Band raster = getSourceBand(destBand.getName());
+            if (raster != null) {
+                destBand.setSourceImage(raster.getSourceImage());
             }
         }
     }
 
+    private void fixBandTimeCodings() {
+        for (Band destBand : tsProduct.getBands()) {
+            final Band raster = getSourceBand(destBand.getName());
+            rasterTimeMap.put(destBand, GridTimeCoding.create(raster.getProduct()));
+        }
+    }
+
+    private void init(Product product) {
+        this.tsProduct = product;
+        productTimeMap = new HashMap<String, Product>();
+        createTimeSeriesMetadataStructure(product);
+
+        // to reconstruct the source image which will be nulled when
+        // a product is reopened after saving
+        tsProduct.addProductNodeListener(new SourceImageReconstructor());
+    }
+
+    private void storeProductsInMap() {
+        for (Product product : getAllProducts()) {
+            productTimeMap.put(formatTimeString(product), product);
+        }
+    }
+
+    @Override
     public void setVariableSelected(String variableName, boolean selected) {
-        MetadataElement variableListElement = tsProduct.getMetadataRoot().
-                getElement(TIME_SERIES_ROOT_NAME).
-                getElement(VARIABLES);
-        final MetadataElement[] variables = variableListElement.getElements();
+        // set in metadata
+        final MetadataElement[] variables = getVariableMetadataElements();
         for (MetadataElement elem : variables) {
             if (elem.getAttributeString(VARIABLE_NAME).equals(variableName)) {
                 elem.setAttributeString(VARIABLE_SELECTION, String.valueOf(selected));
             }
         }
+        // set in product
         if (selected) {
-            for (ProductLocation productLocation : productLocationList) {
-                for (Product product : productLocation.getProducts()) {
-                    addSpecifiedBandOfGivenProduct(variableName, product);
-                }
+            for (Product product : getAllProducts()) {
+                addSpecifiedBandOfGivenProduct(variableName, product);
             }
         } else {
             final Band[] bands = tsProduct.getBands();
@@ -250,15 +252,13 @@ class TimeSeriesImpl extends AbstractTimeSeries {
                 }
             }
         }
-        tsProduct.fireProductNodeChanged(PROPERTY_VARIABLE_SELECTION);
+        fireChangeEvent(new TimeSeriesChangeEvent(TimeSeriesChangeEvent.PROPERTY_VARIABLE_SELECTION, null));
+
     }
 
     @Override
     public boolean isVariableSelected(String variableName) {
-        MetadataElement variableListElement = tsProduct.getMetadataRoot().
-                getElement(TIME_SERIES_ROOT_NAME).
-                getElement(VARIABLES);
-        final MetadataElement[] variables = variableListElement.getElements();
+        final MetadataElement[] variables = getVariableMetadataElements();
         for (MetadataElement elem : variables) {
             if (elem.getAttributeString(VARIABLE_NAME).equals(variableName)) {
                 return Boolean.parseBoolean(elem.getAttributeString(VARIABLE_SELECTION));
@@ -295,8 +295,161 @@ class TimeSeriesImpl extends AbstractTimeSeries {
         return bands;
     }
 
-    private void updateAutogrouping() {
-        tsProduct.setAutoGrouping(StringUtils.join(getTimeVariables(), ":"));
+    @Override
+    public Map<RasterDataNode, TimeCoding> getRasterTimeMap() {
+        return Collections.unmodifiableMap(rasterTimeMap);
+    }
+
+    @Override
+    public boolean isAutoAdjustingTimeCoding() {
+        final MetadataElement tsRootElement = tsProduct.getMetadataRoot().getElement(TIME_SERIES_ROOT_NAME);
+        if (!tsRootElement.containsAttribute(AUTO_ADJUSTING_TIME_CODING)) {
+            setAutoAdjustingTimeCoding(true);
+        }
+        final String autoAdjustString = tsRootElement.getAttributeString(AUTO_ADJUSTING_TIME_CODING);
+        return Boolean.parseBoolean(autoAdjustString);
+    }
+
+    @Override
+    public void setAutoAdjustingTimeCoding(boolean autoAdjust) {
+        final MetadataElement tsRootElement = tsProduct.getMetadataRoot().getElement(TIME_SERIES_ROOT_NAME);
+        tsRootElement.setAttributeString(AUTO_ADJUSTING_TIME_CODING, Boolean.toString(autoAdjust));
+    }
+
+
+    @Override
+    public boolean isProductCompatible(Product product, String rasterName) {
+        return product.getFileLocation() != null &&
+               product.containsRasterDataNode(rasterName) &&
+               tsProduct.isCompatibleProduct(product, 0.1e-6f);
+    }
+
+    @Override
+    public TimeCoding getTimeCoding() {
+        return GridTimeCoding.create(tsProduct);
+    }
+
+    @Override
+    public void setTimeCoding(TimeCoding timeCoding) {
+        final ProductData.UTC startTime = timeCoding.getStartTime();
+        if (tsProduct.getStartTime().getAsCalendar().compareTo(startTime.getAsCalendar()) != 0) {
+            tsProduct.setStartTime(startTime);
+            fireChangeEvent(new TimeSeriesChangeEvent(TimeSeriesChangeEvent.START_TIME_PROPERTY_NAME, startTime));
+        }
+        final ProductData.UTC endTime = timeCoding.getEndTime();
+        if (tsProduct.getEndTime().getAsCalendar().compareTo(endTime.getAsCalendar()) != 0) {
+            tsProduct.setEndTime(endTime);
+            fireChangeEvent(new TimeSeriesChangeEvent(TimeSeriesChangeEvent.END_TIME_PROPERTY_NAME, endTime));
+        }
+        List<String> variables = getVariables();
+        for (Product product : getAllProducts()) {
+            for (String variable : variables) {
+                if (isVariableSelected(variable)) {
+                    addSpecifiedBandOfGivenProduct(variable, product);
+                }
+            }
+        }
+        for (Band band : tsProduct.getBands()) {
+            final TimeCoding bandTimeCoding = getRasterTimeMap().get(band);
+            if (!timeCoding.contains(bandTimeCoding)) {
+                fireChangeEvent(new TimeSeriesChangeEvent(TimeSeriesChangeEvent.BAND_TO_BE_REMOVED, band));
+                tsProduct.removeBand(band);
+            }
+        }
+    }
+
+
+    @Override
+    public void addTimeSeriesListener(TimeSeriesListener listener) {
+        if (!listeners.contains(listener)) {
+            listeners.add(listener);
+            tsProduct.addProductNodeListener(listener);
+        }
+    }
+
+    @Override
+    public void removeTimeSeriesListener(TimeSeriesListener listener) {
+        listeners.remove(listener);
+        tsProduct.removeProductNodeListener(listener);
+    }
+
+
+    /////////////////////////////////////////////////////////////////////////////////
+    // private methods
+    /////////////////////////////////////////////////////////////////////////////////
+
+    private MetadataElement[] getVariableMetadataElements() {
+        MetadataElement variableListElement = tsProduct.getMetadataRoot().
+                getElement(TIME_SERIES_ROOT_NAME).
+                getElement(VARIABLES);
+        return variableListElement.getElements();
+    }
+
+    private List<Product> getAllProducts() {
+        List<Product> result = new ArrayList<Product>();
+        for (ProductLocation productLocation : productLocationList) {
+            for (Product product : productLocation.getProducts()) {
+                result.add(product);
+            }
+        }
+        return result;
+    }
+
+    private boolean isTimeCodingSet() {
+        return tsProduct.getStartTime() != null;
+    }
+
+    private void adjustImageInfos(RasterDataNode raster) {
+        if (!isAdjustingImageInfos) {
+            try {
+                isAdjustingImageInfos = true;
+                final String variableName = AbstractTimeSeries.rasterToVariableName(raster.getName());
+                final List<Band> bandList = getBandsForVariable(variableName);
+                final ImageInfo imageInfo = raster.getImageInfo(ProgressMonitor.NULL);
+                if (imageInfo != null) {
+                    for (Band band : bandList) {
+                        if (band != raster) {
+                            band.setImageInfo(imageInfo.createDeepCopy());
+                        }
+                    }
+                }
+            } finally {
+                isAdjustingImageInfos = false;
+            }
+        }
+    }
+
+    private void sortBands(List<Band> bandList) {
+        Collections.sort(bandList, new Comparator<Band>() {
+            @Override
+            public int compare(Band band1, Band band2) {
+                final Date date1 = rasterTimeMap.get(band1).getStartTime().getAsDate();
+                final Date date2 = rasterTimeMap.get(band2).getStartTime().getAsDate();
+                return date1.compareTo(date2);
+            }
+        });
+    }
+
+    private void updateAutoGrouping() {
+        tsProduct.setAutoGrouping(StringUtils.join(getVariables(), ":"));
+    }
+
+    private void setProductTimeCoding(Product tsProduct) {
+        for (Band band : tsProduct.getBands()) {
+            final ProductData.UTC rasterStartTime = getRasterTimeMap().get(band).getStartTime();
+            final ProductData.UTC rasterEndTime = getRasterTimeMap().get(band).getEndTime();
+
+            ProductData.UTC tsStartTime = tsProduct.getStartTime();
+            if (tsStartTime == null || rasterStartTime.getAsDate().before(tsStartTime.getAsDate())) {
+                tsProduct.setStartTime(rasterStartTime);
+            }
+            ProductData.UTC tsEndTime = tsProduct.getEndTime();
+            if (rasterEndTime != null) {
+                if (tsEndTime == null || rasterEndTime.getAsDate().after(tsEndTime.getAsDate())) {
+                    tsProduct.setEndTime(rasterEndTime);
+                }
+            }
+        }
     }
 
     private static void createTimeSeriesMetadataStructure(Product tsProduct) {
@@ -316,28 +469,28 @@ class TimeSeriesImpl extends AbstractTimeSeries {
                 getElement(PRODUCT_LOCATIONS);
         ProductData productPath = ProductData.createInstance(productLocation.getPath());
         ProductData productType = ProductData.createInstance(productLocation.getProductLocationType().toString());
-        int length = productLocationsElement.getElements().length + 1;
+        int length = productLocationsElement.getElements().length + TimeSeriesChangeEvent.BAND_TO_BE_REMOVED;
         MetadataElement elem = new MetadataElement(
-                PRODUCT_LOCATIONS + "." + Integer.toString(length));
+                String.format("%s.%s", PRODUCT_LOCATIONS, Integer.toString(length)));
         elem.addAttribute(new MetadataAttribute(PL_PATH, productPath, true));
         elem.addAttribute(new MetadataAttribute(PL_TYPE, productType, true));
         productLocationsElement.addElement(elem);
     }
 
     private static String formatTimeString(Product product) {
-        final SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
+        final SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT, Locale.ENGLISH);
         final ProductData.UTC startTime = product.getStartTime();
         return dateFormat.format(startTime.getAsDate());
     }
 
     private void addToVariableList(Product product) {
         final ArrayList<String> newVariables = new ArrayList<String>();
-        final List<String> timeVariables = getTimeVariables();
+        final List<String> variables = getVariables();
         final Band[] bands = product.getBands();
         for (Band band : bands) {
             final String bandName = band.getName();
             boolean varExist = false;
-            for (String variable : timeVariables) {
+            for (String variable : variables) {
                 varExist |= variable.equals(bandName);
             }
             if (!varExist) {
@@ -348,7 +501,7 @@ class TimeSeriesImpl extends AbstractTimeSeries {
             addVariableToMetadata(variable);
         }
         if (!newVariables.isEmpty()) {
-            updateAutogrouping();
+            updateAutoGrouping();
         }
     }
 
@@ -358,51 +511,106 @@ class TimeSeriesImpl extends AbstractTimeSeries {
                 getElement(VARIABLES);
         final ProductData variableName = ProductData.createInstance(variable);
         final ProductData isSelected = ProductData.createInstance(Boolean.toString(false));
-        int length = variableListElement.getElements().length + 1;
-        MetadataElement elem = new MetadataElement(VARIABLES + "." + Integer.toString(length));
+        int length = variableListElement.getElements().length + TimeSeriesChangeEvent.BAND_TO_BE_REMOVED;
+        MetadataElement elem = new MetadataElement(String.format("%s.%s", VARIABLES, Integer.toString(length)));
         elem.addAttribute(new MetadataAttribute(VARIABLE_NAME, variableName, true));
         elem.addAttribute(new MetadataAttribute(VARIABLE_SELECTION, isSelected, true));
         variableListElement.addElement(elem);
     }
 
     private void addSpecifiedBandOfGivenProduct(String nodeName, Product product) {
-        if (isProductCompatible(product, tsProduct, nodeName)) {
+        if (isProductCompatible(product, nodeName)) {
             final RasterDataNode raster = product.getRasterDataNode(nodeName);
-            TimeCoding rasterTimeCoding = new DefaultTimeCoding(product.getStartTime(),
-                                                                product.getEndTime(),
-                                                                product.getSceneRasterHeight());
+            TimeCoding rasterTimeCoding = GridTimeCoding.create(product);
             final ProductData.UTC rasterStartTime = rasterTimeCoding.getStartTime();
             final ProductData.UTC rasterEndTime = rasterTimeCoding.getEndTime();
             Guardian.assertNotNull("rasterStartTime", rasterStartTime);
             final String bandName = variableToRasterName(nodeName, rasterTimeCoding);
+
             if (!tsProduct.containsBand(bandName)) {
-                final Band band = new Band(bandName, raster.getDataType(), tsProduct.getSceneRasterWidth(),
-                                           tsProduct.getSceneRasterHeight());
-                band.setSourceImage(raster.getSourceImage());
-                ProductUtils.copyRasterDataNodeProperties(raster, band);
-                // todo copy also referenced band in valid pixel expression
-                band.setValidPixelExpression(null);
-                rasterTimeMap.put(band, new DefaultTimeCoding(rasterStartTime, rasterEndTime,
-                                                              raster.getSceneRasterHeight()));
-                tsProduct.addBand(band);
-                ProductData.UTC tsStartTime = tsProduct.getStartTime();
-                if (tsStartTime == null || rasterStartTime.getAsDate().before(tsStartTime.getAsDate())) {
-                    tsProduct.setStartTime(rasterStartTime);
+                // band not already contained
+                if (isAutoAdjustingTimeCoding() || !isTimeCodingSet()) {
+                    // automatically setting time coding
+                    // OR
+                    // first band to add to time series; time bounds of this band will be used
+                    // as ts-product's time bounds, no matter if auto adjust is true or false
+                    autoAdjustTimeInformation(rasterStartTime, rasterEndTime);
                 }
-                ProductData.UTC tsEndTime = tsProduct.getEndTime();
-                if (rasterEndTime != null) {
-                    if (tsEndTime == null || rasterEndTime.getAsDate().after(tsEndTime.getAsDate())) {
-                        tsProduct.setEndTime(rasterEndTime);
+                if (getTimeCoding().contains(rasterTimeCoding)) {
+                    // add only bands which are in the time bounds
+                    final Band addedBand = addBand(raster, rasterTimeCoding, bandName);
+                    final List<Band> bandsForVariable = getBandsForVariable(nodeName);
+                    if (!bandsForVariable.isEmpty()) {
+                        final ImageInfo imageInfo = bandsForVariable.get(0).getImageInfo(ProgressMonitor.NULL);
+                        addedBand.setImageInfo(imageInfo.createDeepCopy());
                     }
+
                 }
+                // todo no bands added message
             }
         }
     }
 
-    private static boolean isProductCompatible(Product product, Product tsProduct, String rasterName) {
-        return product.getFileLocation() != null &&
-               product.containsRasterDataNode(rasterName) &&
-               tsProduct.isCompatibleProduct(product, 0.1e-6f);
+    private Band addBand(RasterDataNode raster, TimeCoding rasterTimeCoding, String bandName) {
+        final Band band = new Band(bandName, raster.getDataType(), tsProduct.getSceneRasterWidth(),
+                                   tsProduct.getSceneRasterHeight());
+        band.setSourceImage(raster.getSourceImage());
+        ProductUtils.copyRasterDataNodeProperties(raster, band);
+//                todo copy also referenced band in valid pixel expression
+        band.setValidPixelExpression(null);
+        rasterTimeMap.put(band, rasterTimeCoding);
+        tsProduct.addBand(band);
+        return band;
     }
 
+    private void autoAdjustTimeInformation(ProductData.UTC rasterStartTime, ProductData.UTC rasterEndTime) {
+        ProductData.UTC tsStartTime = tsProduct.getStartTime();
+        if (tsStartTime == null || rasterStartTime.getAsDate().before(tsStartTime.getAsDate())) {
+            tsProduct.setStartTime(rasterStartTime);
+        }
+        ProductData.UTC tsEndTime = tsProduct.getEndTime();
+        if (tsEndTime == null || rasterEndTime.getAsDate().after(tsEndTime.getAsDate())) {
+            tsProduct.setEndTime(rasterEndTime);
+        }
+    }
+
+    private void initImageInfos() {
+        for (String variable : getVariables()) {
+            if (isVariableSelected(variable)) {
+                final List<Band> bandList = getBandsForVariable(variable);
+                adjustImageInfos(bandList.get(0));
+            }
+        }
+    }
+
+    private void fireChangeEvent(TimeSeriesChangeEvent event) {
+        final TimeSeriesListener[] timeSeriesListeners = listeners.toArray(new TimeSeriesListener[listeners.size()]);
+        for (TimeSeriesListener listener : timeSeriesListeners) {
+            listener.timeSeriesChanged(event);
+        }
+    }
+
+    private class SourceImageReconstructor extends ProductNodeListenerAdapter {
+
+        @Override
+        public void nodeChanged(ProductNodeEvent event) {
+            if ("sourceImage".equals(event.getPropertyName()) &&
+                event.getOldValue() != null &&
+                event.getNewValue() == null) {
+                ProductNode productNode = event.getSourceNode();
+                if (productNode instanceof Band) {
+                    Band destBand = (Band) productNode;
+                    final Band sourceBand = getSourceBand(destBand.getName());
+                    if (sourceBand != null) {
+                        destBand.setSourceImage(sourceBand.getSourceImage());
+                    }
+                }
+            }
+            if (RasterDataNode.PROPERTY_NAME_IMAGE_INFO.equals(event.getPropertyName())) {
+                if (event.getSourceNode() instanceof RasterDataNode) {
+                    adjustImageInfos((RasterDataNode) event.getSourceNode());
+                }
+            }
+        }
+    }
 }
