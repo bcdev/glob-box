@@ -219,13 +219,17 @@ class TimeSeriesGraphModel {
 
     private static double getValue(Band band, int pixelX, int pixelY, int currentLevel) {
         final Rectangle pixelRect = new Rectangle(pixelX, pixelY, 1, 1);
-        final RenderedImage validMask = band.getValidMaskImage().getImage(currentLevel);
-        final Raster validMaskData = validMask.getData(pixelRect);
-        double value = Double.NaN;
-        if (validMaskData.getSample(pixelX, pixelY, 0) > 0) {
-            value = ProductUtils.getGeophysicalSampleDouble(band, pixelX, pixelY, currentLevel);
+        if (band.getValidMaskImage() != null) {
+            final RenderedImage validMask = band.getValidMaskImage().getImage(currentLevel);
+            final Raster validMaskData = validMask.getData(pixelRect);
+            if (validMaskData.getSample(pixelX, pixelY, 0) > 0) {
+                return ProductUtils.getGeophysicalSampleDouble(band, pixelX, pixelY, currentLevel);
+            } else {
+                return band.getNoDataValue();
+            }
+        } else {
+            return ProductUtils.getGeophysicalSampleDouble(band, pixelX, pixelY, currentLevel);
         }
-        return value;
     }
 
     private void addTimeSeries(List<TimeSeries> timeSeries, boolean cursor) {
@@ -264,8 +268,8 @@ class TimeSeriesGraphModel {
         if (timeCoding != null) {
             final ProductData.UTC startTime = timeCoding.getStartTime();
             final Millisecond timePeriod = new Millisecond(startTime.getAsDate(),
-                    ProductData.UTC.UTC_TIME_ZONE,
-                    Locale.getDefault());
+                                                           ProductData.UTC.UTC_TIME_ZONE,
+                                                           Locale.getDefault());
 
             double millisecond = timePeriod.getFirstMillisecond();
             Range valueRange = null;
@@ -274,7 +278,7 @@ class TimeSeriesGraphModel {
             }
             if (valueRange != null) {
                 XYAnnotation annotation = new XYLineAnnotation(millisecond, valueRange.getLowerBound(), millisecond,
-                        valueRange.getUpperBound());
+                                                               valueRange.getUpperBound());
                 timeSeriesPlot.addAnnotation(annotation, true);
             }
         }
@@ -358,8 +362,8 @@ class TimeSeriesGraphModel {
                 if (timeCoding != null) {
                     final ProductData.UTC startTime = timeCoding.getStartTime();
                     final Millisecond timePeriod = new Millisecond(startTime.getAsDate(),
-                            ProductData.UTC.UTC_TIME_ZONE,
-                            Locale.getDefault());
+                                                                   ProductData.UTC.UTC_TIME_ZONE,
+                                                                   Locale.getDefault());
 
                     final double value = getValue(band, pixelX, pixelY, currentLevel);
                     timeSeries.add(new TimeSeriesDataItem(timePeriod, value));
