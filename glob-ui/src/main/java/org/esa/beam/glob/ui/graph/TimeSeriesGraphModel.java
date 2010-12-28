@@ -17,7 +17,6 @@
 package org.esa.beam.glob.ui.graph;
 
 import com.bc.ceres.core.ProgressMonitor;
-import com.bc.ceres.glevel.MultiLevelImage;
 import com.bc.ceres.swing.progress.ProgressMonitorSwingWorker;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.ProductData;
@@ -212,7 +211,6 @@ class TimeSeriesGraphModel {
 
     private static double getValue(Band band, int pixelX, int pixelY, int currentLevel) {
         final Rectangle pixelRect = new Rectangle(pixelX, pixelY, 1, 1);
-<<<<<<< HEAD:glob-ui/src/main/java/org/esa/beam/glob/ui/TimeSeriesGraphModel.java
         if (band.getValidMaskImage() != null) {
             final RenderedImage validMask = band.getValidMaskImage().getImage(currentLevel);
             final Raster validMaskData = validMask.getData(pixelRect);
@@ -223,20 +221,6 @@ class TimeSeriesGraphModel {
             }
         } else {
             return ProductUtils.getGeophysicalSampleDouble(band, pixelX, pixelY, currentLevel);
-=======
-        boolean isValid = true;
-        MultiLevelImage multiLevelImage = band.getValidMaskImage();
-        if (multiLevelImage != null) {
-            final RenderedImage validMask = multiLevelImage.getImage(currentLevel);
-            final Raster validMaskData = validMask.getData(pixelRect);
-            if (validMaskData.getSample(pixelX, pixelY, 0) == 0) {
-                isValid = false;
-            }
-        }
-        double value = Double.NaN;
-        if (isValid) {
-            value = ProductUtils.getGeophysicalSampleDouble(band, pixelX, pixelY, currentLevel);
->>>>>>> 82dbd59a2bd7b8b5d856d295dc48c2636cb20a0d:glob-ui/src/main/java/org/esa/beam/glob/ui/graph/TimeSeriesGraphModel.java
         }
     }
 
