@@ -16,6 +16,7 @@
 
 package org.esa.beam.dataio.globcarbon;
 
+import com.bc.ceres.core.VirtualDir;
 import org.esa.beam.framework.dataio.DecodeQualification;
 import org.esa.beam.framework.dataio.ProductReader;
 import org.esa.beam.framework.dataio.ProductReaderPlugIn;
