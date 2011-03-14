@@ -40,6 +40,10 @@ import org.esa.beam.jai.ImageManager;
 import org.esa.beam.util.SystemUtils;
 import org.esa.beam.util.io.BeamFileChooser;
 import org.esa.beam.util.io.BeamFileFilter;
+import org.esa.beam.util.kmz.KmlFeature;
+import org.esa.beam.util.kmz.KmlFolder;
+import org.esa.beam.util.kmz.KmlGroundOverlay;
+import org.esa.beam.util.kmz.KmzExporter;
 import org.esa.beam.visat.VisatApp;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.geotools.referencing.CRS;
@@ -189,7 +193,7 @@ public class ExportTimeBasedKmz extends ExecCommand {
         List<Band> bands = timeSeries.getBandsForVariable(
                 AbstractTimeSeries.rasterToVariableName(view.getRaster().getName()));
 
-        if (bands.size() == 0) {
+        if (bands.isEmpty()) {
             return null;
         }
         RasterDataNode refRaster = bands.get(0);
