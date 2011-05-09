@@ -81,7 +81,7 @@
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-geotiff</artifactId>
-                <version>1.1</version>
+                <version>1.1.1-SNAPSHOT</version>
             </dependency>
             <dependency> <!-- used to read Dbase files (*.dbf) -->
                 <groupId>org.geotools</groupId>
