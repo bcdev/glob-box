@@ -5,12 +5,14 @@ import com.jidesoft.combobox.DateComboBox;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.ui.ModalDialog;
+import org.esa.beam.framework.ui.UIUtils;
 import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
 import org.esa.beam.glob.core.timeseries.datamodel.GridTimeCoding;
 import org.esa.beam.glob.core.timeseries.datamodel.ProductLocation;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeCoding;
 
 import javax.swing.AbstractAction;
+import javax.swing.ImageIcon;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -19,6 +21,7 @@ import java.awt.Component;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.net.URL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -32,8 +35,9 @@ class EditTimeSpanAction extends AbstractAction {
     EditTimeSpanAction(AbstractTimeSeries timeSeries) {
         this.timeSeries = timeSeries;
         setEnabled(timeSeries != null);
-        putValue(NAME, "[?]"); // todo set name
-//        putValue(LARGE_ICON_KEY, UIUtils.loadImageIcon("icons/ICON_NAME.gif")); // todo set icon
+//        putValue(NAME, "[?]"); // todo set name
+        URL editTimeSpanIconImageURL = UIUtils.getImageURL("/org/esa/beam/glob/ui/icons/TimeSeriesEditTimeSpan24.png", EditTimeSpanAction.class);
+        putValue(LARGE_ICON_KEY, new ImageIcon(editTimeSpanIconImageURL));
         putValue(ACTION_COMMAND_KEY, getClass().getName());
         putValue(SHORT_DESCRIPTION, "Edit time span");
         putValue("componentName", "EditTimeSpan");

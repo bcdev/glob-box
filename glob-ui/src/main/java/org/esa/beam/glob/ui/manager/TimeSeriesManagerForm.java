@@ -200,8 +200,8 @@ class TimeSeriesManagerForm {
         timeSpanButton = ToolButtonFactory.createButton((Icon) null, false);
         timeSpanButton.setAction(new EditTimeSpanAction(currentTimeSeries));
 
-        URL imageURL = UIUtils.getImageURL("/org/esa/beam/glob/ui/icons/ViewTS24.png", TimeSeriesManagerForm.class);
-        viewButton = ToolButtonFactory.createButton(new ImageIcon(imageURL), false);
+        URL viewIconImageURL = UIUtils.getImageURL("/org/esa/beam/glob/ui/icons/ViewTS24.png", TimeSeriesManagerForm.class);
+        viewButton = ToolButtonFactory.createButton(new ImageIcon(viewIconImageURL), false);
         viewButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
