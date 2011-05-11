@@ -16,7 +16,6 @@
 
 package org.esa.beam.dataio.globcarbon;
 
-import com.bc.ceres.core.VirtualDir;
 import org.esa.beam.framework.dataio.DecodeQualification;
 import org.esa.beam.framework.dataio.ProductReader;
 import org.esa.beam.framework.dataio.ProductReaderPlugIn;
@@ -25,7 +24,13 @@ import org.esa.beam.util.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.List;
 import java.util.Locale;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 /**
  * @author Thomas Storm
@@ -68,7 +73,7 @@ public class GlobCarbonEnviProductReaderPlugIn implements ProductReaderPlugIn {
 
         boolean isZipFile = ".ZIP".equalsIgnoreCase(extension);
 
-        if (!(isZipFile || existsImgFile(fileName))) {
+        if (!(isZipFile || existsImgFileInDirectory(fileName))) {
             return DecodeQualification.UNABLE;
         }
 
@@ -104,7 +109,7 @@ public class GlobCarbonEnviProductReaderPlugIn implements ProductReaderPlugIn {
         return new BeamFileFilter(FORMAT_NAME, getDefaultFileExtensions(), getDescription(null));
     }
 
-    boolean existsImgFile(Object input) {
+    boolean existsImgFileInDirectory(Object input) {
         String fileName = input.toString();
         String[] filesInDir;
         try {
@@ -155,15 +160,14 @@ public class GlobCarbonEnviProductReaderPlugIn implements ProductReaderPlugIn {
             fileName = fileName.substring(0, index);
         }
         if (fileName.toLowerCase().endsWith(".zip")) {
-            final VirtualDir productZip = VirtualDir.create(new File(fileName));
-            String[] zipEntries = productZip.list("");
-            if (zipEntries.length > 1) {
-                String basePath = productZip.getBasePath();
-                for (int i = 0; i < zipEntries.length; i++) {
-                    zipEntries[i] = basePath + "!" + zipEntries[i];
-                }
-                return zipEntries;
+            final ZipFile zipFile = new ZipFile(fileName);
+            final Enumeration<? extends ZipEntry> entries = zipFile.entries();
+            final List<String> productFiles = new ArrayList<String>();
+            while (entries.hasMoreElements()) {
+                final String filePath = entries.nextElement().getName();
+                productFiles.add(filePath.substring(filePath.lastIndexOf("/") + 1, filePath.length()));
             }
+            return productFiles.toArray(new String[productFiles.size()]);
         } else {
             File dir = new File(fileName).getParentFile();
             String[] fileNames = dir.list();
@@ -176,23 +180,27 @@ public class GlobCarbonEnviProductReaderPlugIn implements ProductReaderPlugIn {
                 return getProductFiles(fileNames[0]);
             }
         }
-        return new String[0];
     }
 
 
     // a zip is considered complete if it contains at least one pair of hdr and img file
-
     private boolean isZipComplete(Object input) {
         boolean isComplete = false;
         try {
             String[] productFiles = getProductFiles(input.toString());
             for (String productFile : productFiles) {
-                isComplete |= ".hdr".equalsIgnoreCase(FileUtils.getExtension(productFile))
-                              && existsImgFile(productFile);
+                isComplete |= ".hdr".equalsIgnoreCase(FileUtils.getExtension(productFile)) &&
+                              existsImgFile(productFile, productFiles);
             }
         } catch (IOException ignored) {
             return false;
         }
         return isComplete;
+    }
+
+    private boolean existsImgFile(String productFile, String[] productFiles) {
+        final String filenameWithoutExtension = FileUtils.getFilenameWithoutExtension(productFile);
+        final List<String> productFileList = Arrays.asList(productFiles);
+        return productFileList.contains(filenameWithoutExtension + ".img");
     }
 }
