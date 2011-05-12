@@ -38,7 +38,7 @@ import java.text.ParseException;
  */
 public class ProductUtilities {
 
-    private static final String GLOBAL_ATTRIBUTES = "GLOBAL_ATTRIBUTES";
+    static final String GLOBAL_ATTRIBUTES = "Global_Attributes";
 
     private static final String[] DATE_TIME_PATTERNS = new String[]{
             // ISO 8601 standard

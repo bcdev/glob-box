@@ -49,8 +49,8 @@ public class ProductUtilitiesTest extends TestCase {
         assertNull(utc);
 
         // Test product with MPH metadata element
-        product.getMetadataRoot().addElement(new MetadataElement("MPH"));
-        final MetadataElement mph = product.getMetadataRoot().getElement("MPH");
+        product.getMetadataRoot().addElement(new MetadataElement(ProductUtilities.GLOBAL_ATTRIBUTES));
+        final MetadataElement mph = product.getMetadataRoot().getElement(ProductUtilities.GLOBAL_ATTRIBUTES);
 
         utc = ProductUtilities.getTimeAttrValue(product, ProductAttributes.START_TIME);
         assertNull(utc);
