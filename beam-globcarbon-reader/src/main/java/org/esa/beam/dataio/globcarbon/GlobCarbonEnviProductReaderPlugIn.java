@@ -201,6 +201,8 @@ public class GlobCarbonEnviProductReaderPlugIn implements ProductReaderPlugIn {
     private boolean existsImgFile(String productFile, String[] productFiles) {
         final String filenameWithoutExtension = FileUtils.getFilenameWithoutExtension(productFile);
         final List<String> productFileList = Arrays.asList(productFiles);
-        return productFileList.contains(filenameWithoutExtension + ".img");
+        final boolean containsLowerCase = productFileList.contains(filenameWithoutExtension + ".img");
+        final boolean containsUpperCase = productFileList.contains(filenameWithoutExtension + ".IMG");
+        return containsLowerCase || containsUpperCase;
     }
 }
