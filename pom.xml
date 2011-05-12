@@ -30,8 +30,8 @@
            -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <geotools.version>2.6.5</geotools.version>
-        <beam.version>4.9-SNAPSHOT</beam.version>
-        <ceres.version>0.12-SNAPSHOT</ceres.version>
+        <beam.version>4.9</beam.version>
+        <ceres.version>0.12</ceres.version>
     </properties>
 
     <modules>
@@ -76,12 +76,12 @@
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-netcdf</artifactId>
-                <version>1.0.101-SNAPSHOT</version>
+                <version>1.0.101</version>
             </dependency>
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-geotiff</artifactId>
-                <version>1.1.1-SNAPSHOT</version>
+                <version>1.1.1</version>
             </dependency>
             <dependency> <!-- used to read Dbase files (*.dbf) -->
                 <groupId>org.geotools</groupId>

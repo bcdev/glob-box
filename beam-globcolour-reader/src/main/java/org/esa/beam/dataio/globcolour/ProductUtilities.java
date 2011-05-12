@@ -38,7 +38,7 @@ import java.text.ParseException;
  */
 public class ProductUtilities {
 
-    private static final String MPH = "MPH";
+    private static final String GLOBAL_ATTRIBUTES = "GLOBAL_ATTRIBUTES";
 
     private static final String[] DATE_TIME_PATTERNS = new String[]{
             // ISO 8601 standard
@@ -99,7 +99,7 @@ public class ProductUtilities {
     }
 
     static boolean addDiagnosticSitePin(Product product) {
-        final MetadataElement pa = product.getMetadataRoot().getElement(MPH);
+        final MetadataElement pa = product.getMetadataRoot().getElement(GLOBAL_ATTRIBUTES);
         if (pa == null || product.getGeoCoding() == null) {
             return false;
         }
@@ -152,7 +152,7 @@ public class ProductUtilities {
      * @see ProductData.UTC
      */
     public static ProductData.UTC getTimeAttrValue(final Product product, final String timeAttrName) {
-        final MetadataElement pa = product.getMetadataRoot().getElement(MPH);
+        final MetadataElement pa = product.getMetadataRoot().getElement(GLOBAL_ATTRIBUTES);
         if (pa == null) {
             return null;
         }
@@ -213,7 +213,7 @@ public class ProductUtilities {
     }
 
     static boolean isDiagnosticDataSet(final Product product) {
-        final MetadataElement pa = product.getMetadataRoot().getElement(MPH);
+        final MetadataElement pa = product.getMetadataRoot().getElement(GLOBAL_ATTRIBUTES);
 
         if (pa == null) {
             return false;
