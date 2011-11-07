@@ -5,13 +5,14 @@
     <parent>
         <artifactId>glob-box</artifactId>
         <groupId>org.esa.beam.glob</groupId>
-        <version>2.1-SNAPSHOT</version>
+        <version>2.1</version>
     </parent>
 
     <artifactId>glob-bootstrap</artifactId>
     <name>GlobToolbox Bootstrap</name>
     <packaging>jar</packaging>
     <description>Provides the bootstrap classpath for all GlobToolbox modules</description>
+    <version>${parent.version}</version>
 
     <dependencies>
         <dependency>
