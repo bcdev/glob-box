@@ -2,7 +2,7 @@
     <manifestVersion>1.0.0</manifestVersion>
 
     <symbolicName>glob-export</symbolicName>
-    <version>2.1</version>
+    <version>3.0</version>
     <name>GlobToolbox Export</name>
 
     <description>The GlobToolbox export module provides export components for the GlobToolbox, such as export of time

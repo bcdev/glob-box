@@ -2,7 +2,7 @@
     <manifestVersion>1.0.0</manifestVersion>
 
     <symbolicName>glob-ui</symbolicName>
-    <version>2.1</version>
+    <version>3.0</version>
     <name>GlobToolbox UI</name>
 
     <description>
@@ -15,7 +15,7 @@
     <changelog>
         <![CDATA[
         <p>Changes in 2.1<br/>
-          [GLOB-007] When adding geometries to time series, an ArrayIndexOutOfBoundsException is thrown<br/>                
+          [GLOB-007] When adding geometries to time series, an ArrayIndexOutOfBoundsException is thrown<br/>
                 ]]>
     </changelog>
 

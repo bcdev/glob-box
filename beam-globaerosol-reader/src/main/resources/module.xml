@@ -1,7 +1,7 @@
 <module>
     <manifestVersion>1.0.0</manifestVersion>
     <symbolicName>beam-globaerosol-reader</symbolicName>
-    <version>2.1</version>
+    <version>3.0</version>
     <name>GlobAerosol Reader</name>
 
     <description>
