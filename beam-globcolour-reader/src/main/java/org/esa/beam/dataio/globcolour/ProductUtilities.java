@@ -41,10 +41,10 @@ public class ProductUtilities {
     static final String GLOBAL_ATTRIBUTES = "Global_Attributes";
 
     private static final String[] DATE_TIME_PATTERNS = new String[]{
-            // ISO 8601 standard
-            "yyyyMMdd'T'HHmmss'Z'",
-            "yyyyMMddHHmmss",
-            "yyyyMMdd",
+                // ISO 8601 standard
+                "yyyyMMdd'T'HHmmss'Z'",
+                "yyyyMMddHHmmss",
+                "yyyyMMdd",
     };
 
     private ProductUtilities() {
@@ -93,7 +93,7 @@ public class ProductUtilities {
             final int width = product.getSceneRasterWidth();
             final int height = product.getSceneRasterHeight();
             Mask mask = Mask.BandMathsType.create(name, flag.getDescription(), width, height,
-                    expression, flag.getColor(), flag.getTransparency());
+                                                  expression, flag.getColor(), flag.getTransparency());
             maskGroup.add(mask);
         }
     }
@@ -121,9 +121,12 @@ public class ProductUtilities {
         }
 
         final String pinLabel = pa.getAttributeString(ProductAttributes.SITE_NAME, pinName);
-        product.getPinGroup().add(new Placemark(pinName, pinLabel, "GlobColour diagnostic site",
-                                          null, new GeoPos(siteLat, siteLon),
-                                          PinDescriptor.INSTANCE, product.getGeoCoding()));
+
+        final Placemark pointPlacemark = Placemark.createPointPlacemark(
+                    PinDescriptor.getInstance(), pinName, pinLabel, "GlobColour diagnostic site",
+                    null, new GeoPos(siteLat, siteLon), product.getGeoCoding());
+        product.getPinGroup().add(pointPlacemark);
+
         return true;
     }
 

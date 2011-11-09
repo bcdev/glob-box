@@ -23,18 +23,7 @@ import com.bc.ceres.glevel.MultiLevelSource;
 import com.bc.ceres.glevel.support.DefaultMultiLevelImage;
 import com.bc.ceres.glevel.support.DefaultMultiLevelSource;
 import org.esa.beam.framework.dataio.AbstractProductReader;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.ColorPaletteDef;
-import org.esa.beam.framework.datamodel.CrsGeoCoding;
-import org.esa.beam.framework.datamodel.GeoCoding;
-import org.esa.beam.framework.datamodel.GeoPos;
-import org.esa.beam.framework.datamodel.ImageInfo;
-import org.esa.beam.framework.datamodel.IndexCoding;
-import org.esa.beam.framework.datamodel.PinDescriptor;
-import org.esa.beam.framework.datamodel.PixelPos;
-import org.esa.beam.framework.datamodel.Placemark;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.jai.ImageManager;
 import org.esa.beam.jai.ResolutionLevel;
 import org.esa.beam.util.Debug;
@@ -115,8 +104,8 @@ class WorldFireReader extends AbstractProductReader {
         product.getIndexCodingGroup().add(indexCoding);
         fireBand.setSampleCoding(indexCoding);
         final ColorPaletteDef.Point[] points = new ColorPaletteDef.Point[]{
-                new ColorPaletteDef.Point(0, Color.BLACK, "No-data"),
-                new ColorPaletteDef.Point(255, Color.RED, "fire"),
+                    new ColorPaletteDef.Point(0, Color.BLACK, "No-data"),
+                    new ColorPaletteDef.Point(255, Color.RED, "fire"),
         };
         fireBand.setImageInfo(new ImageInfo(new ColorPaletteDef(points)));
 
@@ -256,9 +245,9 @@ class WorldFireReader extends AbstractProductReader {
             final String name = "Fire_" + index;
             final GeoPos geoPos = new GeoPos(lat, lon);
             final PixelPos pixelPos = geoCoding.getPixelPos(geoPos, null);
-            return new Placemark(name, String.format("%1$tF", calendar), "Fire", pixelPos, geoPos,
-                                 PinDescriptor.INSTANCE,
-                                 geoCoding);
+            return Placemark.createPointPlacemark(PinDescriptor.getInstance(),
+                                                  name, String.format("%1$tF", calendar), "Fire",
+                                                  pixelPos, geoPos, geoCoding);
         } else if (columns.length == 6) { // ATSR2
             // todo - implement
             return null;//new FireSpot();
