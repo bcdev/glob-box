@@ -115,7 +115,7 @@
         <action>
             <id>newTimeSeriesAssistantAction</id>
             <parent>file</parent>
-            <class>org.esa.beam.glob.ui.assistant.NewTimeSeriesAssistantAction</class>
+            <class>org.esa.beam.glob.ui.assistant.TimeSeriesAssistantAction</class>
             <text>New Time Series...</text>
             <smallIcon>icons/New16.gif</smallIcon>
             <largeIcon>icons/New24.gif</largeIcon>
