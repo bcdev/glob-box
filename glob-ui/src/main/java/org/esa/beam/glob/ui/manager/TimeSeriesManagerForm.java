@@ -38,7 +38,7 @@ import org.esa.beam.glob.ui.ProductLocationsPaneModel;
 import org.esa.beam.glob.ui.Variable;
 import org.esa.beam.glob.ui.VariableSelectionPane;
 import org.esa.beam.glob.ui.VariableSelectionPaneModel;
-import org.esa.beam.glob.ui.assistant.NewTimeSeriesAssistantAction;
+import org.esa.beam.glob.ui.assistant.TimeSeriesAssistantAction;
 import org.esa.beam.util.Debug;
 import org.esa.beam.visat.VisatApp;
 
@@ -194,7 +194,7 @@ class TimeSeriesManagerForm {
 
 
     private JPanel createButtonPanel() {
-        final Command newTSCommand = VisatApp.getApp().getCommandManager().getCommand(NewTimeSeriesAssistantAction.ID);
+        final Command newTSCommand = VisatApp.getApp().getCommandManager().getCommand(TimeSeriesAssistantAction.ID);
         final AbstractButton newButton = ToolButtonFactory.createButton(newTSCommand.getAction(), false);
 
         timeSpanButton = ToolButtonFactory.createButton((Icon) null, false);

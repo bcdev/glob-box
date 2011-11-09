@@ -16,6 +16,8 @@
 
 package org.esa.beam.glob.ui.assistant;
 
+import org.esa.beam.framework.dataio.ProductWriterPlugIn;
+import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.glob.ui.DefaultProductLocationsPaneModel;
 import org.esa.beam.glob.ui.DefaultVariableSelectionPaneModel;
 import org.esa.beam.glob.ui.ProductLocationsPaneModel;
@@ -32,6 +34,7 @@ class TimeSeriesAssistantModel {
 
     private final ProductLocationsPaneModel productLocationsModel;
     private final VariableSelectionPaneModel variableSelectionPaneModel;
+    private final List<Product> projectedProducts = new ArrayList<Product>();
     private String timeSeriesName;
     private List<ChangeListener> changeListenerList;
 
@@ -44,6 +47,7 @@ class TimeSeriesAssistantModel {
         this.productLocationsModel = productLocationsModel;
         this.variableSelectionPaneModel = variableSelectionPaneModel;
         this.timeSeriesName = "TimeSeries";
+
         final ListDataListenerDelegate dataListenerDelegate = new ListDataListenerDelegate();
         productLocationsModel.addListDataListener(dataListenerDelegate);
         variableSelectionPaneModel.addListDataListener(dataListenerDelegate);
@@ -82,6 +86,14 @@ class TimeSeriesAssistantModel {
         if(changeListenerList != null) {
             changeListenerList.remove(changeListener);
         }
+    }
+
+    void addProjectedProduct(Product product) {
+        projectedProducts.add(product);
+    }
+
+    Product[] getProjectedProducts() {
+        return projectedProducts.toArray(new Product[projectedProducts.size()]);
     }
 
     private void fireChangeEvent() {

@@ -16,7 +16,7 @@
 
 package org.esa.beam.glob.ui.assistant;
 
-public class NewTimeSeriesAssistantAction extends AbstractTimeSeriesAssistantAction {
+public class TimeSeriesAssistantAction extends AbstractTimeSeriesAssistantAction {
 
     public static final String ID = "newTimeSeriesAssistantAction";
 

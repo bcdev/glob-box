@@ -27,7 +27,7 @@ public abstract class AbstractTimeSeriesAssistantAction extends AbstractVisatAct
         super.actionPerformed(event);
         final TimeSeriesAssistantModel assistantModel = createModel();
         final AssistantPane assistant = new AssistantPane(getAppContext().getApplicationWindow(), "New Time Series");
-        assistant.show(new NewTimeSeriesAssistantPage1(assistantModel));
+        assistant.show(new TimeSeriesAssistantPage_SourceProducts(assistantModel));
     }
 
     protected abstract TimeSeriesAssistantModel createModel();

@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2010 Brockmann Consult GmbH (info@brockmann-consult.de)
- * 
+ *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
  * Software Foundation; either version 3 of the License, or (at your option)
@@ -9,7 +9,7 @@
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
  * more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, see http://www.gnu.org/licenses/
  */
@@ -30,9 +30,9 @@ import java.awt.Component;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-class NewTimeSeriesAssistantPage1 extends AbstractTimeSeriesAssistantPage {
+class TimeSeriesAssistantPage_SourceProducts extends AbstractTimeSeriesAssistantPage {
 
-    NewTimeSeriesAssistantPage1(TimeSeriesAssistantModel model) {
+    TimeSeriesAssistantPage_SourceProducts(TimeSeriesAssistantModel model) {
         super("Define Time Series Sources", model);
     }
 
@@ -65,7 +65,16 @@ class NewTimeSeriesAssistantPage1 extends AbstractTimeSeriesAssistantPage {
         final ProgressMonitorSwingWorker worker = new MyProgressMonitorSwingWorker(model);
         worker.executeWithBlocking();
 
-        return new NewTimeSeriesAssistantPage2(model);
+        if (allProductsOnSameGrid()) {
+            return new TimeSeriesAssistantPage_VariableSelection(model);
+        } else {
+            return new TimeSeriesAssistantPage_ReprojectingSources(model);
+        }
+    }
+
+    private boolean allProductsOnSameGrid() {
+//        @todo se - implement
+        return false;
     }
 
     @Override
@@ -79,7 +88,7 @@ class NewTimeSeriesAssistantPage1 extends AbstractTimeSeriesAssistantPage {
         private final TimeSeriesAssistantModel model;
 
         private MyProgressMonitorSwingWorker(TimeSeriesAssistantModel model) {
-            super(NewTimeSeriesAssistantPage1.this.getContext().getCurrentPage().getPageComponent(),
+            super(TimeSeriesAssistantPage_SourceProducts.this.getContext().getCurrentPage().getPageComponent(),
                   "Scanning for products");
             this.model = model;
         }
@@ -115,6 +124,7 @@ class NewTimeSeriesAssistantPage1 extends AbstractTimeSeriesAssistantPage {
                             variables[j] = new Variable(bandNames[j]);
                         }
                         location.closeProducts();
+//                        @todo se - ?? return variables ?? - really a shortcut after the first product?
                         return variables;
                     } else {
                         location.closeProducts();

@@ -89,10 +89,14 @@ public enum ProductLocationType {
     private static List<Product> readSingleProduct(File path) {
         try {
             final Product product = ProductIO.readProduct(path);
+//            @todo se - replace product.getStartTime() with a general getTime() Method
+//            This getTime method should also contain rules for time extraction from the filename
+//            if there is no start time metadate in the product
             if (product != null && product.getStartTime() != null) {
                 return Arrays.asList(product);
             }
         } catch (IOException ignore) {
+//            @todo se - realy ignore?
         }
         return Collections.emptyList();
     }

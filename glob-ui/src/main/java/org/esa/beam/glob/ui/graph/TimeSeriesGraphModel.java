@@ -280,18 +280,18 @@ class TimeSeriesGraphModel {
         timeSeriesPlot.clearAnnotations();
     }
 
-    private SwingWorker cursorUpdater;
+//    private SwingWorker cursorUpdater;
 
     void updateTimeSeries(JComponent control, int pixelX, int pixelY, int currentLevel, boolean cursor) {
-        if (cursor && (cursorUpdater == null || cursorUpdater.isDone())) {
-            cursorUpdater = new TimeSeriesUpdater(control, "Loading...", pixelX, pixelY, currentLevel, cursor,
-                                                  version.get());
-            cursorUpdater.execute();
-        } else {
+//        if (cursor && (cursorUpdater == null || cursorUpdater.isDone())) {
+//            cursorUpdater = new TimeSeriesUpdater(control, "Loading...", pixelX, pixelY, currentLevel, cursor,
+//                                                  version.get());
+//            cursorUpdater.execute();
+//        } else {
             TimeSeriesUpdater updater = new TimeSeriesUpdater(control, "Loading...", pixelX, pixelY, currentLevel,
                                                               cursor, version.get());
             updater.execute();
-        }
+//        }
     }
 
     private class TimeSeriesUpdater extends ProgressMonitorSwingWorker<List<TimeSeries>, Void> {

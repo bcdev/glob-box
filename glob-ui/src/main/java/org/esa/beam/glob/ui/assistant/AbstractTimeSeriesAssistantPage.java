@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2010 Brockmann Consult GmbH (info@brockmann-consult.de)
- * 
+ *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
  * Software Foundation; either version 3 of the License, or (at your option)
@@ -9,7 +9,7 @@
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
  * more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, see http://www.gnu.org/licenses/
  */
@@ -21,6 +21,7 @@ import com.bc.ceres.swing.progress.ProgressMonitorSwingWorker;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductManager;
 import org.esa.beam.framework.ui.assistant.AbstractAssistantPage;
+import org.esa.beam.framework.ui.assistant.AssistantPage;
 import org.esa.beam.glob.core.TimeSeriesMapper;
 import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesFactory;
@@ -32,6 +33,7 @@ import org.esa.beam.visat.VisatApp;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import java.awt.Component;
+import java.util.concurrent.TimeUnit;
 
 abstract class AbstractTimeSeriesAssistantPage extends AbstractAssistantPage {
 
@@ -52,7 +54,8 @@ abstract class AbstractTimeSeriesAssistantPage extends AbstractAssistantPage {
     @Override
     public boolean performFinish() {
         TimeSeriesAssistantModel model = getAssistantModel();
-        new TimeSeriesCreator(model, this.getPageComponent()).executeWithBlocking();
+        final TimeSeriesCreator creator = new TimeSeriesCreator(model, this.getPageComponent());
+        creator.executeWithBlocking();
         removeModeListener();
         return true;
     }

@@ -180,6 +180,5 @@ public class TimeSeriesManagerToolView extends AbstractToolView {
         public void nodeChanged(ProductNodeEvent event) {
             activeForm.updateFormControl(getSelectedProduct());
         }
-
     }
 }
