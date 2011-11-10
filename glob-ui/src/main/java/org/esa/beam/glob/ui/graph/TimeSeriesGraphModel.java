@@ -16,8 +16,6 @@
 
 package org.esa.beam.glob.ui.graph;
 
-import com.bc.ceres.core.ProgressMonitor;
-import com.bc.ceres.swing.progress.ProgressMonitorSwingWorker;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.RasterDataNode;
@@ -48,7 +46,6 @@ import javax.swing.JComponent;
 import javax.swing.SwingWorker;
 import java.awt.BasicStroke;
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Font;
 import java.awt.Paint;
 import java.awt.Rectangle;
@@ -288,13 +285,13 @@ class TimeSeriesGraphModel {
 //                                                  version.get());
 //            cursorUpdater.execute();
 //        } else {
-            TimeSeriesUpdater updater = new TimeSeriesUpdater(control, "Loading...", pixelX, pixelY, currentLevel,
+            TimeSeriesUpdater updater = new TimeSeriesUpdater(pixelX, pixelY, currentLevel,
                                                               cursor, version.get());
             updater.execute();
 //        }
     }
 
-    private class TimeSeriesUpdater extends ProgressMonitorSwingWorker<List<TimeSeries>, Void> {
+    private class TimeSeriesUpdater extends SwingWorker<List<TimeSeries>, Void> {
 
         private final int pixelX;
         private final int pixelY;
@@ -302,9 +299,9 @@ class TimeSeriesGraphModel {
         private final boolean cursor;
         private final int myVersion;
 
-        TimeSeriesUpdater(Component parent, String title, int pixelX, int pixelY, int currentLevel,
+        TimeSeriesUpdater(int pixelX, int pixelY, int currentLevel,
                           boolean cursor, int version) {
-            super(parent, title);
+            super();
             this.pixelX = pixelX;
             this.pixelY = pixelY;
             this.currentLevel = currentLevel;
@@ -313,18 +310,15 @@ class TimeSeriesGraphModel {
         }
 
         @Override
-        protected List<TimeSeries> doInBackground(ProgressMonitor pm) throws Exception {
+        protected List<TimeSeries> doInBackground() throws Exception {
             if (version.get() != myVersion) {
                 return Collections.emptyList();
             }
             final int variableCount = variableBands.size();
             List<TimeSeries> result = new ArrayList<TimeSeries>(variableCount);
-            pm.beginTask("Loading data", variableCount);
             for (List<Band> bandList : variableBands) {
                 result.add(computeTimeSeries(bandList, pixelX, pixelY, currentLevel));
-                pm.worked(1);
             }
-            pm.done();
             return result;
         }
 
