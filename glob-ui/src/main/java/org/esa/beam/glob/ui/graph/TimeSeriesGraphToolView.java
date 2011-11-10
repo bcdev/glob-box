@@ -179,7 +179,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
                 final AffineTransform modelToCurrentLevel = baseLayer.getModelToImageTransform(currentLevel);
                 final Point2D modelPos = levelZeroToModel.transform(pin.getPixelPos(), null);
                 final Point2D currentPos = modelToCurrentLevel.transform(modelPos, null);
-                graphModel.updateTimeSeries(graphForm.getControl(), (int) currentPos.getX(), (int) currentPos.getY(),
+                graphModel.updateTimeSeries((int) currentPos.getX(), (int) currentPos.getY(),
                                             currentLevel, false);
             }
         }
@@ -226,7 +226,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         public void pixelPosChanged(ImageLayer imageLayer, int pixelX, int pixelY,
                                     int currentLevel, boolean pixelPosValid, MouseEvent e) {
             if (pixelPosValid && isVisible() && currentView != null) {
-                graphModel.updateTimeSeries(graphForm.getControl(), pixelX, pixelY, currentLevel, true);
+                graphModel.updateTimeSeries(pixelX, pixelY, currentLevel, true);
             }
 
             final ValueAxis rangeAxis = chart.getXYPlot().getRangeAxis();

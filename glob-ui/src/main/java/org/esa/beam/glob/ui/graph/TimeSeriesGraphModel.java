@@ -42,7 +42,6 @@ import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 import org.jfree.data.time.TimeSeriesDataItem;
 
-import javax.swing.JComponent;
 import javax.swing.SwingWorker;
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -277,18 +276,16 @@ class TimeSeriesGraphModel {
         timeSeriesPlot.clearAnnotations();
     }
 
-//    private SwingWorker cursorUpdater;
+    private SwingWorker nextWorker;
 
-    void updateTimeSeries(JComponent control, int pixelX, int pixelY, int currentLevel, boolean cursor) {
-//        if (cursor && (cursorUpdater == null || cursorUpdater.isDone())) {
-//            cursorUpdater = new TimeSeriesUpdater(control, "Loading...", pixelX, pixelY, currentLevel, cursor,
-//                                                  version.get());
-//            cursorUpdater.execute();
-//        } else {
-            TimeSeriesUpdater updater = new TimeSeriesUpdater(pixelX, pixelY, currentLevel,
-                                                              cursor, version.get());
-            updater.execute();
-//        }
+    void updateTimeSeries(int pixelX, int pixelY, int currentLevel, boolean cursor) {
+        final TimeSeriesUpdater w = new TimeSeriesUpdater(pixelX, pixelY, currentLevel, cursor, version.get());
+        if (nextWorker == null) {
+            nextWorker = w;
+            nextWorker.execute();
+        } else {
+            nextWorker = w;
+        }
     }
 
     private class TimeSeriesUpdater extends SwingWorker<List<TimeSeries>, Void> {
@@ -332,6 +329,11 @@ class TimeSeriesGraphModel {
             }
             try {
                 addTimeSeries(get(), cursor);
+                if (this == nextWorker) {
+                    nextWorker = null;
+                } else {
+                    nextWorker.execute();
+                }
             } catch (InterruptedException ignore) {
             } catch (ExecutionException ignore) {
             }
