@@ -71,7 +71,6 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
 
     private ProductSceneView currentView;
 
-
     public TimeSeriesGraphToolView() {
         pixelPosListener = new TimeSeriesPPL();
         pinSelectionListener = new PinSelectionListener();
