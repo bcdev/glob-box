@@ -28,6 +28,7 @@ import org.esa.beam.glob.ui.Variable;
 
 import java.awt.Component;
 import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 class TimeSeriesAssistantPage_SourceProducts extends AbstractTimeSeriesAssistantPage {
@@ -72,9 +73,24 @@ class TimeSeriesAssistantPage_SourceProducts extends AbstractTimeSeriesAssistant
         }
     }
 
+    @SuppressWarnings({"MethodWithMoreThanThreeNegations"})
     private boolean allProductsOnSameGrid() {
-//        @todo se - implement
-        return false;
+        Product refProduct = null;
+        final List<ProductLocation> productLocations = getAssistantModel().getProductLocationsModel().getProductLocations();
+        for (ProductLocation productLocation : productLocations) {
+            for (Product product : productLocation.getProducts().values()) {
+                if (refProduct != null) {
+                    if (product != null && !refProduct.isCompatibleProduct(product, 0.1E-4f)) {
+                        return false;
+                    }
+                } else {
+                    if (product != null) {
+                        refProduct = product;
+                    }
+                }
+            }
+        }
+        return true;
     }
 
     @Override
