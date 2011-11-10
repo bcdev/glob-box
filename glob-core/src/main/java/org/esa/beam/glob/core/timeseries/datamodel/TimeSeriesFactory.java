@@ -21,8 +21,9 @@ import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.glob.core.TimeSeriesMapper;
 import org.esa.beam.util.ProductUtils;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * <p><i>Note that this class is not yet public API. Interface may chhange in future releases.</i></p>
@@ -68,14 +69,12 @@ public class TimeSeriesFactory {
             Assert.argument(variableNames.size() > 0, "variableNames must contain at least one variable name.");
             Assert.argument(timeSeriesName != null && timeSeriesName.trim().length() > 0, "timeSeriesName must not be null or empty.");
 
-            final List<Product> productList = new ArrayList<Product>();
-            for (ProductLocation productLocation : productLocations) {
-                productList.addAll(productLocation.getProducts());
-            }
-            if (productList.isEmpty()) {
+            if (noSourceProductsAvailable(productLocations)) {
                 return null;
             }
-            Product refProduct = productList.get(0);
+
+            // todo - ts - get user-specified reference product
+            final Product refProduct = productLocations.get(0).getProducts().values().iterator().next();
             final Product tsProduct = new Product(timeSeriesName, TimeSeriesImpl.TIME_SERIES_PRODUCT_TYPE,
                                                   refProduct.getSceneRasterWidth(),
                                                   refProduct.getSceneRasterHeight());
@@ -89,6 +88,14 @@ public class TimeSeriesFactory {
             e.printStackTrace();
         }
         return null;
+    }
+
+    private static boolean noSourceProductsAvailable(List<ProductLocation> productLocations) {
+        final Map<String, Product> productList = new HashMap<String, Product>();
+        for (ProductLocation productLocation : productLocations) {
+            productList.putAll(productLocation.getProducts());
+        }
+        return productList.isEmpty();
     }
 
 }

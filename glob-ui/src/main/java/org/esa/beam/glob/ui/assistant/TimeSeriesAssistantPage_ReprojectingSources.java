@@ -5,7 +5,6 @@ import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.ui.assistant.AssistantPage;
 import org.esa.beam.glob.core.timeseries.datamodel.ProductLocation;
 import org.esa.beam.glob.ui.ProductLocationsPaneModel;
-import org.esa.beam.gpf.operators.standard.reproject.ReprojectionOp;
 
 import javax.swing.JLabel;
 import java.awt.Component;
@@ -50,8 +49,8 @@ class TimeSeriesAssistantPage_ReprojectingSources extends AbstractTimeSeriesAssi
         final ProductLocationsPaneModel productLocationsModel = getAssistantModel().getProductLocationsModel();
         final List<ProductLocation> productLocations = productLocationsModel.getProductLocations();
         for (ProductLocation productLocation : productLocations) {
-            final List<Product> products = productLocation.getProducts();
-            for (Product product : products) {
+            final Map<String, Product> products = productLocation.getProducts();
+            for (Product product : products.values()) {
                 Product targetProduct = createTargetProduct(product);
                 // @todo - replace the unprojected source with the projected
             }
@@ -85,6 +84,6 @@ class TimeSeriesAssistantPage_ReprojectingSources extends AbstractTimeSeriesAssi
     public Product getCrsReferenceProduct() {
         final List<ProductLocation> productLocations = getAssistantModel().getProductLocationsModel().getProductLocations();
         final ProductLocation productLocation = productLocations.get(0);
-        return productLocation.getProducts().get(0);
+        return productLocation.getProducts().values().iterator().next();
     }
 }

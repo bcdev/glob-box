@@ -27,7 +27,7 @@ import org.esa.beam.glob.ui.ProductLocationsPaneModel;
 import org.esa.beam.glob.ui.Variable;
 
 import java.awt.Component;
-import java.util.List;
+import java.util.Collection;
 import java.util.concurrent.ExecutionException;
 
 class TimeSeriesAssistantPage_SourceProducts extends AbstractTimeSeriesAssistantPage {
@@ -115,9 +115,9 @@ class TimeSeriesAssistantPage_SourceProducts extends AbstractTimeSeriesAssistant
                 for (int i = 0; i < locationsModel.getSize(); i++) {
                     final ProductLocation location = locationsModel.getElementAt(i);
                     location.loadProducts(new SubProgressMonitor(pm, 1));
-                    final List<Product> products = location.getProducts();
+                    final Collection<Product> products = location.getProducts().values();
                     if (!products.isEmpty()) {
-                        final Product product = products.get(0);
+                        final Product product = products.iterator().next();
                         final String[] bandNames = product.getBandNames();
                         final Variable[] variables = new Variable[bandNames.length];
                         for (int j = 0; j < bandNames.length; j++) {

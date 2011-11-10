@@ -23,60 +23,75 @@ import org.esa.beam.framework.datamodel.Product;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 public enum ProductLocationType {
 
     FILE {
         @Override
-        public List<Product> findProducts(String path, ProgressMonitor pm) {
-            return readSingleProduct(new File(path));
+        public Map<String, Product> findProducts(String path, ProgressMonitor pm) {
+            final Map<String, Product> result = new HashMap<String, Product>();
+            addProductToResult(result, new File(path));
+            return result;
         }
     },
     DIRECTORY {
         @Override
-        public List<Product> findProducts(String path, ProgressMonitor pm) {
-            List<Product> products = new ArrayList<Product>();
+        public Map<String, Product> findProducts(String path, ProgressMonitor pm) {
             final File[] files = listFiles(path);
+            Map<String, Product> result = new HashMap<String, Product>();
             pm.beginTask("Scanning for products...", files.length);
             try {
                 for (File file : files) {
                     if (!file.isDirectory()) {
-                        products.addAll(readSingleProduct(file));
+                        addProductToResult(result, file);
                     }
                     pm.worked(1);
                 }
             } finally {
                 pm.done();
             }
-            return products;
+            return result;
         }
     },
     DIRECTORY_REC {
         @Override
-        public List<Product> findProducts(String path, ProgressMonitor pm) {
-            List<Product> products = new ArrayList<Product>();
+        public Map<String, Product> findProducts(String path, ProgressMonitor pm) {
             final File[] files = listFiles(path);
+            Map<String, Product> result = new HashMap<String, Product>();
             pm.beginTask("Scanning for products...", files.length);
             try {
                 for (File file : files) {
                     if (file.isDirectory()) {
-                        products.addAll(findProducts(file.getPath(), new SubProgressMonitor(pm, 1)));
+                        result.putAll(findProducts(file.getPath(), new SubProgressMonitor(pm, 1)));
                     } else {
-                        products.addAll(readSingleProduct(file));
+                        addProductToResult(result, file);
                     }
                 }
             } finally {
                 pm.done();
             }
-            return products;
+            return result;
         }
     };
 
-    abstract List<Product> findProducts(String path, ProgressMonitor pm);
+    abstract Map<String, Product> findProducts(String path, ProgressMonitor pm);
+
+    private static void addProductToResult(Map<String, Product> result, File file) {
+        try {
+            final Product product = readSingleProduct(file);
+            putIfNotNull(result, product);
+        } catch (IOException e) {
+            // ok; add nothing to result map.
+        }
+    }
+
+    private static void putIfNotNull(Map<String, Product> result, Product product) {
+        if (product != null) {
+            result.put(product.getFileLocation().getAbsolutePath(), product);
+        }
+    }
 
     private static File[] listFiles(String path) {
         File dir = new File(path);
@@ -86,18 +101,14 @@ public enum ProductLocationType {
         return dir.listFiles();
     }
 
-    private static List<Product> readSingleProduct(File path) {
-        try {
-            final Product product = ProductIO.readProduct(path);
+    private static Product readSingleProduct(File path) throws IOException {
+        final Product product = ProductIO.readProduct(path);
 //            @todo se - replace product.getStartTime() with a general getTime() Method
 //            This getTime method should also contain rules for time extraction from the filename
 //            if there is no start time metadate in the product
-            if (product != null && product.getStartTime() != null) {
-                return Arrays.asList(product);
-            }
-        } catch (IOException ignore) {
-//            @todo se - realy ignore?
+        if (product != null && product.getStartTime() != null) {
+            return product;
         }
-        return Collections.emptyList();
+        return null;
     }
 }

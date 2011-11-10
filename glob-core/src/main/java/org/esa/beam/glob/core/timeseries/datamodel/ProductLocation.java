@@ -20,7 +20,7 @@ import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.framework.datamodel.Product;
 
 import java.util.Collections;
-import java.util.List;
+import java.util.Map;
 
 /**
  * <p><i>Note that this class is not yet public API. Interface may chhange in future releases.</i></p>
@@ -29,7 +29,7 @@ public class ProductLocation {
 
     private final ProductLocationType productLocationType;
     private final String path;
-    private List<Product> productList;
+    private Map<String, Product> products;
 
     public ProductLocation(ProductLocationType productLocationType, String path) {
         this.productLocationType = productLocationType;
@@ -45,22 +45,22 @@ public class ProductLocation {
     }
 
     public synchronized void loadProducts(ProgressMonitor pm) {
-        productList = productLocationType.findProducts( path, pm);
+        products = productLocationType.findProducts( path, pm);
     }
 
-    public List<Product> getProducts() {
-        if (productList == null) {
+    public Map<String, Product> getProducts() {
+        if (products == null) {
             loadProducts(ProgressMonitor.NULL);
         }
-        return Collections.unmodifiableList(productList);
+        return Collections.unmodifiableMap(products);
     }
 
     public synchronized void closeProducts() {
-        if (productList != null) {
-            for (Product product : productList) {
+        if (products != null) {
+            for (Product product : products.values()) {
                 product.dispose();
             }
-            productList = null;
+            products = null;
         }
     }
 

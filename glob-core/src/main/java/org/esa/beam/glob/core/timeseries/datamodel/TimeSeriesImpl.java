@@ -74,9 +74,9 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
     /**
      * Used to create a new TimeSeries from the user interface.
      *
-     * @param tsProduct         the newly created time series product
-     * @param productLocations  the product location to be used
-     * @param variableNames     the currently selected names of variables
+     * @param tsProduct        the newly created time series product
+     * @param productLocations the product location to be used
+     * @param variableNames    the currently selected names of variables
      */
     TimeSeriesImpl(Product tsProduct, List<ProductLocation> productLocations, List<String> variableNames) {
         init(tsProduct);
@@ -129,8 +129,12 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
             addProductLocationMetadata(productLocation);
             productLocationList.add(productLocation);
             List<String> variables = getVariables();
-            for (Product product : productLocation.getProducts()) {
+
+            final Map<String, Product> products = productLocation.getProducts();
+            for (Map.Entry<String, Product> productEntry : products.entrySet()) {
+                final Product product = productEntry.getValue();
                 if (product.getStartTime() != null) {
+                    addProductMetadata(productEntry);
                     addToVariableList(product);
                     for (String variable : variables) {
                         if (isVariableSelected(variable)) {
@@ -146,27 +150,31 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
         }
     }
 
+    private void addProductMetadata(Map.Entry<String, Product> productEntry) {
+        MetadataElement productElement = tsProduct.getMetadataRoot().
+                getElement(TIME_SERIES_ROOT_NAME).
+                getElement(SOURCE_PRODUCT_PATHS);
+        ProductData productPath = ProductData.createInstance(productEntry.getKey());
+        int length = productElement.getElements().length + 1;
+        MetadataElement elem = new MetadataElement(String.format("%s.%s", SOURCE_PRODUCT_PATHS, Integer.toString(length)));
+        elem.addAttribute(new MetadataAttribute(PL_PATH, productPath, true));
+        productElement.addElement(elem);
+    }
+
     @Override
     public void removeProductLocation(ProductLocation productLocation) {
         // remove metadata
-        MetadataElement productLocationsElement = tsProduct.getMetadataRoot().
-                getElement(TIME_SERIES_ROOT_NAME).
-                getElement(PRODUCT_LOCATIONS);
-        final MetadataElement[] productLocations = productLocationsElement.getElements();
-        MetadataElement removeElem = null;
-        for (MetadataElement elem : productLocations) {
-            if (elem.getAttributeString(PL_PATH).equals(productLocation.getPath())) {
-                removeElem = elem;
-                break;
-            }
-        }
-        productLocationsElement.removeElement(removeElem);
+        final MetadataElement timeSeriesRootElement = tsProduct.getMetadataRoot().getElement(TIME_SERIES_ROOT_NAME);
+        MetadataElement productLocationsElement = timeSeriesRootElement.getElement(PRODUCT_LOCATIONS);
+        removeAttributeWithValue(PL_PATH, productLocation.getPath(), productLocationsElement);
         // remove variables for this productLocation
         updateAutoGrouping(); // TODO ???
 
-        List<Product> products = productLocation.getProducts();
         final Band[] bands = tsProduct.getBands();
-        for (Product product : products) {
+        final MetadataElement sourceProductPaths = timeSeriesRootElement.getElement(SOURCE_PRODUCT_PATHS);
+        for (Map.Entry<String, Product> productEntry : productLocation.getProducts().entrySet()) {
+            final Product product = productEntry.getValue();
+            removeAttributeWithValue(PL_PATH, productEntry.getKey(), sourceProductPaths);
             String timeString = formatTimeString(product);
             productTimeMap.remove(timeString);
             for (Band band : bands) {
@@ -180,6 +188,16 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
 
         fireChangeEvent(new TimeSeriesChangeEvent(TimeSeriesChangeEvent.PROPERTY_PRODUCT_LOCATIONS,
                                                   productLocationList));
+    }
+
+    private void removeAttributeWithValue(String attributeName, String value, MetadataElement parentElement) {
+        final MetadataElement[] childElements = parentElement.getElements();
+        for (MetadataElement elem : childElements) {
+            if (elem.getAttributeString(attributeName).equals(value)) {
+                parentElement.removeElement(elem);
+                return;
+            }
+        }
     }
 
     private Band getSourceBand(String destBandName) {
@@ -282,8 +300,8 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
     @Override
     public List<Band> getBandsForProductLocation(ProductLocation location) {
         final List<Band> bands = new ArrayList<Band>();
-        List<Product> products = location.getProducts();
-        for (Product product : products) {
+        Map<String, Product> products = location.getProducts();
+        for (Product product : products.values()) {
             String timeString = formatTimeString(product);
             // TODO relies on one timecoding per product... thats not good (mz, ts, 2010-07-12)
             for (Band band : tsProduct.getBands()) {
@@ -388,7 +406,7 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
     private List<Product> getAllProducts() {
         List<Product> result = new ArrayList<Product>();
         for (ProductLocation productLocation : productLocationList) {
-            for (Product product : productLocation.getProducts()) {
+            for (Product product : productLocation.getProducts().values()) {
                 result.add(product);
             }
         }

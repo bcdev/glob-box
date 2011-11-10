@@ -126,7 +126,7 @@ class EditTimeSpanAction extends AbstractAction {
         private List<Product> getCompatibleProducts() {
             List<Product> result = new ArrayList<Product>();
             for (ProductLocation productLocation : timeSeries.getProductLocations()) {
-                for (Product product : productLocation.getProducts()) {
+                for (Product product : productLocation.getProducts().values()) {
                     for (String variable : timeSeries.getVariables()) {
                         if (timeSeries.isProductCompatible(product, variable)) {
                             if (timeSeries.isVariableSelected(variable)) {
