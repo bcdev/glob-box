@@ -68,7 +68,10 @@ class TimeSeriesAssistantPage_ReprojectingSources extends AbstractTimeSeriesAssi
         parameterMap.put("includeTiePointGrids", false);
         parameterMap.put("addDeltaBands", false);
         // @todo - generalise
-        return GPF.createProduct("Reproject", parameterMap, productMap);
+        final Product reprojectedProduct = GPF.createProduct("Reproject", parameterMap, productMap);
+        reprojectedProduct.setStartTime(toReproject.getStartTime());
+        reprojectedProduct.setEndTime(toReproject.getEndTime());
+        return reprojectedProduct;
     }
 
 

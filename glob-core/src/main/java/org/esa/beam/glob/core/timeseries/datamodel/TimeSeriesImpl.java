@@ -337,8 +337,7 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
 
     @Override
     public boolean isProductCompatible(Product product, String rasterName) {
-        return product.getFileLocation() != null &&
-               product.containsRasterDataNode(rasterName) &&
+        return product.containsRasterDataNode(rasterName) &&
                tsProduct.isCompatibleProduct(product, 0.1e-6f);
     }
 
@@ -505,7 +504,7 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
     }
 
     private void addToVariableList(Product product) {
-        final ArrayList<String> newVariables = new ArrayList<String>();
+        final List<String> newVariables = new ArrayList<String>();
         final List<String> variables = getVariables();
         final Band[] bands = product.getBands();
         for (Band band : bands) {
@@ -532,7 +531,7 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
                 getElement(VARIABLES);
         final ProductData variableName = ProductData.createInstance(variable);
         final ProductData isSelected = ProductData.createInstance(Boolean.toString(false));
-        int length = variableListElement.getElements().length + TimeSeriesChangeEvent.BAND_TO_BE_REMOVED;
+        int length = variableListElement.getElements().length + 1;
         MetadataElement elem = new MetadataElement(String.format("%s.%s", VARIABLES, Integer.toString(length)));
         elem.addAttribute(new MetadataAttribute(VARIABLE_NAME, variableName, true));
         elem.addAttribute(new MetadataAttribute(VARIABLE_SELECTION, isSelected, true));

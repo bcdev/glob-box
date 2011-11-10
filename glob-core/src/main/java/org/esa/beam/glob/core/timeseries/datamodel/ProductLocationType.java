@@ -20,11 +20,14 @@ import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.util.logging.BeamLogManager;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
 
 public enum ProductLocationType {
 
@@ -103,11 +106,20 @@ public enum ProductLocationType {
 
     private static Product readSingleProduct(File path) throws IOException {
         final Product product = ProductIO.readProduct(path);
-//            @todo se - replace product.getStartTime() with a general getTime() Method
-//            This getTime method should also contain rules for time extraction from the filename
-//            if there is no start time metadate in the product
-        if (product != null && product.getStartTime() != null) {
-            return product;
+        if (product == null) {
+            return null;
+        }
+
+        if (product.getStartTime() == null) {
+            final String productName = product.getName();
+            try {
+                final ProductData.UTC[] utcs = DateRangeParser.tryToGetDateRange(productName);
+                product.setStartTime(utcs[0]);
+                product.setEndTime(utcs[1]);
+                return product;
+            } catch (IllegalArgumentException e) {
+                BeamLogManager.getSystemLogger().log(Level.WARNING, "Product '" + productName + "' does not contain readable time information.", e);
+            }
         }
         return null;
     }

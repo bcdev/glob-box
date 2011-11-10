@@ -19,7 +19,6 @@ package org.esa.beam.glob.core.timeseries.datamodel;
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.framework.datamodel.Product;
 
-import java.util.Collections;
 import java.util.Map;
 
 /**
@@ -48,11 +47,15 @@ public class ProductLocation {
         products = productLocationType.findProducts( path, pm);
     }
 
+    /**
+     * Returns the live map of products of the product location.
+     * @return the live map of this product location's products.
+     */
     public Map<String, Product> getProducts() {
         if (products == null) {
             loadProducts(ProgressMonitor.NULL);
         }
-        return Collections.unmodifiableMap(products);
+        return products;
     }
 
     public synchronized void closeProducts() {
