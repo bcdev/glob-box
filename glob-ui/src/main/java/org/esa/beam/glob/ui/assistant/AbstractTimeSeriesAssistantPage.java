@@ -78,12 +78,12 @@ abstract class AbstractTimeSeriesAssistantPage extends AbstractAssistantPage {
         final AbstractTimeSeries timeSeries = TimeSeriesFactory.create(assistantModel.getTimeSeriesName(),
                                                                        locationsModel.getProductLocations(),
                                                                        variablesModel.getSelectedVariableNames());
-        pm.worked(43);
+        pm.worked(42);
         ProductManager productManager = VisatApp.getApp().getProductManager();
         Product tsProduct = timeSeries.getTsProduct();
         productManager.addProduct(tsProduct);
         productManager.addListener(new CloseListener(tsProduct));
-        pm.worked(5);
+        pm.worked(6);
     }
 
     private static class CloseListener implements ProductManager.Listener {

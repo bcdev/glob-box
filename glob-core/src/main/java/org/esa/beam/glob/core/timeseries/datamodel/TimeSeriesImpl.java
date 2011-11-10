@@ -74,9 +74,9 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
     /**
      * Used to create a new TimeSeries from the user interface.
      *
-     * @param tsProduct        the newly created time series product
-     * @param productLocations the product location to be used
-     * @param variableNames    the currently selected names of variables
+     * @param tsProduct         the newly created time series product
+     * @param productLocations  the product location to be used
+     * @param variableNames     the currently selected names of variables
      */
     TimeSeriesImpl(Product tsProduct, List<ProductLocation> productLocations, List<String> variableNames) {
         init(tsProduct);
@@ -467,6 +467,7 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
         MetadataElement productLocationsElement = tsProduct.getMetadataRoot().
                 getElement(TIME_SERIES_ROOT_NAME).
                 getElement(PRODUCT_LOCATIONS);
+        // @todo - nur produkt pfade, keine Verzeichnisse
         ProductData productPath = ProductData.createInstance(productLocation.getPath());
         ProductData productType = ProductData.createInstance(productLocation.getProductLocationType().toString());
         int length = productLocationsElement.getElements().length + TimeSeriesChangeEvent.BAND_TO_BE_REMOVED;

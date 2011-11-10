@@ -16,9 +16,9 @@
 
 package org.esa.beam.glob.core.timeseries.datamodel;
 
+import com.bc.ceres.core.Assert;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.glob.core.TimeSeriesMapper;
-import org.esa.beam.util.Guardian;
 import org.esa.beam.util.ProductUtils;
 
 import java.util.ArrayList;
@@ -52,20 +52,21 @@ public class TimeSeriesFactory {
      * Creates a new TimeSeries with a given name, a list of product locations and a list of variables (which are
      * placeholders for bands)
      *
-     * @param name             a name for the time series
-     * @param productLocations locations where to find the data the time series is based on
-     * @param variableNames    the variables the time series is based on
+     * @param timeSeriesName              a name for the time series
+     * @param productLocations  locations where to find the data the time series is based on
+     * @param variableNames     the variables the time series is based on
      *
      * @return a time series
      */
-    public static AbstractTimeSeries create(String name, List<ProductLocation> productLocations,
+    public static AbstractTimeSeries create(String timeSeriesName,
+                                            List<ProductLocation> productLocations,
                                             List<String> variableNames) {
         try {
-            Guardian.assertNotNull("productLocations", productLocations);
-            Guardian.assertGreaterThan("productLocations.size()", productLocations.size(), 0);
-            Guardian.assertNotNull("variables", variableNames);
-            Guardian.assertGreaterThan("variables.size()", variableNames.size(), 0);
-            Guardian.assertNotNullOrEmpty("name", name);
+            Assert.notNull(productLocations, "productLocations");
+            Assert.argument(productLocations.size() > 0, "productLocations must contain at least one location.");
+            Assert.notNull(variableNames, "variableNames");
+            Assert.argument(variableNames.size() > 0, "variableNames must contain at least one variable name.");
+            Assert.argument(timeSeriesName != null && timeSeriesName.trim().length() > 0, "timeSeriesName must not be null or empty.");
 
             final List<Product> productList = new ArrayList<Product>();
             for (ProductLocation productLocation : productLocations) {
@@ -75,7 +76,7 @@ public class TimeSeriesFactory {
                 return null;
             }
             Product refProduct = productList.get(0);
-            final Product tsProduct = new Product(name, TimeSeriesImpl.TIME_SERIES_PRODUCT_TYPE,
+            final Product tsProduct = new Product(timeSeriesName, TimeSeriesImpl.TIME_SERIES_PRODUCT_TYPE,
                                                   refProduct.getSceneRasterWidth(),
                                                   refProduct.getSceneRasterHeight());
             tsProduct.setDescription("A time series product");

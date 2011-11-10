@@ -15,8 +15,6 @@ import java.util.Map;
 
 class TimeSeriesAssistantPage_ReprojectingSources extends AbstractTimeSeriesAssistantPage {
 
-    private Product crsReferenceProduct;
-
     TimeSeriesAssistantPage_ReprojectingSources(TimeSeriesAssistantModel model) {
         super("Reproject Source Products", model);
     }
@@ -38,9 +36,14 @@ class TimeSeriesAssistantPage_ReprojectingSources extends AbstractTimeSeriesAssi
     }
 
     @Override
+    public boolean hasNextPage() {
+        return true;
+    }
+
+    @Override
     public AssistantPage getNextPage() {
         reprojectSourceProducts();
-        return super.getNextPage();  //Todo change body of created method. Use File | Settings | File Templates to change
+        return new TimeSeriesAssistantPage_VariableSelection(getAssistantModel());
     }
 
     private void reprojectSourceProducts() {
@@ -50,7 +53,7 @@ class TimeSeriesAssistantPage_ReprojectingSources extends AbstractTimeSeriesAssi
             final List<Product> products = productLocation.getProducts();
             for (Product product : products) {
                 Product targetProduct = createTargetProduct(product);
-                getAssistantModel().addProjectedProduct(targetProduct);
+                // @todo - replace the unprojected source with the projected
             }
         }
     }
@@ -80,6 +83,8 @@ class TimeSeriesAssistantPage_ReprojectingSources extends AbstractTimeSeriesAssi
     }
 
     public Product getCrsReferenceProduct() {
-        return crsReferenceProduct;
+        final List<ProductLocation> productLocations = getAssistantModel().getProductLocationsModel().getProductLocations();
+        final ProductLocation productLocation = productLocations.get(0);
+        return productLocation.getProducts().get(0);
     }
 }
