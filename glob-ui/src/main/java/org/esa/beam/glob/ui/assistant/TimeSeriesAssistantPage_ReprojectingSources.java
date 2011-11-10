@@ -50,28 +50,32 @@ class TimeSeriesAssistantPage_ReprojectingSources extends AbstractTimeSeriesAssi
         final List<ProductLocation> productLocations = productLocationsModel.getProductLocations();
         for (ProductLocation productLocation : productLocations) {
             final Map<String, Product> products = productLocation.getProducts();
-            for (Product product : products.values()) {
-                Product targetProduct = createTargetProduct(product);
-                // @todo - replace the unprojected source with the projected
+            final Product crsReferenceProduct = getCrsReferenceProduct();
+            for (Map.Entry<String, Product> productEntry : products.entrySet()) {
+                final Product product = productEntry.getValue();
+                if (!product.isCompatibleProduct(crsReferenceProduct, 0.1E-4f)) {
+                    Product reprojectedProduct = createProjectedProduct(product, crsReferenceProduct);
+                    productEntry.setValue(reprojectedProduct);
+                }
             }
         }
     }
 
-    private Product createTargetProduct(Product product) {
-        final Map<String, Product> productMap = getProductMap(product);
+    private Product createProjectedProduct(Product toReproject, Product crsReference) {
+        final Map<String, Product> productMap = getProductMap(toReproject, crsReference);
         final Map<String, Object> parameterMap = new HashMap<String, Object>();
         parameterMap.put("resamplingName", "Nearest");
         parameterMap.put("includeTiePointGrids", false);
         parameterMap.put("addDeltaBands", false);
-        // @todo
+        // @todo - generalise
         return GPF.createProduct("Reproject", parameterMap, productMap);
     }
 
 
-    private Map<String, Product> getProductMap(Product product) {
-        final Map<String, Product> productMap = new HashMap<String, Product>(5);
+    private Map<String, Product> getProductMap(Product product, Product crsReference) {
+        final Map<String, Product> productMap = new HashMap<String, Product>(2);
         productMap.put("source", product);
-        productMap.put("collocateWith", getCrsReferenceProduct());
+        productMap.put("collocateWith", crsReference);
         return productMap;
     }
 

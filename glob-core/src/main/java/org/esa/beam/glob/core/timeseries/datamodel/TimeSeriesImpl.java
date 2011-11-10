@@ -474,8 +474,10 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
         if (!tsProduct.getMetadataRoot().containsElement(TIME_SERIES_ROOT_NAME)) {
             final MetadataElement timeSeriesRoot = new MetadataElement(TIME_SERIES_ROOT_NAME);
             final MetadataElement productListElement = new MetadataElement(PRODUCT_LOCATIONS);
+            final MetadataElement sourceProductPathsElement = new MetadataElement(SOURCE_PRODUCT_PATHS);
             final MetadataElement variablesListElement = new MetadataElement(VARIABLES);
             timeSeriesRoot.addElement(productListElement);
+            timeSeriesRoot.addElement(sourceProductPathsElement);
             timeSeriesRoot.addElement(variablesListElement);
             tsProduct.getMetadataRoot().addElement(timeSeriesRoot);
         }
