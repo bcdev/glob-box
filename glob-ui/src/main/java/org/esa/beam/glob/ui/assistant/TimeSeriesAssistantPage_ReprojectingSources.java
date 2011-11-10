@@ -88,9 +88,15 @@ class TimeSeriesAssistantPage_ReprojectingSources extends AbstractTimeSeriesAssi
         return new JLabel("Da kommt noch was");
     }
 
-    public Product getCrsReferenceProduct() {
+    private Product getCrsReferenceProduct() {
         final List<ProductLocation> productLocations = getAssistantModel().getProductLocationsModel().getProductLocations();
-        final ProductLocation productLocation = productLocations.get(0);
-        return productLocation.getProducts().values().iterator().next();
+        for (ProductLocation productLocation : productLocations) {
+            for (Product product : productLocation.getProducts().values()) {
+                if(product != null) {
+                    return product;
+                }
+            }
+        }
+        return null;
     }
 }

@@ -44,7 +44,7 @@ public class ProductLocation {
     }
 
     public synchronized void loadProducts(ProgressMonitor pm) {
-        products = productLocationType.findProducts( path, pm);
+        products = productLocationType.findProducts(path, pm);
     }
 
     /**

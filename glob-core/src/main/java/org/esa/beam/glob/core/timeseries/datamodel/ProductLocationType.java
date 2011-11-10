@@ -110,17 +110,20 @@ public enum ProductLocationType {
             return null;
         }
 
-        if (product.getStartTime() == null) {
-            final String productName = product.getName();
-            try {
-                final ProductData.UTC[] utcs = DateRangeParser.tryToGetDateRange(productName);
-                product.setStartTime(utcs[0]);
-                product.setEndTime(utcs[1]);
-                return product;
-            } catch (IllegalArgumentException e) {
-                BeamLogManager.getSystemLogger().log(Level.WARNING, "Product '" + productName + "' does not contain readable time information.", e);
-            }
+        if (product.getStartTime() != null) {
+            return product;
         }
-        return null;
+
+        final String productName = product.getName();
+        try {
+            final ProductData.UTC[] utcs = DateRangeParser.tryToGetDateRange(productName);
+            product.setStartTime(utcs[0]);
+            product.setEndTime(utcs[1]);
+            return product;
+        } catch (IllegalArgumentException e) {
+            BeamLogManager.getSystemLogger().log(Level.WARNING, "Product '" + productName +
+                                                                "' does not contain readable time information.", e);
+            return null;
+        }
     }
 }
