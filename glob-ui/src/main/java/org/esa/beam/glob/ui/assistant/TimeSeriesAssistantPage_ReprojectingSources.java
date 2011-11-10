@@ -7,14 +7,22 @@ import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.ui.assistant.AssistantPage;
 import org.esa.beam.glob.core.timeseries.datamodel.ProductLocation;
 import org.esa.beam.glob.ui.ProductLocationsPaneModel;
+import org.esa.beam.gpf.operators.reproject.CollocationCrsForm;
+import org.esa.beam.visat.VisatApp;
 
 import javax.swing.JLabel;
+import javax.swing.JPanel;
+import java.awt.BorderLayout;
 import java.awt.Component;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 class TimeSeriesAssistantPage_ReprojectingSources extends AbstractTimeSeriesAssistantPage {
+
+    private MyCollocationCrsForm collocationCrsForm;
 
     TimeSeriesAssistantPage_ReprojectingSources(TimeSeriesAssistantModel model) {
         super("Reproject Source Products", model);
@@ -33,7 +41,7 @@ class TimeSeriesAssistantPage_ReprojectingSources extends AbstractTimeSeriesAssi
 
     @Override
     public boolean validatePage() {
-        return super.validatePage();  //Todo change body of created method. Use File | Settings | File Templates to change
+        return collocationCrsForm.getCollocationProduct() != null;
     }
 
     @Override
@@ -50,7 +58,35 @@ class TimeSeriesAssistantPage_ReprojectingSources extends AbstractTimeSeriesAssi
 
     @Override
     protected Component createPageComponent() {
-        return new JLabel("Da kommt noch was");
+        final PropertyChangeListener listener = new PropertyChangeListener() {
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                getContext().updateState();
+            }
+        };
+        collocationCrsForm = new MyCollocationCrsForm(listener);
+        collocationCrsForm.addMyChangeListener();
+
+        final JPanel jPanel = new JPanel(new BorderLayout());
+        final JPanel northPanel = new JPanel(new BorderLayout());
+        northPanel.add(new JLabel("Use CRS of "), BorderLayout.WEST);
+        northPanel.add(collocationCrsForm.getCrsUI());
+        jPanel.add(northPanel, BorderLayout.NORTH);
+        return jPanel;
+    }
+
+    private static class MyCollocationCrsForm extends CollocationCrsForm {
+
+        private final PropertyChangeListener listener;
+
+        public MyCollocationCrsForm(PropertyChangeListener listener) {
+            super(VisatApp.getApp());
+            this.listener = listener;
+        }
+
+        void addMyChangeListener() {
+            super.addCrsChangeListener(listener);
+        }
     }
 
     private class Reprojector extends ProgressMonitorSwingWorker<Void, TimeSeriesAssistantModel> {
@@ -107,15 +143,7 @@ class TimeSeriesAssistantPage_ReprojectingSources extends AbstractTimeSeriesAssi
 
 
         private Product getCrsReferenceProduct() {
-            final List<ProductLocation> productLocations = getAssistantModel().getProductLocationsModel().getProductLocations();
-            for (ProductLocation productLocation : productLocations) {
-                for (Product product : productLocation.getProducts().values()) {
-                    if (product != null) {
-                        return product;
-                    }
-                }
-            }
-            return null;
+            return collocationCrsForm.getCollocationProduct();
         }
     }
 }
