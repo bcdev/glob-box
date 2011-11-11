@@ -24,7 +24,7 @@ public interface Record {
     Date getTime();
 
     /**
-     * @return The attribute values according to {@link Header#getAttributeNames()}.
+     * @return The attribute values according to {@link Header#getColumnNames()}.
      *         The array will be empty if this record doesn't have any attributes.
      */
     Object[] getAttributeValues();

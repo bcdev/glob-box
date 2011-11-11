@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2010 Brockmann Consult GmbH (info@brockmann-consult.de)
- *
+ * Copyright (C) 2011 Brockmann Consult GmbH (info@brockmann-consult.de)
+ * 
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
  * Software Foundation; either version 3 of the License, or (at your option)
@@ -9,35 +9,23 @@
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
  * more details.
- *
+ * 
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package org.esa.beam.glob.ui;
+package org.esa.beam.glob.core.insitu;
 
-public class Variable {
-    private String name;
-    private boolean selected;
+import org.esa.beam.glob.core.insitu.csv.RecordSource;
 
-    public Variable(String name) {
-        this(name, false);
-    }
+import java.io.IOException;
 
-    public Variable(String name, boolean selected) {
-        this.name = name;
-        this.selected = selected;
-    }
+/**
+ * TODO fill out or delete
+ *
+ * @author Thomas Storm
+ */
+public interface InsituLoader {
 
-    public String getName() {
-        return name;
-    }
-
-    public boolean isSelected() {
-        return selected;
-    }
-
-    public void setSelected(boolean selected) {
-        this.selected = selected;
-    }
+    RecordSource loadSource() throws IOException;
 }

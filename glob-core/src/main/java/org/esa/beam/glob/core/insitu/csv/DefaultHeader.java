@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * A default implementation of a {@link RecordSource}.
+ * A default implementation of a {@link Header}.
  *
  * @author Norman
  */
@@ -12,12 +12,14 @@ class DefaultHeader implements Header {
 
     private final boolean hasLocation;
     private final boolean hasTime;
-    private final List<String> attributeNames;
+    private final List<String> parameterNames;
+    private final List<String> columnNames;
 
-    DefaultHeader(boolean hasLocation, boolean hasTime, String... attributeNames) {
+    DefaultHeader(boolean hasLocation, boolean hasTime, String[] columnNames, String[] parameterNames) {
         this.hasLocation = hasLocation;
         this.hasTime = hasTime;
-        this.attributeNames = Arrays.asList(attributeNames);
+        this.parameterNames = Arrays.asList(parameterNames);
+        this.columnNames = Arrays.asList(columnNames);
     }
 
     @Override
@@ -31,7 +33,12 @@ class DefaultHeader implements Header {
     }
 
     @Override
-    public String[] getAttributeNames() {
-        return attributeNames.toArray(new String[attributeNames.size()]);
+    public String[] getColumnNames() {
+        return columnNames.toArray(new String[columnNames.size()]);
+    }
+
+    @Override
+    public String[] getParameterNames() {
+        return parameterNames.toArray(new String[parameterNames.size()]);
     }
 }

@@ -26,6 +26,7 @@ public class TimeSeriesChangeEvent {
     public static final int END_TIME_PROPERTY_NAME = 3;
     public static final int PROPERTY_PRODUCT_LOCATIONS = 4;
     public static final int PROPERTY_VARIABLE_SELECTION = 5;
+    public static final int INSITU_SOURCE_CHANGED = 6;
 
     private final int type;
     private final Object value;

@@ -127,9 +127,9 @@ class EditTimeSpanAction extends AbstractAction {
             List<Product> result = new ArrayList<Product>();
             for (ProductLocation productLocation : timeSeries.getProductLocations()) {
                 for (Product product : productLocation.getProducts().values()) {
-                    for (String variable : timeSeries.getVariables()) {
+                    for (String variable : timeSeries.getEoVariables()) {
                         if (timeSeries.isProductCompatible(product, variable)) {
-                            if (timeSeries.isVariableSelected(variable)) {
+                            if (timeSeries.isEoVariableSelected(variable)) {
                                 result.add(product);
                             }
                         }

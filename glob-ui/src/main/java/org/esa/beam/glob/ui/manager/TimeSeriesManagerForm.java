@@ -40,6 +40,7 @@ import org.esa.beam.glob.ui.VariableSelectionPane;
 import org.esa.beam.glob.ui.VariableSelectionPaneModel;
 import org.esa.beam.glob.ui.assistant.TimeSeriesAssistantAction;
 import org.esa.beam.util.Debug;
+import org.esa.beam.util.logging.BeamLogManager;
 import org.esa.beam.visat.VisatApp;
 
 import javax.swing.AbstractAction;
@@ -58,11 +59,13 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyVetoException;
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.logging.Level;
 
 class TimeSeriesManagerForm {
 
@@ -75,11 +78,13 @@ class TimeSeriesManagerForm {
     private JLabel startField;
     private JLabel endField;
     private JLabel dimensionField;
-    private VariableSelectionPane variablePane;
+    private VariableSelectionPane eoVariablePane;
+    private VariableSelectionPane insituVariablePane;
     private ProductLocationsPane locationsPane;
+    private AbstractButton loadInsituButton;
+    private AbstractButton timeSpanButton;
     private AbstractButton viewButton;
     private AbstractButton exportButton;
-    private AbstractButton timeSpanButton;
     private AbstractTimeSeries currentTimeSeries;
 
     TimeSeriesManagerForm(PageComponentDescriptor descriptor) {
@@ -90,29 +95,35 @@ class TimeSeriesManagerForm {
     }
 
     private JComponent createControl() {
-        final TableLayout layout = new TableLayout(3);
+        final TableLayout layout = new TableLayout(4);
         layout.setTableAnchor(TableLayout.Anchor.NORTHWEST);
         layout.setTablePadding(4, 4);
         layout.setTableFill(TableLayout.Fill.BOTH);
-        layout.setColumnFill(2, TableLayout.Fill.BOTH);
+        layout.setColumnFill(3, TableLayout.Fill.BOTH);
         layout.setRowWeightY(0, 0.0);
-        layout.setCellWeightY(0, 2, 1.0);
-        layout.setColumnWeightX(0, 0.4);
-        layout.setColumnWeightX(1, 0.6);
-        layout.setColumnWeightX(2, 0.0);
+        layout.setCellWeightY(0, 3, 1.0);
+        layout.setColumnWeightX(0, 0.2);
+        layout.setColumnWeightX(1, 0.4);
+        layout.setColumnWeightX(2, 0.4);
+        layout.setColumnWeightX(3, 0.0);
         layout.setRowWeightY(1, 1.0);
         layout.setCellFill(0, 0, TableLayout.Fill.HORIZONTAL);
-        layout.setCellRowspan(0, 2, 2);
-        layout.setCellColspan(1, 0, 2);
+        layout.setCellRowspan(0, 3, 2);
+        layout.setCellColspan(1, 0, 3);
+
+        eoVariablePane = new VariableSelectionPane();
+        insituVariablePane = new VariableSelectionPane();
 
         JPanel infoPanel = createInfoPanel();
-        JPanel variablePanel = createVariablePanel();
+        JPanel variablePanel = createVariablePanel("Variables", eoVariablePane);
+        JPanel insituVariablePanel = createVariablePanel("In-situ variables", insituVariablePane);
         JPanel buttonPanel = createButtonPanel();
         JPanel productsPanel = createProductsPanel();
 
         final JPanel control = new JPanel(layout);
         control.add(infoPanel);
         control.add(variablePanel);
+        control.add(insituVariablePanel);
         control.add(buttonPanel);
         control.add(productsPanel);
         return control;
@@ -127,6 +138,8 @@ class TimeSeriesManagerForm {
         if (currentTimeSeries != null) {
             currentTimeSeries.addTimeSeriesListener(frameClosingTimeSeriesListener);
         }
+
+        loadInsituButton.setAction(new LoadInsituAction(currentTimeSeries));
         timeSpanButton.setAction(new EditTimeSpanAction(currentTimeSeries));
         updateInfoPanel(currentTimeSeries);
         updateButtonPanel(currentTimeSeries);
@@ -197,6 +210,9 @@ class TimeSeriesManagerForm {
         final Command newTSCommand = VisatApp.getApp().getCommandManager().getCommand(TimeSeriesAssistantAction.ID);
         final AbstractButton newButton = ToolButtonFactory.createButton(newTSCommand.getAction(), false);
 
+        loadInsituButton = ToolButtonFactory.createButton((Icon) null, false);
+        loadInsituButton.setAction(new LoadInsituAction(currentTimeSeries));
+
         timeSpanButton = ToolButtonFactory.createButton((Icon) null, false);
         timeSpanButton.setAction(new EditTimeSpanAction(currentTimeSeries));
 
@@ -205,7 +221,7 @@ class TimeSeriesManagerForm {
         viewButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                final VariableSelectionPaneModel variableModel = variablePane.getModel();
+                final VariableSelectionPaneModel variableModel = eoVariablePane.getModel();
                 final List<String> variableNames = variableModel.getSelectedVariableNames();
                 if (!variableNames.isEmpty() && currentTimeSeries != null) {
                     if (variableNames.size() == 1) {
@@ -226,7 +242,6 @@ class TimeSeriesManagerForm {
         AbstractButton helpButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/Help24.gif"), false);
         helpButton.setToolTipText("Help");
 
-
         final TableLayout layout = new TableLayout(1);
         layout.setTableAnchor(TableLayout.Anchor.NORTHWEST);
         layout.setTableFill(TableLayout.Fill.HORIZONTAL);
@@ -234,6 +249,7 @@ class TimeSeriesManagerForm {
         layout.setTableWeightY(0.0);
         final JPanel panel = new JPanel(layout);
         panel.add(newButton);
+        panel.add(loadInsituButton);
         panel.add(timeSpanButton);
         panel.add(viewButton);
         panel.add(exportButton);
@@ -266,9 +282,10 @@ class TimeSeriesManagerForm {
         boolean enabled = timeSeries != null;
         viewButton.setEnabled(enabled);
         exportButton.setEnabled(enabled);
+        loadInsituButton.setEnabled(enabled);
     }
 
-    private JPanel createVariablePanel() {
+    private JPanel createVariablePanel(String title, VariableSelectionPane variablePane) {
         final TableLayout layout = new TableLayout(1);
         layout.setTableAnchor(TableLayout.Anchor.NORTHWEST);
         layout.setTableFill(TableLayout.Fill.HORIZONTAL);
@@ -278,8 +295,7 @@ class TimeSeriesManagerForm {
         layout.setRowFill(1, TableLayout.Fill.BOTH);
 
         final JPanel panel = new JPanel(layout);
-        panel.add(new TitledSeparator("Variables"));
-        variablePane = new VariableSelectionPane();
+        panel.add(new TitledSeparator(title));
         variablePane.setPreferredSize(new Dimension(150, 80));
         panel.add(variablePane);
         return panel;
@@ -288,11 +304,21 @@ class TimeSeriesManagerForm {
     private void updateVariablePanel(AbstractTimeSeries timeSeries) {
         final VariableSelectionPaneModel model;
         if (timeSeries != null) {
-            model = new TimeSeriesVariableSelectionPaneModel(timeSeries);
+            model = new TimeSeriesEoVariableSelectionPaneModel(timeSeries);
         } else {
             model = new DefaultVariableSelectionPaneModel();
         }
-        variablePane.setModel(model);
+        eoVariablePane.setModel(model);
+    }
+
+    private void updateInsituVariablePanel(AbstractTimeSeries timeSeries) {
+        final VariableSelectionPaneModel model;
+        if (timeSeries != null) {
+            model = new TimeSeriesInsituVariableSelectionPaneModel(timeSeries);
+        } else {
+            model = new DefaultVariableSelectionPaneModel();
+        }
+        insituVariablePane.setModel(model);
     }
 
     private JPanel createProductsPanel() {
@@ -322,24 +348,24 @@ class TimeSeriesManagerForm {
         locationsPane.setModel(locationsModel, (timeSeries != null));
     }
 
-    private static class TimeSeriesVariableSelectionPaneModel extends AbstractListModel
+    private static class TimeSeriesEoVariableSelectionPaneModel extends AbstractListModel
             implements VariableSelectionPaneModel {
 
         private final AbstractTimeSeries timeSeries;
 
-        private TimeSeriesVariableSelectionPaneModel(AbstractTimeSeries timeSeries) {
+        private TimeSeriesEoVariableSelectionPaneModel(AbstractTimeSeries timeSeries) {
             this.timeSeries = timeSeries;
         }
 
         @Override
         public int getSize() {
-            return timeSeries.getVariables().size();
+            return timeSeries.getEoVariables().size();
         }
 
         @Override
         public Variable getElementAt(int index) {
-            final String varName = timeSeries.getVariables().get(index);
-            return new Variable(varName, timeSeries.isVariableSelected(varName));
+            final String varName = timeSeries.getEoVariables().get(index);
+            return new Variable(varName, timeSeries.isEoVariableSelected(varName));
         }
 
         @Override
@@ -352,12 +378,12 @@ class TimeSeriesManagerForm {
 
         @Override
         public void setSelectedVariableAt(int index, boolean selected) {
-            final String varName = timeSeries.getVariables().get(index);
-            if (timeSeries.isVariableSelected(varName) != selected) {
+            final String varName = timeSeries.getEoVariables().get(index);
+            if (timeSeries.isEoVariableSelected(varName) != selected) {
                 if (!selected) {
                     closeAssociatedViews(varName);
                 }
-                timeSeries.setVariableSelected(varName, selected);
+                timeSeries.setEoVariableSelected(varName, selected);
                 fireContentsChanged(this, index, index);
             }
         }
@@ -379,10 +405,83 @@ class TimeSeriesManagerForm {
 
         @Override
         public List<String> getSelectedVariableNames() {
-            final List<String> allVars = timeSeries.getVariables();
+            final List<String> allVars = timeSeries.getEoVariables();
             final List<String> selectedVars = new ArrayList<String>(allVars.size());
             for (String varName : allVars) {
-                if (timeSeries.isVariableSelected(varName)) {
+                if (timeSeries.isEoVariableSelected(varName)) {
+                    selectedVars.add(varName);
+                }
+            }
+            return selectedVars;
+        }
+    }
+
+    private static class TimeSeriesInsituVariableSelectionPaneModel extends AbstractListModel
+            implements VariableSelectionPaneModel {
+
+        private final AbstractTimeSeries timeSeries;
+
+        private TimeSeriesInsituVariableSelectionPaneModel(AbstractTimeSeries timeSeries) {
+            this.timeSeries = timeSeries;
+        }
+
+        @Override
+        public int getSize() {
+            try {
+                return timeSeries.getInsituSource().getParameterNames().length;
+            } catch (IOException e) {
+                BeamLogManager.getSystemLogger().log(Level.WARNING, "Unable to read insitu data.", e);
+                return 0;
+            }
+        }
+
+        @Override
+        public Variable getElementAt(int index) {
+            final String variableName;
+            try {
+                variableName = timeSeries.getInsituSource().getParameterNames()[index];
+            } catch (IOException e) {
+                BeamLogManager.getSystemLogger().log(Level.WARNING, "Unable to read insitu data.", e);
+                return null;
+            }
+            return new Variable(variableName, timeSeries.isInsituVariableSelected(variableName));
+        }
+
+        @Override
+        public void set(Variable... variables) {
+        }
+
+        @Override
+        public void add(Variable... variables) {
+        }
+
+        @Override
+        public void setSelectedVariableAt(int index, boolean selected) {
+            String variableName = null;
+            try {
+                variableName = timeSeries.getInsituSource().getParameterNames()[index];
+            } catch (IOException e) {
+                BeamLogManager.getSystemLogger().log(Level.WARNING, "Unable to read insitu data.", e);
+                return;
+            }
+            if (timeSeries.isInsituVariableSelected(variableName) != selected) {
+                timeSeries.setInsituVariableSelected(variableName, selected);
+                fireContentsChanged(this, index, index);
+            }
+        }
+
+        @Override
+        public List<String> getSelectedVariableNames() {
+            final String[] allVars;
+            try {
+                allVars = timeSeries.getInsituSource().getParameterNames();
+            } catch (IOException e) {
+                BeamLogManager.getSystemLogger().log(Level.WARNING, "Unable to read insitu data.", e);
+                return new ArrayList<String>();
+            }
+            final List<String> selectedVars = new ArrayList<String>(allVars.length);
+            for (String varName : allVars) {
+                if (timeSeries.isInsituVariableSelected(varName)) {
                     selectedVars.add(varName);
                 }
             }
@@ -483,7 +582,7 @@ class TimeSeriesManagerForm {
         }
     }
 
-    private static class FrameClosingTimeSeriesListener extends TimeSeriesListener {
+    private class FrameClosingTimeSeriesListener extends TimeSeriesListener {
 
         @Override
         public void timeSeriesChanged(TimeSeriesChangeEvent event) {
@@ -495,9 +594,9 @@ class TimeSeriesManagerForm {
                 if (internalFrame != null) {
                     internalFrame.dispose();
                 }
-
+            } else if (event.getType() == TimeSeriesChangeEvent.INSITU_SOURCE_CHANGED) {
+                updateInsituVariablePanel((AbstractTimeSeries) event.getValue());
             }
-
         }
     }
 }

@@ -9,8 +9,10 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * A record source that reads from a CSV stream. Values must be separated by a TAB character, records by a NL (newline).
@@ -41,15 +43,16 @@ public class CsvRecordSource implements RecordSource {
 
         this.dateFormat = dateFormat;
 
-        String[] attributeNames = readTextRecord(-1);
-        attributeTypes = new Class<?>[attributeNames.length];
+        String[] columnNames = readTextRecord(-1);
+        attributeTypes = new Class<?>[columnNames.length];
 
-        latIndex = indexOf(attributeNames, LAT_NAMES);
-        lonIndex = indexOf(attributeNames, LON_NAMES);
-        timeIndex = indexOf(attributeNames, TIME_NAMES);
+        latIndex = indexOf(columnNames, LAT_NAMES);
+        lonIndex = indexOf(columnNames, LON_NAMES);
+        timeIndex = indexOf(columnNames, TIME_NAMES);
 
-        header = new DefaultHeader(latIndex >= 0 && lonIndex >= 0, timeIndex >= 0, attributeNames);
-        recordLength = attributeNames.length;
+        final String[] parameterNames = getParameterNames(columnNames);
+        header = new DefaultHeader(latIndex >= 0 && lonIndex >= 0, timeIndex >= 0, columnNames, parameterNames);
+        recordLength = columnNames.length;
     }
 
     @Override
@@ -65,6 +68,22 @@ public class CsvRecordSource implements RecordSource {
                 return new CsvRecordIterator();
             }
         };
+    }
+
+    private String[] getParameterNames(String[] columnNames) {
+        final int[] sortedIndices = {latIndex, lonIndex, timeIndex};
+        Arrays.sort(sortedIndices);
+
+        final List<String> parameterNames = new ArrayList<String>();
+        Collections.addAll(parameterNames, columnNames);
+        for (int i = sortedIndices.length -1; i >=0; i--) {
+            final int index = sortedIndices[i];
+            if (index > -1) {
+                parameterNames.remove(index);
+            }
+        }
+
+        return parameterNames.toArray(new String[parameterNames.size()]);
     }
 
     /**
@@ -201,7 +220,7 @@ public class CsvRecordSource implements RecordSource {
                 return null;
             }
 
-            if (getHeader().getAttributeNames().length != textValues.length) {
+            if (getHeader().getColumnNames().length != textValues.length) {
                 System.out.println("to less values " + Arrays.toString(textValues));
             }
 

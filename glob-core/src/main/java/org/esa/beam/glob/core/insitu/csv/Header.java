@@ -13,7 +13,12 @@ public interface Header {
     boolean hasTime();
 
     /**
-     * @return The array of attribute names.
+     * @return The array of parameter names.
      */
-    String[] getAttributeNames();
+    String[] getParameterNames();
+
+    /**
+     * @return The array of column names.
+     */
+    String[] getColumnNames();
 }

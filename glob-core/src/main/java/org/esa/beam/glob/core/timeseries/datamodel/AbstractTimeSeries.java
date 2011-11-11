@@ -20,6 +20,7 @@ import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.RasterDataNode;
+import org.esa.beam.glob.core.insitu.InsituSource;
 import org.esa.beam.util.Guardian;
 
 import java.text.SimpleDateFormat;
@@ -52,7 +53,7 @@ public abstract class AbstractTimeSeries {
     public static final String PL_TYPE = "TYPE";
     public static final String VARIABLES = "VARIABLES";
 
-    public abstract List<String> getVariables();
+    public abstract List<String> getEoVariables();
 
     public abstract List<ProductLocation> getProductLocations();
 
@@ -60,9 +61,13 @@ public abstract class AbstractTimeSeries {
 
     public abstract void removeProductLocation(ProductLocation productLocation);
 
-    public abstract void setVariableSelected(String variableName, boolean selected);
+    public abstract boolean isEoVariableSelected(String variableName);
 
-    public abstract boolean isVariableSelected(String variableName);
+    public abstract void setEoVariableSelected(String variableName, boolean selected);
+
+    public abstract boolean isInsituVariableSelected(String variableName);
+
+    public abstract void setInsituVariableSelected(String variableName, boolean selected);
 
     public abstract Product getTsProduct();
 
@@ -97,5 +102,9 @@ public abstract class AbstractTimeSeries {
     public abstract void removeTimeSeriesListener(TimeSeriesListener listener);
 
     public abstract boolean isProductCompatible(Product product, String rasterName);
+
+    public abstract void setInsituSource(InsituSource insituSource);
+
+    public abstract InsituSource getInsituSource();
 
 }

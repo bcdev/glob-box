@@ -27,9 +27,9 @@ public class CsvRecordSourceTest {
         CsvRecordSource recordSource = new CsvRecordSource(new StringReader(CSV), dateFormat);
         Header header = recordSource.getHeader();
         assertNotNull(header);
-        assertNotNull(header.getAttributeNames());
+        assertNotNull(header.getColumnNames());
         assertArrayEquals(new String[]{"ID", "LAT", "LONG", "TIME", "SITE", "CHL", "FLAG"},
-                          header.getAttributeNames());
+                          header.getColumnNames());
         assertEquals(true, header.hasLocation());
         assertEquals(true, header.hasTime());
 
@@ -81,9 +81,9 @@ public class CsvRecordSourceTest {
         CsvRecordSource recordSource = new CsvRecordSource(new StringReader(CSV), dateFormat);
         Header header = recordSource.getHeader();
         assertNotNull(header);
-        assertNotNull(header.getAttributeNames());
+        assertNotNull(header.getColumnNames());
         assertArrayEquals(new String[]{"ID", "LAT", "LONG", "TIME", "SITE", "CHL", "FLAG"},
-                          header.getAttributeNames());
+                          header.getColumnNames());
         assertEquals(true, header.hasLocation());
         assertEquals(true, header.hasTime());
 
@@ -125,7 +125,7 @@ public class CsvRecordSourceTest {
 
         Header header = recordSource.getHeader();
         assertNotNull(header);
-        String[] headerAttributeNames = header.getAttributeNames();
+        String[] headerAttributeNames = header.getColumnNames();
         assertNotNull(headerAttributeNames);
         assertEquals(8, headerAttributeNames.length);
         assertArrayEquals(new String[]{"ID", "SITE", "FILE_ID", "LAT", "LONG", "TIME", "CONC_CHL", "KD_490"}, headerAttributeNames);

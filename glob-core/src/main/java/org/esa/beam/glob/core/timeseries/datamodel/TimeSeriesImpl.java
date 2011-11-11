@@ -27,6 +27,7 @@ import org.esa.beam.framework.datamodel.ProductNode;
 import org.esa.beam.framework.datamodel.ProductNodeEvent;
 import org.esa.beam.framework.datamodel.ProductNodeListenerAdapter;
 import org.esa.beam.framework.datamodel.RasterDataNode;
+import org.esa.beam.glob.core.insitu.InsituSource;
 import org.esa.beam.util.Guardian;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.StringUtils;
@@ -37,9 +38,11 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.WeakHashMap;
 
 /**
@@ -55,6 +58,8 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
     private final Map<RasterDataNode, TimeCoding> rasterTimeMap = new WeakHashMap<RasterDataNode, TimeCoding>();
     private final List<TimeSeriesListener> listeners = new ArrayList<TimeSeriesListener>();
     private volatile boolean isAdjustingImageInfos;
+    private InsituSource insituSource;
+    private Set<String> insituVariablesSelections = new HashSet<String>();
 
     /**
      * Used to create a TimeSeries from within a ProductReader
@@ -85,7 +90,7 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
         }
         storeProductsInMap();
         for (String variable : variableNames) {
-            setVariableSelected(variable, true);
+            setEoVariableSelected(variable, true);
         }
         setProductTimeCoding(tsProduct);
         initImageInfos();
@@ -111,7 +116,7 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
     }
 
     @Override
-    public List<String> getVariables() {
+    public List<String> getEoVariables() {
         MetadataElement[] variableElems = getVariableMetadataElements();
         List<String> variables = new ArrayList<String>();
         for (MetadataElement varElem : variableElems) {
@@ -128,7 +133,7 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
         if (!productLocationList.contains(productLocation)) {
             addProductLocationMetadata(productLocation);
             productLocationList.add(productLocation);
-            List<String> variables = getVariables();
+            List<String> variables = getEoVariables();
 
             final Map<String, Product> products = productLocation.getProducts();
             for (Map.Entry<String, Product> productEntry : products.entrySet()) {
@@ -137,7 +142,7 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
                     addProductMetadata(productEntry);
                     addToVariableList(product);
                     for (String variable : variables) {
-                        if (isVariableSelected(variable)) {
+                        if (isEoVariableSelected(variable)) {
                             addSpecifiedBandOfGivenProduct(variable, product);
                         }
                     }
@@ -249,7 +254,18 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
     }
 
     @Override
-    public void setVariableSelected(String variableName, boolean selected) {
+    public boolean isEoVariableSelected(String variableName) {
+        final MetadataElement[] variables = getVariableMetadataElements();
+        for (MetadataElement elem : variables) {
+            if (elem.getAttributeString(VARIABLE_NAME).equals(variableName)) {
+                return Boolean.parseBoolean(elem.getAttributeString(VARIABLE_SELECTION));
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public void setEoVariableSelected(String variableName, boolean selected) {
         // set in metadata
         final MetadataElement[] variables = getVariableMetadataElements();
         for (MetadataElement elem : variables) {
@@ -271,18 +287,20 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
             }
         }
         fireChangeEvent(new TimeSeriesChangeEvent(TimeSeriesChangeEvent.PROPERTY_VARIABLE_SELECTION, null));
-
     }
 
     @Override
-    public boolean isVariableSelected(String variableName) {
-        final MetadataElement[] variables = getVariableMetadataElements();
-        for (MetadataElement elem : variables) {
-            if (elem.getAttributeString(VARIABLE_NAME).equals(variableName)) {
-                return Boolean.parseBoolean(elem.getAttributeString(VARIABLE_SELECTION));
-            }
+    public boolean isInsituVariableSelected(String variableName) {
+        return insituVariablesSelections.contains(variableName);
+    }
+
+    @Override
+    public void setInsituVariableSelected(String variableName, boolean selected) {
+        if(selected) {
+            insituVariablesSelections.add(variableName);
+        } else {
+            insituVariablesSelections.remove(variableName);
         }
-        return false;
     }
 
     @Override
@@ -358,10 +376,10 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
             tsProduct.setEndTime(endTime);
             fireChangeEvent(new TimeSeriesChangeEvent(TimeSeriesChangeEvent.END_TIME_PROPERTY_NAME, endTime));
         }
-        List<String> variables = getVariables();
+        List<String> variables = getEoVariables();
         for (Product product : getAllProducts()) {
             for (String variable : variables) {
-                if (isVariableSelected(variable)) {
+                if (isEoVariableSelected(variable)) {
                     addSpecifiedBandOfGivenProduct(variable, product);
                 }
             }
@@ -390,6 +408,16 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
         tsProduct.removeProductNodeListener(listener);
     }
 
+    @Override
+    public void setInsituSource(InsituSource insituSource) {
+        this.insituSource = insituSource;
+        fireChangeEvent(new TimeSeriesChangeEvent(TimeSeriesChangeEvent.INSITU_SOURCE_CHANGED, this));
+    }
+
+    @Override
+    public InsituSource getInsituSource() {
+        return insituSource;
+    }
 
     /////////////////////////////////////////////////////////////////////////////////
     // private methods
@@ -448,7 +476,7 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
     }
 
     private void updateAutoGrouping() {
-        tsProduct.setAutoGrouping(StringUtils.join(getVariables(), ":"));
+        tsProduct.setAutoGrouping(StringUtils.join(getEoVariables(), ":"));
     }
 
     private void setProductTimeCoding(Product tsProduct) {
@@ -505,7 +533,7 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
 
     private void addToVariableList(Product product) {
         final List<String> newVariables = new ArrayList<String>();
-        final List<String> variables = getVariables();
+        final List<String> variables = getEoVariables();
         final Band[] bands = product.getBands();
         for (Band band : bands) {
             final String bandName = band.getName();
@@ -595,8 +623,8 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
     }
 
     private void initImageInfos() {
-        for (String variable : getVariables()) {
-            if (isVariableSelected(variable)) {
+        for (String variable : getEoVariables()) {
+            if (isEoVariableSelected(variable)) {
                 final List<Band> bandList = getBandsForVariable(variable);
                 adjustImageInfos(bandList.get(0));
             }
