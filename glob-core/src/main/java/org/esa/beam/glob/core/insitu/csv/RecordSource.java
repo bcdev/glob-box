@@ -1,4 +1,4 @@
-package org.esa.beam.glob.core.insitu;
+package org.esa.beam.glob.core.insitu.csv;
 
 public interface RecordSource {
     /**
@@ -10,7 +10,6 @@ public interface RecordSource {
      * Gets the records.
      *
      * @return The records.
-     * @throws Exception if any error occurs.
      */
-    Iterable<Record> getRecords() throws Exception;
+    Iterable<Record> getRecords();
 }

@@ -1,4 +1,4 @@
-package org.esa.beam.glob.core.insitu;
+package org.esa.beam.glob.core.insitu.csv;
 
 import org.esa.beam.framework.datamodel.GeoPos;
 

@@ -1,8 +1,8 @@
-package org.esa.beam.glob.core.insitu;
+package org.esa.beam.glob.core.insitu.csv;
 
 import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.framework.datamodel.ProductData;
-import org.junit.*;
+import org.junit.Test;
 
 import java.io.InputStreamReader;
 import java.io.StringReader;
@@ -21,7 +21,6 @@ public class CsvRecordSourceTest {
                 + "16\t53.1\t13.6\t03.04.2003\tA\t0.5\t1\n"
                 + "17\t53.3\t13.4\t08.04.2003\tA\t0.9\t0\n"
                 + "18\t53.1\t13.5\t11.04.2003\tA\t0.4\t1\n";
-
 
         DateFormat dateFormat = ProductData.UTC.createDateFormat("dd.MM.yyyy");
 

@@ -1,4 +1,4 @@
-package org.esa.beam.glob.core.insitu;
+package org.esa.beam.glob.core.insitu.csv;
 
 import org.esa.beam.framework.datamodel.GeoPos;
 
@@ -11,16 +11,12 @@ import java.util.Date;
  * @author MarcoZ
  * @author Norman
  */
-public class DefaultRecord implements Record {
+class DefaultRecord implements Record {
     private final GeoPos location;
     private final Date time;
     private final Object[] values;
 
-    public DefaultRecord(Object ... values) {
-        this(null, null, values);
-    }
-
-    public DefaultRecord(GeoPos location, Date time, Object[] values) {
+    DefaultRecord(GeoPos location, Date time, Object[] values) {
         this.location = location;
         this.time = time;
         this.values = values;

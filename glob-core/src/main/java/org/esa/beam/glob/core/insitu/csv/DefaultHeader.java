@@ -1,4 +1,4 @@
-package org.esa.beam.glob.core.insitu;
+package org.esa.beam.glob.core.insitu.csv;
 
 import java.util.Arrays;
 import java.util.List;
@@ -8,21 +8,13 @@ import java.util.List;
  *
  * @author Norman
  */
-public class DefaultHeader implements Header {
+class DefaultHeader implements Header {
 
     private final boolean hasLocation;
     private final boolean hasTime;
     private final List<String> attributeNames;
 
-    public DefaultHeader(String... attributeNames) {
-        this(false, false, attributeNames);
-    }
-
-    public DefaultHeader(boolean hasLocation, String... attributeNames) {
-        this(hasLocation, false, attributeNames);
-    }
-
-    public DefaultHeader(boolean hasLocation, boolean hasTime, String... attributeNames) {
+    DefaultHeader(boolean hasLocation, boolean hasTime, String... attributeNames) {
         this.hasLocation = hasLocation;
         this.hasTime = hasTime;
         this.attributeNames = Arrays.asList(attributeNames);

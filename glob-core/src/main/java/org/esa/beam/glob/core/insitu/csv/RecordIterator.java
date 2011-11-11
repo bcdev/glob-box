@@ -1,4 +1,4 @@
-package org.esa.beam.glob.core.insitu;
+package org.esa.beam.glob.core.insitu.csv;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -8,11 +8,11 @@ import java.util.NoSuchElementException;
  *
  * @author Norman
  */
-public abstract class RecordIterator implements Iterator<Record> {
+abstract class RecordIterator implements Iterator<Record> {
     private Record next;
     private boolean nextValid;
 
-    public RecordIterator() {
+    RecordIterator() {
     }
 
     @Override

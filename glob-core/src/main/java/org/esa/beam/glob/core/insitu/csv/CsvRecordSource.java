@@ -1,4 +1,4 @@
-package org.esa.beam.glob.core.insitu;
+package org.esa.beam.glob.core.insitu.csv;
 
 import org.esa.beam.framework.datamodel.GeoPos;
 
@@ -44,23 +44,12 @@ public class CsvRecordSource implements RecordSource {
         String[] attributeNames = readTextRecord(-1);
         attributeTypes = new Class<?>[attributeNames.length];
 
-        latIndex = TextUtils.indexOf(attributeNames, LAT_NAMES);
-        lonIndex = TextUtils.indexOf(attributeNames, LON_NAMES);
-        timeIndex = TextUtils.indexOf(attributeNames, TIME_NAMES);
+        latIndex = indexOf(attributeNames, LAT_NAMES);
+        lonIndex = indexOf(attributeNames, LON_NAMES);
+        timeIndex = indexOf(attributeNames, TIME_NAMES);
 
         header = new DefaultHeader(latIndex >= 0 && lonIndex >= 0, timeIndex >= 0, attributeNames);
         recordLength = attributeNames.length;
-    }
-
-    private String[] readTextRecord(int recordLength) throws IOException {
-        String line;
-        while ((line = reader.readLine()) != null) {
-            String trimLine = line.trim();
-            if (!trimLine.startsWith("#") && !trimLine.isEmpty()) {
-                return splitRecordLine(line, recordLength);
-            }
-        }
-        return null;
     }
 
     @Override
@@ -69,13 +58,54 @@ public class CsvRecordSource implements RecordSource {
     }
 
     @Override
-    public Iterable<Record> getRecords() throws Exception {
+    public Iterable<Record> getRecords() {
         return new Iterable<Record>() {
             @Override
             public Iterator<Record> iterator() {
                 return new CsvRecordIterator();
             }
         };
+    }
+
+    /**
+     * Converts a string array into an array of object which are either a number ({@link Double}), a text ({@link String}),
+     * a date/time value ({@link Date}). Empty text is converted to {@code null}.
+     *
+     * @param textValues The text values to convert.
+     * @param types      The types.
+     * @param dateFormat The date format to be used.
+     * @return The array of converted objects.
+     */
+    private static Object[] toObjects(String[] textValues, Class<?>[] types, DateFormat dateFormat) {
+        final Object[] values = new Object[textValues.length];
+        for (int i = 0; i < textValues.length; i++) {
+            final String text = textValues[i];
+            if (text != null && !text.isEmpty()) {
+                final Object value;
+                final Class<?> type = types[i];
+                if (type != null) {
+                    value = parse(text, type, dateFormat);
+                } else {
+                    value = parse(text, dateFormat);
+                    if (value != null) {
+                        types[i] = value.getClass();
+                    }
+                }
+                values[i] = value;
+            }
+        }
+        return values;
+    }
+
+    private static int indexOf(String[] textValues, String[] possibleValues) {
+        for (String possibleValue : possibleValues) {
+            for (int index = 0; index < textValues.length; index++) {
+                if (possibleValue.equalsIgnoreCase(textValues[index])) {
+                    return index;
+                }
+            }
+        }
+        return -1;
     }
 
     private static String[] splitRecordLine(String line, int recordLength) {
@@ -97,34 +127,15 @@ public class CsvRecordSource implements RecordSource {
         }
     }
 
-    /**
-     * Converts a string array into an array of object which are either a number ({@link Double}), a text ({@link String}),
-     * a date/time value ({@link Date}). Empty text is converted to {@code null}.
-     *
-     * @param textValues The text values to convert.
-     * @param types      The types.
-     * @param dateFormat The date format to be used.
-     * @return The array of converted objects.
-     */
-    public static Object[] toObjects(String[] textValues, Class<?>[] types, DateFormat dateFormat) {
-        final Object[] values = new Object[textValues.length];
-        for (int i = 0; i < textValues.length; i++) {
-            final String text = textValues[i];
-            if (text != null && !text.isEmpty()) {
-                final Object value;
-                final Class<?> type = types[i];
-                if (type != null) {
-                    value = parse(text, type, dateFormat);
-                } else {
-                    value = parse(text, dateFormat);
-                    if (value != null) {
-                        types[i] = value.getClass();
-                    }
-                }
-                values[i] = value;
+    private String[] readTextRecord(int recordLength) throws IOException {
+        String line;
+        while ((line = reader.readLine()) != null) {
+            String trimLine = line.trim();
+            if (!trimLine.startsWith("#") && !trimLine.isEmpty()) {
+                return splitRecordLine(line, recordLength);
             }
         }
-        return values;
+        return null;
     }
 
     private static Object parse(String text, Class<?> type, DateFormat dateFormat) {
