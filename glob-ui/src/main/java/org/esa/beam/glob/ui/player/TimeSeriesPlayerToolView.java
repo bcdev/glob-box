@@ -247,7 +247,7 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
         @Override
         public void timeSeriesChanged(TimeSeriesChangeEvent event) {
             if (event.getType() == TimeSeriesChangeEvent.PROPERTY_PRODUCT_LOCATIONS ||
-                event.getType() == TimeSeriesChangeEvent.PROPERTY_VARIABLE_SELECTION) {
+                event.getType() == TimeSeriesChangeEvent.PROPERTY_EO_VARIABLE_SELECTION) {
                 form.configureTimeSlider(currentView.getRaster());
             }
         }

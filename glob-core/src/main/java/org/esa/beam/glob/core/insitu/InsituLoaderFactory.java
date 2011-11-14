@@ -36,7 +36,7 @@ public class InsituLoaderFactory {
         InputStreamReader reader = new InputStreamReader(new FileInputStream(selectedFile));
         csvInsituLoader.setCsvReader(reader);
         // todo - ts - allow user specifying date format
-        csvInsituLoader.setDateFormat(ProductData.UTC.createDateFormat("yyyy.MM.dd"));
+        csvInsituLoader.setDateFormat(ProductData.UTC.createDateFormat("yyyy-MM-dd"));
         return csvInsituLoader;
     }
 }

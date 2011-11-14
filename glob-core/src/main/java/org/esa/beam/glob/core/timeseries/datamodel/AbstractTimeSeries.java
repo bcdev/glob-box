@@ -106,4 +106,6 @@ public abstract class AbstractTimeSeries {
         final int lastSeparator = rasterName.lastIndexOf(SEPARATOR);
         return rasterName.substring(0, lastSeparator);
     }
+
+    public abstract boolean hasInsituData();
 }

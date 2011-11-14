@@ -40,7 +40,6 @@ import org.esa.beam.glob.ui.VariableSelectionPane;
 import org.esa.beam.glob.ui.VariableSelectionPaneModel;
 import org.esa.beam.glob.ui.assistant.TimeSeriesAssistantAction;
 import org.esa.beam.util.Debug;
-import org.esa.beam.util.logging.BeamLogManager;
 import org.esa.beam.visat.VisatApp;
 
 import javax.swing.AbstractAction;
@@ -59,13 +58,11 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyVetoException;
 import java.io.File;
-import java.io.IOException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.logging.Level;
 
 class TimeSeriesManagerForm {
 
@@ -427,23 +424,12 @@ class TimeSeriesManagerForm {
 
         @Override
         public int getSize() {
-            try {
-                return timeSeries.getInsituSource().getParameterNames().length;
-            } catch (IOException e) {
-                BeamLogManager.getSystemLogger().log(Level.WARNING, "Unable to read insitu data.", e);
-                return 0;
-            }
+            return timeSeries.getInsituSource().getParameterNames().length;
         }
 
         @Override
         public Variable getElementAt(int index) {
-            final String variableName;
-            try {
-                variableName = timeSeries.getInsituSource().getParameterNames()[index];
-            } catch (IOException e) {
-                BeamLogManager.getSystemLogger().log(Level.WARNING, "Unable to read insitu data.", e);
-                return null;
-            }
+            final String variableName = timeSeries.getInsituSource().getParameterNames()[index];
             return new Variable(variableName, timeSeries.isInsituVariableSelected(variableName));
         }
 
@@ -457,13 +443,7 @@ class TimeSeriesManagerForm {
 
         @Override
         public void setSelectedVariableAt(int index, boolean selected) {
-            String variableName;
-            try {
-                variableName = timeSeries.getInsituSource().getParameterNames()[index];
-            } catch (IOException e) {
-                BeamLogManager.getSystemLogger().log(Level.WARNING, "Unable to read insitu data.", e);
-                return;
-            }
+            String variableName = timeSeries.getInsituSource().getParameterNames()[index];
             if (timeSeries.isInsituVariableSelected(variableName) != selected) {
                 timeSeries.setInsituVariableSelected(variableName, selected);
                 fireContentsChanged(this, index, index);
@@ -472,13 +452,7 @@ class TimeSeriesManagerForm {
 
         @Override
         public List<String> getSelectedVariableNames() {
-            final String[] allVars;
-            try {
-                allVars = timeSeries.getInsituSource().getParameterNames();
-            } catch (IOException e) {
-                BeamLogManager.getSystemLogger().log(Level.WARNING, "Unable to read insitu data.", e);
-                return new ArrayList<String>();
-            }
+            final String[] allVars = timeSeries.getInsituSource().getParameterNames();
             final List<String> selectedVars = new ArrayList<String>(allVars.length);
             for (String varName : allVars) {
                 if (timeSeries.isInsituVariableSelected(varName)) {

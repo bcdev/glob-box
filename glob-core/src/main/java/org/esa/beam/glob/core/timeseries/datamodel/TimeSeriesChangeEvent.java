@@ -22,11 +22,12 @@ package org.esa.beam.glob.core.timeseries.datamodel;
 public class TimeSeriesChangeEvent {
 
     public static final int BAND_TO_BE_REMOVED = 1;
-    public static final int START_TIME_PROPERTY_NAME = 2;
-    public static final int END_TIME_PROPERTY_NAME = 3;
-    public static final int PROPERTY_PRODUCT_LOCATIONS = 4;
-    public static final int PROPERTY_VARIABLE_SELECTION = 5;
-    public static final int INSITU_SOURCE_CHANGED = 6;
+    public static final int START_TIME_PROPERTY_NAME = BAND_TO_BE_REMOVED << 1;
+    public static final int END_TIME_PROPERTY_NAME = START_TIME_PROPERTY_NAME << 1;
+    public static final int PROPERTY_PRODUCT_LOCATIONS = END_TIME_PROPERTY_NAME << 1;
+    public static final int PROPERTY_EO_VARIABLE_SELECTION = PROPERTY_PRODUCT_LOCATIONS << 1;
+    public static final int INSITU_SOURCE_CHANGED = PROPERTY_EO_VARIABLE_SELECTION << 1;
+    public static final int PROPERTY_INSITU_VARIABLE_SELECTION = INSITU_SOURCE_CHANGED << 1;
 
     private final int type;
     private final Object value;

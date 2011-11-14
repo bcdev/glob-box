@@ -41,12 +41,12 @@ public class InsituSource {
     private final InsituLoader insituLoader;
     private RecordSource recordSource;
 
-    public InsituSource(InsituLoader insituLoader) {
+    public InsituSource(InsituLoader insituLoader) throws IOException {
         this.insituLoader = insituLoader;
+        ensureInsituData();
     }
 
-    public InsituRecord[] getValuesFor(String parameterName) throws IOException {
-        ensureInsituData();
+    public InsituRecord[] getValuesFor(String parameterName) {
         final Header header = recordSource.getHeader();
         final String[] columnNames = header.getColumnNames();
         final int columnIndex = StringUtils.indexOf(columnNames, parameterName);
@@ -57,6 +57,9 @@ public class InsituSource {
             final GeoPos pos = record.getLocation();
             final Date time = record.getTime();
             final Double value = (Double) record.getAttributeValues()[columnIndex];
+            if(value == null) {
+                continue;
+            }
             final InsituRecord insituRecord = new InsituRecord(pos, time, value);
             parameterRecords.add(insituRecord);
         }
@@ -65,8 +68,7 @@ public class InsituSource {
         return parameterRecords.toArray(new InsituRecord[parameterRecords.size()]);
     }
 
-    public String[] getParameterNames() throws IOException {
-        ensureInsituData();
+    public String[] getParameterNames() {
         return recordSource.getHeader().getParameterNames();
     }
 

@@ -32,7 +32,7 @@ import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileFilter;
 import java.awt.event.ActionEvent;
 import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.logging.Level;
 
 /**
@@ -76,8 +76,8 @@ public class LoadInsituAction extends AbstractAction {
             final InsituLoader insituLoader = InsituLoaderFactory.createInsituLoader(selectedFile);
             final InsituSource insituSource = new InsituSource(insituLoader);
             currentTimeSeries.setInsituSource(insituSource);
-        } catch (FileNotFoundException exception) {
-            BeamLogManager.getSystemLogger().log(Level.WARNING, "Unable to find '" + selectedFile + "'.", exception);
+        } catch (IOException exception) {
+            BeamLogManager.getSystemLogger().log(Level.WARNING, "Unable to load in situ data from '" + selectedFile + "'.", exception);
             return;
         }
 

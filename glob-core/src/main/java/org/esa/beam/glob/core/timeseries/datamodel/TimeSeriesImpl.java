@@ -286,7 +286,7 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
                 }
             }
         }
-        fireChangeEvent(new TimeSeriesChangeEvent(TimeSeriesChangeEvent.PROPERTY_VARIABLE_SELECTION, null));
+        fireChangeEvent(new TimeSeriesChangeEvent(TimeSeriesChangeEvent.PROPERTY_EO_VARIABLE_SELECTION, null));
     }
 
     @Override
@@ -296,10 +296,14 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
 
     @Override
     public void setInsituVariableSelected(String variableName, boolean selected) {
+        boolean hasChanged;
         if(selected) {
-            insituVariablesSelections.add(variableName);
+            hasChanged = insituVariablesSelections.add(variableName);
         } else {
-            insituVariablesSelections.remove(variableName);
+            hasChanged = insituVariablesSelections.remove(variableName);
+        }
+        if(hasChanged) {
+            fireChangeEvent(new TimeSeriesChangeEvent(TimeSeriesChangeEvent.PROPERTY_INSITU_VARIABLE_SELECTION, variableName));
         }
     }
 
@@ -417,6 +421,11 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
     @Override
     public InsituSource getInsituSource() {
         return insituSource;
+    }
+
+    @Override
+    public boolean hasInsituData() {
+        return insituSource != null;
     }
 
     /////////////////////////////////////////////////////////////////////////////////
