@@ -31,9 +31,10 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * TODO fill out or delete
+ * Represents a source for in situ data
  *
  * @author Thomas Storm
+ * @author Sabine Embacher
  */
 public class InsituSource {
 

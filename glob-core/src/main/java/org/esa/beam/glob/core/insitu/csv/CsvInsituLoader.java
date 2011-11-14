@@ -24,9 +24,10 @@ import java.io.Reader;
 import java.text.DateFormat;
 
 /**
- * TODO fill out or delete
+ * Implementation of {@link InsituLoader} reading in situ data from a csv source.
  *
  * @author Thomas Storm
+ * @author Sabine Embacher
  */
 public class CsvInsituLoader implements InsituLoader {
 

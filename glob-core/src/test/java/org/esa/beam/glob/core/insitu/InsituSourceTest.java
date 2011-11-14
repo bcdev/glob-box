@@ -32,9 +32,8 @@ import java.util.Date;
 import static org.junit.Assert.*;
 
 /**
- * TODO fill out or delete
- *
  * @author Thomas Storm
+ * @author Sabine Embacher
  */
 public class InsituSourceTest {
 

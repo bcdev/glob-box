@@ -25,7 +25,7 @@ import java.io.FileNotFoundException;
 import java.io.InputStreamReader;
 
 /**
- * TODO fill out or delete
+ * Factory class for creating instances of type {@link InsituLoader}.
  *
  * @author Thomas Storm
  */

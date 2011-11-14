@@ -21,9 +21,10 @@ import org.esa.beam.glob.core.insitu.csv.RecordSource;
 import java.io.IOException;
 
 /**
- * TODO fill out or delete
+ * Provides a method to load in situ sources.
  *
  * @author Thomas Storm
+ * @author Sabine Embacher
  */
 public interface InsituLoader {
 
