@@ -36,9 +36,10 @@ import java.io.FileNotFoundException;
 import java.util.logging.Level;
 
 /**
- * TODO fill out or delete
+ * Action for loading in situ data.
  *
  * @author Thomas Storm
+ * @author Sabine Embacher
  */
 public class LoadInsituAction extends AbstractAction {
 
