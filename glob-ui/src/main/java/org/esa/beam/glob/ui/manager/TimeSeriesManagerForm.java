@@ -457,7 +457,7 @@ class TimeSeriesManagerForm {
 
         @Override
         public void setSelectedVariableAt(int index, boolean selected) {
-            String variableName = null;
+            String variableName;
             try {
                 variableName = timeSeries.getInsituSource().getParameterNames()[index];
             } catch (IOException e) {
