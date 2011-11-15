@@ -12,4 +12,9 @@ public interface RecordSource {
      * @return The records.
      */
     Iterable<Record> getRecords();
+
+    /**
+     * Closes the sources.
+     */
+    void close();
 }

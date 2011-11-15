@@ -414,8 +414,10 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
 
     @Override
     public void setInsituSource(InsituSource insituSource) {
-        this.insituSource = insituSource;
-        fireChangeEvent(new TimeSeriesChangeEvent(TimeSeriesChangeEvent.INSITU_SOURCE_CHANGED, this));
+        if(this.insituSource != insituSource) {
+            this.insituSource = insituSource;
+            fireChangeEvent(new TimeSeriesChangeEvent(TimeSeriesChangeEvent.INSITU_SOURCE_CHANGED, this));
+        }
     }
 
     @Override

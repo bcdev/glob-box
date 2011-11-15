@@ -33,6 +33,8 @@ public class CsvRecordSource implements RecordSource {
     private final int lonIndex;
     private final int timeIndex;
     private final Class<?>[] attributeTypes;
+    private Iterable<Record> recordIterable;
+    private CsvRecordIterator csvRecordIterator;
 
     public CsvRecordSource(Reader reader, DateFormat dateFormat) throws IOException {
         if (reader instanceof LineNumberReader) {
@@ -62,25 +64,38 @@ public class CsvRecordSource implements RecordSource {
 
     @Override
     public Iterable<Record> getRecords() {
-        return new Iterable<Record>() {
+        if (recordIterable == null) {
+            recordIterable = createIterable();
+        }
 
-            private CsvRecordSource.CsvRecordIterator csvRecordIterator;
-
-            @Override
-            public Iterator<Record> iterator() {
-                if(csvRecordIterator == null) {
-                    csvRecordIterator = new CsvRecordIterator();
-                }
-                return csvRecordIterator;
-            }
-        };
+        if (csvRecordIterator != null) {
+            csvRecordIterator.currentRecord = 0;
+        }
+        return recordIterable;
     }
 
+    @Override
     public void close() {
         try {
             reader.close();
         } catch (IOException ignore) {
         }
+    }
+
+    private Iterable<Record> createIterable() {
+        return new Iterable<Record>() {
+            @Override
+            public Iterator<Record> iterator() {
+                if (csvRecordIterator == null) {
+                    try {
+                        csvRecordIterator = new CsvRecordIterator(readTextRecords(recordLength));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+                return csvRecordIterator;
+            }
+        };
     }
 
     private String[] getParameterNames(String[] columnNames) {
@@ -89,7 +104,7 @@ public class CsvRecordSource implements RecordSource {
 
         final List<String> parameterNames = new ArrayList<String>();
         Collections.addAll(parameterNames, columnNames);
-        for (int i = sortedIndices.length -1; i >=0; i--) {
+        for (int i = sortedIndices.length - 1; i >= 0; i--) {
             final int index = sortedIndices[i];
             if (index > -1) {
                 parameterNames.remove(index);
@@ -106,6 +121,7 @@ public class CsvRecordSource implements RecordSource {
      * @param textValues The text values to convert.
      * @param types      The types.
      * @param dateFormat The date format to be used.
+     *
      * @return The array of converted objects.
      */
     private static Object[] toObjects(String[] textValues, Class<?>[] types, DateFormat dateFormat) {
@@ -166,7 +182,7 @@ public class CsvRecordSource implements RecordSource {
             String trimLine = line.trim();
             if (!trimLine.startsWith("#") && !trimLine.isEmpty()) {
                 result.add(splitRecordLine(line, recordLength));
-                if(recordLength < 0) {
+                if (recordLength < 0) {
                     return result;
                 }
             }
@@ -224,20 +240,17 @@ public class CsvRecordSource implements RecordSource {
 
     private class CsvRecordIterator extends RecordIterator {
 
-        int currentRecord = 0;
         List<String[]> records;
+        private int currentRecord;
+
+        private CsvRecordIterator(List<String[]> records) {
+            currentRecord = 0;
+            this.records = records;
+        }
 
         @Override
         protected Record getNextRecord() {
-
-            if (records == null) {
-                try {
-                    records = readTextRecords(recordLength);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-            if(records.size() <= currentRecord ) {
+            if (records.size() <= currentRecord) {
                 return null;
             }
             String[] record = records.get(currentRecord);
