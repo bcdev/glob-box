@@ -229,7 +229,7 @@ public class TimeSeriesManagerToolView extends AbstractToolView {
         for (Map.Entry<String, GeoPos[]> entry : geoPoses.entrySet()) {
             for (GeoPos geoPos : entry.getValue()) {
                 geoCoding.getPixelPos(geoPos, pixelPos);
-                if (!pixelIsValid(tsProduct, pixelPos)) {
+                if (!AbstractTimeSeries.isPixelValid(tsProduct, pixelPos)) {
                     continue;
                 }
                 final Placemark placemark = Placemark.createPointPlacemark(
@@ -267,13 +267,5 @@ public class TimeSeriesManagerToolView extends AbstractToolView {
             }
         }
         return selectedInsituVariables;
-    }
-
-    private boolean pixelIsValid(Product tsProduct, PixelPos pixelPos) {
-        return pixelPos.isValid() &&
-               pixelPos.x < tsProduct.getSceneRasterWidth() &&
-               pixelPos.x >= 0 &&
-               pixelPos.y < tsProduct.getSceneRasterHeight() &&
-               pixelPos.y >= 0;
     }
 }

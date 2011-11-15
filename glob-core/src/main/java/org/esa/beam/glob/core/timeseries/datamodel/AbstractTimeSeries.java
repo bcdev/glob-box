@@ -17,6 +17,7 @@
 package org.esa.beam.glob.core.timeseries.datamodel;
 
 import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Placemark;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
@@ -53,6 +54,14 @@ public abstract class AbstractTimeSeries {
     public static final String PL_PATH = "PATH";
     public static final String PL_TYPE = "TYPE";
     public static final String VARIABLES = "VARIABLES";
+
+    public static boolean isPixelValid(Product tsProduct, PixelPos pixelPos) {
+        return pixelPos.isValid() &&
+               pixelPos.x < tsProduct.getSceneRasterWidth() &&
+               pixelPos.x >= 0 &&
+               pixelPos.y < tsProduct.getSceneRasterHeight() &&
+               pixelPos.y >= 0;
+    }
 
     public abstract List<String> getEoVariables();
 

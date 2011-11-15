@@ -17,7 +17,10 @@
 package org.esa.beam.glob.ui.graph;
 
 import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.GeoCoding;
 import org.esa.beam.framework.datamodel.GeoPos;
+import org.esa.beam.framework.datamodel.PixelPos;
+import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.framework.datamodel.Stx;
@@ -374,11 +377,19 @@ class TimeSeriesGraphModel {
                 ProductSceneView sceneView = VisatApp.getApp().getSelectedProductSceneView();
                 AbstractTimeSeries globTimeSeries = TimeSeriesMapper.getInstance().getTimeSeries(sceneView.getProduct());
                 final InsituSource insituSource = globTimeSeries.getInsituSource();
+                final Product tsProduct = globTimeSeries.getTsProduct();
+                final GeoCoding geoCoding = tsProduct.getGeoCoding();
                 for (String insituVariable : insituVariables) {
                     final GeoPos[] insituPositions = insituSource.getInsituPositionsFor(insituVariable);
-                    final GeoPos geoPos = insituPositions[0];
-                    InsituRecord[] insituRecords = insituSource.getValuesFor(insituVariable, geoPos);
-                    timeSeriesList.add(computeTimeSeries(insituRecords));
+                    PixelPos pixelPos = new PixelPos();
+                    for (GeoPos insituPosition : insituPositions) {
+                        geoCoding.getPixelPos(insituPosition, pixelPos);
+                        if (!AbstractTimeSeries.isPixelValid(tsProduct, pixelPos)) {
+                            continue;
+                        }
+                        InsituRecord[] insituRecords = insituSource.getValuesFor(insituVariable, insituPosition);
+                        timeSeriesList.add(computeTimeSeries(insituRecords));
+                    }
                 }
                 return timeSeriesList;
             }
