@@ -22,6 +22,7 @@ import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.framework.datamodel.Stx;
 import org.esa.beam.framework.ui.product.ProductSceneView;
 import org.esa.beam.glob.core.TimeSeriesMapper;
+import org.esa.beam.glob.core.insitu.InsituSource;
 import org.esa.beam.glob.core.insitu.csv.InsituRecord;
 import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeCoding;
@@ -186,27 +187,40 @@ class TimeSeriesGraphModel {
 
                 timeSeriesPlot.setRenderer(i + numEoVariables, pinRenderer, true);
             }
-//
-//            for(int i = 0; i < numInsituVariables; i++) {
-//                String insituVariableName = insituVariablesToDisplay.get(i);
-//                // todo - ts - get better paint smarter
-//                Paint paint = displayModel.getVariablename2colorMap().values().iterator().next();
-//
-//                TimeSeriesCollection insituDataset = new TimeSeriesCollection();
-//                timeSeriesPlot.setDataset(i + numEoVariables * 2, insituDataset);
-//                insituDatasets.add(insituDataset);
-//
-//                timeSeriesPlot.mapDatasetToRangeAxis(i + numEoVariables * 2, i);
-//
-//                XYLineAndShapeRenderer insituRenderer = new XYLineAndShapeRenderer(true, true);
-//                insituRenderer.setBasePaint(paint);
-//                // todo - ts - set better stroke
-//                insituRenderer.setBaseStroke(PIN_STROKE);
-//                insituRenderer.setAutoPopulateSeriesPaint(false);
-//                insituRenderer.setAutoPopulateSeriesStroke(false);
-//
-//                timeSeriesPlot.setRenderer(i + numEoVariables + 2, insituRenderer, true);
-//            }
+
+            // todo - ts - that's not the optimal way to get the time series; TimeSeriesGraphModel might get the time series as parameter
+            ProductSceneView sceneView = VisatApp.getApp().getSelectedProductSceneView();
+            AbstractTimeSeries globTimeSeries = TimeSeriesMapper.getInstance().getTimeSeries(sceneView.getProduct());
+            final InsituSource insituSource = globTimeSeries.getInsituSource();
+            final List<String> insituVariablesToDisplay = new ArrayList<String>();
+            if(!globTimeSeries.hasInsituData()) {
+                return;
+            }
+            for (String s : insituSource.getParameterNames()) {
+                if(globTimeSeries.isInsituVariableSelected(s)) {
+                    insituVariablesToDisplay.add(s);
+                }
+            }
+            for (int i = 0; i < insituVariablesToDisplay.size(); i++) {
+                String insituVariableName = insituVariablesToDisplay.get(i);
+                // todo - ts - get better paint smarter
+                Paint paint = displayModel.getVariablename2colorMap().values().iterator().next();
+
+                TimeSeriesCollection insituDataset = new TimeSeriesCollection();
+                timeSeriesPlot.setDataset(i + numEoVariables * 2, insituDataset);
+                insituDatasets.add(insituDataset);
+
+                timeSeriesPlot.mapDatasetToRangeAxis(i + numEoVariables * 2, i);
+
+                XYLineAndShapeRenderer insituRenderer = new XYLineAndShapeRenderer(true, true);
+                insituRenderer.setBasePaint(paint);
+                // todo - ts - set better stroke
+                insituRenderer.setBaseStroke(PIN_STROKE);
+                insituRenderer.setAutoPopulateSeriesPaint(false);
+                insituRenderer.setAutoPopulateSeriesStroke(false);
+
+                timeSeriesPlot.setRenderer(i + numEoVariables + 2, insituRenderer, true);
+            }
         }
     }
 
@@ -355,11 +369,12 @@ class TimeSeriesGraphModel {
             if (type.equals(TimeSeriesType.INSITU)) {
                 int variableCount = insituVariables.size();
                 List<TimeSeries> timeSeriesList = new ArrayList<TimeSeries>(variableCount);
+                // todo - ts - that's not the optimal way to get the time series; TimeSeriesGraphModel might get the time series as parameter
+                ProductSceneView sceneView = VisatApp.getApp().getSelectedProductSceneView();
+                AbstractTimeSeries globTimeSeries = TimeSeriesMapper.getInstance().getTimeSeries(sceneView.getProduct());
+                final InsituSource insituSource = globTimeSeries.getInsituSource();
                 for (String insituVariable : insituVariables) {
-                    // todo - ts - that's not the optimal way to get the time series; TimeSeriesUpdater may get the time series as parameter
-                    ProductSceneView sceneView = VisatApp.getApp().getSelectedProductSceneView();
-                    AbstractTimeSeries globTimeSeries = TimeSeriesMapper.getInstance().getTimeSeries(sceneView.getProduct());
-                    InsituRecord[] insituRecords = globTimeSeries.getInsituSource().getValuesFor(insituVariable);
+                    InsituRecord[] insituRecords = insituSource.getValuesFor(insituVariable);
                     timeSeriesList.add(computeTimeSeries(insituRecords));
                 }
                 return timeSeriesList;
@@ -402,7 +417,7 @@ class TimeSeriesGraphModel {
                 final Millisecond timePeriod = new Millisecond(startTime.getAsDate(),
                                                                ProductData.UTC.UTC_TIME_ZONE,
                                                                Locale.getDefault());
-                timeSeries.add(new TimeSeriesDataItem(timePeriod, insituRecord.value));
+                timeSeries.addOrUpdate(timePeriod, insituRecord.value);
             }
             return timeSeries;
         }
@@ -419,7 +434,6 @@ class TimeSeriesGraphModel {
                     final Millisecond timePeriod = new Millisecond(startTime.getAsDate(),
                                                                    ProductData.UTC.UTC_TIME_ZONE,
                                                                    Locale.getDefault());
-
                     final double value = getValue(band, pixelX, pixelY, currentLevel);
                     timeSeries.add(new TimeSeriesDataItem(timePeriod, value));
                 }

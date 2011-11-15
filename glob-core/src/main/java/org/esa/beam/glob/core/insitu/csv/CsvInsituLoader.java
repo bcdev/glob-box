@@ -38,6 +38,7 @@ public class CsvInsituLoader implements InsituLoader {
     public RecordSource loadSource() throws IOException {
         Assert.state(reader != null, "reader != null");
         Assert.state(dateFormat != null, "dateFormat != null");
+        reader.reset();
         return new CsvRecordSource(reader, dateFormat);
     }
 

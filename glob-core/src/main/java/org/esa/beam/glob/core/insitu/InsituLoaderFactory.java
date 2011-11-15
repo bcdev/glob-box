@@ -20,9 +20,12 @@ import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.glob.core.insitu.csv.CsvInsituLoader;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.RandomAccessFile;
+import java.io.Reader;
 
 /**
  * Factory class for creating instances of type {@link InsituLoader}.
@@ -33,10 +36,53 @@ public class InsituLoaderFactory {
 
     public static InsituLoader createInsituLoader(File selectedFile) throws FileNotFoundException {
         final CsvInsituLoader csvInsituLoader = new CsvInsituLoader();
-        InputStreamReader reader = new InputStreamReader(new FileInputStream(selectedFile));
+        Reader reader = new RandomAccessFileReader(new RandomAccessFile(selectedFile, "r"));
         csvInsituLoader.setCsvReader(reader);
         // todo - ts - allow user specifying date format
         csvInsituLoader.setDateFormat(ProductData.UTC.createDateFormat("yyyy-MM-dd"));
         return csvInsituLoader;
     }
+
+    private static class RandomAccessFileReader extends Reader {
+
+        RandomAccessFile raf;
+        InputStreamReader reader;
+
+        private RandomAccessFileReader(RandomAccessFile raf) {
+            super();
+            this.raf = raf;
+            createReader();
+        }
+
+        protected void createReader() {
+            reader = new InputStreamReader(new InputStream() {
+                @Override
+                public int read() throws IOException {
+                    return raf.read();
+                }
+            });
+        }
+
+        @Override
+        public void reset() throws IOException {
+            raf.seek(0);
+            createReader();
+        }
+
+        @Override
+        public void close() throws IOException {
+            reader.close();
+            raf.close();
+        }
+
+        @Override
+        public int read(char[] cbuf, int off, int len) throws IOException {
+            return reader.read(cbuf, off, len);
+        }
+
+        public long size() throws IOException {
+            return raf.length();
+        }
+    }
+
 }

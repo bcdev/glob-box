@@ -425,7 +425,7 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
 
     @Override
     public boolean hasInsituData() {
-        return insituSource != null;
+        return insituSource != null && !insituVariablesSelections.isEmpty();
     }
 
     /////////////////////////////////////////////////////////////////////////////////

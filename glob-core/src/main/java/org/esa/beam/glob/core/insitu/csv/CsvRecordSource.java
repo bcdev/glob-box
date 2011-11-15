@@ -43,7 +43,7 @@ public class CsvRecordSource implements RecordSource {
 
         this.dateFormat = dateFormat;
 
-        String[] columnNames = readTextRecord(-1);
+        String[] columnNames = readTextRecords(-1).get(0);
         attributeTypes = new Class<?>[columnNames.length];
 
         latIndex = indexOf(columnNames, LAT_NAMES);
@@ -63,11 +63,24 @@ public class CsvRecordSource implements RecordSource {
     @Override
     public Iterable<Record> getRecords() {
         return new Iterable<Record>() {
+
+            private CsvRecordSource.CsvRecordIterator csvRecordIterator;
+
             @Override
             public Iterator<Record> iterator() {
-                return new CsvRecordIterator();
+                if(csvRecordIterator == null) {
+                    csvRecordIterator = new CsvRecordIterator();
+                }
+                return csvRecordIterator;
             }
         };
+    }
+
+    public void close() {
+        try {
+            reader.close();
+        } catch (IOException ignore) {
+        }
     }
 
     private String[] getParameterNames(String[] columnNames) {
@@ -146,15 +159,19 @@ public class CsvRecordSource implements RecordSource {
         }
     }
 
-    private String[] readTextRecord(int recordLength) throws IOException {
+    private List<String[]> readTextRecords(int recordLength) throws IOException {
+        final List<String[]> result = new ArrayList<String[]>();
         String line;
         while ((line = reader.readLine()) != null) {
             String trimLine = line.trim();
             if (!trimLine.startsWith("#") && !trimLine.isEmpty()) {
-                return splitRecordLine(line, recordLength);
+                result.add(splitRecordLine(line, recordLength));
+                if(recordLength < 0) {
+                    return result;
+                }
             }
         }
-        return null;
+        return result;
     }
 
     private static Object parse(String text, Class<?> type, DateFormat dateFormat) {
@@ -206,25 +223,31 @@ public class CsvRecordSource implements RecordSource {
     }
 
     private class CsvRecordIterator extends RecordIterator {
+
+        int currentRecord = 0;
+        List<String[]> records;
+
         @Override
         protected Record getNextRecord() {
 
-            final String[] textValues;
-            try {
-                textValues = readTextRecord(recordLength);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+            if (records == null) {
+                try {
+                    records = readTextRecords(recordLength);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
             }
-
-            if (textValues == null) {
+            if(records.size() <= currentRecord ) {
                 return null;
             }
+            String[] record = records.get(currentRecord);
+            currentRecord++;
 
-            if (getHeader().getColumnNames().length != textValues.length) {
-                System.out.println("to less values " + Arrays.toString(textValues));
+            if (getHeader().getColumnNames().length != record.length) {
+                System.out.println("too few values " + Arrays.toString(record));
             }
 
-            final Object[] values = toObjects(textValues, attributeTypes, dateFormat);
+            final Object[] values = toObjects(record, attributeTypes, dateFormat);
 
             final GeoPos location;
             if (header.hasLocation() && values[latIndex] instanceof Number && values[lonIndex] instanceof Number) {
