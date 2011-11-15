@@ -41,7 +41,7 @@ import java.util.logging.Level;
  * @author Thomas Storm
  * @author Sabine Embacher
  */
-public class LoadInsituAction extends AbstractAction {
+class LoadInsituAction extends AbstractAction {
 
     private static final String PROPERTY_KEY_LAST_OPEN_INSITU_DIR = "glob.file.lastInsituOpenDir";
 

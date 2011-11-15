@@ -21,6 +21,7 @@ import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.ImageInfo;
 import org.esa.beam.framework.datamodel.MetadataAttribute;
 import org.esa.beam.framework.datamodel.MetadataElement;
+import org.esa.beam.framework.datamodel.Placemark;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.ProductNode;
@@ -60,6 +61,7 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
     private volatile boolean isAdjustingImageInfos;
     private InsituSource insituSource;
     private Set<String> insituVariablesSelections = new HashSet<String>();
+    private final List<Placemark> insituPins = new ArrayList<Placemark>();
 
     /**
      * Used to create a TimeSeries from within a ProductReader
@@ -423,6 +425,11 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
     @Override
     public InsituSource getInsituSource() {
         return insituSource;
+    }
+
+    @Override
+    public List<Placemark> getInsituPlacemarks() {
+        return insituPins;
     }
 
     @Override

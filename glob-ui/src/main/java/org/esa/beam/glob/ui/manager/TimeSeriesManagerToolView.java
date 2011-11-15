@@ -16,6 +16,12 @@
 
 package org.esa.beam.glob.ui.manager;
 
+import org.esa.beam.framework.datamodel.GeoCoding;
+import org.esa.beam.framework.datamodel.GeoPos;
+import org.esa.beam.framework.datamodel.PinDescriptor;
+import org.esa.beam.framework.datamodel.PixelPos;
+import org.esa.beam.framework.datamodel.Placemark;
+import org.esa.beam.framework.datamodel.PlacemarkGroup;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductNode;
 import org.esa.beam.framework.datamodel.ProductNodeEvent;
@@ -24,6 +30,7 @@ import org.esa.beam.framework.ui.AppContext;
 import org.esa.beam.framework.ui.application.support.AbstractToolView;
 import org.esa.beam.framework.ui.product.ProductTreeListenerAdapter;
 import org.esa.beam.glob.core.TimeSeriesMapper;
+import org.esa.beam.glob.core.insitu.InsituSource;
 import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesChangeEvent;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesListener;
@@ -33,6 +40,10 @@ import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 import java.awt.BorderLayout;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.WeakHashMap;
 
 
@@ -170,9 +181,12 @@ public class TimeSeriesManagerToolView extends AbstractToolView {
 
         @Override
         public void timeSeriesChanged(TimeSeriesChangeEvent event) {
-            if (event.getType() == TimeSeriesChangeEvent.START_TIME_PROPERTY_NAME ||
-                event.getType() == TimeSeriesChangeEvent.END_TIME_PROPERTY_NAME) {
+            final int type = event.getType();
+            if (type == TimeSeriesChangeEvent.START_TIME_PROPERTY_NAME ||
+                type == TimeSeriesChangeEvent.END_TIME_PROPERTY_NAME) {
                 activeForm.updateFormControl(getSelectedProduct());
+            } else if(type == TimeSeriesChangeEvent.PROPERTY_INSITU_VARIABLE_SELECTION) {
+                updateInsituPins(event.getValue().toString());
             }
         }
 
@@ -180,5 +194,86 @@ public class TimeSeriesManagerToolView extends AbstractToolView {
         public void nodeChanged(ProductNodeEvent event) {
             activeForm.updateFormControl(getSelectedProduct());
         }
+    }
+
+    private void updateInsituPins(String insituVariable) {
+        final AbstractTimeSeries timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(selectedProduct);
+        final Product tsProduct = timeSeries.getTsProduct();
+        final PlacemarkGroup pinGroup = tsProduct.getPinGroup();
+        if(!timeSeries.hasInsituData()) {
+            for (Placemark insituPin : timeSeries.getInsituPlacemarks()) {
+                pinGroup.remove(insituPin);
+            }
+            return;
+        }
+        final InsituSource insituSource = timeSeries.getInsituSource();
+        final List<String> selectedInsituVariables = getSelectedInsituVariables(timeSeries, insituSource);
+        if(selectedInsituVariables.contains(insituVariable)) {
+            removePlacemark(insituVariable, pinGroup);
+        }
+
+        addPlacemarks(tsProduct, timeSeries, selectedInsituVariables);
+    }
+
+    private void addPlacemarks(Product tsProduct, AbstractTimeSeries timeSeries, List<String> selectedInsituVariables) {
+        final InsituSource insituSource = timeSeries.getInsituSource();
+        PlacemarkGroup pinGroup = tsProduct.getPinGroup();
+        final Map<String, GeoPos[]> geoPoses = new HashMap<String, GeoPos[]>();
+        for (String selectedInsituVariable : selectedInsituVariables) {
+            geoPoses.put(selectedInsituVariable, insituSource.getInsituPositionsFor(selectedInsituVariable));
+        }
+        final GeoCoding geoCoding = tsProduct.getGeoCoding();
+
+        int counter = 1;
+        final PixelPos pixelPos = new PixelPos();
+        for (Map.Entry<String, GeoPos[]> entry : geoPoses.entrySet()) {
+            for (GeoPos geoPos : entry.getValue()) {
+                geoCoding.getPixelPos(geoPos, pixelPos);
+                if (!pixelIsValid(tsProduct, pixelPos)) {
+                    continue;
+                }
+                final Placemark placemark = Placemark.createPointPlacemark(
+                        PinDescriptor.getInstance(),
+                        "Pin_" + entry.getKey() + "_" + counter,
+                        "Pin_" + entry.getKey() + "_" + counter,
+                        "Pin_" + entry.getKey() + "_" + counter,
+                        null,
+                        geoPos,
+                        geoCoding);
+                if (placemark != null) {
+                    pinGroup.add(placemark);
+                }
+                counter++;
+                timeSeries.getInsituPlacemarks().add(placemark);
+            }
+        }
+    }
+
+    private void removePlacemark(String insituVariable, PlacemarkGroup pinGroup) {
+        for (int i = 0; i < pinGroup.getNodeCount(); i++) {
+            final Placemark placemark = pinGroup.get(i);
+            if(placemark.getName().matches("Pin_" + insituVariable + "_%d*")) {
+                pinGroup.remove(placemark);
+            }
+        }
+    }
+
+    private List<String> getSelectedInsituVariables(AbstractTimeSeries timeSeries, InsituSource insituSource) {
+        final String[] parameterNames = insituSource.getParameterNames();
+        final List<String> selectedInsituVariables = new ArrayList<String>();
+        for (String parameterName : parameterNames) {
+            if (timeSeries.isInsituVariableSelected(parameterName)) {
+                selectedInsituVariables.add(parameterName);
+            }
+        }
+        return selectedInsituVariables;
+    }
+
+    private boolean pixelIsValid(Product tsProduct, PixelPos pixelPos) {
+        return pixelPos.isValid() &&
+               pixelPos.x < tsProduct.getSceneRasterWidth() &&
+               pixelPos.x >= 0 &&
+               pixelPos.y < tsProduct.getSceneRasterHeight() &&
+               pixelPos.y >= 0;
     }
 }

@@ -17,6 +17,7 @@
 package org.esa.beam.glob.ui.graph;
 
 import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.framework.datamodel.Stx;
@@ -374,7 +375,9 @@ class TimeSeriesGraphModel {
                 AbstractTimeSeries globTimeSeries = TimeSeriesMapper.getInstance().getTimeSeries(sceneView.getProduct());
                 final InsituSource insituSource = globTimeSeries.getInsituSource();
                 for (String insituVariable : insituVariables) {
-                    InsituRecord[] insituRecords = insituSource.getValuesFor(insituVariable);
+                    final GeoPos[] insituPositions = insituSource.getInsituPositionsFor(insituVariable);
+                    final GeoPos geoPos = insituPositions[0];
+                    InsituRecord[] insituRecords = insituSource.getValuesFor(insituVariable, geoPos);
                     timeSeriesList.add(computeTimeSeries(insituRecords));
                 }
                 return timeSeriesList;

@@ -49,6 +49,8 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries.*;
 
@@ -170,6 +172,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
             showing = graphForm.isShowingSelectedPins();
             pins = currentView.getSelectedPins();
         }
+        pins = filterInsituPins(pins);
         if (showing) {
             for (Placemark pin : pins) {
                 final Viewport viewport = currentView.getViewport();
@@ -183,6 +186,18 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
                                             currentLevel, TimeSeriesType.PIN);
             }
         }
+    }
+
+    private Placemark[] filterInsituPins(Placemark[] pins) {
+        AbstractTimeSeries timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(currentView.getProduct());
+        final List<Placemark> insituPins = timeSeries.getInsituPlacemarks();
+        final List<Placemark> result = new ArrayList<Placemark>();
+        for (Placemark pin : pins) {
+            if(!insituPins.contains(pin)) {
+                result.add(pin);
+            }
+        }
+        return result.toArray(new Placemark[result.size()]);
     }
 
     private class ShowPinAction extends AbstractAction {

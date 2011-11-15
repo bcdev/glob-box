@@ -28,7 +28,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Represents a source for in situ data
@@ -46,15 +48,33 @@ public class InsituSource {
         ensureInsituData();
     }
 
-    public InsituRecord[] getValuesFor(String parameterName) {
-        final Header header = recordSource.getHeader();
-        final String[] columnNames = header.getColumnNames();
-        final int columnIndex = StringUtils.indexOf(columnNames, parameterName);
+    public GeoPos[] getInsituPositionsFor(String parameterName) {
+        Set<GeoPos> result = new HashSet<GeoPos>();
+        final int columnIndex = getIndexForParameter(parameterName);
+        final Iterable<Record> records = recordSource.getRecords();
+        for (Record record : records) {
+            final Double value = (Double) record.getAttributeValues()[columnIndex];
+            if (value == null) {
+                continue;
+            }
+            result.add(record.getLocation());
+        }
+        return result.toArray(new GeoPos[result.size()]);
+    }
 
+    public InsituRecord[] getValuesFor(String parameterName) {
+        return getValuesFor(parameterName, null);
+    }
+
+    public InsituRecord[] getValuesFor(String parameterName, GeoPos position) {
+        final int columnIndex = getIndexForParameter(parameterName);
         final Iterable<Record> records = recordSource.getRecords();
         final List<InsituRecord> parameterRecords = new ArrayList<InsituRecord>();
         for (Record record : records) {
             final GeoPos pos = record.getLocation();
+            if(position != null && !pos.equals(position)) {
+                continue;
+            }
             final Date time = record.getTime();
             final Double value = (Double) record.getAttributeValues()[columnIndex];
             if (value == null) {
@@ -66,6 +86,12 @@ public class InsituSource {
 
         sortRecordsAscending(parameterRecords);
         return parameterRecords.toArray(new InsituRecord[parameterRecords.size()]);
+    }
+
+    private int getIndexForParameter(String parameterName) {
+        final Header header = recordSource.getHeader();
+        final String[] columnNames = header.getColumnNames();
+        return StringUtils.indexOf(columnNames, parameterName);
     }
 
     public String[] getParameterNames() {
