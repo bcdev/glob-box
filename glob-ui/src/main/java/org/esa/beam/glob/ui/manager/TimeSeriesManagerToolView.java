@@ -209,7 +209,7 @@ public class TimeSeriesManagerToolView extends AbstractToolView {
         final InsituSource insituSource = timeSeries.getInsituSource();
         final List<String> selectedInsituVariables = getSelectedInsituVariables(timeSeries, insituSource);
         if(selectedInsituVariables.contains(insituVariable)) {
-            removePlacemark(insituVariable, pinGroup);
+            removePlacemarks(timeSeries.getInsituPlacemarks(), pinGroup);
         }
 
         addPlacemarks(tsProduct, timeSeries, selectedInsituVariables);
@@ -249,10 +249,10 @@ public class TimeSeriesManagerToolView extends AbstractToolView {
         }
     }
 
-    private void removePlacemark(String insituVariable, PlacemarkGroup pinGroup) {
+    private void removePlacemarks(List<Placemark> insituVariable, PlacemarkGroup pinGroup) {
         for (int i = 0; i < pinGroup.getNodeCount(); i++) {
             final Placemark placemark = pinGroup.get(i);
-            if(placemark.getName().matches("Pin_" + insituVariable + "_%d*")) {
+            if(insituVariable.contains(placemark)) {
                 pinGroup.remove(placemark);
             }
         }
