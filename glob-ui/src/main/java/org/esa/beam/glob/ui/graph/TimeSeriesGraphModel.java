@@ -138,10 +138,10 @@ class TimeSeriesGraphModel {
         } else {
             displayModel = null;
         }
-        updatePlot(hasData);
+        updatePlot(hasData, timeSeries);
     }
 
-    private void updatePlot(boolean hasData) {
+    private void updatePlot(boolean hasData, AbstractTimeSeries timeSeries) {
         for (int i = 0; i < timeSeriesPlot.getDatasetCount(); i++) {
             timeSeriesPlot.setDataset(i, null);
         }
@@ -192,16 +192,13 @@ class TimeSeriesGraphModel {
                 timeSeriesPlot.setRenderer(i + numEoVariables, pinRenderer, true);
             }
 
-            // todo - ts - that's not the optimal way to get the time series; TimeSeriesGraphModel might get the time series as parameter
-            ProductSceneView sceneView = VisatApp.getApp().getSelectedProductSceneView();
-            AbstractTimeSeries globTimeSeries = TimeSeriesMapper.getInstance().getTimeSeries(sceneView.getProduct());
-            final InsituSource insituSource = globTimeSeries.getInsituSource();
-            final List<String> insituVariablesToDisplay = new ArrayList<String>();
-            if(!globTimeSeries.hasInsituData()) {
+            if(!timeSeries.hasInsituData()) {
                 return;
             }
+            final InsituSource insituSource = timeSeries.getInsituSource();
+            final List<String> insituVariablesToDisplay = new ArrayList<String>();
             for (String s : insituSource.getParameterNames()) {
-                if(globTimeSeries.isInsituVariableSelected(s)) {
+                if(timeSeries.isInsituVariableSelected(s)) {
                     insituVariablesToDisplay.add(s);
                 }
             }
@@ -412,15 +409,16 @@ class TimeSeriesGraphModel {
             }
             try {
                 addTimeSeries(get(), type);
+            } catch (InterruptedException ignore) {
+                ignore.printStackTrace();
+            } catch (ExecutionException ignore) {
+                ignore.printStackTrace();
+            } finally {
                 if (this == nextWorker) {
                     nextWorker = null;
                 } else {
                     nextWorker.execute();
                 }
-            } catch (InterruptedException ignore) {
-                ignore.printStackTrace();
-            } catch (ExecutionException ignore) {
-                ignore.printStackTrace();
             }
         }
 
