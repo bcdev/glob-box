@@ -232,11 +232,13 @@ public class TimeSeriesManagerToolView extends AbstractToolView {
                 if (!AbstractTimeSeries.isPixelValid(tsProduct, pixelPos)) {
                     continue;
                 }
+                final String name = "Insitu_" + entry.getKey() + "_" + counter;
+                // todo - ts - create better name, label, and description
                 final Placemark placemark = Placemark.createPointPlacemark(
                         PinDescriptor.getInstance(),
-                        "Pin_" + entry.getKey() + "_" + counter,
-                        "Pin_" + entry.getKey() + "_" + counter,
-                        "Pin_" + entry.getKey() + "_" + counter,
+                        name,
+                        name,
+                        name,
                         null,
                         geoPos,
                         geoCoding);
