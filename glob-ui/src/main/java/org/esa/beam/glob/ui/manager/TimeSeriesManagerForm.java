@@ -308,10 +308,10 @@ class TimeSeriesManagerForm {
         eoVariablePane.setModel(model);
     }
 
-    private void updateInsituVariablePanel(AbstractTimeSeries timeSeries) {
+    private void updateInsituVariablePanel() {
         final VariableSelectionPaneModel model;
-        if (timeSeries != null) {
-            model = new TimeSeriesInsituVariableSelectionPaneModel(timeSeries);
+        if (currentTimeSeries != null) {
+            model = new TimeSeriesInsituVariableSelectionPaneModel(currentTimeSeries);
         } else {
             model = new DefaultVariableSelectionPaneModel();
         }
@@ -569,7 +569,7 @@ class TimeSeriesManagerForm {
                     internalFrame.dispose();
                 }
             } else if (event.getType() == TimeSeriesChangeEvent.INSITU_SOURCE_CHANGED) {
-                updateInsituVariablePanel((AbstractTimeSeries) event.getValue());
+                updateInsituVariablePanel();
             }
         }
     }

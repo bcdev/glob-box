@@ -40,8 +40,8 @@ import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.plot.DefaultDrawingSupplier;
 import org.jfree.chart.plot.XYPlot;
-import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.chart.renderer.xy.XYSplineRenderer;
 import org.jfree.data.Range;
 import org.jfree.data.time.Millisecond;
 import org.jfree.data.time.TimeSeries;
@@ -76,7 +76,9 @@ class TimeSeriesGraphModel {
     private static final Color DEFAULT_BACKGROUND_COLOR = new Color(180, 180, 180);
     private static final String NO_DATA_MESSAGE = "No data to display";
     private static final Stroke CURSOR_STROKE = new BasicStroke(1.0f);
-    private static final Stroke PIN_STROKE = new BasicStroke(1.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, new float[]{10.0f}, 0.0f);
+    private static final Stroke PIN_STROKE = new BasicStroke(1.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, new float[]{
+            10.0f
+    }, 0.0f);
 
     private final Map<AbstractTimeSeries, DisplayModel> displayModelMap;
     private final XYPlot timeSeriesPlot;
@@ -103,14 +105,12 @@ class TimeSeriesGraphModel {
     private void initPlot() {
         final ValueAxis domainAxis = timeSeriesPlot.getDomainAxis();
         domainAxis.setAutoRange(true);
-        XYItemRenderer renderer = timeSeriesPlot.getRenderer();
-        if (renderer instanceof XYLineAndShapeRenderer) {
-            XYLineAndShapeRenderer xyRenderer = (XYLineAndShapeRenderer) renderer;
-            xyRenderer.setBaseShapesVisible(true);
-            xyRenderer.setBaseShapesFilled(true);
-            xyRenderer.setBaseLegendTextFont(Font.getFont(DEFAULT_FONT_NAME));
-            xyRenderer.setBaseLegendTextPaint(DEFAULT_FOREGROUND_COLOR);
-        }
+        XYLineAndShapeRenderer xyRenderer = new XYSplineRenderer();
+        xyRenderer.setBaseShapesVisible(true);
+        xyRenderer.setBaseShapesFilled(true);
+        xyRenderer.setBaseLegendTextFont(Font.getFont(DEFAULT_FONT_NAME));
+        xyRenderer.setBaseLegendTextPaint(DEFAULT_FOREGROUND_COLOR);
+        timeSeriesPlot.setRenderer(xyRenderer);
         timeSeriesPlot.setBackgroundPaint(DEFAULT_BACKGROUND_COLOR);
         timeSeriesPlot.setNoDataMessage(NO_DATA_MESSAGE);
     }
@@ -192,21 +192,18 @@ class TimeSeriesGraphModel {
                 timeSeriesPlot.setRenderer(i + numEoVariables, pinRenderer, true);
             }
 
-            if(!timeSeries.hasInsituData()) {
+            if (!timeSeries.hasInsituData()) {
                 return;
             }
             final InsituSource insituSource = timeSeries.getInsituSource();
             final List<String> insituVariablesToDisplay = new ArrayList<String>();
-            for (String s : insituSource.getParameterNames()) {
-                if(timeSeries.isInsituVariableSelected(s)) {
-                    insituVariablesToDisplay.add(s);
+            for (String parameterName : insituSource.getParameterNames()) {
+                if (timeSeries.isInsituVariableSelected(parameterName)) {
+                    insituVariablesToDisplay.add(parameterName);
                 }
             }
             for (int i = 0; i < insituVariablesToDisplay.size(); i++) {
-                String insituVariableName = insituVariablesToDisplay.get(i);
-                // todo - ts - get better paint smarter
-                Paint paint = displayModel.getVariablename2colorMap().values().iterator().next();
-
+                Paint paint = getPaintFromCorrespondingPlacemark();
                 TimeSeriesCollection insituDataset = new TimeSeriesCollection();
                 timeSeriesPlot.setDataset(i + numEoVariables * 2, insituDataset);
                 insituDatasets.add(insituDataset);
@@ -223,6 +220,26 @@ class TimeSeriesGraphModel {
                 timeSeriesPlot.setRenderer(i + numEoVariables + 2, insituRenderer, true);
             }
         }
+    }
+
+    private Paint getPaintFromCorrespondingPlacemark() {
+        // todo - ts - get paint from corresponding placemark, similar to this:
+        /**
+         *   Paint paint = null;
+         *   for(Placemark placemark : timeSeries.getInsituPlacemarks()) {
+         *       final GeoPos[] geoPoses = timeSeries.getInsituSource().getInsituPositionsFor(insituVariableName);
+         *       for (GeoPos geoPos : geoPoses) {
+         *           if(placemark.getGeoPos().equals(geoPos)) {
+         *               paint = placemark.getSymbol().getFillPaint();
+         *           }
+         *       }
+         *   }
+         *   if(paint == null) {
+         *       throw new IllegalStateException("No placemark found for variable '" + insituVariableName + ".");
+         *   }
+         *   return paint;
+         **/
+        return new Color(255, 0, 0);
     }
 
     private static Range computeYAxisRange(List<Band> bands) {
@@ -335,6 +352,10 @@ class TimeSeriesGraphModel {
 
     private SwingWorker nextWorker;
 
+    void updateInsituTimeSeries() {
+        updateTimeSeries(-1, -1, -1, TimeSeriesType.INSITU);
+    }
+
     void updateTimeSeries(int pixelX, int pixelY, int currentLevel, TimeSeriesType type) {
         final TimeSeriesUpdater w = new TimeSeriesUpdater(pixelX, pixelY, currentLevel, type, version.get());
         if (nextWorker == null) {
@@ -370,7 +391,6 @@ class TimeSeriesGraphModel {
             if (type.equals(TimeSeriesType.INSITU)) {
                 int variableCount = insituVariables.size();
                 List<TimeSeries> timeSeriesList = new ArrayList<TimeSeries>(variableCount);
-                // todo - ts - that's not the optimal way to get the time series; TimeSeriesGraphModel might get the time series as parameter
                 ProductSceneView sceneView = VisatApp.getApp().getSelectedProductSceneView();
                 AbstractTimeSeries globTimeSeries = TimeSeriesMapper.getInstance().getTimeSeries(sceneView.getProduct());
                 final InsituSource insituSource = globTimeSeries.getInsituSource();

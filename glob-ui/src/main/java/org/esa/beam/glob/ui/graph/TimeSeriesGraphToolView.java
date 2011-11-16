@@ -328,7 +328,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
             AbstractTimeSeries timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(currentView.getProduct());
             graphModel.adaptToTimeSeries(timeSeries);
             if(timeSeries.isInsituVariableSelected(variableName)) {
-                graphModel.updateTimeSeries(-1, -1, -1, TimeSeriesType.INSITU);
+                graphModel.updateInsituTimeSeries();
             } else {
                 graphModel.removeInsituTimeSeries();
             }
