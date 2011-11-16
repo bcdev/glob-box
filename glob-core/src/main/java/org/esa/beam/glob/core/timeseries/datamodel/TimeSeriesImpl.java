@@ -650,8 +650,7 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
     }
 
     private void fireChangeEvent(TimeSeriesChangeEvent event) {
-        final TimeSeriesListener[] timeSeriesListeners = listeners.toArray(new TimeSeriesListener[listeners.size()]);
-        for (TimeSeriesListener listener : timeSeriesListeners) {
+        for (TimeSeriesListener listener : listeners) {
             listener.timeSeriesChanged(event);
         }
     }
