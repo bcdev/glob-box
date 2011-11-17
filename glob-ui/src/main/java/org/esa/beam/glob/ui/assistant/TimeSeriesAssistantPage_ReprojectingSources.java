@@ -94,9 +94,6 @@ class TimeSeriesAssistantPage_ReprojectingSources extends AbstractTimeSeriesAssi
         errorText.setBackground(southPanel.getBackground());
         final JPanel jPanel = new JPanel();
         jPanel.add(errorText);
-//        final JScrollPane pane = new JScrollPane(errorLabel);
-//        pane.setBorder(null);
-//        southPanel.add(pane);
         southPanel.add(errorText);
         pagePanel.add(southPanel, BorderLayout.SOUTH);
         return pagePanel;
