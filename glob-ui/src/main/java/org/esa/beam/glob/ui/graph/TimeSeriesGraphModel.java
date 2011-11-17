@@ -76,9 +76,8 @@ class TimeSeriesGraphModel {
     private static final Color DEFAULT_BACKGROUND_COLOR = new Color(180, 180, 180);
     private static final String NO_DATA_MESSAGE = "No data to display";
     private static final Stroke CURSOR_STROKE = new BasicStroke(1.0f);
-    private static final Stroke PIN_STROKE = new BasicStroke(1.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, new float[]{
-            10.0f
-    }, 0.0f);
+    private static final Stroke PIN_STROKE = new BasicStroke(1.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f,
+                                                             new float[]{10.0f}, 0.0f);
 
     private final Map<AbstractTimeSeries, DisplayModel> displayModelMap;
     private final XYPlot timeSeriesPlot;
