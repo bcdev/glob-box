@@ -14,19 +14,16 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package org.esa.beam.glob.core.insitu;
-
-import org.esa.beam.glob.core.insitu.csv.RecordSource;
-
-import java.io.IOException;
+package org.esa.beam.glob.ui.graph;
 
 /**
- * Provides a method to load in situ sources.
+ * Enum listing the possible types of time series.
  *
  * @author Thomas Storm
- * @author Sabine Embacher
  */
-public interface InsituLoader {
+public enum TimeSeriesType {
 
-    RecordSource loadSource() throws IOException;
+    CURSOR,
+    PIN,
+    INSITU
 }

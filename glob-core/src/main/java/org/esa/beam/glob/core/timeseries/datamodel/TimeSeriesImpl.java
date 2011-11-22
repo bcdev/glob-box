@@ -21,6 +21,7 @@ import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.ImageInfo;
 import org.esa.beam.framework.datamodel.MetadataAttribute;
 import org.esa.beam.framework.datamodel.MetadataElement;
+import org.esa.beam.framework.datamodel.Placemark;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.ProductNode;
@@ -60,6 +61,7 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
     private volatile boolean isAdjustingImageInfos;
     private InsituSource insituSource;
     private Set<String> insituVariablesSelections = new HashSet<String>();
+    private final List<Placemark> insituPins = new ArrayList<Placemark>();
 
     /**
      * Used to create a TimeSeries from within a ProductReader
@@ -286,7 +288,7 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
                 }
             }
         }
-        fireChangeEvent(new TimeSeriesChangeEvent(TimeSeriesChangeEvent.PROPERTY_VARIABLE_SELECTION, null));
+        fireChangeEvent(new TimeSeriesChangeEvent(TimeSeriesChangeEvent.PROPERTY_EO_VARIABLE_SELECTION, null));
     }
 
     @Override
@@ -296,10 +298,14 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
 
     @Override
     public void setInsituVariableSelected(String variableName, boolean selected) {
+        boolean hasChanged;
         if(selected) {
-            insituVariablesSelections.add(variableName);
+            hasChanged = insituVariablesSelections.add(variableName);
         } else {
-            insituVariablesSelections.remove(variableName);
+            hasChanged = insituVariablesSelections.remove(variableName);
+        }
+        if(hasChanged) {
+            fireChangeEvent(new TimeSeriesChangeEvent(TimeSeriesChangeEvent.PROPERTY_INSITU_VARIABLE_SELECTION, variableName));
         }
     }
 
@@ -410,13 +416,25 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
 
     @Override
     public void setInsituSource(InsituSource insituSource) {
-        this.insituSource = insituSource;
-        fireChangeEvent(new TimeSeriesChangeEvent(TimeSeriesChangeEvent.INSITU_SOURCE_CHANGED, this));
+        if(this.insituSource != insituSource) {
+            this.insituSource = insituSource;
+            fireChangeEvent(new TimeSeriesChangeEvent(TimeSeriesChangeEvent.INSITU_SOURCE_CHANGED, this));
+        }
     }
 
     @Override
     public InsituSource getInsituSource() {
         return insituSource;
+    }
+
+    @Override
+    public List<Placemark> getInsituPlacemarks() {
+        return insituPins;
+    }
+
+    @Override
+    public boolean hasInsituData() {
+        return insituSource != null && !insituVariablesSelections.isEmpty();
     }
 
     /////////////////////////////////////////////////////////////////////////////////
@@ -632,8 +650,7 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
     }
 
     private void fireChangeEvent(TimeSeriesChangeEvent event) {
-        final TimeSeriesListener[] timeSeriesListeners = listeners.toArray(new TimeSeriesListener[listeners.size()]);
-        for (TimeSeriesListener listener : timeSeriesListeners) {
+        for (TimeSeriesListener listener : listeners) {
             listener.timeSeriesChanged(event);
         }
     }

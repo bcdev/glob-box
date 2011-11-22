@@ -39,7 +39,9 @@ abstract class RecordIterator implements Iterator<Record> {
     private void ensureValidNext() {
         if (!nextValid) {
             next = getNextRecord();
-            nextValid = true;
+            if(next != null) {
+                nextValid = true;
+            }
         }
     }
 

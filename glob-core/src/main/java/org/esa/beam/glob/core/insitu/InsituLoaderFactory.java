@@ -23,9 +23,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStreamReader;
+import java.io.Reader;
 
 /**
- * TODO fill out or delete
+ * Factory class for creating instances of type {@link InsituLoader}.
  *
  * @author Thomas Storm
  */
@@ -33,10 +34,10 @@ public class InsituLoaderFactory {
 
     public static InsituLoader createInsituLoader(File selectedFile) throws FileNotFoundException {
         final CsvInsituLoader csvInsituLoader = new CsvInsituLoader();
-        InputStreamReader reader = new InputStreamReader(new FileInputStream(selectedFile));
+        Reader reader = new InputStreamReader(new FileInputStream(selectedFile));
         csvInsituLoader.setCsvReader(reader);
         // todo - ts - allow user specifying date format
-        csvInsituLoader.setDateFormat(ProductData.UTC.createDateFormat("yyyy.MM.dd"));
+        csvInsituLoader.setDateFormat(ProductData.UTC.createDateFormat("yyyy-MM-dd"));
         return csvInsituLoader;
     }
 }

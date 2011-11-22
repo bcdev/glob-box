@@ -17,6 +17,8 @@
 package org.esa.beam.glob.core.timeseries.datamodel;
 
 import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.PixelPos;
+import org.esa.beam.framework.datamodel.Placemark;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.RasterDataNode;
@@ -53,6 +55,14 @@ public abstract class AbstractTimeSeries {
     public static final String PL_TYPE = "TYPE";
     public static final String VARIABLES = "VARIABLES";
 
+    public static boolean isPixelValid(Product tsProduct, PixelPos pixelPos) {
+        return pixelPos.isValid() &&
+               pixelPos.x < tsProduct.getSceneRasterWidth() &&
+               pixelPos.x >= 0 &&
+               pixelPos.y < tsProduct.getSceneRasterHeight() &&
+               pixelPos.y >= 0;
+    }
+
     public abstract List<String> getEoVariables();
 
     public abstract List<ProductLocation> getProductLocations();
@@ -85,6 +95,18 @@ public abstract class AbstractTimeSeries {
 
     public abstract void setTimeCoding(TimeCoding timeCoding);
 
+    public abstract void addTimeSeriesListener(TimeSeriesListener listener);
+
+    public abstract void removeTimeSeriesListener(TimeSeriesListener listener);
+
+    public abstract boolean isProductCompatible(Product product, String rasterName);
+
+    public abstract void setInsituSource(InsituSource insituSource);
+
+    public abstract InsituSource getInsituSource();
+
+    public abstract List<Placemark> getInsituPlacemarks();
+
     public static String variableToRasterName(String variableName, TimeCoding timeCoding) {
         final ProductData.UTC rasterStartTime = timeCoding.getStartTime();
         Guardian.assertNotNull("rasterStartTime", rasterStartTime);
@@ -97,14 +119,5 @@ public abstract class AbstractTimeSeries {
         return rasterName.substring(0, lastSeparator);
     }
 
-    public abstract void addTimeSeriesListener(TimeSeriesListener listener);
-
-    public abstract void removeTimeSeriesListener(TimeSeriesListener listener);
-
-    public abstract boolean isProductCompatible(Product product, String rasterName);
-
-    public abstract void setInsituSource(InsituSource insituSource);
-
-    public abstract InsituSource getInsituSource();
-
+    public abstract boolean hasInsituData();
 }

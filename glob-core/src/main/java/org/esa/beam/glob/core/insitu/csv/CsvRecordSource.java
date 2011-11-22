@@ -33,6 +33,8 @@ public class CsvRecordSource implements RecordSource {
     private final int lonIndex;
     private final int timeIndex;
     private final Class<?>[] attributeTypes;
+    private Iterable<Record> recordIterable;
+    private CsvRecordIterator csvRecordIterator;
 
     public CsvRecordSource(Reader reader, DateFormat dateFormat) throws IOException {
         if (reader instanceof LineNumberReader) {
@@ -43,7 +45,7 @@ public class CsvRecordSource implements RecordSource {
 
         this.dateFormat = dateFormat;
 
-        String[] columnNames = readTextRecord(-1);
+        String[] columnNames = readTextRecords(-1).get(0);
         attributeTypes = new Class<?>[columnNames.length];
 
         latIndex = indexOf(columnNames, LAT_NAMES);
@@ -62,10 +64,36 @@ public class CsvRecordSource implements RecordSource {
 
     @Override
     public Iterable<Record> getRecords() {
+        if (recordIterable == null) {
+            recordIterable = createIterable();
+        }
+
+        if (csvRecordIterator != null) {
+            csvRecordIterator.currentRecord = 0;
+        }
+        return recordIterable;
+    }
+
+    @Override
+    public void close() {
+        try {
+            reader.close();
+        } catch (IOException ignore) {
+        }
+    }
+
+    private Iterable<Record> createIterable() {
         return new Iterable<Record>() {
             @Override
             public Iterator<Record> iterator() {
-                return new CsvRecordIterator();
+                if (csvRecordIterator == null) {
+                    try {
+                        csvRecordIterator = new CsvRecordIterator(readTextRecords(recordLength));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+                return csvRecordIterator;
             }
         };
     }
@@ -76,7 +104,7 @@ public class CsvRecordSource implements RecordSource {
 
         final List<String> parameterNames = new ArrayList<String>();
         Collections.addAll(parameterNames, columnNames);
-        for (int i = sortedIndices.length -1; i >=0; i--) {
+        for (int i = sortedIndices.length - 1; i >= 0; i--) {
             final int index = sortedIndices[i];
             if (index > -1) {
                 parameterNames.remove(index);
@@ -93,6 +121,7 @@ public class CsvRecordSource implements RecordSource {
      * @param textValues The text values to convert.
      * @param types      The types.
      * @param dateFormat The date format to be used.
+     *
      * @return The array of converted objects.
      */
     private static Object[] toObjects(String[] textValues, Class<?>[] types, DateFormat dateFormat) {
@@ -146,15 +175,19 @@ public class CsvRecordSource implements RecordSource {
         }
     }
 
-    private String[] readTextRecord(int recordLength) throws IOException {
+    private List<String[]> readTextRecords(int recordLength) throws IOException {
+        final List<String[]> result = new ArrayList<String[]>();
         String line;
         while ((line = reader.readLine()) != null) {
             String trimLine = line.trim();
             if (!trimLine.startsWith("#") && !trimLine.isEmpty()) {
-                return splitRecordLine(line, recordLength);
+                result.add(splitRecordLine(line, recordLength));
+                if (recordLength < 0) {
+                    return result;
+                }
             }
         }
-        return null;
+        return result;
     }
 
     private static Object parse(String text, Class<?> type, DateFormat dateFormat) {
@@ -206,25 +239,28 @@ public class CsvRecordSource implements RecordSource {
     }
 
     private class CsvRecordIterator extends RecordIterator {
+
+        List<String[]> records;
+        private int currentRecord;
+
+        private CsvRecordIterator(List<String[]> records) {
+            currentRecord = 0;
+            this.records = records;
+        }
+
         @Override
         protected Record getNextRecord() {
-
-            final String[] textValues;
-            try {
-                textValues = readTextRecord(recordLength);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-
-            if (textValues == null) {
+            if (records.size() <= currentRecord) {
                 return null;
             }
+            String[] record = records.get(currentRecord);
+            currentRecord++;
 
-            if (getHeader().getColumnNames().length != textValues.length) {
-                System.out.println("to less values " + Arrays.toString(textValues));
+            if (getHeader().getColumnNames().length != record.length) {
+                System.out.println("too few values " + Arrays.toString(record));
             }
 
-            final Object[] values = toObjects(textValues, attributeTypes, dateFormat);
+            final Object[] values = toObjects(record, attributeTypes, dateFormat);
 
             final GeoPos location;
             if (header.hasLocation() && values[latIndex] instanceof Number && values[lonIndex] instanceof Number) {

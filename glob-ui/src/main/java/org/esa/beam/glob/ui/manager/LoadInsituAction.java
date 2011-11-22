@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2011 Brockmann Consult GmbH (info@brockmann-consult.de)
- *
+ * 
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
  * Software Foundation; either version 3 of the License, or (at your option)
@@ -9,7 +9,7 @@
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
  * more details.
- *
+ * 
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, see http://www.gnu.org/licenses/
  */
@@ -32,19 +32,21 @@ import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileFilter;
 import java.awt.event.ActionEvent;
 import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.logging.Level;
 
 /**
- * TODO fill out or delete
+ * Action for loading in situ data.
  *
  * @author Thomas Storm
+ * @author Sabine Embacher
  */
-public class LoadInsituAction extends AbstractAction {
+class LoadInsituAction extends AbstractAction {
 
     private static final String PROPERTY_KEY_LAST_OPEN_INSITU_DIR = "glob.file.lastInsituOpenDir";
 
     private final AbstractTimeSeries currentTimeSeries;
+    private InsituSource insituSource;
 
     public LoadInsituAction(AbstractTimeSeries currentTimeSeries) {
         putValue(SHORT_DESCRIPTION, "Import in situ source file");
@@ -71,17 +73,17 @@ public class LoadInsituAction extends AbstractAction {
         }
 
         final File selectedFile = fileChooser.getSelectedFile();
-
-        final InsituLoader insituLoader;
         try {
-            insituLoader = InsituLoaderFactory.createInsituLoader(selectedFile);
-        } catch (FileNotFoundException exception) {
-            BeamLogManager.getSystemLogger().log(Level.WARNING, "Unable to find '" + selectedFile + "'.", exception);
+            final InsituLoader insituLoader = InsituLoaderFactory.createInsituLoader(selectedFile);
+            if(insituSource != null) {
+                insituSource.close();
+            }
+            insituSource = new InsituSource(insituLoader);
+            currentTimeSeries.setInsituSource(insituSource);
+        } catch (IOException exception) {
+            BeamLogManager.getSystemLogger().log(Level.WARNING, "Unable to load in situ data from '" + selectedFile + "'.", exception);
             return;
         }
-
-        final InsituSource insituSource = new InsituSource(insituLoader);
-        currentTimeSeries.setInsituSource(insituSource);
 
         String currentDir = fileChooser.getCurrentDirectory().getAbsolutePath();
         if (currentDir != null) {

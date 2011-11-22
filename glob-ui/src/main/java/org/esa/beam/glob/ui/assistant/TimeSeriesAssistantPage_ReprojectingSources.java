@@ -2,20 +2,36 @@ package org.esa.beam.glob.ui.assistant;
 
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.swing.progress.ProgressMonitorSwingWorker;
+import com.bc.ceres.swing.selection.AbstractSelectionChangeListener;
+import com.bc.ceres.swing.selection.SelectionChangeEvent;
+import org.esa.beam.framework.datamodel.CrsGeoCoding;
+import org.esa.beam.framework.datamodel.GeoCoding;
+import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductFilter;
 import org.esa.beam.framework.gpf.GPF;
+import org.esa.beam.framework.gpf.ui.SourceProductSelector;
 import org.esa.beam.framework.ui.assistant.AssistantPage;
 import org.esa.beam.glob.core.timeseries.datamodel.ProductLocation;
 import org.esa.beam.glob.ui.ProductLocationsPaneModel;
 import org.esa.beam.gpf.operators.reproject.CollocationCrsForm;
+import org.esa.beam.util.ProductUtils;
 import org.esa.beam.visat.VisatApp;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JTextArea;
+import javax.swing.SwingUtilities;
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.FlowLayout;
+import java.awt.Rectangle;
+import java.awt.geom.GeneralPath;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +39,7 @@ import java.util.Map;
 class TimeSeriesAssistantPage_ReprojectingSources extends AbstractTimeSeriesAssistantPage {
 
     private MyCollocationCrsForm collocationCrsForm;
+    private JTextArea errorText;
 
     TimeSeriesAssistantPage_ReprojectingSources(TimeSeriesAssistantModel model) {
         super("Reproject Source Products", model);
@@ -64,28 +81,150 @@ class TimeSeriesAssistantPage_ReprojectingSources extends AbstractTimeSeriesAssi
                 getContext().updateState();
             }
         };
-        collocationCrsForm = new MyCollocationCrsForm(listener);
+        collocationCrsForm = new MyCollocationCrsForm(listener, getAssistantModel());
         collocationCrsForm.addMyChangeListener();
 
-        final JPanel jPanel = new JPanel(new BorderLayout());
+        final JPanel pagePanel = new JPanel(new BorderLayout());
         final JPanel northPanel = new JPanel(new BorderLayout());
         northPanel.add(new JLabel("Use CRS of "), BorderLayout.WEST);
         northPanel.add(collocationCrsForm.getCrsUI());
-        jPanel.add(northPanel, BorderLayout.NORTH);
-        return jPanel;
+        pagePanel.add(northPanel, BorderLayout.NORTH);
+        final JPanel southPanel = new JPanel(new FlowLayout());
+        errorText = new JTextArea();
+        errorText.setBackground(southPanel.getBackground());
+        final JPanel jPanel = new JPanel();
+        jPanel.add(errorText);
+        southPanel.add(errorText);
+        pagePanel.add(southPanel, BorderLayout.SOUTH);
+        return pagePanel;
     }
 
-    private static class MyCollocationCrsForm extends CollocationCrsForm {
+    private void printMessage(final String message) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                errorText.setText(message);
+            }
+        });
+    }
 
+    private class MyCollocationCrsForm extends CollocationCrsForm {
+
+        private SourceProductSelector collocateProductSelector;
         private final PropertyChangeListener listener;
+        private final TimeSeriesAssistantModel assistantModel;
 
-        public MyCollocationCrsForm(PropertyChangeListener listener) {
+        public MyCollocationCrsForm(PropertyChangeListener listener, TimeSeriesAssistantModel assistantModel) {
             super(VisatApp.getApp());
             this.listener = listener;
+            this.assistantModel = assistantModel;
         }
 
         void addMyChangeListener() {
             super.addCrsChangeListener(listener);
+        }
+
+        @Override
+        public CoordinateReferenceSystem getCRS(GeoPos referencePos) {
+            Product collocationProduct = collocateProductSelector.getSelectedProduct();
+            if (collocationProduct != null) {
+                return collocationProduct.getGeoCoding().getMapCRS();
+            }
+            return null;
+        }
+
+        @Override
+        public void prepareShow() {
+            collocateProductSelector.initProducts();
+        }
+
+        @Override
+        public void prepareHide() {
+            collocateProductSelector.releaseProducts();
+        }
+
+        @Override
+        protected JComponent createCrsComponent() {
+            collocateProductSelector = new SourceProductSelector(getAppContext(), "Product:");
+            List<Product> products = new ArrayList<Product>();
+            for (ProductLocation productLocation : assistantModel.getProductLocationsModel().getProductLocations()) {
+                for (Product product : productLocation.getProducts().values()) {
+                    products.add(product);
+                }
+            }
+            collocateProductSelector.setProductFilter(new CollocateProductFilter(products));
+            collocateProductSelector.addSelectionChangeListener(new AbstractSelectionChangeListener() {
+                @Override
+                public void selectionChanged(SelectionChangeEvent event) {
+                    fireCrsChanged();
+                }
+            });
+
+            final JPanel panel = new JPanel(new BorderLayout(2, 2));
+            panel.add(collocateProductSelector.getProductNameComboBox(), BorderLayout.CENTER);
+            panel.add(collocateProductSelector.getProductFileChooserButton(), BorderLayout.EAST);
+            panel.addPropertyChangeListener("enabled", new PropertyChangeListener() {
+                @Override
+                public void propertyChange(PropertyChangeEvent evt) {
+                    collocateProductSelector.getProductNameComboBox().setEnabled(panel.isEnabled());
+                    collocateProductSelector.getProductFileChooserButton().setEnabled(panel.isEnabled());
+                    final boolean collocate = getRadioButton().isSelected();
+                    getCrsUI().firePropertyChange("collocate", !collocate, collocate);
+                }
+            });
+            return panel;
+        }
+
+
+        public Product getCollocationProduct() {
+            return collocateProductSelector.getSelectedProduct();
+        }
+
+        public void setReferenceProduct(Product referenceProduct) {
+        }
+
+    }
+
+    private class CollocateProductFilter implements ProductFilter {
+
+        private final List<Product> products;
+
+        public CollocateProductFilter(List<Product> products) {
+            this.products = products;
+        }
+
+        @Override
+        public boolean accept(Product collocationProduct) {
+            for (Product referenceProduct : products) {
+                if(!isProductOk(referenceProduct, collocationProduct)) {
+                    printMessage("You need to specify a projected product as collocation product.\n" +
+                                 "All products within the time series need to intersect the collocation product.");
+                    return false;
+                }
+            }
+            printMessage("");
+            return true;
+        }
+
+        private boolean isProductOk(Product referenceProduct, Product collocationProduct) {
+            if (referenceProduct == collocationProduct ||
+                collocationProduct.getGeoCoding() == null) {
+                return false;
+            }
+            final GeoCoding geoCoding = collocationProduct.getGeoCoding();
+            if (geoCoding.canGetGeoPos() && geoCoding.canGetPixelPos() && (geoCoding instanceof CrsGeoCoding)) {
+                final GeneralPath[] sourcePath = ProductUtils.createGeoBoundaryPaths(referenceProduct);
+                final GeneralPath[] collocationPath = ProductUtils.createGeoBoundaryPaths(collocationProduct);
+                for (GeneralPath path : sourcePath) {
+                    Rectangle bounds = path.getBounds();
+                    for (GeneralPath colPath : collocationPath) {
+                        if (colPath.getBounds().intersects(bounds)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
         }
     }
 
@@ -140,7 +279,6 @@ class TimeSeriesAssistantPage_ReprojectingSources extends AbstractTimeSeriesAssi
             productMap.put("collocateWith", crsReference);
             return productMap;
         }
-
 
         private Product getCrsReferenceProduct() {
             return collocationCrsForm.getCollocationProduct();
