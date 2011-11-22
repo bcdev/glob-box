@@ -80,6 +80,7 @@ public class TimeSeriesFactory {
                                                   refProduct.getSceneRasterHeight());
             tsProduct.setDescription("A time series product");
             ProductUtils.copyGeoCoding(refProduct, tsProduct);
+            tsProduct.setPreferredTileSize(refProduct.getPreferredTileSize());
 
             final AbstractTimeSeries timeSeries = new TimeSeriesImpl(tsProduct, productLocations, variableNames);
             TimeSeriesMapper.getInstance().put(tsProduct, timeSeries);

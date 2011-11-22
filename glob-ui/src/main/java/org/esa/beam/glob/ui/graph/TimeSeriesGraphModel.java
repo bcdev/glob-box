@@ -308,14 +308,14 @@ class TimeSeriesGraphModel {
 
     private List<TimeSeriesCollection> getDatasets(TimeSeriesType type) {
         switch (type) {
-            case CURSOR:
-                return cursorDatasets;
-            case PIN:
-                return pinDatasets;
-            case INSITU:
-                return insituDatasets;
-            default:
-                throw new IllegalStateException(MessageFormat.format("Unknown type: ''{0}''.", type));
+        case CURSOR:
+            return cursorDatasets;
+        case PIN:
+            return pinDatasets;
+        case INSITU:
+            return insituDatasets;
+        default:
+            throw new IllegalStateException(MessageFormat.format("Unknown type: ''{0}''.", type));
         }
     }
 
@@ -454,12 +454,11 @@ class TimeSeriesGraphModel {
         }
 
         private TimeSeries computeTimeSeries(final List<Band> bandList, int pixelX, int pixelY, int currentLevel) {
-            TimeSeries timeSeries = new TimeSeries("title");
-            ProductSceneView sceneView = VisatApp.getApp().getSelectedProductSceneView();
-            AbstractTimeSeries globTimeSeries = TimeSeriesMapper.getInstance().getTimeSeries(sceneView.getProduct());
+            final TimeSeries timeSeries = new TimeSeries("title");
+            final AbstractTimeSeries globTimeSeries = getTimeSeries();
 
             for (Band band : bandList) {
-                TimeCoding timeCoding = globTimeSeries.getRasterTimeMap().get(band);
+                final TimeCoding timeCoding = globTimeSeries.getRasterTimeMap().get(band);
                 if (timeCoding != null) {
                     final ProductData.UTC startTime = timeCoding.getStartTime();
                     final Millisecond timePeriod = new Millisecond(startTime.getAsDate(),
@@ -470,6 +469,12 @@ class TimeSeriesGraphModel {
                 }
             }
             return timeSeries;
+        }
+
+        private AbstractTimeSeries getTimeSeries() {
+            final ProductSceneView sceneView = VisatApp.getApp().getSelectedProductSceneView();
+            final Product sceneViewProduct = sceneView.getProduct();
+            return TimeSeriesMapper.getInstance().getTimeSeries(sceneViewProduct);
         }
     }
 
@@ -482,14 +487,14 @@ class TimeSeriesGraphModel {
 
         private int maxColorIndex;
         private Color[] colors = {
-                new Color(0, 0, 60, ALPHA),
-                new Color(0, 60, 0, ALPHA),
-                new Color(60, 0, 0, ALPHA),
-                new Color(60, 60, 60, ALPHA),
-                new Color(0, 0, 120, ALPHA),
-                new Color(0, 120, 0, ALPHA),
-                new Color(120, 0, 0, ALPHA),
-                new Color(120, 120, 120, ALPHA)
+                    new Color(0, 0, 60, ALPHA),
+                    new Color(0, 60, 0, ALPHA),
+                    new Color(60, 0, 0, ALPHA),
+                    new Color(60, 60, 60, ALPHA),
+                    new Color(0, 0, 120, ALPHA),
+                    new Color(0, 120, 0, ALPHA),
+                    new Color(120, 0, 0, ALPHA),
+                    new Color(120, 120, 120, ALPHA)
         };
 
         private DisplayModel(AbstractTimeSeries timeSeries) {

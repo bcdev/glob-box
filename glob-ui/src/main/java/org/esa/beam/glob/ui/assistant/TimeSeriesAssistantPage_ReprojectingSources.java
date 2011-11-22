@@ -175,14 +175,12 @@ class TimeSeriesAssistantPage_ReprojectingSources extends AbstractTimeSeriesAssi
             return panel;
         }
 
-
         public Product getCollocationProduct() {
             return collocateProductSelector.getSelectedProduct();
         }
 
         public void setReferenceProduct(Product referenceProduct) {
         }
-
     }
 
     private class CollocateProductFilter implements ProductFilter {
