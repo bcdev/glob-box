@@ -209,8 +209,7 @@ class TimeSeriesAssistantPage_ReprojectingSources extends AbstractTimeSeriesAssi
         }
 
         private boolean isProductOk(Product referenceProduct, Product collocationProduct) {
-            if (referenceProduct == collocationProduct ||
-                collocationProduct.getGeoCoding() == null) {
+            if (collocationProduct.getGeoCoding() == null) {
                 return false;
             }
             final GeoCoding geoCoding = collocationProduct.getGeoCoding();
