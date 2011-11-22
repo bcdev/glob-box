@@ -99,7 +99,7 @@ class TimeSeriesAssistantPage_ReprojectingSources extends AbstractTimeSeriesAssi
         return pagePanel;
     }
 
-    private void printMessage(final String message) {
+    private void setErrorMessage(final String message) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
@@ -195,13 +195,17 @@ class TimeSeriesAssistantPage_ReprojectingSources extends AbstractTimeSeriesAssi
         public boolean accept(Product collocationProduct) {
             for (Product referenceProduct : products) {
                 if(!isProductOk(referenceProduct, collocationProduct)) {
-                    printMessage("You need to specify a projected product as collocation product.\n" +
-                                 "All products within the time series need to intersect the collocation product.");
+                    setErrorMessage("You need to specify a projected product as collocation product.\n" +
+                                    "All products within the time series need to intersect the collocation product.");
                     return false;
                 }
             }
-            printMessage("");
+            resetErrorMessage();
             return true;
+        }
+
+        private void resetErrorMessage() {
+            setErrorMessage("");
         }
 
         private boolean isProductOk(Product referenceProduct, Product collocationProduct) {
