@@ -184,11 +184,8 @@ class TimeSeriesManagerForm {
         final Command newTSCommand = VisatApp.getApp().getCommandManager().getCommand(TimeSeriesAssistantAction.ID);
         final AbstractButton newButton = ToolButtonFactory.createButton(newTSCommand.getAction(), false);
 
-        loadInsituButton = ToolButtonFactory.createButton((Icon) null, false);
-        loadInsituButton.setAction(new LoadInsituAction(currentTimeSeries));
-
-        timeSpanButton = ToolButtonFactory.createButton((Icon) null, false);
-        timeSpanButton.setAction(new EditTimeSpanAction(currentTimeSeries));
+        loadInsituButton = ToolButtonFactory.createButton(new LoadInsituAction(currentTimeSeries), false);
+        timeSpanButton = ToolButtonFactory.createButton(new EditTimeSpanAction(currentTimeSeries), false);
 
         URL viewIconImageURL = UIUtils.getImageURL("/org/esa/beam/glob/ui/icons/ViewTS24.png", TimeSeriesManagerForm.class);
         viewButton = ToolButtonFactory.createButton(new ImageIcon(viewIconImageURL), false);
@@ -212,8 +209,7 @@ class TimeSeriesManagerForm {
                 }
             }
         });
-        exportButton = ToolButtonFactory.createButton((Icon) null, false);
-        exportButton.setAction(new ExportAction());
+        exportButton = ToolButtonFactory.createButton(new ExportAction(), false);
         AbstractButton helpButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/Help24.gif"), false);
         helpButton.setToolTipText("Help");
 
