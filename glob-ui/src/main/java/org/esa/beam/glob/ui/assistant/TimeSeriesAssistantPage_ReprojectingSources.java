@@ -193,8 +193,8 @@ class TimeSeriesAssistantPage_ReprojectingSources extends AbstractTimeSeriesAssi
 
         @Override
         public boolean accept(Product collocationProduct) {
-            for (Product referenceProduct : products) {
-                if(!isProductOk(referenceProduct, collocationProduct)) {
+            for (Product timeSeriesSourceProduct : products) {
+                if(!isProductOk(timeSeriesSourceProduct, collocationProduct)) {
                     setErrorMessage("You need to specify a projected product as collocation product.\n" +
                                     "All products within the time series need to intersect the collocation product.");
                     return false;
@@ -208,13 +208,13 @@ class TimeSeriesAssistantPage_ReprojectingSources extends AbstractTimeSeriesAssi
             setErrorMessage("");
         }
 
-        private boolean isProductOk(Product referenceProduct, Product collocationProduct) {
+        private boolean isProductOk(Product timeSeriesSourceProduct, Product collocationProduct) {
             if (collocationProduct.getGeoCoding() == null) {
                 return false;
             }
             final GeoCoding geoCoding = collocationProduct.getGeoCoding();
             if (geoCoding.canGetGeoPos() && geoCoding.canGetPixelPos() && (geoCoding instanceof CrsGeoCoding)) {
-                final GeneralPath[] sourcePath = ProductUtils.createGeoBoundaryPaths(referenceProduct);
+                final GeneralPath[] sourcePath = ProductUtils.createGeoBoundaryPaths(timeSeriesSourceProduct);
                 final GeneralPath[] collocationPath = ProductUtils.createGeoBoundaryPaths(collocationProduct);
                 for (GeneralPath path : sourcePath) {
                     Rectangle bounds = path.getBounds();

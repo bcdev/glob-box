@@ -53,9 +53,9 @@ public class TimeSeriesFactory {
      * Creates a new TimeSeries with a given name, a list of product locations and a list of variables (which are
      * placeholders for bands)
      *
-     * @param timeSeriesName              a name for the time series
-     * @param productLocations  locations where to find the data the time series is based on
-     * @param variableNames     the variables the time series is based on
+     * @param timeSeriesName   a name for the time series
+     * @param productLocations locations where to find the data the time series is based on
+     * @param variableNames    the variables the time series is based on
      *
      * @return a time series
      */
@@ -73,22 +73,26 @@ public class TimeSeriesFactory {
                 return null;
             }
 
-            // todo - ts - get user-specified reference product
-            final Product refProduct = productLocations.get(0).getProducts().values().iterator().next();
-            final Product tsProduct = new Product(timeSeriesName, TimeSeriesImpl.TIME_SERIES_PRODUCT_TYPE,
-                                                  refProduct.getSceneRasterWidth(),
-                                                  refProduct.getSceneRasterHeight());
-            tsProduct.setDescription("A time series product");
-            ProductUtils.copyGeoCoding(refProduct, tsProduct);
-            tsProduct.setPreferredTileSize(refProduct.getPreferredTileSize());
+            final Product referenceProduct = getFirstReprojectedSourceProduct(productLocations);
+            final Product timeSeriesProduct = new Product(timeSeriesName, TimeSeriesImpl.TIME_SERIES_PRODUCT_TYPE,
+                                                          referenceProduct.getSceneRasterWidth(),
+                                                          referenceProduct.getSceneRasterHeight());
+            timeSeriesProduct.setDescription("A time series product");
+            ProductUtils.copyGeoCoding(referenceProduct, timeSeriesProduct);
+            timeSeriesProduct.setPreferredTileSize(referenceProduct.getPreferredTileSize());
 
-            final AbstractTimeSeries timeSeries = new TimeSeriesImpl(tsProduct, productLocations, variableNames);
-            TimeSeriesMapper.getInstance().put(tsProduct, timeSeries);
+            final AbstractTimeSeries timeSeries = new TimeSeriesImpl(timeSeriesProduct, productLocations, variableNames);
+            TimeSeriesMapper.getInstance().put(timeSeriesProduct, timeSeries);
             return timeSeries;
         } catch (Throwable e) {
             e.printStackTrace();
         }
         return null;
+    }
+
+    private static Product getFirstReprojectedSourceProduct(List<ProductLocation> productLocations) {
+        final ProductLocation firstLocation = productLocations.get(0);
+        return firstLocation.getProducts().values().iterator().next();
     }
 
     private static boolean noSourceProductsAvailable(List<ProductLocation> productLocations) {
