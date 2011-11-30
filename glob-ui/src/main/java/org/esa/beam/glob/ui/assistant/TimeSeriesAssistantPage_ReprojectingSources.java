@@ -193,10 +193,12 @@ class TimeSeriesAssistantPage_ReprojectingSources extends AbstractTimeSeriesAssi
 
         @Override
         public boolean accept(Product collocationProduct) {
+            boolean matchingProductAvailable = false;
             for (Product timeSeriesSourceProduct : products) {
-                if(!isProductOk(timeSeriesSourceProduct, collocationProduct)) {
+                matchingProductAvailable |= isProductOk(timeSeriesSourceProduct, collocationProduct);
+                if (!matchingProductAvailable) {
                     setErrorMessage("You need to specify a projected product as collocation product.\n" +
-                                    "All products within the time series need to intersect the collocation product.");
+                                    "At least one product within the time series needs to intersect the collocation product.");
                     return false;
                 }
             }
