@@ -27,7 +27,7 @@ import javax.swing.SwingUtilities;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.FlowLayout;
-import java.awt.Rectangle;
+import java.awt.geom.Area;
 import java.awt.geom.GeneralPath;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -193,35 +193,35 @@ class TimeSeriesAssistantPage_ReprojectingSources extends AbstractTimeSeriesAssi
 
         @Override
         public boolean accept(Product collocationProduct) {
-            boolean matchingProductAvailable = false;
             for (Product timeSeriesSourceProduct : products) {
-                matchingProductAvailable |= isProductOk(timeSeriesSourceProduct, collocationProduct);
-                if (!matchingProductAvailable) {
-                    setErrorMessage("You need to specify a projected product as collocation product.\n" +
-                                    "At least one product within the time series needs to intersect the collocation product.");
-                    return false;
+                if (productsIntersect(timeSeriesSourceProduct, collocationProduct)) {
+                    resetErrorMessage();
+                    return true;
                 }
             }
-            resetErrorMessage();
-            return true;
+            setErrorMessage("You need to specify a projected product as collocation product.\n" +
+                            "At least one product within the time series needs to intersect the collocation product.");
+            return false;
         }
 
         private void resetErrorMessage() {
             setErrorMessage("");
         }
 
-        private boolean isProductOk(Product timeSeriesSourceProduct, Product collocationProduct) {
+        private boolean productsIntersect(Product timeSeriesSourceProduct, Product collocationProduct) {
             if (collocationProduct.getGeoCoding() == null) {
                 return false;
             }
             final GeoCoding geoCoding = collocationProduct.getGeoCoding();
             if (geoCoding.canGetGeoPos() && geoCoding.canGetPixelPos() && (geoCoding instanceof CrsGeoCoding)) {
-                final GeneralPath[] sourcePath = ProductUtils.createGeoBoundaryPaths(timeSeriesSourceProduct);
-                final GeneralPath[] collocationPath = ProductUtils.createGeoBoundaryPaths(collocationProduct);
-                for (GeneralPath path : sourcePath) {
-                    Rectangle bounds = path.getBounds();
-                    for (GeneralPath colPath : collocationPath) {
-                        if (colPath.getBounds().intersects(bounds)) {
+                final GeneralPath[] sourcePaths = ProductUtils.createGeoBoundaryPaths(timeSeriesSourceProduct);
+                final GeneralPath[] collocationPaths = ProductUtils.createGeoBoundaryPaths(collocationProduct);
+                for (GeneralPath sourcePath : sourcePaths) {
+                    for (GeneralPath collocationPath : collocationPaths) {
+                        final Area sourceArea = new Area(sourcePath);
+                        final Area collocationArea = new Area(collocationPath);
+                        collocationArea.intersect(sourceArea);
+                        if (!collocationArea.isEmpty()) {
                             return true;
                         }
                     }

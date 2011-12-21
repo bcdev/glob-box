@@ -41,7 +41,6 @@ import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.plot.DefaultDrawingSupplier;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
-import org.jfree.chart.renderer.xy.XYSplineRenderer;
 import org.jfree.data.Range;
 import org.jfree.data.time.Millisecond;
 import org.jfree.data.time.TimeSeries;
@@ -90,6 +89,8 @@ class TimeSeriesGraphModel {
     private final AtomicInteger version = new AtomicInteger(0);
     private DisplayModel displayModel;
 
+    private SwingWorker nextWorker;
+
     TimeSeriesGraphModel(XYPlot plot) {
         timeSeriesPlot = plot;
         eoVariableBands = new ArrayList<List<Band>>();
@@ -104,9 +105,11 @@ class TimeSeriesGraphModel {
     private void initPlot() {
         final ValueAxis domainAxis = timeSeriesPlot.getDomainAxis();
         domainAxis.setAutoRange(true);
-        XYLineAndShapeRenderer xyRenderer = new XYSplineRenderer();
-        xyRenderer.setBaseShapesVisible(true);
-        xyRenderer.setBaseShapesFilled(true);
+//        XYLineAndShapeRenderer xyRenderer = new XYSplineRenderer();
+        XYLineAndShapeRenderer xyRenderer = new XYLineAndShapeRenderer(true, true);
+//        xyRenderer.setBaseShapesVisible(true);
+//        xyRenderer.setBaseShapesFilled(true);
+        xyRenderer.setAutoPopulateSeriesPaint(true);
         xyRenderer.setBaseLegendTextFont(Font.getFont(DEFAULT_FONT_NAME));
         xyRenderer.setBaseLegendTextPaint(DEFAULT_FOREGROUND_COLOR);
         timeSeriesPlot.setRenderer(xyRenderer);
@@ -178,14 +181,14 @@ class TimeSeriesGraphModel {
                 timeSeriesPlot.mapDatasetToRangeAxis(i, i);
                 timeSeriesPlot.mapDatasetToRangeAxis(i + numEoVariables, i);
 
-                XYLineAndShapeRenderer cursorRenderer = new XYLineAndShapeRenderer(true, true);
-                cursorRenderer.setSeriesPaint(0, paint);
-                cursorRenderer.setSeriesStroke(0, CURSOR_STROKE);
+//                XYLineAndShapeRenderer cursorRenderer = new XYLineAndShapeRenderer(true, true);
+//                cursorRenderer.setSeriesPaint(0, paint);
+//                cursorRenderer.setSeriesStroke(0, CURSOR_STROKE);
 
                 XYLineAndShapeRenderer pinRenderer = new XYLineAndShapeRenderer(true, true);
                 pinRenderer.setBasePaint(paint);
                 pinRenderer.setBaseStroke(PIN_STROKE);
-                pinRenderer.setAutoPopulateSeriesPaint(false);
+                pinRenderer.setAutoPopulateSeriesPaint(true);
                 pinRenderer.setAutoPopulateSeriesStroke(false);
 
                 timeSeriesPlot.setRenderer(i + numEoVariables, pinRenderer, true);
@@ -209,14 +212,14 @@ class TimeSeriesGraphModel {
 
                 timeSeriesPlot.mapDatasetToRangeAxis(i + numEoVariables * 2, i);
 
-                XYLineAndShapeRenderer insituRenderer = new XYLineAndShapeRenderer(true, true);
+                XYLineAndShapeRenderer insituRenderer = new XYLineAndShapeRenderer(false, true);
                 insituRenderer.setBasePaint(paint);
                 // todo - ts - set better stroke
                 insituRenderer.setBaseStroke(PIN_STROKE);
-                insituRenderer.setAutoPopulateSeriesPaint(false);
+                insituRenderer.setAutoPopulateSeriesPaint(true);
                 insituRenderer.setAutoPopulateSeriesStroke(false);
 
-                timeSeriesPlot.setRenderer(i + numEoVariables + 2, insituRenderer, true);
+                timeSeriesPlot.setRenderer(i + numEoVariables * 2, insituRenderer, true);
             }
         }
     }
@@ -287,6 +290,18 @@ class TimeSeriesGraphModel {
         }
     }
 
+    void removeCursorTimeSeriesInWorkerThread() {
+        nextWorker = new SwingWorker() {
+
+            @Override
+            protected Object doInBackground() throws Exception {
+                nextWorker = null;
+                removeCursorTimeSeries();
+                return null;
+            }
+        };
+    }
+
     void removeCursorTimeSeries() {
         removeTimeSeries(TimeSeriesType.CURSOR);
     }
@@ -349,8 +364,6 @@ class TimeSeriesGraphModel {
         timeSeriesPlot.clearAnnotations();
     }
 
-    private SwingWorker nextWorker;
-
     void updateInsituTimeSeries() {
         updateTimeSeries(-1, -1, -1, TimeSeriesType.INSITU);
     }
@@ -393,14 +406,14 @@ class TimeSeriesGraphModel {
                 ProductSceneView sceneView = VisatApp.getApp().getSelectedProductSceneView();
                 AbstractTimeSeries globTimeSeries = TimeSeriesMapper.getInstance().getTimeSeries(sceneView.getProduct());
                 final InsituSource insituSource = globTimeSeries.getInsituSource();
-                final Product tsProduct = globTimeSeries.getTsProduct();
-                final GeoCoding geoCoding = tsProduct.getGeoCoding();
+                final Product timeSeriesProduct = globTimeSeries.getTsProduct();
+                final GeoCoding geoCoding = timeSeriesProduct.getGeoCoding();
                 for (String insituVariable : insituVariables) {
                     final GeoPos[] insituPositions = insituSource.getInsituPositionsFor(insituVariable);
                     PixelPos pixelPos = new PixelPos();
                     for (GeoPos insituPosition : insituPositions) {
                         geoCoding.getPixelPos(insituPosition, pixelPos);
-                        if (!AbstractTimeSeries.isPixelValid(tsProduct, pixelPos)) {
+                        if (!AbstractTimeSeries.isPixelValid(timeSeriesProduct, pixelPos)) {
                             continue;
                         }
                         InsituRecord[] insituRecords = insituSource.getValuesFor(insituVariable, insituPosition);
@@ -454,9 +467,14 @@ class TimeSeriesGraphModel {
         }
 
         private TimeSeries computeTimeSeries(final List<Band> bandList, int pixelX, int pixelY, int currentLevel) {
-            final TimeSeries timeSeries = new TimeSeries("title");
+            final Band firstBand = bandList.get(0);
+            final String firstBandName = firstBand.getName();
+            final int lastUnderscore = firstBandName.lastIndexOf("_");
+            final String timeSeriesName = firstBandName.substring(0, lastUnderscore);
+            final TimeSeries timeSeries = new TimeSeries(timeSeriesName);
+            // @todo se ... find a better solution to ensure only valid entries in time series
+            final double noDataValue = firstBand.getNoDataValue();
             final AbstractTimeSeries globTimeSeries = getTimeSeries();
-
             for (Band band : bandList) {
                 final TimeCoding timeCoding = globTimeSeries.getRasterTimeMap().get(band);
                 if (timeCoding != null) {
@@ -465,7 +483,9 @@ class TimeSeriesGraphModel {
                                                                    ProductData.UTC.UTC_TIME_ZONE,
                                                                    Locale.getDefault());
                     final double value = getValue(band, pixelX, pixelY, currentLevel);
-                    timeSeries.add(new TimeSeriesDataItem(timePeriod, value));
+                    if (value != noDataValue) {
+                        timeSeries.add(new TimeSeriesDataItem(timePeriod, value));
+                    }
                 }
             }
             return timeSeries;

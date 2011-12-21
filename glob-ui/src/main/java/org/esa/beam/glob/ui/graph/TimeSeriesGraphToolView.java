@@ -35,7 +35,7 @@ import org.esa.beam.glob.ui.player.TimeSeriesPlayerToolView;
 import org.esa.beam.visat.VisatApp;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
-import org.jfree.chart.axis.ValueAxis;
+import org.jfree.chart.plot.XYPlot;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -52,7 +52,7 @@ import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries.*;
+import static org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries.rasterToVariableName;
 
 public class TimeSeriesGraphToolView extends AbstractToolView {
 
@@ -89,7 +89,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         chart = ChartFactory.createTimeSeriesChart(null,
                                                    DEFAULT_DOMAIN_LABEL,
                                                    DEFAULT_RANGE_LABEL,
-                                                   null, false, true, false);
+                                                   null, true, true, false);
         graphModel = new TimeSeriesGraphModel(chart.getXYPlot());
         graphForm = new TimeSeriesGraphForm(chart, showSelectedPinAction, showAllPinAction,
                                             getDescriptor().getHelpId());
@@ -172,7 +172,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
             showing = graphForm.isShowingSelectedPins();
             pins = currentView.getSelectedPins();
         }
-        pins = filterInsituPins(pins);
+//        pins = filterInsituPins(pins);
         if (showing) {
             for (Placemark pin : pins) {
                 final Viewport viewport = currentView.getViewport();
@@ -244,18 +244,17 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
                 graphModel.updateTimeSeries(pixelX, pixelY, currentLevel, TimeSeriesType.CURSOR);
             }
 
-            final ValueAxis rangeAxis = chart.getXYPlot().getRangeAxis();
-            if (e.isShiftDown()) {
-                rangeAxis.setAutoRange(true);
-            } else {
-                rangeAxis.setAutoRange(false);
+            final boolean autorange = e.isShiftDown();
+            final XYPlot xyPlot = chart.getXYPlot();
+            for (int i = 0; i < xyPlot.getRangeAxisCount(); i++) {
+                xyPlot.getRangeAxis(i).setAutoRange(autorange);
             }
             graphModel.updateAnnotation(currentView.getRaster());
         }
 
         @Override
         public void pixelPosNotAvailable() {
-            graphModel.removeCursorTimeSeries();
+            graphModel.removeCursorTimeSeriesInWorkerThread();
         }
     }
 
