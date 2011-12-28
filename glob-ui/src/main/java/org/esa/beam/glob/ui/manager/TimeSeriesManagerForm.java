@@ -60,6 +60,8 @@ class TimeSeriesManagerForm {
     private AbstractButton viewButton;
     private AbstractButton exportButton;
     private AbstractTimeSeries currentTimeSeries;
+    private final AxisMappingModel axisMappingModel = new AxisMappingModel();
+    private AbstractButton editAxisMappingButton;
 
     TimeSeriesManagerForm(PageComponentDescriptor descriptor) {
         this.descriptor = descriptor;
@@ -184,8 +186,11 @@ class TimeSeriesManagerForm {
         final Command newTSCommand = VisatApp.getApp().getCommandManager().getCommand(TimeSeriesAssistantAction.ID);
         final AbstractButton newButton = ToolButtonFactory.createButton(newTSCommand.getAction(), false);
 
-        final LoadInsituAction loadInsituAction = new LoadInsituAction(currentTimeSeries);
+        final Action loadInsituAction = new LoadInsituAction(currentTimeSeries);
         loadInsituButton = ToolButtonFactory.createButton(loadInsituAction, false);
+
+        final Action editAxisMappingAction = new EditAxisMappingAction();
+        editAxisMappingButton = ToolButtonFactory.createButton(editAxisMappingAction, false);
 
         final EditTimeSpanAction editTimeSpanAction = new EditTimeSpanAction(currentTimeSeries);
         timeSpanButton = ToolButtonFactory.createButton(editTimeSpanAction, false);
@@ -226,6 +231,7 @@ class TimeSeriesManagerForm {
         final JPanel panel = new JPanel(layout);
         panel.add(newButton);
         panel.add(loadInsituButton);
+        panel.add(editAxisMappingButton);
         panel.add(timeSpanButton);
         panel.add(viewButton);
         panel.add(exportButton);
@@ -259,6 +265,7 @@ class TimeSeriesManagerForm {
         viewButton.setEnabled(enabled);
         exportButton.setEnabled(enabled);
         loadInsituButton.setEnabled(enabled);
+        editAxisMappingButton.setEnabled(enabled);
     }
 
     private JPanel createVariablePanel(String title, VariableSelectionPane variablePane) {
@@ -532,6 +539,30 @@ class TimeSeriesManagerForm {
         }
     }
 
+    private class EditAxisMappingAction extends AbstractAction {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            new AxisMappingForm(axisMappingModel, getNameProvider()).show();
+        }
+    }
+
+    private AxisMappingForm.NameProvider getNameProvider() {
+        return new AxisMappingForm.NameProvider() {
+            @Override
+            public String[] getRasterNames() {
+                final List<String> eoVariables = currentTimeSeries.getEoVariables();
+                return eoVariables.toArray(new String[eoVariables.size()]);
+            }
+
+            @Override
+            public String[] getInsituNames() {
+                final Set<String> selectedInsituVariables = currentTimeSeries.getSelectedInsituVariables();
+                return selectedInsituVariables.toArray(new String[selectedInsituVariables.size()]);
+            }
+        };
+    }
+
     private class ViewTimeSeriesAction extends AbstractAction {
 
         private final String variableName;
@@ -540,15 +571,14 @@ class TimeSeriesManagerForm {
             super("View " + variableName);
             this.variableName = variableName;
         }
-
         @Override
         public void actionPerformed(ActionEvent e) {
             showTimeSeriesView(variableName);
         }
+
     }
 
     private class FrameClosingTimeSeriesListener extends TimeSeriesListener {
-
         @Override
         public void timeSeriesChanged(TimeSeriesChangeEvent event) {
 
@@ -563,5 +593,6 @@ class TimeSeriesManagerForm {
                 updateInsituVariablePanel();
             }
         }
+
     }
 }

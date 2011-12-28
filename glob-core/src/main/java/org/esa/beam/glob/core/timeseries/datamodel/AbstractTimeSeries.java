@@ -29,6 +29,7 @@ import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * <p><i>Note that this class is not yet public API. Interface may change in future releases.</i></p>
@@ -120,4 +121,6 @@ public abstract class AbstractTimeSeries {
     }
 
     public abstract boolean hasInsituData();
+
+    public abstract Set<String> getSelectedInsituVariables();
 }

@@ -417,6 +417,11 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
         return insituSource != null && !insituVariablesSelections.isEmpty();
     }
 
+    @Override
+    public Set<String> getSelectedInsituVariables() {
+        return Collections.unmodifiableSet(insituVariablesSelections);
+    }
+
     /////////////////////////////////////////////////////////////////////////////////
     // private methods
     /////////////////////////////////////////////////////////////////////////////////
