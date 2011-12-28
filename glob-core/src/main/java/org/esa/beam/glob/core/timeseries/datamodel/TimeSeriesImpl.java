@@ -17,34 +17,14 @@
 package org.esa.beam.glob.core.timeseries.datamodel;
 
 import com.bc.ceres.core.ProgressMonitor;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.ImageInfo;
-import org.esa.beam.framework.datamodel.MetadataAttribute;
-import org.esa.beam.framework.datamodel.MetadataElement;
-import org.esa.beam.framework.datamodel.Placemark;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.framework.datamodel.ProductNode;
-import org.esa.beam.framework.datamodel.ProductNodeEvent;
-import org.esa.beam.framework.datamodel.ProductNodeListenerAdapter;
-import org.esa.beam.framework.datamodel.RasterDataNode;
+import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.glob.core.insitu.InsituSource;
 import org.esa.beam.util.Guardian;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.StringUtils;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.WeakHashMap;
+import java.util.*;
 
 /**
  * <p><i>Note that this class is not yet public API. Interface may change in future releases.</i></p>
@@ -284,7 +264,7 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
             final Band[] bands = tsProduct.getBands();
             for (Band band : bands) {
                 if (band.getName().startsWith(variableName)) {
-                    tsProduct.removeBand(band);
+                     tsProduct.removeBand(band);
                 }
             }
         }

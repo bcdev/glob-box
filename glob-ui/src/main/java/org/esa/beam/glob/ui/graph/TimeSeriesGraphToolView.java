@@ -78,8 +78,8 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         pinSelectionListener = new PinSelectionListener();
         sliderListener = new SliderListener();
         timeSeriesGraphTSL = new TimeSeriesGraphTSL();
-        showSelectedPinAction = new ShowPinAction(false);
-        showAllPinAction = new ShowPinAction(true);
+        showSelectedPinAction = new ShowPinAction();
+        showAllPinAction = new ShowPinAction();
     }
 
     @Override
@@ -147,7 +147,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
             setTitle(String.format("%s - %s", titleBase, variableName));
 
             graphModel.updateAnnotation(raster);
-            updatePins(graphForm.isShowingSelectedPins());
+            updatePins();
             showSelectedPinAction.setEnabled(currentView.getSelectedPin() != null);
             showAllPinAction.setEnabled(currentProduct.getPinGroup().getNodeCount() > 0);
         } else {
@@ -160,20 +160,17 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         }
     }
 
-    private void updatePins(boolean showAll) {
+    private void updatePins() {
         graphModel.removePinTimeSeries();
-        boolean showing;
-        Placemark[] pins;
-        if (showAll) {
-            showing = graphForm.isShowingAllPins();
+        Placemark[] pins = null;
+        if (graphForm.isShowingAllPins()) {
             PlacemarkGroup pinGroup = currentView.getProduct().getPinGroup();
             pins = pinGroup.toArray(new Placemark[pinGroup.getNodeCount()]);
-        } else {
-            showing = graphForm.isShowingSelectedPins();
+        } else if (graphForm.isShowingSelectedPins()) {
             pins = currentView.getSelectedPins();
         }
 //        pins = filterInsituPins(pins);
-        if (showing) {
+        if (pins != null) {
             for (Placemark pin : pins) {
                 final Viewport viewport = currentView.getViewport();
                 final ImageLayer baseLayer = currentView.getBaseImageLayer();
@@ -183,7 +180,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
                 final Point2D modelPos = levelZeroToModel.transform(pin.getPixelPos(), null);
                 final Point2D currentPos = modelToCurrentLevel.transform(modelPos, null);
                 graphModel.updateTimeSeries((int) currentPos.getX(), (int) currentPos.getY(),
-                                            currentLevel, TimeSeriesType.PIN);
+                                            currentLevel, TimeSeriesType.PIN, true);
             }
         }
     }
@@ -202,15 +199,9 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
 
     private class ShowPinAction extends AbstractAction {
 
-        private final boolean showAll;
-
-        private ShowPinAction(boolean showAllPins) {
-            this.showAll = showAllPins;
-        }
-
         @Override
         public void actionPerformed(ActionEvent e) {
-            updatePins(showAll);
+            updatePins();
         }
     }
 
@@ -241,7 +232,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         public void pixelPosChanged(ImageLayer imageLayer, int pixelX, int pixelY,
                                     int currentLevel, boolean pixelPosValid, MouseEvent e) {
             if (pixelPosValid && isVisible() && currentView != null) {
-                graphModel.updateTimeSeries(pixelX, pixelY, currentLevel, TimeSeriesType.CURSOR);
+                graphModel.updateTimeSeries(pixelX, pixelY, currentLevel, TimeSeriesType.CURSOR, false);
             }
 
             final boolean autorange = e.isShiftDown();
@@ -264,7 +255,9 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         public void propertyChange(PropertyChangeEvent evt) {
             Placemark pin = (Placemark) evt.getNewValue();
             showSelectedPinAction.setEnabled(pin != null);
-            updatePins(graphForm.isShowingSelectedPins());
+            if (!graphForm.isShowingAllPins()) {
+                updatePins();
+            }
         }
     }
 
@@ -285,7 +278,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         public void nodeChanged(ProductNodeEvent event) {
             String propertyName = event.getPropertyName();
             if (propertyName.equals(Placemark.PROPERTY_NAME_PIXELPOS)) {
-                updatePins(graphForm.isShowingSelectedPins());
+                updatePins();
             }
         }
 
@@ -320,7 +313,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
             AbstractTimeSeries timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(currentView.getProduct());
             graphModel.adaptToTimeSeries(timeSeries);
             graphModel.updateAnnotation(currentView.getRaster());
-            updatePins(graphForm.isShowingSelectedPins());
+            updatePins();
         }
 
         private void handleInsituVariablesChanged(String variableName) {
@@ -329,8 +322,9 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
             if(timeSeries.isInsituVariableSelected(variableName)) {
                 graphModel.updateInsituTimeSeries();
             } else {
-                graphModel.removeInsituTimeSeries();
+                graphModel.removeInsituTimeSeriesInWorkerThread();
             }
+            updatePins();
         }
     }
 

@@ -50,7 +50,6 @@ import org.jfree.data.time.TimeSeriesDataItem;
 import javax.swing.SwingWorker;
 import java.awt.BasicStroke;
 import java.awt.Color;
-import java.awt.Font;
 import java.awt.Paint;
 import java.awt.Rectangle;
 import java.awt.Stroke;
@@ -89,7 +88,9 @@ class TimeSeriesGraphModel {
     private final AtomicInteger version = new AtomicInteger(0);
     private DisplayModel displayModel;
 
-    private SwingWorker nextWorker;
+    private final List<SwingWorker> synchronizedWorkerChain;
+    private SwingWorker unchainedWorker;
+    private boolean workerIsRunning = false;
 
     TimeSeriesGraphModel(XYPlot plot) {
         timeSeriesPlot = plot;
@@ -99,6 +100,7 @@ class TimeSeriesGraphModel {
         pinDatasets = new ArrayList<TimeSeriesCollection>();
         cursorDatasets = new ArrayList<TimeSeriesCollection>();
         insituDatasets = new ArrayList<TimeSeriesCollection>();
+        synchronizedWorkerChain = Collections.synchronizedList(new ArrayList<SwingWorker>());
         initPlot();
     }
 
@@ -109,8 +111,8 @@ class TimeSeriesGraphModel {
         XYLineAndShapeRenderer xyRenderer = new XYLineAndShapeRenderer(true, true);
 //        xyRenderer.setBaseShapesVisible(true);
 //        xyRenderer.setBaseShapesFilled(true);
-        xyRenderer.setAutoPopulateSeriesPaint(true);
-        xyRenderer.setBaseLegendTextFont(Font.getFont(DEFAULT_FONT_NAME));
+//        xyRenderer.setAutoPopulateSeriesPaint(true);
+//        xyRenderer.setBaseLegendTextFont(Font.getFont(DEFAULT_FONT_NAME));
         xyRenderer.setBaseLegendTextPaint(DEFAULT_FOREGROUND_COLOR);
         timeSeriesPlot.setRenderer(xyRenderer);
         timeSeriesPlot.setBackgroundPaint(DEFAULT_BACKGROUND_COLOR);
@@ -286,20 +288,25 @@ class TimeSeriesGraphModel {
     private void addTimeSeries(List<TimeSeries> timeSeries, TimeSeriesType type) {
         List<TimeSeriesCollection> collections = getDatasets(type);
         for (int i = 0; i < timeSeries.size(); i++) {
-            collections.get(i).addSeries(timeSeries.get(i));
+            collections.get(0).addSeries(timeSeries.get(i));
         }
     }
 
-    void removeCursorTimeSeriesInWorkerThread() {
-        nextWorker = new SwingWorker() {
+    synchronized void removeCursorTimeSeriesInWorkerThread() {
+        final SwingWorker worker = new SwingWorker() {
 
             @Override
             protected Object doInBackground() throws Exception {
-                nextWorker = null;
                 removeCursorTimeSeries();
                 return null;
             }
+
+            @Override
+            protected void done() {
+                removeCurrentWorkerAndExecuteNext(this);
+            }
         };
+        setOrExecuteNextWorker(worker, false);
     }
 
     void removeCursorTimeSeries() {
@@ -310,8 +317,21 @@ class TimeSeriesGraphModel {
         removeTimeSeries(TimeSeriesType.PIN);
     }
 
-    void removeInsituTimeSeries() {
-        removeTimeSeries(TimeSeriesType.INSITU);
+    synchronized void removeInsituTimeSeriesInWorkerThread() {
+        final SwingWorker worker = new SwingWorker() {
+
+            @Override
+            protected Object doInBackground() throws Exception {
+                removeTimeSeries(TimeSeriesType.INSITU);
+                return null;
+            }
+
+            @Override
+            protected void done() {
+                removeCurrentWorkerAndExecuteNext(this);
+            }
+        };
+        setOrExecuteNextWorker(worker, true);
     }
 
     private void removeTimeSeries(TimeSeriesType type) {
@@ -365,17 +385,63 @@ class TimeSeriesGraphModel {
     }
 
     void updateInsituTimeSeries() {
-        updateTimeSeries(-1, -1, -1, TimeSeriesType.INSITU);
+        updateTimeSeries(-1, -1, -1, TimeSeriesType.INSITU, true);
     }
 
-    void updateTimeSeries(int pixelX, int pixelY, int currentLevel, TimeSeriesType type) {
+    synchronized void updateTimeSeries(int pixelX, int pixelY, int currentLevel, TimeSeriesType type, boolean chained) {
         final TimeSeriesUpdater w = new TimeSeriesUpdater(pixelX, pixelY, currentLevel, type, version.get());
-        if (nextWorker == null) {
-            nextWorker = w;
-            nextWorker.execute();
-        } else {
-            nextWorker = w;
+        setOrExecuteNextWorker(w, chained);
+    }
+
+    synchronized private void setOrExecuteNextWorker(SwingWorker w, boolean chained) {
+        if (w == null) {
+            return;
         }
+        if (workerIsRunning) {
+            if (chained) {
+                synchronizedWorkerChain.add(w);
+                System.out.println("add worker to chain");
+            } else {
+                unchainedWorker = w;
+                System.out.println("replace unchained worker");
+            }
+        } else {
+            System.out.println("===================================================");
+            if (chained) {
+                synchronizedWorkerChain.add(w);
+                System.out.println("start working chained");
+                executeFirstWorkerInChain();
+            } else {
+                unchainedWorker = w;
+                System.out.println("start working unchained");
+                w.execute();
+            }
+            workerIsRunning = true;
+        }
+    }
+
+    synchronized void removeCurrentWorkerAndExecuteNext(SwingWorker currentWorker) {
+        synchronizedWorkerChain.remove(currentWorker);
+        if (unchainedWorker == currentWorker) {
+            unchainedWorker = null;
+        }
+        if (synchronizedWorkerChain.size() > 0) {
+            executeFirstWorkerInChain();
+            return;
+        }
+        if (unchainedWorker != null) {
+            unchainedWorker.execute();
+            System.out.println("execute unchained worker");
+            return;
+        }
+        workerIsRunning = false;
+        System.out.println("stop working");
+        System.out.println("");
+    }
+
+    private void executeFirstWorkerInChain() {
+        synchronizedWorkerChain.get(0).execute();
+        System.out.println("excecute first worker in chain");
     }
 
     private class TimeSeriesUpdater extends SwingWorker<List<TimeSeries>, Void> {
@@ -446,11 +512,7 @@ class TimeSeriesGraphModel {
             } catch (ExecutionException ignore) {
                 ignore.printStackTrace();
             } finally {
-                if (this == nextWorker) {
-                    nextWorker = null;
-                } else {
-                    nextWorker.execute();
-                }
+                removeCurrentWorkerAndExecuteNext(this);
             }
         }
 
