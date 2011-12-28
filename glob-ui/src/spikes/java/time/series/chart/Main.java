@@ -4,18 +4,13 @@ import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.time.Month;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 
-import javax.swing.AbstractAction;
-import javax.swing.Action;
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.FlowLayout;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.geom.Ellipse2D;
 
@@ -84,13 +79,14 @@ public class Main {
         );
 
         final XYPlot plot = timeSeriesChart.getXYPlot();
-        plot.set
 
         final XYLineAndShapeRenderer renderer = (XYLineAndShapeRenderer) plot.getRendererForDataset(dataset);
         renderer.setBaseShapesVisible(true);
         renderer.setSeriesPaint(0, Color.CYAN);
         renderer.setSeriesPaint(1, Color.GREEN);
         renderer.setSeriesShape(0, new Ellipse2D.Double(-10, -10, 20, 20));
+        renderer.setSeriesStroke(0, new BasicStroke(1.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f,
+                new float[]{10.0f, 30.0f}, 0.0f));
 //        renderer.setSeriesShape(0, new Ellipse2D.Double(-4,-4,8,8));
 
 
