@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2011 Brockmann Consult GmbH (info@brockmann-consult.de)
- * 
+ *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
  * Software Foundation; either version 3 of the License, or (at your option)
@@ -9,7 +9,7 @@
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
  * more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, see http://www.gnu.org/licenses/
  */
@@ -26,7 +26,9 @@ import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.AbstractTableModel;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.List;
@@ -57,12 +59,37 @@ class AxisMappingForm extends ModalDialog {
         init();
     }
 
+    private boolean shown = false;
+
+    @Override
+    public int show() {
+        setButtonID(0);
+        final JDialog dialog = getJDialog();
+        if (!shown) {
+            dialog.pack();
+            center();
+        }
+        dialog.setMinimumSize(dialog.getSize());
+        dialog.setVisible(true);
+        shown = true;
+        return getButtonID();
+    }
+
     private void init() {
         final TableLayout layout = createLayout();
         final JPanel mainPanel = new JPanel(layout);
+        mainPanel.add(new JLabel("Alias names"));
+        mainPanel.add(new JLabel(""));
+        mainPanel.add(new JLabel("Raster names"));
+        mainPanel.add(new JLabel("Insitu variable names"));
+        mainPanel.add(createAliasList());
+        mainPanel.add(createButtonsPanel());
+        mainPanel.add(createRasterNames());
+        mainPanel.add(createInsituNames());
+        setContent(mainPanel);
+    }
 
-        final JComponent scrollableAliasList = createAliasList();
-
+    private JPanel createButtonsPanel() {
         final JPanel buttonsPanel = new JPanel();
         buttonsPanel.setLayout(new BoxLayout(buttonsPanel, BoxLayout.Y_AXIS));
         final AbstractButton addButton = ToolButtonFactory.createButton(new AddAliasAction(), false);
@@ -70,19 +97,7 @@ class AxisMappingForm extends ModalDialog {
         removeButton.setEnabled(false);
         buttonsPanel.add(addButton, BorderLayout.NORTH);
         buttonsPanel.add(removeButton, BorderLayout.SOUTH);
-
-        final JComponent rasterNames = createRasterNames();
-        final JComponent insituNames = createInsituNames();
-
-        mainPanel.add(new JLabel("Alias names"));
-        mainPanel.add(new JLabel(""));
-        mainPanel.add(new JLabel("Raster names"));
-        mainPanel.add(new JLabel("Insitu variable names"));
-        mainPanel.add(scrollableAliasList);
-        mainPanel.add(buttonsPanel);
-        mainPanel.add(rasterNames);
-        mainPanel.add(insituNames);
-        setContent(mainPanel);
+        return buttonsPanel;
     }
 
     private TableLayout createLayout() {
@@ -276,7 +291,7 @@ class AxisMappingForm extends ModalDialog {
                 }
             }
         }
-        
+
         abstract void addVariableName(String currentAlias, String name);
         abstract void removeVariableName(String currentAlias, String name);
     }
