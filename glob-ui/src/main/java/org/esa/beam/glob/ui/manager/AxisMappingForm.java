@@ -20,15 +20,14 @@ import com.bc.ceres.swing.TableLayout;
 import org.esa.beam.framework.ui.ModalDialog;
 import org.esa.beam.framework.ui.UIUtils;
 import org.esa.beam.framework.ui.tool.ToolButtonFactory;
+import org.esa.beam.glob.core.timeseries.datamodel.AxisMappingModel;
 import org.esa.beam.visat.VisatApp;
 
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.AbstractTableModel;
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.Insets;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.List;
@@ -50,6 +49,7 @@ class AxisMappingForm extends ModalDialog {
     private JList rasterNames;
     private JList insituNames;
     private AbstractButton removeButton;
+    private boolean shown = false;
 
     AxisMappingForm(AxisMappingModel axisMappingModel, NameProvider nameProvider) {
         // TODO - validate help id
@@ -58,8 +58,6 @@ class AxisMappingForm extends ModalDialog {
         this.nameProvider = nameProvider;
         init();
     }
-
-    private boolean shown = false;
 
     @Override
     public int show() {
@@ -274,6 +272,7 @@ class AxisMappingForm extends ModalDialog {
 
         @Override
         public void valueChanged(ListSelectionEvent e) {
+        // todo - don't allow the the user to select raster/insitu names which are already selected for another alias
             final ArrayList<Integer> selectedIndices = new ArrayList<Integer>();
             for (int index : variableNames.getSelectedIndices()) {
                 selectedIndices.add(index);

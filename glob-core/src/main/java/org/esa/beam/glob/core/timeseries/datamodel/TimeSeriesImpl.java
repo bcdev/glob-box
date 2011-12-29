@@ -42,6 +42,7 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
     private InsituSource insituSource;
     private Set<String> insituVariablesSelections = new HashSet<String>();
     private final List<Placemark> insituPins = new ArrayList<Placemark>();
+    private final AxisMappingModel axisMappingModel = new AxisMappingModel();
 
     /**
      * Used to create a TimeSeries from within a ProductReader
@@ -420,6 +421,11 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
     @Override
     public Set<String> getSelectedInsituVariables() {
         return Collections.unmodifiableSet(insituVariablesSelections);
+    }
+
+    @Override
+    public AxisMappingModel getAxisMappingModel() {
+        return axisMappingModel;
     }
 
     /////////////////////////////////////////////////////////////////////////////////

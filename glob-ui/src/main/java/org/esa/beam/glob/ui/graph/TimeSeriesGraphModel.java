@@ -16,29 +16,21 @@
 
 package org.esa.beam.glob.ui.graph;
 
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.GeoCoding;
-import org.esa.beam.framework.datamodel.GeoPos;
-import org.esa.beam.framework.datamodel.PixelPos;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.framework.datamodel.RasterDataNode;
-import org.esa.beam.framework.datamodel.Stx;
+import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.ui.product.ProductSceneView;
 import org.esa.beam.glob.core.TimeSeriesMapper;
 import org.esa.beam.glob.core.insitu.InsituSource;
 import org.esa.beam.glob.core.insitu.csv.InsituRecord;
 import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
+import org.esa.beam.glob.core.timeseries.datamodel.AxisMappingModel;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeCoding;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.StringUtils;
-import org.esa.beam.util.math.Histogram;
 import org.esa.beam.visat.VisatApp;
 import org.jfree.chart.annotations.XYAnnotation;
 import org.jfree.chart.annotations.XYLineAnnotation;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.axis.ValueAxis;
-import org.jfree.chart.plot.DefaultDrawingSupplier;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.Range;
@@ -47,22 +39,13 @@ import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 import org.jfree.data.time.TimeSeriesDataItem;
 
-import javax.swing.SwingWorker;
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Paint;
-import java.awt.Rectangle;
-import java.awt.Stroke;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
 import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.WeakHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -77,7 +60,7 @@ class TimeSeriesGraphModel {
     private static final Stroke PIN_STROKE = new BasicStroke(1.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f,
                                                              new float[]{10.0f}, 0.0f);
 
-    private final Map<AbstractTimeSeries, DisplayModel> displayModelMap;
+    private final Map<AbstractTimeSeries, DisplayController> displayControllerMap;
     private final XYPlot timeSeriesPlot;
     private final List<List<Band>> eoVariableBands;
     private final List<String> insituVariables;
@@ -86,7 +69,7 @@ class TimeSeriesGraphModel {
     private final List<TimeSeriesCollection> insituDatasets;
 
     private final AtomicInteger version = new AtomicInteger(0);
-    private DisplayModel displayModel;
+    private DisplayController displayController;
 
     private final List<SwingWorker> synchronizedWorkerChain;
     private SwingWorker unchainedWorker;
@@ -96,7 +79,7 @@ class TimeSeriesGraphModel {
         timeSeriesPlot = plot;
         eoVariableBands = new ArrayList<List<Band>>();
         insituVariables = new ArrayList<String>();
-        displayModelMap = new WeakHashMap<AbstractTimeSeries, DisplayModel>();
+        displayControllerMap = new WeakHashMap<AbstractTimeSeries, DisplayController>();
         pinDatasets = new ArrayList<TimeSeriesCollection>();
         cursorDatasets = new ArrayList<TimeSeriesCollection>();
         insituDatasets = new ArrayList<TimeSeriesCollection>();
@@ -126,21 +109,21 @@ class TimeSeriesGraphModel {
 
         final boolean hasData = timeSeries != null;
         if (hasData) {
-            displayModel = displayModelMap.get(timeSeries);
-            if (displayModel == null) {
-                displayModel = new DisplayModel(timeSeries);
-                displayModelMap.put(timeSeries, displayModel);
+            displayController = displayControllerMap.get(timeSeries);
+            if (displayController == null) {
+                displayController = new DisplayController(timeSeries);
+                displayControllerMap.put(timeSeries, displayController);
             } else {
-                displayModel.adaptTo(timeSeries);
+                displayController.adaptTo(timeSeries);
             }
-            for (String eoVariableName : displayModel.eoVariablesToDisplay) {
+            for (String eoVariableName : displayController.eoVariablesToDisplay) {
                 eoVariableBands.add(timeSeries.getBandsForVariable(eoVariableName));
             }
-            for (String insituVariableName : displayModel.getInsituVariablesToDisplay()) {
+            for (String insituVariableName : displayController.getInsituVariablesToDisplay()) {
                 insituVariables.add(insituVariableName);
             }
         } else {
-            displayModel = null;
+            displayController = null;
         }
         updatePlot(hasData, timeSeries);
     }
@@ -155,13 +138,66 @@ class TimeSeriesGraphModel {
         insituDatasets.clear();
 
         if (hasData) {
-            List<String> eoVariablesToDisplay = displayModel.getEoVariablesToDisplay();
+            final List<String> eoVariables = displayController.getEoVariablesToDisplay();
+            final List<String> insituVariables = displayController.getInsituVariablesToDisplay();
+            final AxisMappingModel axisMappingModel = timeSeries.getAxisMappingModel();
+            final AxisMappingModel displayAxisModel = createDisplayAxisModel(eoVariables, insituVariables, axisMappingModel);
+            final Set<String> aliasNamesSet = displayAxisModel.getAliasNames();
+            final String[] aliasNames = aliasNamesSet.toArray(new String[aliasNamesSet.size()]);
+            for (int i = 0; i < aliasNames.length; i++) {
+                String aliasName = aliasNames[i];
+
+                Paint paint = displayController.getPaint(i);
+                String unit = getUnit(displayAxisModel, aliasName);
+                String axisLabel = getAxisLabel(aliasName, unit);
+                NumberAxis valueAxis = new NumberAxis(axisLabel);
+                valueAxis.setAutoRange(true);
+                valueAxis.setAxisLinePaint(paint);
+                valueAxis.setLabelPaint(paint);
+                valueAxis.setTickLabelPaint(paint);
+                valueAxis.setTickMarkPaint(paint);
+                timeSeriesPlot.setRangeAxis(i, valueAxis);
+
+                XYLineAndShapeRenderer pinRenderer = new XYLineAndShapeRenderer(true, true);
+                pinRenderer.setBasePaint(paint);
+                pinRenderer.setBaseStroke(PIN_STROKE);
+                pinRenderer.setAutoPopulateSeriesPaint(true);
+                pinRenderer.setAutoPopulateSeriesStroke(false);
+
+                final int cursorIndex = i * 3;
+                final int pinIndex = 1 + i * 3;
+                final int insituIndex = 2 + i * 3;
+
+                TimeSeriesCollection cursorDataset = new TimeSeriesCollection();
+                timeSeriesPlot.setDataset(cursorIndex, cursorDataset);
+                cursorDatasets.add(cursorDataset);
+
+                TimeSeriesCollection pinDataset = new TimeSeriesCollection();
+                timeSeriesPlot.setDataset(pinIndex, pinDataset);
+                pinDatasets.add(pinDataset);
+
+                TimeSeriesCollection insituDataset = new TimeSeriesCollection();
+                timeSeriesPlot.setDataset(insituIndex, insituDataset);
+                insituDatasets.add(insituDataset);
+
+                timeSeriesPlot.setRenderer(cursorIndex, pinRenderer, true);
+                timeSeriesPlot.setRenderer(pinIndex, pinRenderer, true);
+                timeSeriesPlot.setRenderer(insituIndex, pinRenderer, true);
+
+                timeSeriesPlot.mapDatasetToRangeAxis(cursorIndex, i);
+                timeSeriesPlot.mapDatasetToRangeAxis(pinIndex, i);
+                timeSeriesPlot.mapDatasetToRangeAxis(insituIndex, i);
+            }
+
+
+            /*
+            List<String> eoVariablesToDisplay = displayController.getEoVariablesToDisplay();
             int numEoVariables = eoVariablesToDisplay.size();
             for (int i = 0; i < numEoVariables; i++) {
                 String eoVariableName = eoVariablesToDisplay.get(i);
                 final List<Band> bandList = eoVariableBands.get(i);
 
-                Paint paint = displayModel.getVariablename2colorMap().get(eoVariableName);
+                Paint paint = displayController.getVariablename2colorMap().get(eoVariableName);
                 String axisLabel = getAxisLabel(eoVariableName, bandList.get(0).getUnit());
                 NumberAxis valueAxis = new NumberAxis(axisLabel);
                 valueAxis.setAutoRange(true);
@@ -172,13 +208,13 @@ class TimeSeriesGraphModel {
                 valueAxis.setTickMarkPaint(paint);
                 timeSeriesPlot.setRangeAxis(i, valueAxis);
 
-                TimeSeriesCollection cursorDataset = new TimeSeriesCollection();
-                timeSeriesPlot.setDataset(i, cursorDataset);
-                cursorDatasets.add(cursorDataset);
+                TimeSeriesCollection cursorDatasetCollection = new TimeSeriesCollection();
+                timeSeriesPlot.setDataset(i, cursorDatasetCollection);
+                cursorDatasets.add(cursorDatasetCollection);
 
-                TimeSeriesCollection pinDataset = new TimeSeriesCollection();
-                timeSeriesPlot.setDataset(i + numEoVariables, pinDataset);
-                pinDatasets.add(pinDataset);
+                TimeSeriesCollection pinDatasetCollection = new TimeSeriesCollection();
+                timeSeriesPlot.setDataset(i + numEoVariables, pinDatasetCollection);
+                pinDatasets.add(pinDatasetCollection);
 
                 timeSeriesPlot.mapDatasetToRangeAxis(i, i);
                 timeSeriesPlot.mapDatasetToRangeAxis(i + numEoVariables, i);
@@ -208,9 +244,9 @@ class TimeSeriesGraphModel {
             }
             for (int i = 0; i < insituVariablesToDisplay.size(); i++) {
                 Paint paint = getPaintFromCorrespondingPlacemark();
-                TimeSeriesCollection insituDataset = new TimeSeriesCollection();
-                timeSeriesPlot.setDataset(i + numEoVariables * 2, insituDataset);
-                insituDatasets.add(insituDataset);
+                TimeSeriesCollection insituDatasetCollection = new TimeSeriesCollection();
+                timeSeriesPlot.setDataset(i + numEoVariables * 2, insituDatasetCollection);
+                insituDatasets.add(insituDatasetCollection);
 
                 timeSeriesPlot.mapDatasetToRangeAxis(i + numEoVariables * 2, i);
 
@@ -223,7 +259,49 @@ class TimeSeriesGraphModel {
 
                 timeSeriesPlot.setRenderer(i + numEoVariables * 2, insituRenderer, true);
             }
+            */
         }
+    }
+
+    private String getUnit(AxisMappingModel axisMappingModel, String aliasName) {
+        final Set<String> rasterNames = axisMappingModel.getRasterNames(aliasName);
+        for (List<Band> eoVariableBandList : eoVariableBands) {
+            for (String rasterName : rasterNames) {
+                final Band raster = eoVariableBandList.get(0);
+                if (raster.getName().equals(rasterName)) {
+                    return raster.getUnit();
+                }
+            }
+        }
+        return "";
+    }
+
+    private AxisMappingModel createDisplayAxisModel(List<String> eoVariables, List<String> insituVariables, AxisMappingModel axisMappingModel) {
+        final AxisMappingModel displayAxisModel = new AxisMappingModel();
+
+        for (String eoVariable : eoVariables) {
+            final String aliasName = axisMappingModel.getRasterAlias(eoVariable);
+            if(aliasName == null) {
+                displayAxisModel.addAlias(eoVariable);
+                displayAxisModel.addRasterName(eoVariable, eoVariable);
+            } else {
+                displayAxisModel.addAlias(aliasName);
+                displayAxisModel.addRasterName(aliasName, eoVariable);
+            }
+        }
+
+        for (String insituVariable : insituVariables) {
+            final String aliasName = axisMappingModel.getInsituAlias(insituVariable);
+            if(aliasName == null) {
+                displayAxisModel.addAlias(insituVariable);
+                displayAxisModel.addRasterName(insituVariable, insituVariable);
+            } else {
+                displayAxisModel.addAlias(aliasName);
+                displayAxisModel.addRasterName(aliasName, insituVariable);
+            }
+        }
+        
+        return displayAxisModel;
     }
 
     private Paint getPaintFromCorrespondingPlacemark() {
@@ -244,22 +322,6 @@ class TimeSeriesGraphModel {
          *   return paint;
          **/
         return new Color(255, 0, 0);
-    }
-
-    private static Range computeYAxisRange(List<Band> bands) {
-        Range result = null;
-        for (Band band : bands) {
-            Stx stx = band.getStx();
-            Histogram histogram = new Histogram(stx.getHistogramBins(), stx.getMin(), stx.getMax());
-            org.esa.beam.util.math.Range rangeFor95Percent = histogram.findRangeFor95Percent();
-            Range range = new Range(band.scale(rangeFor95Percent.getMin()), band.scale(rangeFor95Percent.getMax()));
-            if (result == null) {
-                result = range;
-            } else {
-                result = Range.combine(result, range);
-            }
-        }
-        return result;
     }
 
     private static String getAxisLabel(String variableName, String unit) {
@@ -286,9 +348,11 @@ class TimeSeriesGraphModel {
     }
 
     private void addTimeSeries(List<TimeSeries> timeSeries, TimeSeriesType type) {
-        List<TimeSeriesCollection> collections = getDatasets(type);
-        for (int i = 0; i < timeSeries.size(); i++) {
-            collections.get(0).addSeries(timeSeries.get(i));
+        List<TimeSeriesCollection> datasets = getDatasets(type);
+        for(int index = 0; index < datasets.size(); index++) {
+            final TimeSeries currentTimeSeries = timeSeries.get(index);
+            datasets.get(index).removeAllSeries();
+            datasets.get(index).addSeries(currentTimeSeries);
         }
     }
 
@@ -400,20 +464,20 @@ class TimeSeriesGraphModel {
         if (workerIsRunning) {
             if (chained) {
                 synchronizedWorkerChain.add(w);
-                System.out.println("add worker to chain");
+//                System.out.println("add worker to chain");
             } else {
                 unchainedWorker = w;
-                System.out.println("replace unchained worker");
+//                System.out.println("replace unchained worker");
             }
         } else {
-            System.out.println("===================================================");
+//            System.out.println("===================================================");
             if (chained) {
                 synchronizedWorkerChain.add(w);
-                System.out.println("start working chained");
+//                System.out.println("start working chained");
                 executeFirstWorkerInChain();
             } else {
                 unchainedWorker = w;
-                System.out.println("start working unchained");
+//                System.out.println("start working unchained");
                 w.execute();
             }
             workerIsRunning = true;
@@ -431,17 +495,17 @@ class TimeSeriesGraphModel {
         }
         if (unchainedWorker != null) {
             unchainedWorker.execute();
-            System.out.println("execute unchained worker");
+//            System.out.println("execute unchained worker");
             return;
         }
         workerIsRunning = false;
-        System.out.println("stop working");
-        System.out.println("");
+//        System.out.println("stop working");
+//        System.out.println("");
     }
 
     private void executeFirstWorkerInChain() {
         synchronizedWorkerChain.get(0).execute();
-        System.out.println("excecute first worker in chain");
+//        System.out.println("excecute first worker in chain");
     }
 
     private class TimeSeriesUpdater extends SwingWorker<List<TimeSeries>, Void> {
@@ -560,14 +624,12 @@ class TimeSeriesGraphModel {
         }
     }
 
-    private static class DisplayModel {
+    private static class DisplayController {
 
-        private final Map<String, Paint> variablename2colorMap;
         private final List<String> eoVariablesToDisplay;
         private final List<String> insituVariablesToDisplay;
         private static final int ALPHA = 200;
 
-        private int maxColorIndex;
         private Color[] colors = {
                     new Color(0, 0, 60, ALPHA),
                     new Color(0, 60, 0, ALPHA),
@@ -579,16 +641,14 @@ class TimeSeriesGraphModel {
                     new Color(120, 120, 120, ALPHA)
         };
 
-        private DisplayModel(AbstractTimeSeries timeSeries) {
+        private Paint getPaint(int i) {
+            return colors[i % colors.length];
+        }        
+        
+        private DisplayController(AbstractTimeSeries timeSeries) {
             eoVariablesToDisplay = new ArrayList<String>();
             insituVariablesToDisplay = new ArrayList<String>();
-            variablename2colorMap = new HashMap<String, Paint>();
             adaptTo(timeSeries);
-
-        }
-
-        private Map<String, Paint> getVariablename2colorMap() {
-            return Collections.unmodifiableMap(variablename2colorMap);
         }
 
         private List<String> getEoVariablesToDisplay() {
@@ -605,9 +665,6 @@ class TimeSeriesGraphModel {
                     if (!eoVariablesToDisplay.contains(eoVariableName)) {
                         eoVariablesToDisplay.add(eoVariableName);
                     }
-                    if (!variablename2colorMap.containsKey(eoVariableName)) {
-                        variablename2colorMap.put(eoVariableName, getNextPaint());
-                    }
                 } else {
                     eoVariablesToDisplay.remove(eoVariableName);
                 }
@@ -618,17 +675,11 @@ class TimeSeriesGraphModel {
                         if (!insituVariablesToDisplay.contains(insituVariableName)) {
                             insituVariablesToDisplay.add(insituVariableName);
                         }
-                        // todo - ts - care for colour
                     } else {
                         insituVariablesToDisplay.remove(insituVariableName);
                     }
                 }
             }
-        }
-
-        private Paint getNextPaint() {
-            int numColors = DefaultDrawingSupplier.DEFAULT_PAINT_SEQUENCE.length;
-            return colors[maxColorIndex++ % numColors];
         }
     }
 }

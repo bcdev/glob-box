@@ -14,7 +14,7 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package org.esa.beam.glob.ui.manager;
+package org.esa.beam.glob.core.timeseries.datamodel;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -24,6 +24,7 @@ import java.util.Set;
 import java.util.SortedSet;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -145,6 +146,24 @@ public class AxisMappingModelTest {
         assertEquals("replaced", aliasNames.iterator().next());
         assertEquals("RName", axisMappingModel.getRasterNames("replaced").iterator().next());
         assertEquals("IName", axisMappingModel.getInsituNames("replaced").iterator().next());
+    }
+
+    @Test
+    public void testGetAliasNameForRasterName() {
+        axisMappingModel.addRasterName("alias1", "rasterName1");
+        axisMappingModel.addRasterName("alias2", "rasterName2");
+        
+        assertEquals("alias1", axisMappingModel.getRasterAlias("rasterName1"));
+        assertNull(axisMappingModel.getRasterAlias("rasterName3"));
+    }
+
+    @Test
+    public void testGetAliasNameForInsituName() {
+        axisMappingModel.addInsituName("alias1", "insituName1");
+        axisMappingModel.addInsituName("alias2", "insituName2");
+        
+        assertEquals("alias1", axisMappingModel.getInsituAlias("insituName1"));
+        assertNull(axisMappingModel.getInsituAlias("insituName3"));
     }
 }
 

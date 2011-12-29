@@ -14,7 +14,7 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package org.esa.beam.glob.ui.manager;
+package org.esa.beam.glob.core.timeseries.datamodel;
 
 import java.util.*;
 
@@ -72,6 +72,25 @@ public class AxisMappingModel {
     public void replaceAlias(String beforeName, String changedName) {
         replaceAliasInMap(beforeName, changedName, rasterMap);
         replaceAliasInMap(beforeName, changedName, insituMap);
+    }
+
+    public String getRasterAlias(String rasterName) {
+        return getAlias(rasterName, rasterMap);
+    }
+
+    public String getInsituAlias(String insituName) {
+        return getAlias(insituName, insituMap);
+    }
+
+    private String getAlias(String rasterName, Map<String, Set<String>> map) {
+        for (Map.Entry<String, Set<String>> entry : map.entrySet()) {
+            for (String mappedRasterName : entry.getValue()) {
+                if (mappedRasterName.equals(rasterName)) {
+                    return entry.getKey();
+                }
+            }
+        }
+        return null;
     }
 
     private Set<String> getNamesFor(String alias, Map<String, Set<String>> map) {

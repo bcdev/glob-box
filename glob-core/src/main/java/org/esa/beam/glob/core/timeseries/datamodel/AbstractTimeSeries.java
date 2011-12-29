@@ -123,4 +123,6 @@ public abstract class AbstractTimeSeries {
     public abstract boolean hasInsituData();
 
     public abstract Set<String> getSelectedInsituVariables();
+
+    public abstract AxisMappingModel getAxisMappingModel();
 }

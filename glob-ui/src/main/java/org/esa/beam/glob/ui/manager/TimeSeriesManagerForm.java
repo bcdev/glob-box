@@ -60,7 +60,6 @@ class TimeSeriesManagerForm {
     private AbstractButton viewButton;
     private AbstractButton exportButton;
     private AbstractTimeSeries currentTimeSeries;
-    private final AxisMappingModel axisMappingModel = new AxisMappingModel();
     private AbstractButton editAxisMappingButton;
 
     TimeSeriesManagerForm(PageComponentDescriptor descriptor) {
@@ -543,7 +542,9 @@ class TimeSeriesManagerForm {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            new AxisMappingForm(axisMappingModel, getNameProvider()).show();
+            final AxisMappingModel axisMappingModel = currentTimeSeries.getAxisMappingModel();
+            final AxisMappingForm.NameProvider nameProvider = getNameProvider();
+            new AxisMappingForm(axisMappingModel, nameProvider).show();
         }
     }
 
@@ -557,8 +558,7 @@ class TimeSeriesManagerForm {
 
             @Override
             public String[] getInsituNames() {
-                final Set<String> selectedInsituVariables = currentTimeSeries.getSelectedInsituVariables();
-                return selectedInsituVariables.toArray(new String[selectedInsituVariables.size()]);
+                return currentTimeSeries.getInsituSource().getParameterNames();
             }
         };
     }

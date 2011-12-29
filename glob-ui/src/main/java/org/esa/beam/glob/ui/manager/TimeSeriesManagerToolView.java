@@ -64,10 +64,6 @@ public class TimeSeriesManagerToolView extends AbstractToolView {
         timeSeriesManagerTSL = new TimeSeriesManagerTSL();
     }
 
-    protected JPanel getControlPanel() {
-        return controlPanel;
-    }
-
     @Override
     protected JComponent createControl() {
         controlPanel = new JPanel(new BorderLayout());
@@ -83,6 +79,15 @@ public class TimeSeriesManagerToolView extends AbstractToolView {
         return controlPanel;
     }
 
+    Product getSelectedProduct() {
+        return selectedProduct;
+    }
+
+    private void productClosed(Product product) {
+        formMap.remove(product);
+        setSelectedProduct(null);
+    }
+
     private void updateTitle() {
         final String suffix;
         final Product product = getSelectedProduct();
@@ -92,10 +97,6 @@ public class TimeSeriesManagerToolView extends AbstractToolView {
             suffix = "";
         }
         getDescriptor().setTitle(prefixTitle + suffix);
-    }
-
-    public Product getSelectedProduct() {
-        return selectedProduct;
     }
 
     private void setSelectedProduct(Product newProduct) {
@@ -121,13 +122,8 @@ public class TimeSeriesManagerToolView extends AbstractToolView {
         }
     }
 
-    protected void productClosed(Product product) {
-        formMap.remove(product);
-        setSelectedProduct(null);
-    }
-
     private void realizeActiveForm() {
-        final JPanel controlPanel = getControlPanel();
+        final JPanel controlPanel = this.controlPanel;
 
         if (controlPanel.getComponentCount() > 0) {
             controlPanel.remove(0);
@@ -140,7 +136,7 @@ public class TimeSeriesManagerToolView extends AbstractToolView {
         controlPanel.repaint();
     }
 
-    protected TimeSeriesManagerForm getOrCreateActiveForm(Product product) {
+    private TimeSeriesManagerForm getOrCreateActiveForm(Product product) {
         if (formMap.containsKey(product)) {
             activeForm = formMap.get(product);
         } else {
@@ -149,51 +145,6 @@ public class TimeSeriesManagerToolView extends AbstractToolView {
         }
         activeForm.updateFormControl(product);
         return activeForm;
-    }
-
-    private class TSManagerPTL extends ProductTreeListenerAdapter {
-
-        @Override
-        public void productRemoved(Product product) {
-            productClosed(product);
-        }
-
-        @Override
-        public void productNodeSelected(ProductNode productNode, int clickCount) {
-            setSelectedProduct(getProduct(productNode));
-        }
-
-        private Product getProduct(ProductNode productNode) {
-            while (true) {
-                if (productNode instanceof ProductNodeGroup<?>) {
-                    ProductNodeGroup<?> productNodeGroup = (ProductNodeGroup<?>) productNode;
-                    if (productNodeGroup.getNodeCount() > 0) {
-                        productNode = productNodeGroup.get(0);
-                        continue;
-                    }
-                }
-                return productNode.getProduct();
-            }
-        }
-    }
-
-    private class TimeSeriesManagerTSL extends TimeSeriesListener {
-
-        @Override
-        public void timeSeriesChanged(TimeSeriesChangeEvent event) {
-            final int type = event.getType();
-            if (type == TimeSeriesChangeEvent.START_TIME_PROPERTY_NAME ||
-                type == TimeSeriesChangeEvent.END_TIME_PROPERTY_NAME) {
-                activeForm.updateFormControl(getSelectedProduct());
-            } else if(type == TimeSeriesChangeEvent.PROPERTY_INSITU_VARIABLE_SELECTION) {
-                updateInsituPins(event.getValue().toString());
-            }
-        }
-
-        @Override
-        public void nodeChanged(ProductNodeEvent event) {
-            activeForm.updateFormControl(getSelectedProduct());
-        }
     }
 
     private void updateInsituPins(String insituVariable) {
@@ -269,5 +220,50 @@ public class TimeSeriesManagerToolView extends AbstractToolView {
             }
         }
         return selectedInsituVariables;
+    }
+
+    private class TSManagerPTL extends ProductTreeListenerAdapter {
+
+        @Override
+        public void productRemoved(Product product) {
+            productClosed(product);
+        }
+
+        @Override
+        public void productNodeSelected(ProductNode productNode, int clickCount) {
+            setSelectedProduct(getProduct(productNode));
+        }
+
+        private Product getProduct(ProductNode productNode) {
+            while (true) {
+                if (productNode instanceof ProductNodeGroup<?>) {
+                    ProductNodeGroup<?> productNodeGroup = (ProductNodeGroup<?>) productNode;
+                    if (productNodeGroup.getNodeCount() > 0) {
+                        productNode = productNodeGroup.get(0);
+                        continue;
+                    }
+                }
+                return productNode.getProduct();
+            }
+        }
+    }
+
+    private class TimeSeriesManagerTSL extends TimeSeriesListener {
+
+        @Override
+        public void timeSeriesChanged(TimeSeriesChangeEvent event) {
+            final int type = event.getType();
+            if (type == TimeSeriesChangeEvent.START_TIME_PROPERTY_NAME ||
+                type == TimeSeriesChangeEvent.END_TIME_PROPERTY_NAME) {
+                activeForm.updateFormControl(getSelectedProduct());
+            } else if(type == TimeSeriesChangeEvent.PROPERTY_INSITU_VARIABLE_SELECTION) {
+                updateInsituPins(event.getValue().toString());
+            }
+        }
+
+        @Override
+        public void nodeChanged(ProductNodeEvent event) {
+            activeForm.updateFormControl(getSelectedProduct());
+        }
     }
 }
