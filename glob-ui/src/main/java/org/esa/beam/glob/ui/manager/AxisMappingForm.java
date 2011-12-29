@@ -319,15 +319,14 @@ class AxisMappingForm extends ModalDialog {
 
         @Override
         public void valueChanged(ListSelectionEvent e) {
-            final int minSelectionIndex = aliasNames.getSelectionModel().getMinSelectionIndex();
-            final boolean isSomeAliasSelected = minSelectionIndex != -1;
+            final boolean isSomeAliasSelected = aliasNames.getSelectionModel().getMinSelectionIndex() != -1;
             rasterNames.setEnabled(isSomeAliasSelected);
             insituNames.setEnabled(isSomeAliasSelected);
             removeButton.setEnabled(isSomeAliasSelected);
 
             if(isSomeAliasSelected) {
-                final int[] selectedRasterIndices = getSelectedRasterIndices(minSelectionIndex);
-                final int[] selectedInsituIndices = getSelectedInsituIndices(minSelectionIndex);
+                final int[] selectedRasterIndices = getSelectedRasterIndices();
+                final int[] selectedInsituIndices = getSelectedInsituIndices();
                 rasterNames.setSelectedIndices(selectedRasterIndices);
                 insituNames.setSelectedIndices(selectedInsituIndices);
             } else {
@@ -336,16 +335,21 @@ class AxisMappingForm extends ModalDialog {
             }
         }
 
-        private int[] getSelectedRasterIndices(int minSelectionIndex) {
-            final String currentAlias = aliasNames.getModel().getValueAt(minSelectionIndex, 0).toString();
+        private int[] getSelectedRasterIndices() {
+            final String currentAlias = getCurrentAlias();
             final Set<String> selectedRasterNames = axisMappingModel.getRasterNames(currentAlias);
             return getSelectedIndices(selectedRasterNames, rasterNames);
         }
 
-        private int[] getSelectedInsituIndices(int minSelectionIndex) {
-            final String currentAlias = aliasNames.getModel().getValueAt(minSelectionIndex, 0).toString();
+        private int[] getSelectedInsituIndices() {
+            final String currentAlias = getCurrentAlias();
             final Set<String> selectedInsituNames = axisMappingModel.getInsituNames(currentAlias);
             return getSelectedIndices(selectedInsituNames, insituNames);
+        }
+
+        private String getCurrentAlias() {
+            final int minSelectionIndex = aliasNames.getSelectionModel().getMinSelectionIndex();
+            return aliasNames.getModel().getValueAt(minSelectionIndex, 0).toString();
         }
 
         private int[] getSelectedIndices(Set<String> selectedVariableNames, JList variableNames) {
