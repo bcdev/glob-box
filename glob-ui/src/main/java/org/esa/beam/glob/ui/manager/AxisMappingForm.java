@@ -166,7 +166,7 @@ class AxisMappingForm extends ModalDialog {
             }
         });
         rasterNames.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-        rasterNames.addListSelectionListener(new RasterNamesSelectionListener());
+        rasterNames.addListSelectionListener(new RasterNamesSelectionListener(rasterNames));
         rasterNames.setEnabled(false);
         final JScrollPane scrollPane = new JScrollPane(rasterNames);
         scrollPane.setPreferredSize(new Dimension(160, 200));
@@ -175,6 +175,7 @@ class AxisMappingForm extends ModalDialog {
 
     private JComponent createInsituNames() {
         insituNames = new JList(new AbstractListModel() {
+
             @Override
             public int getSize() {
                 return nameProvider.getInsituNames().length;
@@ -186,10 +187,18 @@ class AxisMappingForm extends ModalDialog {
             }
         });
         insituNames.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        insituNames.addListSelectionListener(new InsituNamesSelectionListener(insituNames));
         insituNames.setEnabled(false);
         final JScrollPane scrollPane = new JScrollPane(insituNames);
         scrollPane.setPreferredSize(new Dimension(160, 200));
         return scrollPane;
+    }
+
+    static interface NameProvider {
+
+        String[] getRasterNames();
+
+        String[] getInsituNames();
     }
 
     private class AddAliasAction extends AbstractAction {
@@ -197,7 +206,6 @@ class AxisMappingForm extends ModalDialog {
         private AddAliasAction() {
             super("Add alias", UIUtils.loadImageIcon("icons/Plus16.gif"));
         }
-
         @Override
         public void actionPerformed(ActionEvent e) {
             axisMappingModel.addAlias("...");
@@ -216,6 +224,7 @@ class AxisMappingForm extends ModalDialog {
             textField.requestFocus();
             textField.selectAll();
         }
+
     }
 
     private class RemoveAliasAction extends AbstractAction {
@@ -223,7 +232,6 @@ class AxisMappingForm extends ModalDialog {
         private RemoveAliasAction() {
             super("Remove alias", UIUtils.loadImageIcon("icons/Minus16.gif"));
         }
-
         @Override
         public void actionPerformed(ActionEvent e) {
             final ListSelectionModel selectionModel = aliasNames.getSelectionModel();
@@ -238,34 +246,72 @@ class AxisMappingForm extends ModalDialog {
             removeButton.setEnabled(axisMappingModel.getAliasNames().size() > 0);
             aliasNameScrollPane.repaint();
         }
+
     }
 
-    static interface NameProvider {
-        String[] getRasterNames();
+    private abstract class VariableNamesSelectionListener implements ListSelectionListener {
 
-        String[] getInsituNames();
-    }
+        private final JList variableNames;
 
-    private class RasterNamesSelectionListener implements ListSelectionListener {
+        private VariableNamesSelectionListener(JList variableNames) {
+            this.variableNames = variableNames;
+        }
 
         @Override
         public void valueChanged(ListSelectionEvent e) {
             final ArrayList<Integer> selectedIndices = new ArrayList<Integer>();
-            for (int index : rasterNames.getSelectedIndices()) {
+            for (int index : variableNames.getSelectedIndices()) {
                 selectedIndices.add(index);
             }
             final int selectedAliasRow = aliasNames.getSelectedRow();
             if (selectedAliasRow != -1) {
                 final String currentAlias = aliasNames.getModel().getValueAt(selectedAliasRow, 0).toString();
-                for (int i = 0; i < rasterNames.getModel().getSize(); i++) {
-                    final String rasterName = rasterNames.getModel().getElementAt(i).toString();
+                for (int i = 0; i < variableNames.getModel().getSize(); i++) {
+                    final String variableName = variableNames.getModel().getElementAt(i).toString();
                     if (selectedIndices.contains(i)) {
-                        axisMappingModel.addRasterName(currentAlias, rasterName);
+                        addVariableName(currentAlias, variableName);
                     } else {
-                        axisMappingModel.removeRasterName(currentAlias, rasterName);
+                        removeVariableName(currentAlias, variableName);
                     }
                 }
             }
+        }
+        
+        abstract void addVariableName(String currentAlias, String name);
+        abstract void removeVariableName(String currentAlias, String name);
+    }
+
+    private class RasterNamesSelectionListener extends VariableNamesSelectionListener {
+
+        private RasterNamesSelectionListener(JList variableNames) {
+            super(variableNames);
+        }
+
+        @Override
+        void addVariableName(String currentAlias, String variableName) {
+            axisMappingModel.addRasterName(currentAlias, variableName);
+        }
+
+        @Override
+        void removeVariableName(String currentAlias, String variableName) {
+            axisMappingModel.removeRasterName(currentAlias, variableName);
+        }
+    }
+
+    private class InsituNamesSelectionListener extends VariableNamesSelectionListener {
+
+        private InsituNamesSelectionListener(JList variableNames) {
+            super(variableNames);
+        }
+
+        @Override
+        void addVariableName(String currentAlias, String variableName) {
+            axisMappingModel.addInsituName(currentAlias, variableName);
+        }
+
+        @Override
+        void removeVariableName(String currentAlias, String variableName) {
+            axisMappingModel.removeInsituName(currentAlias, variableName);
         }
     }
 
@@ -280,22 +326,34 @@ class AxisMappingForm extends ModalDialog {
             removeButton.setEnabled(isSomeAliasSelected);
 
             if(isSomeAliasSelected) {
-                final int[] selectedIndicesArray = getSelectedIndices(minSelectionIndex);
-                rasterNames.setSelectedIndices(selectedIndicesArray);
+                final int[] selectedRasterIndices = getSelectedRasterIndices(minSelectionIndex);
+                final int[] selectedInsituIndices = getSelectedInsituIndices(minSelectionIndex);
+                rasterNames.setSelectedIndices(selectedRasterIndices);
+                insituNames.setSelectedIndices(selectedInsituIndices);
             } else {
                 rasterNames.clearSelection();
                 insituNames.clearSelection();
             }
         }
 
-        private int[] getSelectedIndices(int minSelectionIndex) {
+        private int[] getSelectedRasterIndices(int minSelectionIndex) {
             final String currentAlias = aliasNames.getModel().getValueAt(minSelectionIndex, 0).toString();
             final Set<String> selectedRasterNames = axisMappingModel.getRasterNames(currentAlias);
-            final List<Integer> selectedIndices = new ArrayList<Integer>(selectedRasterNames.size());
-            final ListModel rasterNamesModel = rasterNames.getModel();
-            for(int i = 0; i < rasterNamesModel.getSize(); i++) {
-                final String rasterName = rasterNamesModel.getElementAt(i).toString();
-                if (selectedRasterNames.contains(rasterName)) {
+            return getSelectedIndices(selectedRasterNames, rasterNames);
+        }
+
+        private int[] getSelectedInsituIndices(int minSelectionIndex) {
+            final String currentAlias = aliasNames.getModel().getValueAt(minSelectionIndex, 0).toString();
+            final Set<String> selectedInsituNames = axisMappingModel.getInsituNames(currentAlias);
+            return getSelectedIndices(selectedInsituNames, insituNames);
+        }
+
+        private int[] getSelectedIndices(Set<String> selectedVariableNames, JList variableNames) {
+            final List<Integer> selectedIndices = new ArrayList<Integer>(selectedVariableNames.size());
+            final ListModel variableNamesModel = variableNames.getModel();
+            for(int i = 0; i < variableNamesModel.getSize(); i++) {
+                final String rasterName = variableNamesModel.getElementAt(i).toString();
+                if (selectedVariableNames.contains(rasterName)) {
                     selectedIndices.add(i);
                 }
             }
