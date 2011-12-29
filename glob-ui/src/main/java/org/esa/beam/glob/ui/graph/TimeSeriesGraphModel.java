@@ -52,11 +52,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 class TimeSeriesGraphModel {
 
-    private static final String DEFAULT_FONT_NAME = "Verdana";
     private static final Color DEFAULT_FOREGROUND_COLOR = Color.BLACK;
     private static final Color DEFAULT_BACKGROUND_COLOR = new Color(180, 180, 180);
     private static final String NO_DATA_MESSAGE = "No data to display";
-    private static final Stroke CURSOR_STROKE = new BasicStroke(1.0f);
     private static final Stroke PIN_STROKE = new BasicStroke(1.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f,
                                                              new float[]{10.0f}, 0.0f);
 
@@ -138,10 +136,7 @@ class TimeSeriesGraphModel {
         insituDatasets.clear();
 
         if (hasData) {
-            final List<String> eoVariables = displayController.getEoVariablesToDisplay();
-            final List<String> insituVariables = displayController.getInsituVariablesToDisplay();
-            final AxisMappingModel axisMappingModel = timeSeries.getAxisMappingModel();
-            final AxisMappingModel displayAxisModel = createDisplayAxisModel(eoVariables, insituVariables, axisMappingModel);
+            final AxisMappingModel displayAxisModel = createDisplayAxisModel(timeSeries);
             final Set<String> aliasNamesSet = displayAxisModel.getAliasNames();
             final String[] aliasNames = aliasNamesSet.toArray(new String[aliasNamesSet.size()]);
             for (int i = 0; i < aliasNames.length; i++) {
@@ -263,12 +258,19 @@ class TimeSeriesGraphModel {
         }
     }
 
+    private AxisMappingModel createDisplayAxisModel(AbstractTimeSeries timeSeries) {
+        final List<String> eoVariables = displayController.getEoVariablesToDisplay();
+        final List<String> insituVariables = displayController.getInsituVariablesToDisplay();
+        final AxisMappingModel axisMappingModel = timeSeries.getAxisMappingModel();
+        return createDisplayAxisModel(eoVariables, insituVariables, axisMappingModel);
+    }
+
     private String getUnit(AxisMappingModel axisMappingModel, String aliasName) {
         final Set<String> rasterNames = axisMappingModel.getRasterNames(aliasName);
         for (List<Band> eoVariableBandList : eoVariableBands) {
             for (String rasterName : rasterNames) {
                 final Band raster = eoVariableBandList.get(0);
-                if (raster.getName().equals(rasterName)) {
+                if (raster.getName().startsWith(rasterName)) {
                     return raster.getUnit();
                 }
             }
@@ -304,26 +306,6 @@ class TimeSeriesGraphModel {
         return displayAxisModel;
     }
 
-    private Paint getPaintFromCorrespondingPlacemark() {
-        // todo - ts - get paint from corresponding placemark, similar to this:
-        /**
-         *   Paint paint = null;
-         *   for(Placemark placemark : timeSeries.getInsituPlacemarks()) {
-         *       final GeoPos[] geoPoses = timeSeries.getInsituSource().getInsituPositionsFor(insituVariableName);
-         *       for (GeoPos geoPos : geoPoses) {
-         *           if(placemark.getGeoPos().equals(geoPos)) {
-         *               paint = placemark.getSymbol().getFillPaint();
-         *           }
-         *       }
-         *   }
-         *   if(paint == null) {
-         *       throw new IllegalStateException("No placemark found for variable '" + insituVariableName + ".");
-         *   }
-         *   return paint;
-         **/
-        return new Color(255, 0, 0);
-    }
-
     private static String getAxisLabel(String variableName, String unit) {
         if (StringUtils.isNotNullAndNotEmpty(unit)) {
             return String.format("%s (%s)", variableName, unit);
@@ -347,13 +329,28 @@ class TimeSeriesGraphModel {
         }
     }
 
-    private void addTimeSeries(List<TimeSeries> timeSeries, TimeSeriesType type) {
+    private void addTimeSeries(Map<String, List<TimeSeries>> timeSeries, TimeSeriesType type) {
+        final AxisMappingModel displayAxisModel = createDisplayAxisModel(getTimeSeries());
         List<TimeSeriesCollection> datasets = getDatasets(type);
-        for(int index = 0; index < datasets.size(); index++) {
-            final TimeSeries currentTimeSeries = timeSeries.get(index);
-            datasets.get(index).removeAllSeries();
-            datasets.get(index).addSeries(currentTimeSeries);
+        for (String alias : displayAxisModel.getAliasNames()) {
+            TimeSeriesCollection aliasDataset = getDatasetForAlias(alias, datasets);
+            final List<TimeSeries> aliasTimeSerieses = timeSeries.get(alias);
+            for (TimeSeries aliasTimeSeriese : aliasTimeSerieses) {
+                aliasDataset.addSeries(aliasTimeSeriese);
+            }
         }
+    }
+
+    private TimeSeriesCollection getDatasetForAlias(String alias, List<TimeSeriesCollection> datasets) {
+        final AxisMappingModel displayAxisModel = createDisplayAxisModel(getTimeSeries());
+        int index = 0;
+        for (String aliasName : displayAxisModel.getAliasNames()) {
+            if (alias.equals(aliasName)) {
+                return datasets.get(index);
+            }
+            index++;
+        }
+        throw new IllegalStateException(MessageFormat.format("No dataset found for alias ''{0}''.", alias));
     }
 
     synchronized void removeCursorTimeSeriesInWorkerThread() {
@@ -508,7 +505,13 @@ class TimeSeriesGraphModel {
 //        System.out.println("excecute first worker in chain");
     }
 
-    private class TimeSeriesUpdater extends SwingWorker<List<TimeSeries>, Void> {
+    private AbstractTimeSeries getTimeSeries() {
+        final ProductSceneView sceneView = VisatApp.getApp().getSelectedProductSceneView();
+        final Product sceneViewProduct = sceneView.getProduct();
+        return TimeSeriesMapper.getInstance().getTimeSeries(sceneViewProduct);
+    }
+
+    private class TimeSeriesUpdater extends SwingWorker<Map<String, List<TimeSeries>>, Void> {
 
         private final int pixelX;
         private final int pixelY;
@@ -526,18 +529,26 @@ class TimeSeriesGraphModel {
         }
 
         @Override
-        protected List<TimeSeries> doInBackground() throws Exception {
+        protected Map<String, List<TimeSeries>> doInBackground() throws Exception {
             if (version.get() != myVersion) {
-                return Collections.emptyList();
+                return Collections.emptyMap();
             }
+
+            // TODO - handle insitu data accordingly to band data
+            // that is: create a list for all alias names
+            // create a time series for insitu data
+            // add it to the list of time series within the result
+            // on return, the map shall contain:
+            // for each alias a list of time series of every type
+
+            final AxisMappingModel axisMappingModel = createDisplayAxisModel(getTimeSeries());
             if (type.equals(TimeSeriesType.INSITU)) {
-                int variableCount = insituVariables.size();
-                List<TimeSeries> timeSeriesList = new ArrayList<TimeSeries>(variableCount);
                 ProductSceneView sceneView = VisatApp.getApp().getSelectedProductSceneView();
                 AbstractTimeSeries globTimeSeries = TimeSeriesMapper.getInstance().getTimeSeries(sceneView.getProduct());
                 final InsituSource insituSource = globTimeSeries.getInsituSource();
                 final Product timeSeriesProduct = globTimeSeries.getTsProduct();
                 final GeoCoding geoCoding = timeSeriesProduct.getGeoCoding();
+                final Map<String, List<TimeSeries>> result = new HashMap<String, List<TimeSeries>>();
                 for (String insituVariable : insituVariables) {
                     final GeoPos[] insituPositions = insituSource.getInsituPositionsFor(insituVariable);
                     PixelPos pixelPos = new PixelPos();
@@ -547,18 +558,38 @@ class TimeSeriesGraphModel {
                             continue;
                         }
                         InsituRecord[] insituRecords = insituSource.getValuesFor(insituVariable, insituPosition);
-                        timeSeriesList.add(computeTimeSeries(insituRecords));
+//                        result.add(computeTimeSeries(insituRecords));
                     }
                 }
-                return timeSeriesList;
+                return result;
             }
 
-            final int variableCount = eoVariableBands.size();
-            List<TimeSeries> timeSeriesList = new ArrayList<TimeSeries>(variableCount);
-            for (List<Band> bandList : eoVariableBands) {
-                timeSeriesList.add(computeTimeSeries(bandList, pixelX, pixelY, currentLevel));
+            final Set<String> aliasNames = axisMappingModel.getAliasNames();
+            final Map<String, List<TimeSeries>> result = new HashMap<String, List<TimeSeries>>();
+            for (String aliasName : aliasNames) {
+                List<List<Band>> bandList = getBandListList(aliasName, axisMappingModel);
+                List<TimeSeries> tsList = new ArrayList<TimeSeries>();
+                for (List<Band> bands : bandList) {
+                    final TimeSeries timeSeries = computeTimeSeries(bands, pixelX, pixelY, currentLevel);
+                    tsList.add(timeSeries);
+                }
+                result.put(aliasName, tsList);
             }
-            return timeSeriesList;
+            return result;
+        }
+
+        private List<List<Band>> getBandListList(String aliasName, AxisMappingModel axisMappingModel) {
+            List<List<Band>> result = new ArrayList<List<Band>>();
+            final Set<String> rasterNames = axisMappingModel.getRasterNames(aliasName);
+            for (List<Band> eoVariableBandList : eoVariableBands) {
+                for (String rasterName : rasterNames) {
+                    final Band raster = eoVariableBandList.get(0);
+                    if (raster.getName().startsWith(rasterName)) {
+                        result.add(eoVariableBandList);
+                    }
+                }
+            }
+            return result;
         }
 
         @Override
@@ -615,12 +646,6 @@ class TimeSeriesGraphModel {
                 }
             }
             return timeSeries;
-        }
-
-        private AbstractTimeSeries getTimeSeries() {
-            final ProductSceneView sceneView = VisatApp.getApp().getSelectedProductSceneView();
-            final Product sceneViewProduct = sceneView.getProduct();
-            return TimeSeriesMapper.getInstance().getTimeSeries(sceneViewProduct);
         }
     }
 
