@@ -558,7 +558,11 @@ class TimeSeriesManagerForm {
 
             @Override
             public String[] getInsituNames() {
-                return currentTimeSeries.getInsituSource().getParameterNames();
+                if (currentTimeSeries.hasInsituData()) {
+                    return currentTimeSeries.getInsituSource().getParameterNames();
+                } else {
+                    return new String[0];
+                }
             }
         };
     }
