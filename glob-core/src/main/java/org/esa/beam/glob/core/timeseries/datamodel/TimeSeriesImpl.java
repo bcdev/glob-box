@@ -16,14 +16,12 @@
 
 package org.esa.beam.glob.core.timeseries.datamodel;
 
-import com.bc.ceres.core.ProgressMonitor;
+import com.bc.ceres.core.*;
 import org.esa.beam.framework.datamodel.*;
-import org.esa.beam.glob.core.insitu.InsituSource;
-import org.esa.beam.util.Guardian;
-import org.esa.beam.util.ProductUtils;
-import org.esa.beam.util.StringUtils;
+import org.esa.beam.glob.core.insitu.*;
+import org.esa.beam.util.*;
 
-import java.text.SimpleDateFormat;
+import java.text.*;
 import java.util.*;
 
 /**
@@ -33,16 +31,18 @@ import java.util.*;
  */
 final class TimeSeriesImpl extends AbstractTimeSeries {
 
+    private final Map<RasterDataNode, TimeCoding> rasterTimeMap = new WeakHashMap<RasterDataNode, TimeCoding>();
+    private final List<TimeSeriesListener> listeners = new ArrayList<TimeSeriesListener>();
+    private final List<Placemark> insituPins = new ArrayList<Placemark>();
+    private final AxisMappingModel axisMappingModel = new AxisMappingModel();
+
     private Product tsProduct;
     private List<ProductLocation> productLocationList;
     private Map<String, Product> productTimeMap;
-    private final Map<RasterDataNode, TimeCoding> rasterTimeMap = new WeakHashMap<RasterDataNode, TimeCoding>();
-    private final List<TimeSeriesListener> listeners = new ArrayList<TimeSeriesListener>();
-    private volatile boolean isAdjustingImageInfos;
     private InsituSource insituSource;
     private Set<String> insituVariablesSelections = new HashSet<String>();
-    private final List<Placemark> insituPins = new ArrayList<Placemark>();
-    private final AxisMappingModel axisMappingModel = new AxisMappingModel();
+
+    private volatile boolean isAdjustingImageInfos;
 
     /**
      * Used to create a TimeSeries from within a ProductReader
@@ -228,6 +228,7 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
         // to reconstruct the source image which will be nulled when
         // a product is reopened after saving
         tsProduct.addProductNodeListener(new SourceImageReconstructor());
+        axisMappingModel.addAxisMappingModelListener(new AxisMappingModelListener());
     }
 
     private void storeProductsInMap() {
@@ -667,6 +668,14 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
                     adjustImageInfos((RasterDataNode) event.getSourceNode());
                 }
             }
+        }
+    }
+
+    private class AxisMappingModelListener implements AxisMappingModel.ModelListener {
+
+        @Override
+        public void hasChanged() {
+            fireChangeEvent(new TimeSeriesChangeEvent(TimeSeriesChangeEvent.PROPERTY_BAND_MAPPING_CHANGED, null));
         }
     }
 }

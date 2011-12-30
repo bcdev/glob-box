@@ -16,43 +16,25 @@
 
 package org.esa.beam.glob.ui.graph;
 
-import com.bc.ceres.glayer.support.ImageLayer;
-import com.bc.ceres.grender.Viewport;
-import org.esa.beam.framework.datamodel.Placemark;
-import org.esa.beam.framework.datamodel.PlacemarkGroup;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductNode;
-import org.esa.beam.framework.datamodel.ProductNodeEvent;
-import org.esa.beam.framework.datamodel.RasterDataNode;
-import org.esa.beam.framework.ui.PixelPositionListener;
-import org.esa.beam.framework.ui.application.support.AbstractToolView;
-import org.esa.beam.framework.ui.product.ProductSceneView;
-import org.esa.beam.glob.core.TimeSeriesMapper;
-import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
-import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesChangeEvent;
-import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesListener;
-import org.esa.beam.glob.ui.player.TimeSeriesPlayerToolView;
-import org.esa.beam.visat.VisatApp;
-import org.jfree.chart.ChartFactory;
-import org.jfree.chart.JFreeChart;
-import org.jfree.chart.plot.XYPlot;
+import com.bc.ceres.glayer.support.*;
+import org.esa.beam.framework.datamodel.*;
+import org.esa.beam.framework.ui.*;
+import org.esa.beam.framework.ui.application.support.*;
+import org.esa.beam.framework.ui.product.*;
+import org.esa.beam.glob.core.*;
+import org.esa.beam.glob.core.timeseries.datamodel.*;
+import org.esa.beam.glob.ui.player.*;
+import org.esa.beam.visat.*;
+import org.jfree.chart.*;
+import org.jfree.chart.plot.*;
 
-import javax.swing.AbstractAction;
-import javax.swing.Action;
-import javax.swing.JComponent;
-import javax.swing.event.InternalFrameAdapter;
-import javax.swing.event.InternalFrameEvent;
-import java.awt.Container;
-import java.awt.event.ActionEvent;
-import java.awt.event.MouseEvent;
-import java.awt.geom.AffineTransform;
-import java.awt.geom.Point2D;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.util.ArrayList;
-import java.util.List;
+import javax.swing.*;
+import javax.swing.event.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.beans.*;
 
-import static org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries.rasterToVariableName;
+import static org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries.*;
 
 public class TimeSeriesGraphToolView extends AbstractToolView {
 
@@ -91,7 +73,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
                                                    DEFAULT_RANGE_LABEL,
                                                    null, true, true, false);
         graphModel = new TimeSeriesGraphModel(chart.getXYPlot());
-        graphForm = new TimeSeriesGraphForm(chart, showSelectedPinAction, showAllPinAction,
+        graphForm = new TimeSeriesGraphForm(graphModel, chart, showSelectedPinAction, showAllPinAction,
                                             getDescriptor().getHelpId());
 
         final VisatApp visatApp = VisatApp.getApp();
@@ -147,7 +129,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
             setTitle(String.format("%s - %s", titleBase, variableName));
 
             graphModel.updateAnnotation(raster);
-            updatePins();
+            graphModel.updatePins();
             showSelectedPinAction.setEnabled(currentView.getSelectedPin() != null);
             showAllPinAction.setEnabled(currentProduct.getPinGroup().getNodeCount() > 0);
         } else {
@@ -160,48 +142,11 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         }
     }
 
-    private void updatePins() {
-        graphModel.removePinTimeSeries();
-        Placemark[] pins = null;
-        if (graphForm.isShowingAllPins()) {
-            PlacemarkGroup pinGroup = currentView.getProduct().getPinGroup();
-            pins = pinGroup.toArray(new Placemark[pinGroup.getNodeCount()]);
-        } else if (graphForm.isShowingSelectedPins()) {
-            pins = currentView.getSelectedPins();
-        }
-//        pins = filterInsituPins(pins);
-        if (pins != null) {
-            for (Placemark pin : pins) {
-                final Viewport viewport = currentView.getViewport();
-                final ImageLayer baseLayer = currentView.getBaseImageLayer();
-                final int currentLevel = baseLayer.getLevel(viewport);
-                final AffineTransform levelZeroToModel = baseLayer.getImageToModelTransform();
-                final AffineTransform modelToCurrentLevel = baseLayer.getModelToImageTransform(currentLevel);
-                final Point2D modelPos = levelZeroToModel.transform(pin.getPixelPos(), null);
-                final Point2D currentPos = modelToCurrentLevel.transform(modelPos, null);
-                graphModel.updateTimeSeries((int) currentPos.getX(), (int) currentPos.getY(),
-                                            currentLevel, TimeSeriesType.PIN, true);
-            }
-        }
-    }
-
-    private Placemark[] filterInsituPins(Placemark[] pins) {
-        AbstractTimeSeries timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(currentView.getProduct());
-        final List<Placemark> insituPins = timeSeries.getInsituPlacemarks();
-        final List<Placemark> result = new ArrayList<Placemark>();
-        for (Placemark pin : pins) {
-            if(!insituPins.contains(pin)) {
-                result.add(pin);
-            }
-        }
-        return result.toArray(new Placemark[result.size()]);
-    }
-
     private class ShowPinAction extends AbstractAction {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            updatePins();
+            graphModel.updatePins();
         }
     }
 
@@ -255,8 +200,8 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         public void propertyChange(PropertyChangeEvent evt) {
             Placemark pin = (Placemark) evt.getNewValue();
             showSelectedPinAction.setEnabled(pin != null);
-            if (!graphForm.isShowingAllPins()) {
-                updatePins();
+            if (!graphModel.isShowingAllPins()) {
+                graphModel.updatePins();
             }
         }
     }
@@ -270,6 +215,8 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
                 handleBandsChanged();
             } else if(event.getType() == TimeSeriesChangeEvent.PROPERTY_INSITU_VARIABLE_SELECTION) {
                 handleInsituVariablesChanged(event.getValue().toString());
+            } else if(event.getType() == TimeSeriesChangeEvent.PROPERTY_BAND_MAPPING_CHANGED) {
+                handleInsituVariablesChanged();
             }
 
         }
@@ -278,7 +225,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         public void nodeChanged(ProductNodeEvent event) {
             String propertyName = event.getPropertyName();
             if (propertyName.equals(Placemark.PROPERTY_NAME_PIXELPOS)) {
-                updatePins();
+                graphModel.updatePins();
             }
         }
 
@@ -313,7 +260,12 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
             AbstractTimeSeries timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(currentView.getProduct());
             graphModel.adaptToTimeSeries(timeSeries);
             graphModel.updateAnnotation(currentView.getRaster());
-            updatePins();
+            graphModel.updatePins();
+        }
+
+        private void handleInsituVariablesChanged() {
+            AbstractTimeSeries timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(currentView.getProduct());
+            graphModel.adaptToTimeSeries(timeSeries);
         }
 
         private void handleInsituVariablesChanged(String variableName) {
@@ -324,7 +276,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
             } else {
                 graphModel.removeInsituTimeSeriesInWorkerThread();
             }
-            updatePins();
+            graphModel.updatePins();
         }
     }
 

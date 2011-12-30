@@ -28,6 +28,8 @@ public class AxisMappingModel {
 
     private final Map<String, Set<String>> insituMap = new HashMap<String, Set<String>>();
     private final Map<String, Set<String>> rasterMap = new HashMap<String, Set<String>>();
+    
+    private final List<ModelListener> listeners = new ArrayList<ModelListener>();
 
     public Set<String> getInsituNames(String alias) {
         return getNamesFor(alias, insituMap);
@@ -48,10 +50,12 @@ public class AxisMappingModel {
     public void removeAlias(String alias) {
         insituMap.remove(alias);
         rasterMap.remove(alias);
+        fireEvent();
     }
 
     public void addAlias(String alias) {
         insituMap.put(alias, new HashSet<String>());
+        fireEvent();
     }
 
     public void removeInsituName(String alias, String insituName) {
@@ -72,6 +76,7 @@ public class AxisMappingModel {
     public void replaceAlias(String beforeName, String changedName) {
         replaceAliasInMap(beforeName, changedName, rasterMap);
         replaceAliasInMap(beforeName, changedName, insituMap);
+        fireEvent();
     }
 
     public String getRasterAlias(String rasterName) {
@@ -82,6 +87,16 @@ public class AxisMappingModel {
         return getAlias(insituName, insituMap);
     }
 
+    public void addAxisMappingModelListener(ModelListener axisMappingModelListener) {
+        listeners.add(axisMappingModelListener);
+    }
+
+    private void fireEvent() {
+        for (ModelListener listener : listeners) {
+            listener.hasChanged();
+        }
+    }
+    
     private String getAlias(String rasterName, Map<String, Set<String>> map) {
         for (Map.Entry<String, Set<String>> entry : map.entrySet()) {
             for (String mappedRasterName : entry.getValue()) {
@@ -105,6 +120,7 @@ public class AxisMappingModel {
         ensureSetAvailable(alias, map);
         final Set<String> set = map.get(alias);
         set.add(name);
+        fireEvent();
     }
 
     private void ensureSetAvailable(String alias, Map<String, Set<String>> map) {
@@ -116,6 +132,7 @@ public class AxisMappingModel {
     private void removeName(String alias, String name, Map<String, Set<String>> map) {
         ensureSetAvailable(alias, map);
         map.get(alias).remove(name);
+        fireEvent();
     }
 
     private void replaceAliasInMap(String beforeName, String changedName, Map<String, Set<String>> map) {
@@ -123,5 +140,9 @@ public class AxisMappingModel {
         if (removedNames != null) {
             map.put(changedName, removedNames);
         }
+    }
+
+    interface ModelListener {
+        void hasChanged();
     }
 }

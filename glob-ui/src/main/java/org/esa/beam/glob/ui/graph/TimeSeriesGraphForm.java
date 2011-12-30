@@ -46,9 +46,11 @@ class TimeSeriesGraphForm {
     private AbstractButton showTimeSeriesForSelectedPinsButton;
     private AbstractButton showTimeSeriesForAllPinsButton;
     private AbstractButton exportTimeSeriesButton;
+    private TimeSeriesGraphModel graphModel;
 
-    TimeSeriesGraphForm(JFreeChart chart, Action showSelectedPinsAction, Action showAllPinsAction,
+    TimeSeriesGraphForm(TimeSeriesGraphModel graphModel, JFreeChart chart, Action showSelectedPinsAction, Action showAllPinsAction,
                         final String helpID) {
+        this.graphModel = graphModel;
         createUI(chart, showSelectedPinsAction, showAllPinsAction, helpID);
     }
 
@@ -81,8 +83,10 @@ class TimeSeriesGraphForm {
         showTimeSeriesForSelectedPinsButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (isShowingAllPins()) {
+                graphModel.setIsShowingSelectedPins(showTimeSeriesForSelectedPinsButton.isSelected());
+                if (graphModel.isShowingAllPins()) {
                     showTimeSeriesForAllPinsButton.setSelected(false);
+                    graphModel.setIsShowingAllPins(false);
                 }
             }
         });
@@ -95,8 +99,10 @@ class TimeSeriesGraphForm {
         showTimeSeriesForAllPinsButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (isShowingSelectedPins()) {
+                graphModel.setIsShowingAllPins(showTimeSeriesForAllPinsButton.isSelected());
+                if (graphModel.isShowingSelectedPins()) {
                     showTimeSeriesForSelectedPinsButton.setSelected(false);
+                    graphModel.setIsShowingSelectedPins(false);
                 }
             }
         });
@@ -163,14 +169,6 @@ class TimeSeriesGraphForm {
 //        filterButton.setEnabled(enabled);
         showTimeSeriesForSelectedPinsButton.setEnabled(enabled);
         showTimeSeriesForAllPinsButton.setEnabled(enabled);
-    }
-
-    boolean isShowingSelectedPins() {
-        return showTimeSeriesForSelectedPinsButton.isSelected();
-    }
-
-    boolean isShowingAllPins() {
-        return showTimeSeriesForAllPinsButton.isSelected();
     }
 
     public void setExportEnabled(boolean placemarksSet) {
