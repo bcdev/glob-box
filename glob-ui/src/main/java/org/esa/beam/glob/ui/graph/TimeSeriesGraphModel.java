@@ -609,7 +609,7 @@ class TimeSeriesGraphModel {
         eoVariableBandsClone.addAll(eoVariableBands);
 
         return new TimeSeriesGraphUpdater.VersionSafeDataSources
-                    (insituVariablesClone, eoVariableBandsClone, displayController.getPinPositionsToDisplay(), getVersion().get()) {
+                (insituVariablesClone, eoVariableBandsClone, displayController.getPinPositionsToDisplay(), getVersion().get()) {
             @Override
             public int getCurrentVersion() {
                 return version.get();
