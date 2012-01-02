@@ -19,7 +19,6 @@ package org.esa.beam.glob.ui.graph;
 import com.bc.ceres.glayer.support.ImageLayer;
 import com.bc.ceres.grender.Viewport;
 import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.framework.datamodel.Placemark;
 import org.esa.beam.framework.datamodel.PlacemarkGroup;
 import org.esa.beam.framework.datamodel.Product;
@@ -52,7 +51,15 @@ import java.awt.Stroke;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.text.MessageFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.WeakHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
@@ -64,7 +71,7 @@ class TimeSeriesGraphModel {
     private static final Stroke PIN_STROKE = new BasicStroke(1.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f,
                                                              new float[]{10.0f}, 0.0f);
 
-    private final Map<AbstractTimeSeries, DisplayController> displayControllerMap;
+    private final Map<AbstractTimeSeries, TimeSeriesGraphDisplayController> displayControllerMap;
     private final XYPlot timeSeriesPlot;
     private final List<List<Band>> eoVariableBands;
     private final List<String> insituVariables;
@@ -73,7 +80,7 @@ class TimeSeriesGraphModel {
     private final List<TimeSeriesCollection> insituDatasets;
 
     final private AtomicInteger version = new AtomicInteger(0);
-    private DisplayController displayController;
+    private TimeSeriesGraphDisplayController displayController;
 
     private final List<SwingWorker> synchronizedWorkerChain;
     private SwingWorker unchainedWorker;
@@ -83,12 +90,13 @@ class TimeSeriesGraphModel {
     private DisplayAxisMapping displayAxisMapping;
     private final TimeSeriesGraphUpdater.WorkerChainSupport workerChainSupport;
     private final TimeSeriesGraphUpdater.TimeSeriesDataHandler dataTarget;
+    private final TimeSeriesGraphDisplayController.PinSupport pinSupport;
 
     TimeSeriesGraphModel(XYPlot plot) {
         timeSeriesPlot = plot;
         eoVariableBands = new ArrayList<List<Band>>();
         insituVariables = new ArrayList<String>();
-        displayControllerMap = new WeakHashMap<AbstractTimeSeries, DisplayController>();
+        displayControllerMap = new WeakHashMap<AbstractTimeSeries, TimeSeriesGraphDisplayController>();
         pinDatasets = new ArrayList<TimeSeriesCollection>();
         cursorDatasets = new ArrayList<TimeSeriesCollection>();
         insituDatasets = new ArrayList<TimeSeriesCollection>();
@@ -111,6 +119,26 @@ class TimeSeriesGraphModel {
                 TimeSeriesGraphModel.this.removeCursorTimeSeries();
             }
         };
+        pinSupport = createPinSupport();
+    }
+
+    private TimeSeriesGraphDisplayController.PinSupport createPinSupport() {
+        return new TimeSeriesGraphDisplayController.PinSupport() {
+    @Override
+    public boolean isShowingAllPins() {
+        return isShowingAllPins;
+    }
+
+    @Override
+    public boolean isShowingSelectedPins() {
+        return isShowingSelectedPins;
+    }
+
+    @Override
+    public Placemark[] getSelectedPins() {
+        return getCurrentView().getSelectedPins();
+    }
+};
     }
 
     private void initPlot() {
@@ -137,12 +165,11 @@ class TimeSeriesGraphModel {
         if (hasData) {
             displayController = displayControllerMap.get(timeSeries);
             if (displayController == null) {
-                displayController = new DisplayController(timeSeries);
+                displayController = new TimeSeriesGraphDisplayController(pinSupport);
                 displayControllerMap.put(timeSeries, displayController);
-            } else {
-                displayController.adaptTo(timeSeries);
             }
-            for (String eoVariableName : displayController.eoVariablesToDisplay) {
+            displayController.adaptTo(timeSeries);
+            for (String eoVariableName : displayController.getEoVariablesToDisplay()) {
                 eoVariableBands.add(timeSeries.getBandsForVariable(eoVariableName));
             }
             for (String insituVariableName : displayController.getInsituVariablesToDisplay()) {
@@ -651,104 +678,6 @@ class TimeSeriesGraphModel {
             }
         }
         return result.toArray(new Placemark[result.size()]);
-    }
-
-    private class DisplayController {
-
-        private final List<String> eoVariablesToDisplay;
-        private final List<String> insituVariablesToDisplay;
-        private static final int ALPHA = 200;
-
-        private Color[] colors = {
-                    Color.red,
-                    Color.green,
-                    Color.blue,
-                    Color.magenta,
-                    Color.orange,
-                    Color.darkGray,
-                    Color.pink,
-                    Color.cyan,
-                    Color.yellow,
-                    Color.red.brighter(),
-                    Color.green.brighter(),
-                    Color.blue.brighter(),
-                    Color.blue.brighter(),
-                    Color.magenta.brighter(),
-                    Color.orange.darker(),
-//                    new Color(0, 0, 60, ALPHA),
-//                    new Color(0, 60, 0, ALPHA),
-//                    new Color(60, 0, 0, ALPHA),
-//                    new Color(60, 60, 60, ALPHA),
-//                    new Color(0, 0, 120, ALPHA),
-//                    new Color(0, 120, 0, ALPHA),
-//                    new Color(120, 0, 0, ALPHA),
-//                    new Color(120, 120, 120, ALPHA)
-        };
-
-        private Paint getPaint(int i) {
-            return colors[i % colors.length];
-        }
-
-        private DisplayController(AbstractTimeSeries timeSeries) {
-            eoVariablesToDisplay = new ArrayList<String>();
-            insituVariablesToDisplay = new ArrayList<String>();
-            adaptTo(timeSeries);
-        }
-
-        private List<String> getEoVariablesToDisplay() {
-            return Collections.unmodifiableList(eoVariablesToDisplay);
-        }
-
-        private List<String> getInsituVariablesToDisplay() {
-            return Collections.unmodifiableList(insituVariablesToDisplay);
-        }
-
-        void adaptTo(AbstractTimeSeries timeSeries) {
-            for (String eoVariableName : timeSeries.getEoVariables()) {
-                if (timeSeries.isEoVariableSelected(eoVariableName)) {
-                    if (!eoVariablesToDisplay.contains(eoVariableName)) {
-                        eoVariablesToDisplay.add(eoVariableName);
-                    }
-                } else {
-                    eoVariablesToDisplay.remove(eoVariableName);
-                }
-            }
-            if (timeSeries.hasInsituData()) {
-                for (String insituVariableName : timeSeries.getInsituSource().getParameterNames()) {
-                    if (timeSeries.isInsituVariableSelected(insituVariableName)) {
-                        if (!insituVariablesToDisplay.contains(insituVariableName)) {
-                            insituVariablesToDisplay.add(insituVariableName);
-                        }
-                    } else {
-                        insituVariablesToDisplay.remove(insituVariableName);
-                    }
-                }
-            }
-        }
-
-        private List<GeoPos> getPinPositionsToDisplay() {
-            final ArrayList<GeoPos> pinPositionsToDisplay = new ArrayList<GeoPos>(0);
-            if (isShowingAllPins) {
-                final PlacemarkGroup pinGroup = getTimeSeries().getTsProduct().getPinGroup();
-                final int pinCount = pinGroup.getNodeCount();
-                for (int i = 0; i < pinCount; i++) {
-                    final Placemark pin = pinGroup.get(i);
-                    pinPositionsToDisplay.add(pin.getGeoPos());
-                }
-            } else if (isShowingSelectedPins) {
-                final ProductSceneView sceneView = getCurrentView();
-                final List<Placemark> selectedPlacemarks = Arrays.asList(sceneView.getSelectedPins());
-                final PlacemarkGroup pinGroup = getTimeSeries().getTsProduct().getPinGroup();
-                final int pinCount = pinGroup.getNodeCount();
-                for (int i = 0; i < pinCount; i++) {
-                    final Placemark pin = pinGroup.get(i);
-                    if (selectedPlacemarks.contains(pin)) {
-                        pinPositionsToDisplay.add(pin.getGeoPos());
-                    }
-                }
-            }
-            return pinPositionsToDisplay;
-        }
     }
 
     private ProductSceneView getCurrentView() {
