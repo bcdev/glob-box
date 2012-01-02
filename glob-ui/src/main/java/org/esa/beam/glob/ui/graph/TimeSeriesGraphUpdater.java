@@ -78,6 +78,7 @@ class TimeSeriesGraphUpdater extends SwingWorker<Map<String, List<TimeSeries>>, 
             dataHandler.removeCursorTimeSeries();
         }
         try {
+
             dataHandler.collectTimeSeries(get(), type);
         } catch (InterruptedException ignore) {
             ignore.printStackTrace();

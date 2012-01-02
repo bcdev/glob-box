@@ -4,13 +4,20 @@ import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.XYPlot;
-import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.chart.renderer.xy.XYErrorRenderer;
 import org.jfree.data.time.Month;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import java.awt.BasicStroke;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.geom.Ellipse2D;
 
@@ -80,13 +87,21 @@ public class Main {
 
         final XYPlot plot = timeSeriesChart.getXYPlot();
 
-        final XYLineAndShapeRenderer renderer = (XYLineAndShapeRenderer) plot.getRendererForDataset(dataset);
+//        final XYLineAndShapeRenderer renderer = (XYLineAndShapeRenderer) plot.getRendererForDataset(dataset);
+
+        final XYErrorRenderer renderer = new XYErrorRenderer();
+        renderer.setDrawXError(false);
+        renderer.setBaseLinesVisible(true);
+        renderer.setAutoPopulateSeriesStroke(false);
+
+
+        plot.setRenderer(0, renderer);
         renderer.setBaseShapesVisible(true);
         renderer.setSeriesPaint(0, Color.CYAN);
         renderer.setSeriesPaint(1, Color.GREEN);
-        renderer.setSeriesShape(0, new Ellipse2D.Double(-10, -10, 20, 20));
-        renderer.setSeriesStroke(0, new BasicStroke(1.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f,
-                new float[]{10.0f, 30.0f}, 0.0f));
+        renderer.setSeriesShape(0, new Ellipse2D.Double(-5, -5, 10, 10));
+        renderer.setBaseStroke(new BasicStroke(1.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 10.0f,
+                                               new float[]{10.0f}, 0.0f));
 //        renderer.setSeriesShape(0, new Ellipse2D.Double(-4,-4,8,8));
 
 

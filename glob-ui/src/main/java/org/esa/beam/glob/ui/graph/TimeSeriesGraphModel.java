@@ -222,45 +222,69 @@ class TimeSeriesGraphModel {
             for (int aliasIdx = 0; aliasIdx < aliasNames.length; aliasIdx++) {
                 String aliasName = aliasNames[aliasIdx];
 
-                String unit = getUnit(displayAxisMapping, aliasName);
-                String axisLabel = getAxisLabel(aliasName, unit);
-                NumberAxis valueAxis = new NumberAxis(axisLabel);
-                valueAxis.setAutoRange(true);
-                timeSeriesPlot.setRangeAxis(aliasIdx, valueAxis);
+                timeSeriesPlot.setRangeAxis(aliasIdx, createValueAxis(aliasName));
 
-//                Paint paint = displayController.getPaint(aliasIdx);
+                final int collectionIndexOffset = aliasIdx * 3;
+                final int cursorCollectionIndex = collectionIndexOffset;
+                final int pinCollectionIndex = 1 + collectionIndexOffset;
+                final int insituCollectionIndex = 2 + collectionIndexOffset;
+
+                final XYErrorRenderer cursorRenderer = new XYErrorRenderer();
+                TimeSeriesCollection cursorDataset = new TimeSeriesCollection();
+                timeSeriesPlot.setDataset(cursorCollectionIndex, cursorDataset);
+                cursorDatasets.add(cursorDataset);
+
                 final XYErrorRenderer pinRenderer = new XYErrorRenderer();
+                TimeSeriesCollection pinDataset = new TimeSeriesCollection();
+                timeSeriesPlot.setDataset(pinCollectionIndex, pinDataset);
+                pinDatasets.add(pinDataset);
+                pinRenderer.setBaseStroke(new BasicStroke());
+
+
+                final XYErrorRenderer insituRenderer = new XYErrorRenderer();
+                TimeSeriesCollection insituDataset = new TimeSeriesCollection();
+                timeSeriesPlot.setDataset(insituCollectionIndex, insituDataset);
+                insituDatasets.add(insituDataset);
+                insituRenderer.setBaseShapesFilled(false);
+                insituRenderer.setBaseLinesVisible(false);
+
+                timeSeriesPlot.mapDatasetToRangeAxis(cursorCollectionIndex, aliasIdx);
+                timeSeriesPlot.mapDatasetToRangeAxis(pinCollectionIndex, aliasIdx);
+                timeSeriesPlot.mapDatasetToRangeAxis(insituCollectionIndex, aliasIdx);
+
+                final Set<String> rasterNamesSet = displayAxisMapping.getRasterNames(aliasName);
+                final String[] rasterNames = rasterNamesSet.toArray(new String[rasterNamesSet.size()]);
+                final List<Paint> paintListForAlias = displayAxisMapping.getPaintListForAlias(aliasName);
+                for (int i = 0; i < rasterNames.length; i++) {
+                    cursorRenderer.setSeriesPaint(i, paintListForAlias.get(i));
+                    insituRenderer.setSeriesPaint(i, paintListForAlias.get(i));
+                    pinRenderer.setSeriesPaint(i, paintListForAlias.get(i));
+                }
+
                 pinRenderer.setBaseLinesVisible(true);
                 pinRenderer.setDrawXError(false);
 
-//                pinRenderer.setBasePaint(paint);
+                //                pinRenderer.setBasePaint(paint);
                 pinRenderer.setBaseStroke(PIN_STROKE);
                 pinRenderer.setAutoPopulateSeriesPaint(true);
                 pinRenderer.setAutoPopulateSeriesStroke(false);
 
-                final int cursorIndex = aliasIdx * 3;
-                final int rasterIndex = 1 + aliasIdx * 3;
-                final int insituIndex = 2 + aliasIdx * 3;
+                timeSeriesPlot.setRenderer(cursorCollectionIndex, pinRenderer, true);
+                timeSeriesPlot.setRenderer(pinCollectionIndex, pinRenderer, true);
+                timeSeriesPlot.setRenderer(insituCollectionIndex, pinRenderer, true);
 
-                TimeSeriesCollection cursorDataset = new TimeSeriesCollection();
-                timeSeriesPlot.setDataset(cursorIndex, cursorDataset);
-                cursorDatasets.add(cursorDataset);
 
-                TimeSeriesCollection pinDataset = new TimeSeriesCollection();
-                timeSeriesPlot.setDataset(rasterIndex, pinDataset);
-                pinDatasets.add(pinDataset);
+//                pinRenderer.setSeriesShape();
+//                pinRenderer.setSeriesPaint();
+//                pinRenderer.setSeriesFillPaint();
+//                pinRenderer.setSeriesLinesVisible();
+//                pinRenderer.setSeriesOutlinePaint();
+//                pinRenderer.setSeriesOutlineStroke();
+//                pinRenderer.setSeriesShapesFilled();
+//                pinRenderer.setSeriesShapesVisible();
+//                pinRenderer.setSeriesShapesVisible();
 
-                TimeSeriesCollection insituDataset = new TimeSeriesCollection();
-                timeSeriesPlot.setDataset(insituIndex, insituDataset);
-                insituDatasets.add(insituDataset);
 
-                timeSeriesPlot.setRenderer(cursorIndex, pinRenderer, true);
-                timeSeriesPlot.setRenderer(rasterIndex, pinRenderer, true);
-                timeSeriesPlot.setRenderer(insituIndex, pinRenderer, true);
-
-                timeSeriesPlot.mapDatasetToRangeAxis(cursorIndex, aliasIdx);
-                timeSeriesPlot.mapDatasetToRangeAxis(rasterIndex, aliasIdx);
-                timeSeriesPlot.mapDatasetToRangeAxis(insituIndex, aliasIdx);
             }
 
 
@@ -335,6 +359,14 @@ class TimeSeriesGraphModel {
             }
             */
         }
+    }
+
+    private NumberAxis createValueAxis(String aliasName) {
+        String unit = getUnit(displayAxisMapping, aliasName);
+        String axisLabel = getAxisLabel(aliasName, unit);
+        NumberAxis valueAxis = new NumberAxis(axisLabel);
+        valueAxis.setAutoRange(true);
+        return valueAxis;
     }
 
     private DisplayAxisMapping createDisplayAxisMapping(AbstractTimeSeries timeSeries) {
