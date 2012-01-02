@@ -29,6 +29,7 @@ import org.esa.beam.glob.core.TimeSeriesMapper;
 import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
 import org.esa.beam.glob.core.timeseries.datamodel.AxisMappingModel;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeCoding;
+import org.esa.beam.glob.ui.WorkerChain;
 import org.esa.beam.util.StringUtils;
 import org.esa.beam.visat.VisatApp;
 import org.jfree.chart.annotations.XYAnnotation;
@@ -82,15 +83,13 @@ class TimeSeriesGraphModel {
     final private AtomicInteger version = new AtomicInteger(0);
     private TimeSeriesGraphDisplayController displayController;
 
-    private final List<SwingWorker> synchronizedWorkerChain;
-    private SwingWorker unchainedWorker;
-    private boolean workerIsRunning = false;
     private boolean isShowingSelectedPins;
     private boolean isShowingAllPins;
     private DisplayAxisMapping displayAxisMapping;
     private final TimeSeriesGraphUpdater.WorkerChainSupport workerChainSupport;
     private final TimeSeriesGraphUpdater.TimeSeriesDataHandler dataTarget;
     private final TimeSeriesGraphDisplayController.PinSupport pinSupport;
+    private final WorkerChain workerChain;
 
     TimeSeriesGraphModel(XYPlot plot) {
         timeSeriesPlot = plot;
@@ -100,15 +99,24 @@ class TimeSeriesGraphModel {
         pinDatasets = new ArrayList<TimeSeriesCollection>();
         cursorDatasets = new ArrayList<TimeSeriesCollection>();
         insituDatasets = new ArrayList<TimeSeriesCollection>();
-        synchronizedWorkerChain = Collections.synchronizedList(new ArrayList<SwingWorker>());
+        workerChainSupport = createWorkerChainSupport();
+        dataTarget = createDataHandler();
+        pinSupport = createPinSupport();
+        workerChain = new WorkerChain();
         initPlot();
-        workerChainSupport = new TimeSeriesGraphUpdater.WorkerChainSupport() {
+    }
+
+    private TimeSeriesGraphUpdater.WorkerChainSupport createWorkerChainSupport() {
+        return new TimeSeriesGraphUpdater.WorkerChainSupport() {
             @Override
             public void removeWorkerAndStartNext(TimeSeriesGraphUpdater worker) {
-                removeCurrentWorkerAndExecuteNext(worker);
+                workerChain.removeCurrentWorkerAndExecuteNext(worker);
             }
         };
-        dataTarget = new TimeSeriesGraphUpdater.TimeSeriesDataHandler() {
+    }
+
+    private TimeSeriesGraphUpdater.TimeSeriesDataHandler createDataHandler() {
+        return new TimeSeriesGraphUpdater.TimeSeriesDataHandler() {
             @Override
             public void collectTimeSeries(Map<String, List<TimeSeries>> data, TimeSeriesType type) {
                 addTimeSeries(data, type);
@@ -119,26 +127,25 @@ class TimeSeriesGraphModel {
                 TimeSeriesGraphModel.this.removeCursorTimeSeries();
             }
         };
-        pinSupport = createPinSupport();
     }
 
     private TimeSeriesGraphDisplayController.PinSupport createPinSupport() {
         return new TimeSeriesGraphDisplayController.PinSupport() {
-    @Override
-    public boolean isShowingAllPins() {
-        return isShowingAllPins;
-    }
+            @Override
+            public boolean isShowingAllPins() {
+                return isShowingAllPins;
+            }
 
-    @Override
-    public boolean isShowingSelectedPins() {
-        return isShowingSelectedPins;
-    }
+            @Override
+            public boolean isShowingSelectedPins() {
+                return isShowingSelectedPins;
+            }
 
-    @Override
-    public Placemark[] getSelectedPins() {
-        return getCurrentView().getSelectedPins();
-    }
-};
+            @Override
+            public Placemark[] getSelectedPins() {
+                return getCurrentView().getSelectedPins();
+            }
+        };
     }
 
     private void initPlot() {
@@ -378,37 +385,6 @@ class TimeSeriesGraphModel {
         return displayAxisMapping;
     }
 
-    public class DisplayAxisMapping extends AxisMappingModel {
-
-        private final Map<String, List<Paint>> alias_paintList_Map;
-
-        private DisplayAxisMapping() {
-            alias_paintList_Map = new HashMap<String, List<Paint>>();
-        }
-
-        public void addPaintForAlias(String aliasName, Paint paint) {
-            if (!getAliasNames().contains(aliasName)) {
-                throw new IllegalStateException("alias '" + aliasName + "' must be already registered");
-            }
-            if (!alias_paintList_Map.containsKey(aliasName)) {
-                alias_paintList_Map.put(aliasName, new ArrayList<Paint>());
-            }
-            alias_paintList_Map.get(aliasName).add(paint);
-        }
-
-        public List<Paint> getPaintListForAlias(String aliasName) {
-            return Collections.unmodifiableList(alias_paintList_Map.get(aliasName));
-        }
-
-        public int getNumRegisteredPaints() {
-            int numRegisteredPaints = 0;
-            for (List<Paint> paintList : alias_paintList_Map.values()) {
-                numRegisteredPaints += paintList.size();
-            }
-            return numRegisteredPaints;
-        }
-    }
-
     private static String getAxisLabel(String variableName, String unit) {
         if (StringUtils.isNotNullAndNotEmpty(unit)) {
             return String.format("%s (%s)", variableName, unit);
@@ -452,10 +428,10 @@ class TimeSeriesGraphModel {
 
             @Override
             protected void done() {
-                removeCurrentWorkerAndExecuteNext(this);
+                workerChain.removeCurrentWorkerAndExecuteNext(this);
             }
         };
-        setOrExecuteNextWorker(worker, false);
+        workerChain.setOrExecuteNextWorker(worker, false);
     }
 
     void removeCursorTimeSeries() {
@@ -477,10 +453,10 @@ class TimeSeriesGraphModel {
 
             @Override
             protected void done() {
-                removeCurrentWorkerAndExecuteNext(this);
+                workerChain.removeCurrentWorkerAndExecuteNext(this);
             }
         };
-        setOrExecuteNextWorker(worker, true);
+        workerChain.setOrExecuteNextWorker(worker, true);
     }
 
     private void removeTimeSeries(TimeSeriesType type) {
@@ -598,7 +574,7 @@ class TimeSeriesGraphModel {
                                                                     pixelX, pixelY, currentLevel,
                                                                     type, version.get());
         final boolean chained = type != TimeSeriesType.CURSOR;
-        setOrExecuteNextWorker(w, chained);
+        workerChain.setOrExecuteNextWorker(w, chained);
     }
 
     private TimeSeriesGraphUpdater.VersionSafeDataSources createVersionSafeDataSources() {
@@ -615,48 +591,6 @@ class TimeSeriesGraphModel {
                 return version.get();
             }
         };
-    }
-
-    synchronized private void setOrExecuteNextWorker(SwingWorker w, boolean chained) {
-        if (w == null) {
-            return;
-        }
-        if (workerIsRunning) {
-            if (chained) {
-                synchronizedWorkerChain.add(w);
-            } else {
-                unchainedWorker = w;
-            }
-        } else {
-            if (chained) {
-                synchronizedWorkerChain.add(w);
-                executeFirstWorkerInChain();
-            } else {
-                unchainedWorker = w;
-                w.execute();
-            }
-            workerIsRunning = true;
-        }
-    }
-
-    synchronized void removeCurrentWorkerAndExecuteNext(SwingWorker currentWorker) {
-        synchronizedWorkerChain.remove(currentWorker);
-        if (unchainedWorker == currentWorker) {
-            unchainedWorker = null;
-        }
-        if (synchronizedWorkerChain.size() > 0) {
-            executeFirstWorkerInChain();
-            return;
-        }
-        if (unchainedWorker != null) {
-            unchainedWorker.execute();
-            return;
-        }
-        workerIsRunning = false;
-    }
-
-    private void executeFirstWorkerInChain() {
-        synchronizedWorkerChain.get(0).execute();
     }
 
     private AbstractTimeSeries getTimeSeries() {

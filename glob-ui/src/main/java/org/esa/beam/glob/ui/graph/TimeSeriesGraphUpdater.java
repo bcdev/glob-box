@@ -40,9 +40,9 @@ class TimeSeriesGraphUpdater extends SwingWorker<Map<String, List<TimeSeries>>, 
     private final AbstractTimeSeries timeSeries;
     private final TimeSeriesDataHandler dataHandler;
     private final VersionSafeDataSources dataSources;
-    private final TimeSeriesGraphModel.DisplayAxisMapping displayAxisMapping;
+    private final DisplayAxisMapping displayAxisMapping;
 
-    TimeSeriesGraphUpdater(AbstractTimeSeries timeSeries, VersionSafeDataSources dataSources, TimeSeriesDataHandler dataHandler, TimeSeriesGraphModel.DisplayAxisMapping displayAxisMapping, WorkerChainSupport workerChainSupport, int pixelX, int pixelY, int currentLevel, TimeSeriesType type, int version) {
+    TimeSeriesGraphUpdater(AbstractTimeSeries timeSeries, VersionSafeDataSources dataSources, TimeSeriesDataHandler dataHandler, DisplayAxisMapping displayAxisMapping, WorkerChainSupport workerChainSupport, int pixelX, int pixelY, int currentLevel, TimeSeriesType type, int version) {
         super();
         this.timeSeries = timeSeries;
         this.dataHandler = dataHandler;
