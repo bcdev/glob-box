@@ -31,34 +31,32 @@ import java.util.concurrent.ExecutionException;
 
 class TimeSeriesGraphUpdater extends SwingWorker<Map<String, List<TimeSeries>>, Void> {
 
+    static final Position NULL_POSITION = new Position(-1, -1, -1);
+
     private final WorkerChainSupport workerChainSupport;
-    private final int pixelX;
-    private final int pixelY;
-    private final int currentLevel;
+    private final Position position;
     private final TimeSeriesType type;
-    private final int myVersion;
+    private final int version;
     private final AbstractTimeSeries timeSeries;
     private final TimeSeriesDataHandler dataHandler;
     private final VersionSafeDataSources dataSources;
     private final DisplayAxisMapping displayAxisMapping;
 
-    TimeSeriesGraphUpdater(AbstractTimeSeries timeSeries, VersionSafeDataSources dataSources, TimeSeriesDataHandler dataHandler, DisplayAxisMapping displayAxisMapping, WorkerChainSupport workerChainSupport, int pixelX, int pixelY, int currentLevel, TimeSeriesType type, int version) {
+    TimeSeriesGraphUpdater(AbstractTimeSeries timeSeries, VersionSafeDataSources dataSources, TimeSeriesDataHandler dataHandler, DisplayAxisMapping displayAxisMapping, WorkerChainSupport workerChainSupport, Position position, TimeSeriesType type, int version) {
         super();
         this.timeSeries = timeSeries;
         this.dataHandler = dataHandler;
         this.dataSources = dataSources;
         this.displayAxisMapping = displayAxisMapping;
         this.workerChainSupport = workerChainSupport;
-        this.pixelX = pixelX;
-        this.pixelY = pixelY;
-        this.currentLevel = currentLevel;
+        this.position = position;
         this.type = type;
-        this.myVersion = version;
+        this.version = version;
     }
 
     @Override
     protected Map<String, List<TimeSeries>> doInBackground() throws Exception {
-        if (dataSources.getCurrentVersion() != myVersion) {
+        if (dataSources.getCurrentVersion() != version) {
             return Collections.emptyMap();
         }
 
@@ -71,7 +69,7 @@ class TimeSeriesGraphUpdater extends SwingWorker<Map<String, List<TimeSeries>>, 
 
     @Override
     protected void done() {
-        if (dataSources.getCurrentVersion() != myVersion) {
+        if (dataSources.getCurrentVersion() != version) {
             return;
         }
         if (type.equals(TimeSeriesType.CURSOR)) {
@@ -96,7 +94,7 @@ class TimeSeriesGraphUpdater extends SwingWorker<Map<String, List<TimeSeries>>, 
             final List<List<Band>> bandList = getListOfBandLists(aliasName);
             final List<TimeSeries> tsList = new ArrayList<TimeSeries>();
             for (List<Band> bands : bandList) {
-                final TimeSeries timeSeries = computeSingleTimeSeries(bands, pixelX, pixelY, currentLevel);
+                final TimeSeries timeSeries = computeSingleTimeSeries(bands, position.pixelX, position.pixelY, position.currentLevel);
                 tsList.add(timeSeries);
             }
             rasterTimeSeriesForAlias.put(aliasName, tsList);
@@ -216,6 +214,19 @@ class TimeSeriesGraphUpdater extends SwingWorker<Map<String, List<TimeSeries>>, 
             }
         } else {
             return ProductUtils.getGeophysicalSampleDouble(band, pixelX, pixelY, currentLevel);
+        }
+    }
+
+    static class Position {
+
+        private final int pixelX;
+        private final int pixelY;
+        private final int currentLevel;
+
+        Position(int pixelX, int pixelY, int currentLevel) {
+            this.currentLevel = currentLevel;
+            this.pixelY = pixelY;
+            this.pixelX = pixelX;
         }
     }
 

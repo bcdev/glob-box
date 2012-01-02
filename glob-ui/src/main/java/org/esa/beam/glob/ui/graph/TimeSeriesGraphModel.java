@@ -263,7 +263,7 @@ class TimeSeriesGraphModel {
     }
 
     void updateInsituTimeSeries() {
-        updateTimeSeries(-1, -1, -1, TimeSeriesType.INSITU);
+        updateTimeSeries(TimeSeriesGraphUpdater.NULL_POSITION, TimeSeriesType.INSITU);
     }
 
     void setIsShowingSelectedPins(boolean isShowingSelectedPins) {
@@ -311,17 +311,17 @@ class TimeSeriesGraphModel {
             final AffineTransform modelToCurrentLevel = baseLayer.getModelToImageTransform(currentLevel);
             final Point2D modelPos = levelZeroToModel.transform(pin.getPixelPos(), null);
             final Point2D currentPos = modelToCurrentLevel.transform(modelPos, null);
-            updateTimeSeries((int) currentPos.getX(), (int) currentPos.getY(),
-                    currentLevel, TimeSeriesType.PIN);
+            updateTimeSeries(new TimeSeriesGraphUpdater.Position((int) currentPos.getX(), (int) currentPos.getY(),
+                    currentLevel), TimeSeriesType.PIN);
         }
     }
 
-    synchronized void updateTimeSeries(int pixelX, int pixelY, int currentLevel, TimeSeriesType type) {
+    synchronized void updateTimeSeries(TimeSeriesGraphUpdater.Position position, TimeSeriesType type) {
 
         final TimeSeriesGraphUpdater w = new TimeSeriesGraphUpdater(getTimeSeries(),
                 createVersionSafeDataSources(), dataTarget,
                 displayAxisMapping, workerChainSupport,
-                pixelX, pixelY, currentLevel,
+                position,
                 type, version.get());
         final boolean chained = type != TimeSeriesType.CURSOR;
         workerChain.setOrExecuteNextWorker(w, chained);
