@@ -269,7 +269,7 @@ class TimeSeriesGraphUpdater extends SwingWorker<Map<String, List<TimeSeries>>, 
         protected abstract int getCurrentVersion();
 
         private boolean canReturnValues() {
-            return getCurrentVersion() != version;
+            return getCurrentVersion() == version;
         }
     }
 
