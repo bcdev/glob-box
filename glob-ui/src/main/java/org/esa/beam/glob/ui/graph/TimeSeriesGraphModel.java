@@ -104,63 +104,6 @@ class TimeSeriesGraphModel {
         initPlot();
     }
 
-    private TimeSeriesGraphUpdater.WorkerChainSupport createWorkerChainSupport() {
-        return new TimeSeriesGraphUpdater.WorkerChainSupport() {
-            @Override
-            public void removeWorkerAndStartNext(TimeSeriesGraphUpdater worker) {
-                workerChain.removeCurrentWorkerAndExecuteNext(worker);
-            }
-        };
-    }
-
-    private TimeSeriesGraphUpdater.TimeSeriesDataHandler createDataHandler() {
-        return new TimeSeriesGraphUpdater.TimeSeriesDataHandler() {
-            @Override
-            public void collectTimeSeries(Map<String, List<TimeSeries>> data, TimeSeriesType type) {
-                addTimeSeries(data, type);
-            }
-
-            @Override
-            public void removeCursorTimeSeries() {
-                TimeSeriesGraphModel.this.removeCursorTimeSeries();
-            }
-        };
-    }
-
-    private TimeSeriesGraphDisplayController.PinSupport createPinSupport() {
-        return new TimeSeriesGraphDisplayController.PinSupport() {
-            @Override
-            public boolean isShowingAllPins() {
-                return isShowingAllPins;
-            }
-
-            @Override
-            public boolean isShowingSelectedPins() {
-                return isShowingSelectedPins;
-            }
-
-            @Override
-            public Placemark[] getSelectedPins() {
-                return getCurrentView().getSelectedPins();
-            }
-        };
-    }
-
-    private void initPlot() {
-        final ValueAxis domainAxis = timeSeriesPlot.getDomainAxis();
-        domainAxis.setAutoRange(true);
-//        XYLineAndShapeRenderer xyRenderer = new XYSplineRenderer();
-        XYLineAndShapeRenderer xyRenderer = new XYLineAndShapeRenderer(true, true);
-//        xyRenderer.setBaseShapesVisible(true);
-//        xyRenderer.setBaseShapesFilled(true);
-//        xyRenderer.setAutoPopulateSeriesPaint(true);
-//        xyRenderer.setBaseLegendTextFont(Font.getFont(DEFAULT_FONT_NAME));
-        xyRenderer.setBaseLegendTextPaint(DEFAULT_FOREGROUND_COLOR);
-        timeSeriesPlot.setRenderer(xyRenderer);
-        timeSeriesPlot.setBackgroundPaint(DEFAULT_BACKGROUND_COLOR);
-        timeSeriesPlot.setNoDataMessage(NO_DATA_MESSAGE);
-    }
-
     void adaptToTimeSeries(AbstractTimeSeries timeSeries) {
         version.incrementAndGet();
         eoVariableBands.clear();
@@ -325,6 +268,63 @@ class TimeSeriesGraphModel {
                 type, version.get());
         final boolean chained = type != TimeSeriesType.CURSOR;
         workerChain.setOrExecuteNextWorker(w, chained);
+    }
+
+    private TimeSeriesGraphUpdater.WorkerChainSupport createWorkerChainSupport() {
+        return new TimeSeriesGraphUpdater.WorkerChainSupport() {
+            @Override
+            public void removeWorkerAndStartNext(TimeSeriesGraphUpdater worker) {
+                workerChain.removeCurrentWorkerAndExecuteNext(worker);
+            }
+        };
+    }
+
+    private TimeSeriesGraphUpdater.TimeSeriesDataHandler createDataHandler() {
+        return new TimeSeriesGraphUpdater.TimeSeriesDataHandler() {
+            @Override
+            public void collectTimeSeries(Map<String, List<TimeSeries>> data, TimeSeriesType type) {
+                addTimeSeries(data, type);
+            }
+
+            @Override
+            public void removeCursorTimeSeries() {
+                TimeSeriesGraphModel.this.removeCursorTimeSeries();
+            }
+        };
+    }
+
+    private TimeSeriesGraphDisplayController.PinSupport createPinSupport() {
+        return new TimeSeriesGraphDisplayController.PinSupport() {
+            @Override
+            public boolean isShowingAllPins() {
+                return isShowingAllPins;
+            }
+
+            @Override
+            public boolean isShowingSelectedPins() {
+                return isShowingSelectedPins;
+            }
+
+            @Override
+            public Placemark[] getSelectedPins() {
+                return getCurrentView().getSelectedPins();
+            }
+        };
+    }
+
+    private void initPlot() {
+        final ValueAxis domainAxis = timeSeriesPlot.getDomainAxis();
+        domainAxis.setAutoRange(true);
+//        XYLineAndShapeRenderer xyRenderer = new XYSplineRenderer();
+        XYLineAndShapeRenderer xyRenderer = new XYLineAndShapeRenderer(true, true);
+//        xyRenderer.setBaseShapesVisible(true);
+//        xyRenderer.setBaseShapesFilled(true);
+//        xyRenderer.setAutoPopulateSeriesPaint(true);
+//        xyRenderer.setBaseLegendTextFont(Font.getFont(DEFAULT_FONT_NAME));
+        xyRenderer.setBaseLegendTextPaint(DEFAULT_FOREGROUND_COLOR);
+        timeSeriesPlot.setRenderer(xyRenderer);
+        timeSeriesPlot.setBackgroundPaint(DEFAULT_BACKGROUND_COLOR);
+        timeSeriesPlot.setNoDataMessage(NO_DATA_MESSAGE);
     }
 
     private void updatePlot(boolean hasData, AbstractTimeSeries timeSeries) {
