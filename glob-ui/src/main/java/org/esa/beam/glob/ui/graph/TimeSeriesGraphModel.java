@@ -53,9 +53,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.text.MessageFormat;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -192,6 +190,143 @@ class TimeSeriesGraphModel {
         return version;
     }
 
+    synchronized void removeCursorTimeSeriesInWorkerThread() {
+        final SwingWorker worker = new SwingWorker() {
+
+            @Override
+            protected Object doInBackground() throws Exception {
+                removeCursorTimeSeries();
+                return null;
+            }
+
+            @Override
+            protected void done() {
+                workerChain.removeCurrentWorkerAndExecuteNext(this);
+            }
+        };
+        workerChain.setOrExecuteNextWorker(worker, false);
+    }
+
+    void removeCursorTimeSeries() {
+        removeTimeSeries(TimeSeriesType.CURSOR);
+    }
+
+    void removePinTimeSeries() {
+        removeTimeSeries(TimeSeriesType.PIN);
+    }
+
+    synchronized void removeInsituTimeSeriesInWorkerThread() {
+        final SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
+
+            @Override
+            protected Void doInBackground() throws Exception {
+                removeTimeSeries(TimeSeriesType.INSITU);
+                return null;
+            }
+
+            @Override
+            protected void done() {
+                workerChain.removeCurrentWorkerAndExecuteNext(this);
+            }
+        };
+        workerChain.setOrExecuteNextWorker(worker, true);
+    }
+
+    void updateAnnotation(RasterDataNode raster) {
+        removeAnnotation();
+
+        ProductSceneView sceneView = getCurrentView();
+        AbstractTimeSeries timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(sceneView.getProduct());
+
+        TimeCoding timeCoding = timeSeries.getRasterTimeMap().get(raster);
+        if (timeCoding != null) {
+            final ProductData.UTC startTime = timeCoding.getStartTime();
+            final Millisecond timePeriod = new Millisecond(startTime.getAsDate(),
+                    ProductData.UTC.UTC_TIME_ZONE,
+                    Locale.getDefault());
+
+            double millisecond = timePeriod.getFirstMillisecond();
+            Range valueRange = null;
+            for (int i = 0; i < timeSeriesPlot.getRangeAxisCount(); i++) {
+                valueRange = Range.combine(valueRange, timeSeriesPlot.getRangeAxis(i).getRange());
+            }
+            if (valueRange != null) {
+                XYAnnotation annotation = new XYLineAnnotation(millisecond, valueRange.getLowerBound(), millisecond,
+                        valueRange.getUpperBound());
+                timeSeriesPlot.addAnnotation(annotation, true);
+            }
+        }
+    }
+
+    void removeAnnotation() {
+        timeSeriesPlot.clearAnnotations();
+    }
+
+    void updateInsituTimeSeries() {
+        updateTimeSeries(-1, -1, -1, TimeSeriesType.INSITU);
+    }
+
+    void setIsShowingSelectedPins(boolean isShowingSelectedPins) {
+        if (isShowingSelectedPins && isShowingAllPins) {
+            throw new IllegalStateException("isShowingSelectedPins && isShowingAllPins");
+        }
+        this.isShowingSelectedPins = isShowingSelectedPins;
+        updatePins();
+    }
+
+    void setIsShowingAllPins(boolean isShowingAllPins) {
+        if (isShowingAllPins && isShowingSelectedPins) {
+            throw new IllegalStateException("isShowingAllPins && isShowingSelectedPins");
+        }
+        this.isShowingAllPins = isShowingAllPins;
+        updatePins();
+    }
+
+    boolean isShowingSelectedPins() {
+        return isShowingSelectedPins;
+    }
+
+    boolean isShowingAllPins() {
+        return isShowingAllPins;
+    }
+
+    void updatePins() {
+        removePinTimeSeries();
+        Placemark[] pins = null;
+        final ProductSceneView currentView = getCurrentView();
+        if (isShowingAllPins()) {
+            PlacemarkGroup pinGroup = currentView.getProduct().getPinGroup();
+            pins = pinGroup.toArray(new Placemark[pinGroup.getNodeCount()]);
+        } else if (isShowingSelectedPins()) {
+            pins = currentView.getSelectedPins();
+        }
+        if (pins == null) {
+            return;
+        }
+        for (Placemark pin : pins) {
+            final Viewport viewport = currentView.getViewport();
+            final ImageLayer baseLayer = currentView.getBaseImageLayer();
+            final int currentLevel = baseLayer.getLevel(viewport);
+            final AffineTransform levelZeroToModel = baseLayer.getImageToModelTransform();
+            final AffineTransform modelToCurrentLevel = baseLayer.getModelToImageTransform(currentLevel);
+            final Point2D modelPos = levelZeroToModel.transform(pin.getPixelPos(), null);
+            final Point2D currentPos = modelToCurrentLevel.transform(modelPos, null);
+            updateTimeSeries((int) currentPos.getX(), (int) currentPos.getY(),
+                    currentLevel, TimeSeriesType.PIN);
+        }
+    }
+
+    synchronized void updateTimeSeries(int pixelX, int pixelY, int currentLevel, TimeSeriesType type) {
+
+        final TimeSeriesGraphUpdater w = new TimeSeriesGraphUpdater(getTimeSeries(),
+                createVersionSafeDataSources(), dataTarget,
+                displayAxisMapping, workerChainSupport,
+                pixelX, pixelY, currentLevel,
+                type, version.get());
+        final boolean chained = type != TimeSeriesType.CURSOR;
+        workerChain.setOrExecuteNextWorker(w, chained);
+    }
+
     private void updatePlot(boolean hasData, AbstractTimeSeries timeSeries) {
         for (int i = 0; i < timeSeriesPlot.getDatasetCount(); i++) {
             timeSeriesPlot.setDataset(i, null);
@@ -207,8 +342,7 @@ class TimeSeriesGraphModel {
             final String[] aliasNames = aliasNamesSet.toArray(new String[aliasNamesSet.size()]);
             final Map<String, Paint[]> aliasPaintMap = new HashMap<String, Paint[]>();
 
-            for (Iterator<String> iterator = aliasNamesSet.iterator(); iterator.hasNext(); ) {
-                String aliasName = iterator.next();
+            for (String aliasName : aliasNamesSet) {
                 final Set<String> rasterNames = displayAxisMapping.getRasterNames(aliasName);
                 final Set<String> insituNames = displayAxisMapping.getInsituNames(aliasName);
                 int numColors = Math.max(rasterNames.size(), insituNames.size());
@@ -426,7 +560,6 @@ class TimeSeriesGraphModel {
     }
 
     private void addTimeSeries(Map<String, List<TimeSeries>> timeSeries, TimeSeriesType type) {
-//        final DisplayAxisMapping displayAxisMapping = createDisplayAxisMapping(getTimeSeries());
         List<TimeSeriesCollection> datasets = getDatasets(type);
         for (String alias : displayAxisMapping.getAliasNames()) {
             TimeSeriesCollection aliasDataset = getDatasetForAlias(alias, datasets);
@@ -438,7 +571,6 @@ class TimeSeriesGraphModel {
     }
 
     private TimeSeriesCollection getDatasetForAlias(String alias, List<TimeSeriesCollection> datasets) {
-//        final DisplayAxisMapping displayAxisMapping = createDisplayAxisMapping(getTimeSeries());
         int index = 0;
         for (String aliasName : displayAxisMapping.getAliasNames()) {
             if (alias.equals(aliasName)) {
@@ -447,48 +579,6 @@ class TimeSeriesGraphModel {
             index++;
         }
         throw new IllegalStateException(MessageFormat.format("No dataset found for alias ''{0}''.", alias));
-    }
-
-    synchronized void removeCursorTimeSeriesInWorkerThread() {
-        final SwingWorker worker = new SwingWorker() {
-
-            @Override
-            protected Object doInBackground() throws Exception {
-                removeCursorTimeSeries();
-                return null;
-            }
-
-            @Override
-            protected void done() {
-                workerChain.removeCurrentWorkerAndExecuteNext(this);
-            }
-        };
-        workerChain.setOrExecuteNextWorker(worker, false);
-    }
-
-    void removeCursorTimeSeries() {
-        removeTimeSeries(TimeSeriesType.CURSOR);
-    }
-
-    void removePinTimeSeries() {
-        removeTimeSeries(TimeSeriesType.PIN);
-    }
-
-    synchronized void removeInsituTimeSeriesInWorkerThread() {
-        final SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
-
-            @Override
-            protected Void doInBackground() throws Exception {
-                removeTimeSeries(TimeSeriesType.INSITU);
-                return null;
-            }
-
-            @Override
-            protected void done() {
-                workerChain.removeCurrentWorkerAndExecuteNext(this);
-            }
-        };
-        workerChain.setOrExecuteNextWorker(worker, true);
     }
 
     private void removeTimeSeries(TimeSeriesType type) {
@@ -511,110 +601,12 @@ class TimeSeriesGraphModel {
         }
     }
 
-    void updateAnnotation(RasterDataNode raster) {
-        removeAnnotation();
-
-        ProductSceneView sceneView = getCurrentView();
-        AbstractTimeSeries timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(sceneView.getProduct());
-
-        TimeCoding timeCoding = timeSeries.getRasterTimeMap().get(raster);
-        if (timeCoding != null) {
-            final ProductData.UTC startTime = timeCoding.getStartTime();
-            final Millisecond timePeriod = new Millisecond(startTime.getAsDate(),
-                                                           ProductData.UTC.UTC_TIME_ZONE,
-                                                           Locale.getDefault());
-
-            double millisecond = timePeriod.getFirstMillisecond();
-            Range valueRange = null;
-            for (int i = 0; i < timeSeriesPlot.getRangeAxisCount(); i++) {
-                valueRange = Range.combine(valueRange, timeSeriesPlot.getRangeAxis(i).getRange());
-            }
-            if (valueRange != null) {
-                XYAnnotation annotation = new XYLineAnnotation(millisecond, valueRange.getLowerBound(), millisecond,
-                                                               valueRange.getUpperBound());
-                timeSeriesPlot.addAnnotation(annotation, true);
-            }
-        }
-    }
-
-    void removeAnnotation() {
-        timeSeriesPlot.clearAnnotations();
-    }
-
-    void updateInsituTimeSeries() {
-        updateTimeSeries(-1, -1, -1, TimeSeriesType.INSITU);
-    }
-
-    void setIsShowingSelectedPins(boolean isShowingSelectedPins) {
-        if (isShowingSelectedPins && isShowingAllPins) {
-            throw new IllegalStateException("isShowingSelectedPins && isShowingAllPins");
-        }
-        this.isShowingSelectedPins = isShowingSelectedPins;
-        updatePins();
-    }
-
-    void setIsShowingAllPins(boolean isShowingAllPins) {
-        if (isShowingAllPins && isShowingSelectedPins) {
-            throw new IllegalStateException("isShowingAllPins && isShowingSelectedPins");
-        }
-        this.isShowingAllPins = isShowingAllPins;
-        updatePins();
-    }
-
-    boolean isShowingSelectedPins() {
-        return isShowingSelectedPins;
-    }
-
-    boolean isShowingAllPins() {
-        return isShowingAllPins;
-    }
-
-
-    // todo - method needed which differentiates between pin and insitu time series
-    void updatePins() {
-        removePinTimeSeries();
-        Placemark[] pins = null;
-        final ProductSceneView currentView = getCurrentView();
-        if (isShowingAllPins()) {
-            PlacemarkGroup pinGroup = currentView.getProduct().getPinGroup();
-            pins = pinGroup.toArray(new Placemark[pinGroup.getNodeCount()]);
-        } else if (isShowingSelectedPins()) {
-            pins = currentView.getSelectedPins();
-        }
-//        pins = filterInsituPins(pins);
-        if (pins == null) {
-            return;
-        }
-        for (Placemark pin : pins) {
-            final Viewport viewport = currentView.getViewport();
-            final ImageLayer baseLayer = currentView.getBaseImageLayer();
-            final int currentLevel = baseLayer.getLevel(viewport);
-            final AffineTransform levelZeroToModel = baseLayer.getImageToModelTransform();
-            final AffineTransform modelToCurrentLevel = baseLayer.getModelToImageTransform(currentLevel);
-            final Point2D modelPos = levelZeroToModel.transform(pin.getPixelPos(), null);
-            final Point2D currentPos = modelToCurrentLevel.transform(modelPos, null);
-            updateTimeSeries((int) currentPos.getX(), (int) currentPos.getY(),
-                             currentLevel, TimeSeriesType.PIN);
-        }
-    }
-
-    synchronized void updateTimeSeries(int pixelX, int pixelY, int currentLevel, TimeSeriesType type) {
-
-        final TimeSeriesGraphUpdater w = new TimeSeriesGraphUpdater(getTimeSeries(),
-                                                                    createVersionSafeDataSources(), dataTarget,
-                                                                    displayAxisMapping, workerChainSupport,
-                                                                    pixelX, pixelY, currentLevel,
-                                                                    type, version.get());
-        final boolean chained = type != TimeSeriesType.CURSOR;
-        workerChain.setOrExecuteNextWorker(w, chained);
-    }
-
     private TimeSeriesGraphUpdater.VersionSafeDataSources createVersionSafeDataSources() {
-        final List<String> insituVariablesClone = new ArrayList<String>();
-        Collections.copy(insituVariablesClone, insituVariables);
+        final List<String> insituVariablesClone = new ArrayList<String>(insituVariables.size());
+        insituVariablesClone.addAll(insituVariables);
 
-        final List<List<Band>> eoVariableBandsClone = new ArrayList<List<Band>>();
-        Collections.copy(eoVariableBandsClone, eoVariableBands);
+        final List<List<Band>> eoVariableBandsClone = new ArrayList<List<Band>>(eoVariableBands.size());
+        eoVariableBandsClone.addAll(eoVariableBands);
 
         return new TimeSeriesGraphUpdater.VersionSafeDataSources
                     (insituVariablesClone, eoVariableBandsClone, displayController.getPinPositionsToDisplay(), getVersion().get()) {
@@ -629,21 +621,6 @@ class TimeSeriesGraphModel {
         final ProductSceneView sceneView = getCurrentView();
         final Product sceneViewProduct = sceneView.getProduct();
         return TimeSeriesMapper.getInstance().getTimeSeries(sceneViewProduct);
-    }
-
-    private Placemark[] filterInsituPins(Placemark[] pins) {
-        if (pins == null) {
-            return new Placemark[0];
-        }
-        AbstractTimeSeries timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(getCurrentView().getProduct());
-        final List<Placemark> insituPins = timeSeries.getInsituPlacemarks();
-        final List<Placemark> result = new ArrayList<Placemark>();
-        for (Placemark pin : pins) {
-            if (!insituPins.contains(pin)) {
-                result.add(pin);
-            }
-        }
-        return result.toArray(new Placemark[result.size()]);
     }
 
     private ProductSceneView getCurrentView() {
