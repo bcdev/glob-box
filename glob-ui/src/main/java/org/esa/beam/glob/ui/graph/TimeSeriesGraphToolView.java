@@ -16,25 +16,37 @@
 
 package org.esa.beam.glob.ui.graph;
 
-import com.bc.ceres.glayer.support.*;
-import org.esa.beam.framework.datamodel.*;
-import org.esa.beam.framework.ui.*;
-import org.esa.beam.framework.ui.application.support.*;
-import org.esa.beam.framework.ui.product.*;
-import org.esa.beam.glob.core.*;
-import org.esa.beam.glob.core.timeseries.datamodel.*;
-import org.esa.beam.glob.ui.player.*;
-import org.esa.beam.visat.*;
-import org.jfree.chart.*;
-import org.jfree.chart.plot.*;
+import com.bc.ceres.glayer.support.ImageLayer;
+import org.esa.beam.framework.datamodel.Placemark;
+import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductNode;
+import org.esa.beam.framework.datamodel.ProductNodeEvent;
+import org.esa.beam.framework.datamodel.RasterDataNode;
+import org.esa.beam.framework.ui.PixelPositionListener;
+import org.esa.beam.framework.ui.application.support.AbstractToolView;
+import org.esa.beam.framework.ui.product.ProductSceneView;
+import org.esa.beam.glob.core.TimeSeriesMapper;
+import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
+import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesChangeEvent;
+import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesListener;
+import org.esa.beam.glob.ui.player.TimeSeriesPlayerToolView;
+import org.esa.beam.visat.VisatApp;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.XYPlot;
 
-import javax.swing.*;
-import javax.swing.event.*;
-import java.awt.*;
-import java.awt.event.*;
-import java.beans.*;
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.JComponent;
+import javax.swing.event.InternalFrameAdapter;
+import javax.swing.event.InternalFrameEvent;
+import java.awt.Container;
+import java.awt.event.ActionEvent;
+import java.awt.event.MouseEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 
-import static org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries.*;
+import static org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries.rasterToVariableName;
 
 public class TimeSeriesGraphToolView extends AbstractToolView {
 
@@ -177,7 +189,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         public void pixelPosChanged(ImageLayer imageLayer, int pixelX, int pixelY,
                                     int currentLevel, boolean pixelPosValid, MouseEvent e) {
             if (pixelPosValid && isVisible() && currentView != null) {
-                graphModel.updateTimeSeries(pixelX, pixelY, currentLevel, TimeSeriesType.CURSOR, false);
+                graphModel.updateTimeSeries(pixelX, pixelY, currentLevel, TimeSeriesType.CURSOR);
             }
 
             final boolean autorange = e.isShiftDown();
@@ -212,11 +224,11 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         public void timeSeriesChanged(TimeSeriesChangeEvent event) {
             if (event.getType() == TimeSeriesChangeEvent.PROPERTY_PRODUCT_LOCATIONS ||
                 event.getType() == TimeSeriesChangeEvent.PROPERTY_EO_VARIABLE_SELECTION) {
-                handleBandsChanged();
+                handleBandsChanged(event.getTimeSeries());
             } else if(event.getType() == TimeSeriesChangeEvent.PROPERTY_INSITU_VARIABLE_SELECTION) {
-                handleInsituVariablesChanged(event.getValue().toString());
+                handleInsituVariablesChanged(event.getValue().toString(), event.getTimeSeries());
             } else if(event.getType() == TimeSeriesChangeEvent.PROPERTY_BAND_MAPPING_CHANGED) {
-                handleInsituVariablesChanged();
+                handleBandMappingChanged(event.getTimeSeries());
             }
 
         }
@@ -256,20 +268,17 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
             graphForm.setExportEnabled(placemarksSet);
         }
 
-        private void handleBandsChanged() {
-            AbstractTimeSeries timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(currentView.getProduct());
+        private void handleBandsChanged(final AbstractTimeSeries timeSeries) {
             graphModel.adaptToTimeSeries(timeSeries);
             graphModel.updateAnnotation(currentView.getRaster());
             graphModel.updatePins();
         }
 
-        private void handleInsituVariablesChanged() {
-            AbstractTimeSeries timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(currentView.getProduct());
+        private void handleBandMappingChanged(final AbstractTimeSeries timeSeries) {
             graphModel.adaptToTimeSeries(timeSeries);
         }
 
-        private void handleInsituVariablesChanged(String variableName) {
-            AbstractTimeSeries timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(currentView.getProduct());
+        private void handleInsituVariablesChanged(String variableName, final AbstractTimeSeries timeSeries) {
             graphModel.adaptToTimeSeries(timeSeries);
             if(timeSeries.isInsituVariableSelected(variableName)) {
                 graphModel.updateInsituTimeSeries();

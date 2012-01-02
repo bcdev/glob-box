@@ -32,10 +32,12 @@ public class TimeSeriesChangeEvent {
 
     private final int type;
     private final Object value;
+    private final AbstractTimeSeries timeSeries;
 
-    public TimeSeriesChangeEvent(int type, Object value) {
+    public TimeSeriesChangeEvent(int type, Object value, AbstractTimeSeries timeSeries) {
         this.type = type;
         this.value = value;
+        this.timeSeries = timeSeries;
     }
 
     public int getType() {
@@ -44,5 +46,9 @@ public class TimeSeriesChangeEvent {
 
     public Object getValue() {
         return value;
+    }
+
+    public AbstractTimeSeries getTimeSeries() {
+        return timeSeries;
     }
 }

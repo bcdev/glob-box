@@ -83,11 +83,11 @@ class TimeSeriesGraphForm {
         showTimeSeriesForSelectedPinsButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                graphModel.setIsShowingSelectedPins(showTimeSeriesForSelectedPinsButton.isSelected());
                 if (graphModel.isShowingAllPins()) {
                     showTimeSeriesForAllPinsButton.setSelected(false);
                     graphModel.setIsShowingAllPins(false);
                 }
+                graphModel.setIsShowingSelectedPins(showTimeSeriesForSelectedPinsButton.isSelected());
             }
         });
         showTimeSeriesForSelectedPinsButton.setName("showTimeSeriesForSelectedPinsButton");
@@ -99,11 +99,11 @@ class TimeSeriesGraphForm {
         showTimeSeriesForAllPinsButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                graphModel.setIsShowingAllPins(showTimeSeriesForAllPinsButton.isSelected());
                 if (graphModel.isShowingSelectedPins()) {
                     showTimeSeriesForSelectedPinsButton.setSelected(false);
                     graphModel.setIsShowingSelectedPins(false);
                 }
+                graphModel.setIsShowingAllPins(showTimeSeriesForAllPinsButton.isSelected());
             }
         });
         showTimeSeriesForAllPinsButton.setName("showTimeSeriesForAllPinsButton");

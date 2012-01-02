@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2011 Brockmann Consult GmbH (info@brockmann-consult.de)
- * 
+ *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
  * Software Foundation; either version 3 of the License, or (at your option)
@@ -9,14 +9,21 @@
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
  * more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
 package org.esa.beam.glob.core.timeseries.datamodel;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * Model class for axis mapping.
@@ -28,7 +35,7 @@ public class AxisMappingModel {
 
     private final Map<String, Set<String>> insituMap = new HashMap<String, Set<String>>();
     private final Map<String, Set<String>> rasterMap = new HashMap<String, Set<String>>();
-    
+
     private final List<ModelListener> listeners = new ArrayList<ModelListener>();
 
     public Set<String> getInsituNames(String alias) {
@@ -91,12 +98,6 @@ public class AxisMappingModel {
         listeners.add(axisMappingModelListener);
     }
 
-    private void fireEvent() {
-        for (ModelListener listener : listeners) {
-            listener.hasChanged();
-        }
-    }
-    
     private String getAlias(String rasterName, Map<String, Set<String>> map) {
         for (Map.Entry<String, Set<String>> entry : map.entrySet()) {
             for (String mappedRasterName : entry.getValue()) {
@@ -139,6 +140,12 @@ public class AxisMappingModel {
         final Set<String> removedNames = map.remove(beforeName);
         if (removedNames != null) {
             map.put(changedName, removedNames);
+        }
+    }
+
+    private void fireEvent() {
+        for (ModelListener listener : listeners) {
+            listener.hasChanged();
         }
     }
 

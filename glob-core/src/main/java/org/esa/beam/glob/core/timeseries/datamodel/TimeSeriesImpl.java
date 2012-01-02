@@ -16,12 +16,14 @@
 
 package org.esa.beam.glob.core.timeseries.datamodel;
 
-import com.bc.ceres.core.*;
+import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.framework.datamodel.*;
-import org.esa.beam.glob.core.insitu.*;
-import org.esa.beam.util.*;
+import org.esa.beam.glob.core.insitu.InsituSource;
+import org.esa.beam.util.Guardian;
+import org.esa.beam.util.ProductUtils;
+import org.esa.beam.util.StringUtils;
 
-import java.text.*;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -134,14 +136,14 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
                 }
             }
             fireChangeEvent(new TimeSeriesChangeEvent(TimeSeriesChangeEvent.PROPERTY_PRODUCT_LOCATIONS,
-                                                      productLocationList));
+                                                      productLocationList, this));
         }
     }
 
     private void addProductMetadata(Map.Entry<String, Product> productEntry) {
         MetadataElement productElement = tsProduct.getMetadataRoot().
-                getElement(TIME_SERIES_ROOT_NAME).
-                getElement(SOURCE_PRODUCT_PATHS);
+                    getElement(TIME_SERIES_ROOT_NAME).
+                    getElement(SOURCE_PRODUCT_PATHS);
         ProductData productPath = ProductData.createInstance(productEntry.getKey());
         int length = productElement.getElements().length + 1;
         MetadataElement elem = new MetadataElement(String.format("%s.%s", SOURCE_PRODUCT_PATHS, Integer.toString(length)));
@@ -175,7 +177,7 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
         productLocationList.remove(productLocation);
 
         fireChangeEvent(new TimeSeriesChangeEvent(TimeSeriesChangeEvent.PROPERTY_PRODUCT_LOCATIONS,
-                                                  productLocationList));
+                                                  productLocationList, this));
     }
 
     private void removeAttributeWithValue(String attributeName, String value, MetadataElement parentElement) {
@@ -266,11 +268,11 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
             final Band[] bands = tsProduct.getBands();
             for (Band band : bands) {
                 if (band.getName().startsWith(variableName)) {
-                     tsProduct.removeBand(band);
+                    tsProduct.removeBand(band);
                 }
             }
         }
-        fireChangeEvent(new TimeSeriesChangeEvent(TimeSeriesChangeEvent.PROPERTY_EO_VARIABLE_SELECTION, null));
+        fireChangeEvent(new TimeSeriesChangeEvent(TimeSeriesChangeEvent.PROPERTY_EO_VARIABLE_SELECTION, null, this));
     }
 
     @Override
@@ -281,13 +283,13 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
     @Override
     public void setInsituVariableSelected(String variableName, boolean selected) {
         boolean hasChanged;
-        if(selected) {
+        if (selected) {
             hasChanged = insituVariablesSelections.add(variableName);
         } else {
             hasChanged = insituVariablesSelections.remove(variableName);
         }
-        if(hasChanged) {
-            fireChangeEvent(new TimeSeriesChangeEvent(TimeSeriesChangeEvent.PROPERTY_INSITU_VARIABLE_SELECTION, variableName));
+        if (hasChanged) {
+            fireChangeEvent(new TimeSeriesChangeEvent(TimeSeriesChangeEvent.PROPERTY_INSITU_VARIABLE_SELECTION, variableName, this));
         }
     }
 
@@ -357,12 +359,12 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
         final ProductData.UTC startTime = timeCoding.getStartTime();
         if (tsProduct.getStartTime().getAsCalendar().compareTo(startTime.getAsCalendar()) != 0) {
             tsProduct.setStartTime(startTime);
-            fireChangeEvent(new TimeSeriesChangeEvent(TimeSeriesChangeEvent.START_TIME_PROPERTY_NAME, startTime));
+            fireChangeEvent(new TimeSeriesChangeEvent(TimeSeriesChangeEvent.START_TIME_PROPERTY_NAME, startTime, this));
         }
         final ProductData.UTC endTime = timeCoding.getEndTime();
         if (tsProduct.getEndTime().getAsCalendar().compareTo(endTime.getAsCalendar()) != 0) {
             tsProduct.setEndTime(endTime);
-            fireChangeEvent(new TimeSeriesChangeEvent(TimeSeriesChangeEvent.END_TIME_PROPERTY_NAME, endTime));
+            fireChangeEvent(new TimeSeriesChangeEvent(TimeSeriesChangeEvent.END_TIME_PROPERTY_NAME, endTime,this));
         }
         List<String> variables = getEoVariables();
         for (Product product : getAllProducts()) {
@@ -375,7 +377,7 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
         for (Band band : tsProduct.getBands()) {
             final TimeCoding bandTimeCoding = getRasterTimeMap().get(band);
             if (!timeCoding.contains(bandTimeCoding)) {
-                fireChangeEvent(new TimeSeriesChangeEvent(TimeSeriesChangeEvent.BAND_TO_BE_REMOVED, band));
+                fireChangeEvent(new TimeSeriesChangeEvent(TimeSeriesChangeEvent.BAND_TO_BE_REMOVED, band,this));
                 tsProduct.removeBand(band);
             }
         }
@@ -398,9 +400,9 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
 
     @Override
     public void setInsituSource(InsituSource insituSource) {
-        if(this.insituSource != insituSource) {
+        if (this.insituSource != insituSource) {
             this.insituSource = insituSource;
-            fireChangeEvent(new TimeSeriesChangeEvent(TimeSeriesChangeEvent.INSITU_SOURCE_CHANGED, this));
+            fireChangeEvent(new TimeSeriesChangeEvent(TimeSeriesChangeEvent.INSITU_SOURCE_CHANGED, this,this));
         }
     }
 
@@ -435,8 +437,8 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
 
     private MetadataElement[] getVariableMetadataElements() {
         MetadataElement variableListElement = tsProduct.getMetadataRoot().
-                getElement(TIME_SERIES_ROOT_NAME).
-                getElement(VARIABLES);
+                    getElement(TIME_SERIES_ROOT_NAME).
+                    getElement(VARIABLES);
         return variableListElement.getElements();
     }
 
@@ -522,14 +524,14 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
 
     private void addProductLocationMetadata(ProductLocation productLocation) {
         MetadataElement productLocationsElement = tsProduct.getMetadataRoot().
-                getElement(TIME_SERIES_ROOT_NAME).
-                getElement(PRODUCT_LOCATIONS);
+                    getElement(TIME_SERIES_ROOT_NAME).
+                    getElement(PRODUCT_LOCATIONS);
         // @todo - nur produkt pfade, keine Verzeichnisse
         ProductData productPath = ProductData.createInstance(productLocation.getPath());
         ProductData productType = ProductData.createInstance(productLocation.getProductLocationType().toString());
         int length = productLocationsElement.getElements().length + TimeSeriesChangeEvent.BAND_TO_BE_REMOVED;
         MetadataElement elem = new MetadataElement(
-                String.format("%s.%s", PRODUCT_LOCATIONS, Integer.toString(length)));
+                    String.format("%s.%s", PRODUCT_LOCATIONS, Integer.toString(length)));
         elem.addAttribute(new MetadataAttribute(PL_PATH, productPath, true));
         elem.addAttribute(new MetadataAttribute(PL_TYPE, productType, true));
         productLocationsElement.addElement(elem);
@@ -565,8 +567,8 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
 
     private void addVariableToMetadata(String variable) {
         MetadataElement variableListElement = tsProduct.getMetadataRoot().
-                getElement(TIME_SERIES_ROOT_NAME).
-                getElement(VARIABLES);
+                    getElement(TIME_SERIES_ROOT_NAME).
+                    getElement(VARIABLES);
         final ProductData variableName = ProductData.createInstance(variable);
         final ProductData isSelected = ProductData.createInstance(Boolean.toString(false));
         int length = variableListElement.getElements().length + 1;
@@ -675,7 +677,7 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
 
         @Override
         public void hasChanged() {
-            fireChangeEvent(new TimeSeriesChangeEvent(TimeSeriesChangeEvent.PROPERTY_BAND_MAPPING_CHANGED, null));
+            fireChangeEvent(new TimeSeriesChangeEvent(TimeSeriesChangeEvent.PROPERTY_BAND_MAPPING_CHANGED, null, TimeSeriesImpl.this));
         }
     }
 }
