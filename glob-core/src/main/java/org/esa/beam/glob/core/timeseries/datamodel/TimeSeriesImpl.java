@@ -677,7 +677,7 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
 
         @Override
         public void hasChanged() {
-            fireChangeEvent(new TimeSeriesChangeEvent(TimeSeriesChangeEvent.PROPERTY_BAND_MAPPING_CHANGED, null, TimeSeriesImpl.this));
+            fireChangeEvent(new TimeSeriesChangeEvent(TimeSeriesChangeEvent.PROPERTY_AXIS_MAPPING_CHANGED, null, TimeSeriesImpl.this));
         }
     }
 }

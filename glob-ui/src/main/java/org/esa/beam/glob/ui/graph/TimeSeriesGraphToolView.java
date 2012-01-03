@@ -141,12 +141,12 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
             setTitle(String.format("%s - %s", titleBase, variableName));
 
             graphModel.updateAnnotation(raster);
-            graphModel.updatePins();
+            graphModel.updateTimeSeries(null, TimeSeriesType.PIN);
             showSelectedPinAction.setEnabled(currentView.getSelectedPin() != null);
             showAllPinAction.setEnabled(currentProduct.getPinGroup().getNodeCount() > 0);
         } else {
-            graphModel.removeCursorTimeSeries();
-            graphModel.removePinTimeSeries();
+//            graphModel.removeCursorTimeSeries();
+//            graphModel.removePinTimeSeries();
             graphModel.removeAnnotation();
             graphModel.adaptToTimeSeries(null);
 
@@ -154,11 +154,17 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         }
     }
 
+    private void updateTimeSeries(AbstractTimeSeries timeSeries) {
+        graphModel.adaptToTimeSeries(timeSeries);
+        graphModel.updateTimeSeries(null, TimeSeriesType.INSITU);
+        graphModel.updateTimeSeries(null, TimeSeriesType.PIN);
+    }
+
     private class ShowPinAction extends AbstractAction {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            graphModel.updatePins();
+            graphModel.updateTimeSeries(null, TimeSeriesType.PIN);
         }
     }
 
@@ -183,8 +189,6 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
 
     private class TimeSeriesPPL implements PixelPositionListener {
 
-//        private XYTextAnnotation loadingMessage;
-
         @Override
         public void pixelPosChanged(ImageLayer imageLayer, int pixelX, int pixelY,
                                     int currentLevel, boolean pixelPosValid, MouseEvent e) {
@@ -203,7 +207,8 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
 
         @Override
         public void pixelPosNotAvailable() {
-            graphModel.removeCursorTimeSeriesInWorkerThread();
+            final AbstractTimeSeries timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(currentView.getProduct());
+            updateTimeSeries(timeSeries);
         }
     }
 
@@ -214,7 +219,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
             Placemark pin = (Placemark) evt.getNewValue();
             showSelectedPinAction.setEnabled(pin != null);
             if (!graphModel.isShowingAllPins()) {
-                graphModel.updatePins();
+                graphModel.updateTimeSeries(null, TimeSeriesType.PIN);
             }
         }
     }
@@ -225,20 +230,20 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         public void timeSeriesChanged(TimeSeriesChangeEvent event) {
             if (event.getType() == TimeSeriesChangeEvent.PROPERTY_PRODUCT_LOCATIONS ||
                 event.getType() == TimeSeriesChangeEvent.PROPERTY_EO_VARIABLE_SELECTION) {
-                handleBandsChanged(event.getTimeSeries());
+                graphModel.updateAnnotation(currentView.getRaster());
+                updateTimeSeries(event.getTimeSeries());
             } else if(event.getType() == TimeSeriesChangeEvent.PROPERTY_INSITU_VARIABLE_SELECTION) {
-                handleInsituVariablesChanged(event.getValue().toString(), event.getTimeSeries());
-            } else if(event.getType() == TimeSeriesChangeEvent.PROPERTY_BAND_MAPPING_CHANGED) {
-                handleBandMappingChanged(event.getTimeSeries());
+                updateTimeSeries(event.getTimeSeries());
+            } else if(event.getType() == TimeSeriesChangeEvent.PROPERTY_AXIS_MAPPING_CHANGED) {
+                updateTimeSeries(event.getTimeSeries());
             }
-
         }
 
         @Override
         public void nodeChanged(ProductNodeEvent event) {
             String propertyName = event.getPropertyName();
             if (propertyName.equals(Placemark.PROPERTY_NAME_PIXELPOS)) {
-                graphModel.updatePins();
+                graphModel.updateTimeSeries(null, TimeSeriesType.PIN);
             }
         }
 
@@ -267,26 +272,6 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
             final boolean placemarksSet = currentView.getProduct().getPinGroup().getNodeCount() > 0;
             showAllPinAction.setEnabled(placemarksSet);
             graphForm.setExportEnabled(placemarksSet);
-        }
-
-        private void handleBandsChanged(final AbstractTimeSeries timeSeries) {
-            graphModel.adaptToTimeSeries(timeSeries);
-            graphModel.updateAnnotation(currentView.getRaster());
-            graphModel.updatePins();
-        }
-
-        private void handleBandMappingChanged(final AbstractTimeSeries timeSeries) {
-            graphModel.adaptToTimeSeries(timeSeries);
-        }
-
-        private void handleInsituVariablesChanged(String variableName, final AbstractTimeSeries timeSeries) {
-            graphModel.adaptToTimeSeries(timeSeries);
-            if(timeSeries.isInsituVariableSelected(variableName)) {
-                graphModel.updateInsituTimeSeries();
-            } else {
-                graphModel.removeInsituTimeSeriesInWorkerThread();
-            }
-            graphModel.updatePins();
         }
     }
 

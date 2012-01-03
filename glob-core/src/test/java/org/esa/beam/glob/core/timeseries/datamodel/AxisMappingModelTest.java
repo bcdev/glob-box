@@ -165,5 +165,31 @@ public class AxisMappingModelTest {
         assertEquals("alias1", axisMappingModel.getInsituAlias("insituName1"));
         assertNull(axisMappingModel.getInsituAlias("insituName3"));
     }
+
+    @Test
+    public void testGetRasterCount() throws Exception {
+        final int rasterCount = axisMappingModel.getRasterCount();
+        axisMappingModel.addRasterName("alias", "raster1");
+        axisMappingModel.addRasterName("alias", "raster2");
+        axisMappingModel.addRasterName("alias1", "raster1_1");
+        axisMappingModel.addRasterName("alias1", "raster2");
+        final int rasterCount2 = axisMappingModel.getRasterCount();
+        
+        assertEquals(0, rasterCount);
+        assertEquals(4, rasterCount2);
+    }
+
+    @Test
+    public void testGetInsituCount() throws Exception {
+        final int insituCount = axisMappingModel.getInsituCount();
+        axisMappingModel.addInsituName("alias", "insitu1");
+        axisMappingModel.addInsituName("alias", "insitu2");
+        axisMappingModel.addInsituName("alias1", "insitu1_1");
+        axisMappingModel.addInsituName("alias1", "insitu2");
+        final int insituCount2 = axisMappingModel.getInsituCount();
+
+        assertEquals(0, insituCount);
+        assertEquals(4, insituCount2);
+    }
 }
 

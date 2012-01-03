@@ -7,6 +7,11 @@ import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
 
 import java.awt.Color;
 import java.awt.Paint;
+import java.awt.Rectangle;
+import java.awt.Shape;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Ellipse2D;
+import java.awt.geom.GeneralPath;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -31,9 +36,50 @@ class TimeSeriesGraphDisplayController {
                 Color.orange.darker(),
     };
 
+    private static Shape createTriangle() {
+        final GeneralPath generalPath = new GeneralPath();
+        generalPath.moveTo(-5,-5);
+        generalPath.lineTo(5, -5);
+        generalPath.lineTo(0, 5);
+        generalPath.closePath();
+        return generalPath;
+    }
+
+    private static Shape createPlus() {
+        final GeneralPath generalPath = new GeneralPath();
+        generalPath.moveTo(-5,-1);
+        generalPath.lineTo(-1, -1);
+        generalPath.lineTo(-1, -5);
+        generalPath.lineTo(1, -5);
+        generalPath.lineTo(1, -1);
+        generalPath.lineTo(5, -1);
+        generalPath.lineTo(5, 1);
+        generalPath.lineTo(1, 1);
+        generalPath.lineTo(1, 5);
+        generalPath.lineTo(-1, 5);
+        generalPath.lineTo(-1, 1);
+        generalPath.lineTo(-5, 1);
+        generalPath.closePath();
+        return generalPath;
+    }
+    private static final AffineTransform ROTATION_45 = AffineTransform.getRotateInstance(Math.toRadians(45));
+    private static final AffineTransform ROTATION_180 = AffineTransform.getRotateInstance(Math.toRadians(180));
+
+    private static final Shape[] SHAPES = {
+            new Rectangle(-5, -5, 10, 10),
+            new Ellipse2D.Float(-5,-5, 10,10),
+            ROTATION_45.createTransformedShape( new Rectangle(-5, -5, 10, 10)),
+            createTriangle(),
+            ROTATION_180.createTransformedShape(createTriangle()),
+            createPlus()
+    };
+
+    public static final Shape CURSOR_SHAPE = ROTATION_45.createTransformedShape(createPlus());
+
     private final List<String> eoVariablesToDisplay;
     private final List<String> insituVariablesToDisplay;
     private final PinSupport pinSupport;
+
     private AbstractTimeSeries timeSeries;
 
     TimeSeriesGraphDisplayController(PinSupport pinSupport) {
@@ -93,6 +139,10 @@ class TimeSeriesGraphDisplayController {
             }
         }
         return pinPositionsToDisplay;
+    }
+
+    public Shape getShape(int posIdx) {
+        return SHAPES[posIdx % SHAPES.length];
     }
 
     interface PinSupport {

@@ -1,10 +1,8 @@
 package org.esa.beam.glob.ui.graph;
 
+import com.bc.ceres.core.Assert;
 import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.GeoCoding;
 import org.esa.beam.framework.datamodel.GeoPos;
-import org.esa.beam.framework.datamodel.PixelPos;
-import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.glob.core.insitu.InsituSource;
 import org.esa.beam.glob.core.insitu.csv.InsituRecord;
@@ -21,20 +19,16 @@ import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
-class TimeSeriesGraphUpdater extends SwingWorker<Map<String, List<TimeSeries>>, Void> {
-
-    static final Position NULL_POSITION = new Position(-1, -1, -1);
+class TimeSeriesGraphUpdater extends SwingWorker<List<TimeSeries>, Void> {
 
     private final WorkerChainSupport workerChainSupport;
-    private final Position position;
+    private final Position cursorPosition;
+    private final PositionSupport positionSupport;
     private final TimeSeriesType type;
     private final int version;
     private final AbstractTimeSeries timeSeries;
@@ -42,41 +36,50 @@ class TimeSeriesGraphUpdater extends SwingWorker<Map<String, List<TimeSeries>>, 
     private final VersionSafeDataSources dataSources;
     private final DisplayAxisMapping displayAxisMapping;
 
-    TimeSeriesGraphUpdater(AbstractTimeSeries timeSeries, VersionSafeDataSources dataSources, TimeSeriesDataHandler dataHandler, DisplayAxisMapping displayAxisMapping, WorkerChainSupport workerChainSupport, Position position, TimeSeriesType type, int version) {
+    TimeSeriesGraphUpdater(AbstractTimeSeries timeSeries, VersionSafeDataSources dataSources, TimeSeriesDataHandler dataHandler, DisplayAxisMapping displayAxisMapping, WorkerChainSupport workerChainSupport, Position cursorPosition, PositionSupport positionSupport, TimeSeriesType type, int version) {
         super();
         this.timeSeries = timeSeries;
         this.dataHandler = dataHandler;
         this.dataSources = dataSources;
         this.displayAxisMapping = displayAxisMapping;
         this.workerChainSupport = workerChainSupport;
-        this.position = position;
+        this.cursorPosition = cursorPosition;
+        this.positionSupport = positionSupport;
         this.type = type;
         this.version = version;
+        if (TimeSeriesType.CURSOR.equals(type)) {
+            Assert.notNull(cursorPosition);
+        } else {
+            Assert.argument(cursorPosition == null);
+        }
     }
 
     @Override
-    protected Map<String, List<TimeSeries>> doInBackground() throws Exception {
+    protected List<TimeSeries> doInBackground() throws Exception {
         if (dataSources.getCurrentVersion() != version) {
-            return Collections.emptyMap();
+            return Collections.emptyList();
         }
 
-        if (type == TimeSeriesType.INSITU) {
-            return computeInsituTimeSeries();
-        } else {
-            return computeRasterTimeSeries();
+        switch (type) {
+            case INSITU:
+                return computeInsituTimeSeries();
+            case PIN:
+                return computeRasterTimeSeries();
+            case CURSOR:
+                return computeRasterTimeSeries();
         }
+        throw new IllegalStateException("Unknown type '" + type + "'.");
     }
 
     @Override
     protected void done() {
-        if (dataSources.getCurrentVersion() != version) {
-            return;
-        }
-        if (type.equals(TimeSeriesType.CURSOR)) {
-            dataHandler.removeCursorTimeSeries();
-        }
         try {
-
+            if (dataSources.getCurrentVersion() != version) {
+                return;
+            }
+//            if (type.equals(TimeSeriesType.CURSOR)) {
+//                dataHandler.removeCursorTimeSeries();
+//            }
             dataHandler.collectTimeSeries(get(), type);
         } catch (InterruptedException ignore) {
             ignore.printStackTrace();
@@ -87,83 +90,53 @@ class TimeSeriesGraphUpdater extends SwingWorker<Map<String, List<TimeSeries>>, 
         }
     }
 
-    private Map<String, List<TimeSeries>> computeRasterTimeSeries() {
-        final Set<String> aliasNames = displayAxisMapping.getAliasNames();
-        final Map<String, List<TimeSeries>> rasterTimeSeriesForAlias = new HashMap<String, List<TimeSeries>>();
-        for (String aliasName : aliasNames) {
-            final List<List<Band>> bandList = getListOfBandLists(aliasName);
-            final List<TimeSeries> tsList = new ArrayList<TimeSeries>();
-            for (List<Band> bands : bandList) {
-                final TimeSeries timeSeries = computeSingleTimeSeries(bands, position.pixelX, position.pixelY, position.currentLevel);
-                tsList.add(timeSeries);
+    private List<TimeSeries> computeRasterTimeSeries() {
+        final List<Position> positionsToDisplay = new ArrayList<Position>();
+        if (type.equals(TimeSeriesType.PIN)) {
+            final List<GeoPos> pinPositionsToDisplay = dataSources.getPinPositionsToDisplay();
+            for (GeoPos geoPos : pinPositionsToDisplay) {
+                positionsToDisplay.add(positionSupport.transformGeoPos(geoPos));
             }
-            rasterTimeSeriesForAlias.put(aliasName, tsList);
+        } else {
+            positionsToDisplay.add(cursorPosition);
         }
-        return rasterTimeSeriesForAlias;
+
+        final Set<String> aliasNames = displayAxisMapping.getAliasNames();
+        final List<TimeSeries> rasterTimeSeries = new ArrayList<TimeSeries>();
+
+        for (Position position : positionsToDisplay) {
+            for (String aliasName : aliasNames) {
+                final Set<String> rasterNames = displayAxisMapping.getRasterNames(aliasName);
+                for (String rasterName : rasterNames) {
+                    final List<Band> bandsForVariable = timeSeries.getBandsForVariable(rasterName);
+                    final TimeSeries timeSeries = computeSingleTimeSeries(bandsForVariable, position.pixelX,
+                            position.pixelY, position.currentLevel);
+                    rasterTimeSeries.add(timeSeries);
+                }
+            }
+        }
+        return rasterTimeSeries;
     }
 
-    private Map<String, List<TimeSeries>> computeInsituTimeSeries() {
+    private List<TimeSeries> computeInsituTimeSeries() {
         final InsituSource insituSource = timeSeries.getInsituSource();
-        final Product timeSeriesProduct = timeSeries.getTsProduct();
-        final GeoCoding geoCoding = timeSeriesProduct.getGeoCoding();
-        final Map<String, List<TimeSeries>> insituTimeSeriesForAlias = new HashMap<String, List<TimeSeries>>();
+        final List<TimeSeries> insituTimeSeries = new ArrayList<TimeSeries>();
 
         final Set<String> aliasNames = displayAxisMapping.getAliasNames();
+        final List<GeoPos> pinPositionsToDisplay = dataSources.getPinPositionsToDisplay();
 
-
-        for (String aliasName : aliasNames) {
-            final List<TimeSeries> timeSerieses = new ArrayList<TimeSeries>();
-            final Set<String> insituNames = displayAxisMapping.getInsituNames(aliasName);
-            final Set<String> insituVariablesForAlias = new HashSet<String>();
-            for (String insituName : insituNames) {
-                if (dataSources.getInsituVariables().contains(insituName)) {
-                    insituVariablesForAlias.add(insituName);
-                }
-            }
-            for (String insituVariable : insituVariablesForAlias) {
-                final GeoPos[] insituPositions = insituSource.getInsituPositionsFor(insituVariable);
-                final List<GeoPos> pinPositionsToDisplay = dataSources.getPinPositionsToDisplay();
-                PixelPos pixelPos = new PixelPos();
-                for (GeoPos insituPosition : insituPositions) {
-                    if (!contains(pinPositionsToDisplay, insituPosition)) {
-                        continue;
-                    }
-                    geoCoding.getPixelPos(insituPosition, pixelPos);
-                    if (!AbstractTimeSeries.isPixelValid(timeSeriesProduct, pixelPos)) {
-                        continue;
-                    }
-                    InsituRecord[] insituRecords = insituSource.getValuesFor(insituVariable, insituPosition);
+        for (GeoPos pinPos : pinPositionsToDisplay) {
+            for (String aliasName : aliasNames) {
+                final Set<String> insituNames = displayAxisMapping.getInsituNames(aliasName);
+                for (String insituName : insituNames) {
+                    InsituRecord[] insituRecords = insituSource.getValuesFor(insituName, pinPos);
                     final TimeSeries timeSeries = computeSingleTimeSeries(insituRecords);
-                    timeSerieses.add(timeSeries);
-                }
-            }
-            insituTimeSeriesForAlias.put(aliasName, timeSerieses);
-        }
-        return insituTimeSeriesForAlias;
-    }
-
-    private boolean contains(List<GeoPos> pinPositionsToDisplay, GeoPos insituPosition) {
-        for (GeoPos geoPos : pinPositionsToDisplay) {
-            if (Math.abs(geoPos.lat - insituPosition.lat) < 0.001 &&
-                Math.abs(geoPos.lon - insituPosition.lon) < 0.001) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private List<List<Band>> getListOfBandLists(String aliasName) {
-        List<List<Band>> bandList = new ArrayList<List<Band>>();
-        final Set<String> rasterNames = displayAxisMapping.getRasterNames(aliasName);
-        for (List<Band> eoVariableBandList : dataSources.getRasterSources()) {
-            for (String rasterName : rasterNames) {
-                final Band raster = eoVariableBandList.get(0);
-                if (raster.getName().startsWith(rasterName)) {
-                    bandList.add(eoVariableBandList);
+                    insituTimeSeries.add(timeSeries);
                 }
             }
         }
-        return bandList;
+
+        return insituTimeSeries;
     }
 
     private TimeSeries computeSingleTimeSeries(InsituRecord[] insituRecords) {
@@ -171,8 +144,8 @@ class TimeSeriesGraphUpdater extends SwingWorker<Map<String, List<TimeSeries>>, 
         for (InsituRecord insituRecord : insituRecords) {
             final ProductData.UTC startTime = ProductData.UTC.create(insituRecord.time, 0);
             final Millisecond timePeriod = new Millisecond(startTime.getAsDate(),
-                                                           ProductData.UTC.UTC_TIME_ZONE,
-                                                           Locale.getDefault());
+                    ProductData.UTC.UTC_TIME_ZONE,
+                    Locale.getDefault());
             timeSeries.addOrUpdate(timePeriod, insituRecord.value);
         }
         return timeSeries;
@@ -191,8 +164,8 @@ class TimeSeriesGraphUpdater extends SwingWorker<Map<String, List<TimeSeries>>, 
             if (timeCoding != null) {
                 final ProductData.UTC startTime = timeCoding.getStartTime();
                 final Millisecond timePeriod = new Millisecond(startTime.getAsDate(),
-                                                               ProductData.UTC.UTC_TIME_ZONE,
-                                                               Locale.getDefault());
+                        ProductData.UTC.UTC_TIME_ZONE,
+                        Locale.getDefault());
                 final double value = getValue(band, pixelX, pixelY, currentLevel);
                 if (value != noDataValue) {
                     timeSeries.add(new TimeSeriesDataItem(timePeriod, value));
@@ -232,9 +205,7 @@ class TimeSeriesGraphUpdater extends SwingWorker<Map<String, List<TimeSeries>>, 
 
     static interface TimeSeriesDataHandler {
 
-        void collectTimeSeries(Map<String, List<TimeSeries>> data, TimeSeriesType type);
-
-        void removeCursorTimeSeries();
+        void collectTimeSeries(List<TimeSeries> data, TimeSeriesType type);
     }
 
     static interface WorkerChainSupport {
@@ -244,30 +215,12 @@ class TimeSeriesGraphUpdater extends SwingWorker<Map<String, List<TimeSeries>>, 
 
     static abstract class VersionSafeDataSources {
 
-        private final List<String> insituVariables;
-        private final List<List<Band>> rasterSources;
         private final List<GeoPos> pinPositionsToDisplay;
         private final int version;
 
-        protected VersionSafeDataSources(List<String> insituVariables, List<List<Band>> rasterSources, List<GeoPos> pinPositionsToDisplay, final int version) {
-            this.insituVariables = insituVariables;
-            this.rasterSources = rasterSources;
+        protected VersionSafeDataSources(List<GeoPos> pinPositionsToDisplay, final int version) {
             this.pinPositionsToDisplay = pinPositionsToDisplay;
             this.version = version;
-        }
-
-        public List<String> getInsituVariables() {
-            if (canReturnValues()) {
-                return insituVariables;
-            }
-            return Collections.emptyList();
-        }
-
-        public List<List<Band>> getRasterSources() {
-            if (canReturnValues()) {
-                return rasterSources;
-            }
-            return Collections.emptyList();
         }
 
         public List<GeoPos> getPinPositionsToDisplay() {
@@ -282,6 +235,10 @@ class TimeSeriesGraphUpdater extends SwingWorker<Map<String, List<TimeSeries>>, 
         private boolean canReturnValues() {
             return getCurrentVersion() == version;
         }
+    }
+
+    static interface PositionSupport {
+        Position transformGeoPos(GeoPos geoPos);
     }
 
 }

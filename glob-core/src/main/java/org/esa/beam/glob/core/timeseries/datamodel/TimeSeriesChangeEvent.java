@@ -28,7 +28,7 @@ public class TimeSeriesChangeEvent {
     public static final int PROPERTY_EO_VARIABLE_SELECTION = PROPERTY_PRODUCT_LOCATIONS << 1;
     public static final int INSITU_SOURCE_CHANGED = PROPERTY_EO_VARIABLE_SELECTION << 1;
     public static final int PROPERTY_INSITU_VARIABLE_SELECTION = INSITU_SOURCE_CHANGED << 1;
-    public static final int PROPERTY_BAND_MAPPING_CHANGED = PROPERTY_INSITU_VARIABLE_SELECTION << 1;
+    public static final int PROPERTY_AXIS_MAPPING_CHANGED = PROPERTY_INSITU_VARIABLE_SELECTION << 1;
 
     private final int type;
     private final Object value;

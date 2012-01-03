@@ -98,6 +98,14 @@ public class AxisMappingModel {
         listeners.add(axisMappingModelListener);
     }
 
+    public int getRasterCount() {
+        return getDataSourceCount(rasterMap);
+    }
+
+    public int getInsituCount() {
+        return getDataSourceCount(insituMap);
+    }
+
     private String getAlias(String rasterName, Map<String, Set<String>> map) {
         for (Map.Entry<String, Set<String>> entry : map.entrySet()) {
             for (String mappedRasterName : entry.getValue()) {
@@ -147,6 +155,14 @@ public class AxisMappingModel {
         for (ModelListener listener : listeners) {
             listener.hasChanged();
         }
+    }
+
+    private int getDataSourceCount(Map<String, Set<String>> map) {
+        int count = 0;
+        for (Set<String> strings : map.values()) {
+            count += strings.size();
+        }
+        return count;
     }
 
     interface ModelListener {
