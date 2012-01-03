@@ -145,8 +145,6 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
             showSelectedPinAction.setEnabled(currentView.getSelectedPin() != null);
             showAllPinAction.setEnabled(currentProduct.getPinGroup().getNodeCount() > 0);
         } else {
-//            graphModel.removeCursorTimeSeries();
-//            graphModel.removePinTimeSeries();
             graphModel.removeAnnotation();
             graphModel.adaptToTimeSeries(null);
 

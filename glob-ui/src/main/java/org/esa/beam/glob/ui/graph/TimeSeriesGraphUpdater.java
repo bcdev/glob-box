@@ -59,16 +59,11 @@ class TimeSeriesGraphUpdater extends SwingWorker<List<TimeSeries>, Void> {
         if (dataSources.getCurrentVersion() != version) {
             return Collections.emptyList();
         }
-
-        switch (type) {
-            case INSITU:
-                return computeInsituTimeSeries();
-            case PIN:
-                return computeRasterTimeSeries();
-            case CURSOR:
-                return computeRasterTimeSeries();
+        if (type == TimeSeriesType.INSITU) {
+            return computeInsituTimeSeries();
+        } else {
+            return computeRasterTimeSeries();
         }
-        throw new IllegalStateException("Unknown type '" + type + "'.");
     }
 
     @Override
@@ -77,9 +72,6 @@ class TimeSeriesGraphUpdater extends SwingWorker<List<TimeSeries>, Void> {
             if (dataSources.getCurrentVersion() != version) {
                 return;
             }
-//            if (type.equals(TimeSeriesType.CURSOR)) {
-//                dataHandler.removeCursorTimeSeries();
-//            }
             dataHandler.collectTimeSeries(get(), type);
         } catch (InterruptedException ignore) {
             ignore.printStackTrace();

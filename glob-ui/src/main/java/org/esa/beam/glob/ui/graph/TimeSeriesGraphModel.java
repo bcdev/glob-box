@@ -249,12 +249,7 @@ class TimeSeriesGraphModel {
     private void initPlot() {
         final ValueAxis domainAxis = timeSeriesPlot.getDomainAxis();
         domainAxis.setAutoRange(true);
-//        XYLineAndShapeRenderer xyRenderer = new XYSplineRenderer();
         XYLineAndShapeRenderer xyRenderer = new XYLineAndShapeRenderer(true, true);
-//        xyRenderer.setBaseShapesVisible(true);
-//        xyRenderer.setBaseShapesFilled(true);
-//        xyRenderer.setAutoPopulateSeriesPaint(true);
-//        xyRenderer.setBaseLegendTextFont(Font.getFont(DEFAULT_FONT_NAME));
         xyRenderer.setBaseLegendTextPaint(DEFAULT_FOREGROUND_COLOR);
         timeSeriesPlot.setRenderer(xyRenderer);
         timeSeriesPlot.setBackgroundPaint(DEFAULT_BACKGROUND_COLOR);
@@ -370,19 +365,6 @@ class TimeSeriesGraphModel {
         return createDisplayAxisMapping(eoVariables, insituVariables, axisMappingModel);
     }
 
-    private String getUnit(AxisMappingModel axisMappingModel, String aliasName) {
-        final Set<String> rasterNames = axisMappingModel.getRasterNames(aliasName);
-        for (List<Band> eoVariableBandList : eoVariableBands) {
-            for (String rasterName : rasterNames) {
-                final Band raster = eoVariableBandList.get(0);
-                if (raster.getName().startsWith(rasterName)) {
-                    return raster.getUnit();
-                }
-            }
-        }
-        return "";
-    }
-
     private DisplayAxisMapping createDisplayAxisMapping(List<String> eoVariables, List<String> insituVariables, AxisMappingModel axisMappingModel) {
         final DisplayAxisMapping displayAxisMapping = new DisplayAxisMapping();
 
@@ -408,6 +390,19 @@ class TimeSeriesGraphModel {
             }
         }
         return displayAxisMapping;
+    }
+
+    private String getUnit(AxisMappingModel axisMappingModel, String aliasName) {
+        final Set<String> rasterNames = axisMappingModel.getRasterNames(aliasName);
+        for (List<Band> eoVariableBandList : eoVariableBands) {
+            for (String rasterName : rasterNames) {
+                final Band raster = eoVariableBandList.get(0);
+                if (raster.getName().startsWith(rasterName)) {
+                    return raster.getUnit();
+                }
+            }
+        }
+        return "";
     }
 
     private static String getAxisLabel(String variableName, String unit) {
@@ -437,31 +432,16 @@ class TimeSeriesGraphModel {
         }
         Assert.state(timeSeries.size() % timeSeriesCount == 0.0);
         final int numPositions = timeSeries.size() / timeSeriesCount;
-        final Set<String> aliasNamesSet = displayAxisMapping.getAliasNames();
-        final String[] aliasNames = aliasNamesSet.toArray(new String[aliasNamesSet.size()]);
-
+        final String[] aliasNames = getAliasNames();
         for (int aliasIdx = 0; aliasIdx < aliasNames.length; aliasIdx++) {
             String aliasName = aliasNames[aliasIdx];
-            final int aliasIndexOffset = aliasIdx * 3;
-            final int collectionIndex = aliasIndexOffset + collectionOffset;
+            final int collectionIndex = getCollectionIndex(collectionOffset, aliasIdx);
             final TimeSeriesCollection dataset = (TimeSeriesCollection) timeSeriesPlot.getDataset(collectionIndex);
+            final XYItemRenderer renderer = timeSeriesPlot.getRenderer(collectionIndex);
             dataset.removeAllSeries();
-            final Set<String> dataSourceNameSet;
-            if (TimeSeriesType.INSITU.equals(type)) {
-                dataSourceNameSet = displayAxisMapping.getInsituNames(aliasName);
-            } else {
-                dataSourceNameSet = displayAxisMapping.getRasterNames(aliasName);
-            }
-            final String[] dataSourceNames = dataSourceNameSet.toArray(new String[dataSourceNameSet.size()]);
+            final String[] dataSourceNames = getDataSourceNames(type, aliasName);
             for (int posIdx = 0; posIdx < numPositions; posIdx++) {
-                final Shape posShape;
-                if (!TimeSeriesType.CURSOR.equals(type)) {
-                    posShape = displayController.getShape(posIdx);
-                } else {
-                    posShape = TimeSeriesGraphDisplayController.CURSOR_SHAPE;
-                }
-
-                final XYItemRenderer renderer = timeSeriesPlot.getRenderer(collectionIndex);
+                final Shape posShape = getShapeForPosition(type, posIdx);
                 for (int dataSourceIdx = 0; dataSourceIdx < dataSourceNames.length; dataSourceIdx++) {
                     final int timeSeriesIdx = posIdx * timeSeriesCount + dataSourceIdx;
                     dataset.addSeries(timeSeries.get(timeSeriesIdx));
@@ -469,6 +449,36 @@ class TimeSeriesGraphModel {
                 }
             }
         }
+    }
+
+    private int getCollectionIndex(int collectionOffset, int aliasIdx) {
+        final int aliasIndexOffset = aliasIdx * 3;
+        return aliasIndexOffset + collectionOffset;
+    }
+
+    private String[] getAliasNames() {
+        final Set<String> aliasNamesSet = displayAxisMapping.getAliasNames();
+        return aliasNamesSet.toArray(new String[aliasNamesSet.size()]);
+    }
+
+    private Shape getShapeForPosition(TimeSeriesType type, int posIdx) {
+        final Shape posShape;
+        if (!TimeSeriesType.CURSOR.equals(type)) {
+            posShape = displayController.getShape(posIdx);
+        } else {
+            posShape = TimeSeriesGraphDisplayController.CURSOR_SHAPE;
+        }
+        return posShape;
+    }
+
+    private String[] getDataSourceNames(TimeSeriesType type, String aliasName) {
+        final Set<String> dataSourceNameSet;
+        if (TimeSeriesType.INSITU.equals(type)) {
+            dataSourceNameSet = displayAxisMapping.getInsituNames(aliasName);
+        } else {
+            dataSourceNameSet = displayAxisMapping.getRasterNames(aliasName);
+        }
+        return dataSourceNameSet.toArray(new String[dataSourceNameSet.size()]);
     }
 
     private TimeSeriesGraphUpdater.VersionSafeDataSources createVersionSafeDataSources() {
