@@ -28,10 +28,6 @@ public class Main {
         TimeSeries s1 = new TimeSeries("L&G European Index Trust");
         TimeSeries s2 = new TimeSeries("L&G UK Index Trust");
 
-        TimeSeriesCollection dataset = new TimeSeriesCollection();
-        dataset.addSeries(s1);
-        dataset.addSeries(s2);
-
         s1.add(new Month(2, 2001), 181.8);
         s1.add(new Month(3, 2001), 167.3);
         s1.add(new Month(4, 2001), 153.8);
@@ -73,35 +69,52 @@ public class Main {
         s2.add(new Month(6, 2002), 108.8);
         s2.add(new Month(7, 2002), 101.6);
 
+        TimeSeriesCollection dataset1 = new TimeSeriesCollection();
+        dataset1.addSeries(s1);
+        final TimeSeriesCollection dataset2 = new TimeSeriesCollection();
+        dataset2.addSeries(s2);
 
 
         final JFreeChart timeSeriesChart = ChartFactory.createTimeSeriesChart(
                     "BallaBalla", // Titel
                     "time", // time axis label
                     "chl", // value axis label
-                    dataset, // XY Dataset,
+                    dataset1, // XY Dataset,
                     true, // legend
                     true, // tooltips
                     false // url's
         );
 
         final XYPlot plot = timeSeriesChart.getXYPlot();
+        plot.setDataset(0, dataset1);
+        plot.setDataset(1, dataset2);
 
 //        final XYLineAndShapeRenderer renderer = (XYLineAndShapeRenderer) plot.getRendererForDataset(dataset);
 
-        final XYErrorRenderer renderer = new XYErrorRenderer();
-        renderer.setDrawXError(false);
-        renderer.setAutoPopulateSeriesStroke(false);
-        renderer.setBaseLinesVisible(true);
+        final XYErrorRenderer renderer1 = createRenderer();
+        renderer1.setDrawXError(false);
+        renderer1.setBaseLinesVisible(true);
+        renderer1.setBaseShapesVisible(true);
+        renderer1.setBaseStroke(new BasicStroke(1.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 10.0f,
+                new float[]{10.0f}, 0.0f));
+        renderer1.setBasePaint(Color.CYAN);
+        renderer1.setBaseShape(new Ellipse2D.Double(-5, -5, 10, 10));
+        renderer1.setBaseShapesFilled(false);
+
+        plot.setRenderer(0, renderer1);
+
+        final XYErrorRenderer renderer2 = createRenderer();
+        renderer2.setDrawXError(false);
+        renderer2.setBaseLinesVisible(true);
+        renderer2.setBaseShapesVisible(true);
+        renderer2.setBaseStroke(new BasicStroke());
+        renderer2.setBasePaint(Color.GREEN);
+//        renderer1.setBaseShape(new Ellipse2D.Double(-5, -5, 10, 10));
+//        renderer1.setBaseShapesFilled(false);
+
+        plot.setRenderer(1, renderer2);
 
 
-        plot.setRenderer(0, renderer);
-        renderer.setBaseShapesVisible(true);
-        renderer.setSeriesPaint(0, Color.CYAN);
-        renderer.setSeriesPaint(1, Color.GREEN);
-        renderer.setSeriesShape(0, new Ellipse2D.Double(-5, -5, 10, 10));
-        renderer.setBaseStroke(new BasicStroke(1.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 10.0f,
-                                               new float[]{10.0f}, 0.0f));
 //        renderer.setSeriesShape(0, new Ellipse2D.Double(-4,-4,8,8));
 
 
@@ -130,5 +143,16 @@ public class Main {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setVisible(true);
         frame.pack();
+    }
+
+    private static XYErrorRenderer createRenderer() {
+        final XYErrorRenderer renderer = new XYErrorRenderer();
+        renderer.setAutoPopulateSeriesFillPaint(false);
+        renderer.setAutoPopulateSeriesOutlinePaint(false);
+        renderer.setAutoPopulateSeriesOutlineStroke(false);
+        renderer.setAutoPopulateSeriesPaint(false);
+        renderer.setAutoPopulateSeriesShape(false);
+        renderer.setAutoPopulateSeriesStroke(false);
+        return renderer;
     }
 }
