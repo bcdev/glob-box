@@ -189,7 +189,8 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         public void pixelPosChanged(ImageLayer imageLayer, int pixelX, int pixelY,
                                     int currentLevel, boolean pixelPosValid, MouseEvent e) {
             if (pixelPosValid && isVisible() && currentView != null) {
-                graphModel.updateTimeSeries(new TimeSeriesGraphUpdater.Position(pixelX, pixelY, currentLevel), TimeSeriesType.CURSOR);
+                final TimeSeriesGraphUpdater.Position position = new TimeSeriesGraphUpdater.Position(pixelX, pixelY, currentLevel);
+                graphModel.updateTimeSeries(position, TimeSeriesType.CURSOR);
             }
 
             final boolean autorange = e.isShiftDown();

@@ -53,7 +53,6 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.text.MessageFormat;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -69,6 +68,7 @@ class TimeSeriesGraphModel {
     private static final String NO_DATA_MESSAGE = "No data to display";
     private static final Stroke PIN_STROKE = new BasicStroke(1.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f,
                                                              new float[]{10.0f}, 0.0f);
+    private static final Stroke CURSOR_STROKE = new BasicStroke();
 
     private final Map<AbstractTimeSeries, TimeSeriesGraphDisplayController> displayControllerMap;
     private final XYPlot timeSeriesPlot;
@@ -340,7 +340,6 @@ class TimeSeriesGraphModel {
             displayAxisMapping = createDisplayAxisMapping(timeSeries);
             final Set<String> aliasNamesSet = displayAxisMapping.getAliasNames();
             final String[] aliasNames = aliasNamesSet.toArray(new String[aliasNamesSet.size()]);
-            final Map<String, Paint[]> aliasPaintMap = new HashMap<String, Paint[]>();
 
             for (String aliasName : aliasNamesSet) {
                 final Set<String> rasterNames = displayAxisMapping.getRasterNames(aliasName);
@@ -358,69 +357,70 @@ class TimeSeriesGraphModel {
 
                 timeSeriesPlot.setRangeAxis(aliasIdx, createValueAxis(aliasName));
 
-                final int collectionIndexOffset = aliasIdx * 3;
-                final int cursorCollectionIndex = collectionIndexOffset;
-                final int pinCollectionIndex = 1 + collectionIndexOffset;
-                final int insituCollectionIndex = 2 + collectionIndexOffset;
+                final int cursorCollectionIndex = aliasIdx * 3;
+                final int pinCollectionIndex = cursorCollectionIndex + 1;
+                final int insituCollectionIndex = pinCollectionIndex + 1;
 
-                final XYErrorRenderer cursorRenderer = new XYErrorRenderer();
                 TimeSeriesCollection cursorDataset = new TimeSeriesCollection();
                 timeSeriesPlot.setDataset(cursorCollectionIndex, cursorDataset);
                 cursorDatasets.add(cursorDataset);
 
-                final XYErrorRenderer pinRenderer = new XYErrorRenderer();
                 TimeSeriesCollection pinDataset = new TimeSeriesCollection();
                 timeSeriesPlot.setDataset(pinCollectionIndex, pinDataset);
                 pinDatasets.add(pinDataset);
-                pinRenderer.setBaseStroke(new BasicStroke());
 
-
-                final XYErrorRenderer insituRenderer = new XYErrorRenderer();
                 TimeSeriesCollection insituDataset = new TimeSeriesCollection();
                 timeSeriesPlot.setDataset(insituCollectionIndex, insituDataset);
                 insituDatasets.add(insituDataset);
-                insituRenderer.setBaseShapesFilled(false);
-                insituRenderer.setBaseLinesVisible(false);
 
                 timeSeriesPlot.mapDatasetToRangeAxis(cursorCollectionIndex, aliasIdx);
                 timeSeriesPlot.mapDatasetToRangeAxis(pinCollectionIndex, aliasIdx);
                 timeSeriesPlot.mapDatasetToRangeAxis(insituCollectionIndex, aliasIdx);
 
+                final XYErrorRenderer pinRenderer = createXYErrorRenderer();
+                final XYErrorRenderer cursorRenderer = createXYErrorRenderer();
+                final XYErrorRenderer insituRenderer = createXYErrorRenderer();
+
+                pinRenderer.setBaseStroke(PIN_STROKE);
+                cursorRenderer.setBaseStroke(CURSOR_STROKE);
+
+                insituRenderer.setBaseShapesFilled(false);
+                insituRenderer.setBaseLinesVisible(false);
+
+                final List<Paint> paintListForAlias = displayAxisMapping.getPaintListForAlias(aliasName);
+
                 final Set<String> rasterNamesSet = displayAxisMapping.getRasterNames(aliasName);
                 final String[] rasterNames = rasterNamesSet.toArray(new String[rasterNamesSet.size()]);
-                final List<Paint> paintListForAlias = displayAxisMapping.getPaintListForAlias(aliasName);
+
                 for (int i = 0; i < rasterNames.length; i++) {
                     cursorRenderer.setSeriesPaint(i, paintListForAlias.get(i));
-                    insituRenderer.setSeriesPaint(i, paintListForAlias.get(i));
                     pinRenderer.setSeriesPaint(i, paintListForAlias.get(i));
                 }
 
-                pinRenderer.setBaseLinesVisible(true);
-                pinRenderer.setDrawXError(false);
+                final Set<String> insituNamesSet = displayAxisMapping.getInsituNames(aliasName);
+                final String[] insituNames = insituNamesSet.toArray(new String[insituNamesSet.size()]);
 
-                //                pinRenderer.setBasePaint(paint);
-                pinRenderer.setBaseStroke(PIN_STROKE);
-                pinRenderer.setAutoPopulateSeriesPaint(true);
-                pinRenderer.setAutoPopulateSeriesStroke(false);
+                for (int i = 0; i < insituNames.length; i++) {
+                    insituRenderer.setSeriesPaint(i, paintListForAlias.get(i));
+                }
 
-                timeSeriesPlot.setRenderer(cursorCollectionIndex, pinRenderer, true);
+                timeSeriesPlot.setRenderer(cursorCollectionIndex, cursorRenderer, true);
                 timeSeriesPlot.setRenderer(pinCollectionIndex, pinRenderer, true);
-                timeSeriesPlot.setRenderer(insituCollectionIndex, pinRenderer, true);
-
-
-//                pinRenderer.setSeriesShape();
-//                pinRenderer.setSeriesPaint();
-//                pinRenderer.setSeriesFillPaint();
-//                pinRenderer.setSeriesLinesVisible();
-//                pinRenderer.setSeriesOutlinePaint();
-//                pinRenderer.setSeriesOutlineStroke();
-//                pinRenderer.setSeriesShapesFilled();
-//                pinRenderer.setSeriesShapesVisible();
-//                pinRenderer.setSeriesShapesVisible();
-
-
+                timeSeriesPlot.setRenderer(insituCollectionIndex, insituRenderer, true);
             }
         }
+    }
+
+    private XYErrorRenderer createXYErrorRenderer() {
+        final XYErrorRenderer renderer = new XYErrorRenderer();
+        renderer.setDrawXError(false);
+        renderer.setAutoPopulateSeriesStroke(false);
+        renderer.setAutoPopulateSeriesPaint(false);
+        renderer.setAutoPopulateSeriesFillPaint(false);
+        renderer.setAutoPopulateSeriesOutlinePaint(false);
+        renderer.setAutoPopulateSeriesOutlineStroke(false);
+        renderer.setAutoPopulateSeriesShape(false);
+        return renderer;
     }
 
     private NumberAxis createValueAxis(String aliasName) {

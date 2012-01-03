@@ -91,8 +91,8 @@ public class Main {
 
         final XYErrorRenderer renderer = new XYErrorRenderer();
         renderer.setDrawXError(false);
-        renderer.setBaseLinesVisible(true);
         renderer.setAutoPopulateSeriesStroke(false);
+        renderer.setBaseLinesVisible(true);
 
 
         plot.setRenderer(0, renderer);
