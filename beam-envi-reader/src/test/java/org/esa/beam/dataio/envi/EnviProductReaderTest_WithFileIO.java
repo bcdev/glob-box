@@ -38,6 +38,10 @@ public class EnviProductReaderTest_WithFileIO extends TestCase {
 
         doTest("envifile.hdr", "envifile.bil");
         doTest("envifile.bil.hdr", "envifile.bil");
+
+        doTest("envifile.hdr", "envifile.bsq");
+        doTest("envifile.bsq.hdr", "envifile.bsq");
+
     }
     
     private void doTest(String hdrFilename, String imgFilename) throws IOException {
