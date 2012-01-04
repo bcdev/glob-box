@@ -410,10 +410,19 @@ class EnviProductReader extends AbstractProductReader {
     }
 
     protected static String[] getBandNames(final Header header) {
-        final String[] bandNames = header.getBandNames();
+        String[] bandNames = header.getBandNames();
         // there must be at least 1 bandname because in DIMAP-Files are no bandnames given.
         if (bandNames == null || bandNames.length == 0) {
-            return new String[]{"Band"};
+            int numBands = header.getNumBands();
+            if (numBands == 0) {
+                return new String[]{"Band"};
+            } else {
+                bandNames = new String[numBands];
+                for (int i = 0; i < bandNames.length; i++) {
+                    bandNames[i] = "Band_" + (i + 1);
+                }
+                return bandNames;
+            }
         } else {
             return bandNames;
         }
