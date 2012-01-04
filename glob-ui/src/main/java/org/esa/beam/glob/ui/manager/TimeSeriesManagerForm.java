@@ -540,6 +540,11 @@ class TimeSeriesManagerForm {
 
     private class EditAxisMappingAction extends AbstractAction {
 
+        private EditAxisMappingAction() {
+            URL viewIconImageURL = UIUtils.getImageURL("/org/esa/beam/glob/ui/icons/AxisMapping24.gif", TimeSeriesManagerForm.class);
+            putValue(LARGE_ICON_KEY, new ImageIcon(viewIconImageURL));
+        }
+
         @Override
         public void actionPerformed(ActionEvent e) {
             final AxisMappingModel axisMappingModel = currentTimeSeries.getAxisMappingModel();
