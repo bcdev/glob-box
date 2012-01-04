@@ -65,7 +65,7 @@ import java.util.WeakHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
-class TimeSeriesGraphModel {
+class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandler {
 
     private static final Color DEFAULT_FOREGROUND_COLOR = Color.BLACK;
     private static final Color DEFAULT_BACKGROUND_COLOR = new Color(180, 180, 180);
@@ -88,7 +88,6 @@ class TimeSeriesGraphModel {
     private boolean isShowingAllPins;
     private DisplayAxisMapping displayAxisMapping;
     private final TimeSeriesGraphUpdater.WorkerChainSupport workerChainSupport;
-    private final TimeSeriesGraphUpdater.TimeSeriesDataHandler dataTarget;
     private final TimeSeriesGraphDisplayController.PinSupport pinSupport;
     private final WorkerChain workerChain;
 
@@ -97,7 +96,6 @@ class TimeSeriesGraphModel {
         eoVariableBands = new ArrayList<List<Band>>();
         displayControllerMap = new WeakHashMap<AbstractTimeSeries, TimeSeriesGraphDisplayController>();
         workerChainSupport = createWorkerChainSupport();
-        dataTarget = createDataHandler();
         pinSupport = createPinSupport();
         workerChain = new WorkerChain();
         initPlot();
@@ -184,9 +182,50 @@ class TimeSeriesGraphModel {
     synchronized void updateTimeSeries(TimeSeriesGraphUpdater.Position cursorPosition, TimeSeriesType type) {
         final TimeSeriesGraphUpdater.PositionSupport positionSupport = createPositionSupport();
         final TimeSeriesGraphUpdater w = new TimeSeriesGraphUpdater(getTimeSeries(), createVersionSafeDataSources(),
-                dataTarget, displayAxisMapping, workerChainSupport, cursorPosition, positionSupport, type, version.get());
+                this, displayAxisMapping, workerChainSupport, cursorPosition, positionSupport, type, version.get());
         final boolean chained = type != TimeSeriesType.CURSOR;
         workerChain.setOrExecuteNextWorker(w, chained);
+    }
+
+    @Override
+    public void addTimeSeries(List<TimeSeries> data, TimeSeriesType type) {
+        final int timeSeriesCount;
+        final int collectionOffset;
+        if (TimeSeriesType.INSITU.equals(type)) {
+            timeSeriesCount = displayAxisMapping.getInsituCount();
+            collectionOffset = INSITU_COLLECTION_INDEX_OFFSET;
+        } else {
+            timeSeriesCount = displayAxisMapping.getRasterCount();
+            if (TimeSeriesType.CURSOR.equals(type)) {
+                collectionOffset = CURSOR_COLLECTION_INDEX_OFFSET;
+            } else {
+                collectionOffset = PIN_COLLECTION_INDEX_OFFSET;
+            }
+        }
+        if (timeSeriesCount == 0) {
+            return;
+        }
+        Assert.state(data.size() % timeSeriesCount == 0.0);
+        final int numPositions = data.size() / timeSeriesCount;
+        final String[] aliasNames = getAliasNames();
+        for (int aliasIdx = 0; aliasIdx < aliasNames.length; aliasIdx++) {
+            String aliasName = aliasNames[aliasIdx];
+            final int collectionIndex = getCollectionIndex(collectionOffset, aliasIdx);
+            final TimeSeriesCollection dataset = (TimeSeriesCollection) timeSeriesPlot.getDataset(collectionIndex);
+            final XYItemRenderer renderer = timeSeriesPlot.getRenderer(collectionIndex);
+            dataset.removeAllSeries();
+            final String[] dataSourceNames = getDataSourceNames(type, aliasName);
+            for (int posIdx = 0; posIdx < numPositions; posIdx++) {
+                final Shape posShape = getShapeForPosition(type, posIdx);
+                for (int dataSourceIdx = 0; dataSourceIdx < dataSourceNames.length; dataSourceIdx++) {
+                    final int timeSeriesIdx = posIdx * timeSeriesCount + dataSourceIdx;
+//                    final int timeSeriesIdx = posIdx * timeSeriesCount + aliasIdx * dataSourceNames.length + dataSourceIdx;
+                    dataset.addSeries(data.get(timeSeriesIdx));
+                    renderer.setSeriesShape(timeSeriesIdx, posShape);
+                    renderer.setSeriesPaint(timeSeriesIdx, renderer.getSeriesPaint(dataSourceIdx));
+                }
+            }
+        }
     }
 
     private TimeSeriesGraphUpdater.WorkerChainSupport createWorkerChainSupport() {
@@ -194,15 +233,6 @@ class TimeSeriesGraphModel {
             @Override
             public void removeWorkerAndStartNext(TimeSeriesGraphUpdater worker) {
                 workerChain.removeCurrentWorkerAndExecuteNext(worker);
-            }
-        };
-    }
-
-    private TimeSeriesGraphUpdater.TimeSeriesDataHandler createDataHandler() {
-        return new TimeSeriesGraphUpdater.TimeSeriesDataHandler() {
-            @Override
-            public void collectTimeSeries(List<TimeSeries> data, TimeSeriesType type) {
-                addTimeSeries(data, type);
             }
         };
     }
@@ -421,45 +451,6 @@ class TimeSeriesGraphModel {
         }
     }
 
-    private void addTimeSeries(List<TimeSeries> timeSeries, TimeSeriesType type) {
-        final int timeSeriesCount;
-        final int collectionOffset;
-        if (TimeSeriesType.INSITU.equals(type)) {
-            timeSeriesCount = displayAxisMapping.getInsituCount();
-            collectionOffset = INSITU_COLLECTION_INDEX_OFFSET;
-        } else {
-            timeSeriesCount = displayAxisMapping.getRasterCount();
-            if (TimeSeriesType.CURSOR.equals(type)) {
-                collectionOffset = CURSOR_COLLECTION_INDEX_OFFSET;
-            } else {
-                collectionOffset = PIN_COLLECTION_INDEX_OFFSET;
-            }
-        }
-        if (timeSeriesCount == 0) {
-            return;
-        }
-        Assert.state(timeSeries.size() % timeSeriesCount == 0.0);
-        final int numPositions = timeSeries.size() / timeSeriesCount;
-        final String[] aliasNames = getAliasNames();
-        for (int aliasIdx = 0; aliasIdx < aliasNames.length; aliasIdx++) {
-            String aliasName = aliasNames[aliasIdx];
-            final int collectionIndex = getCollectionIndex(collectionOffset, aliasIdx);
-            final TimeSeriesCollection dataset = (TimeSeriesCollection) timeSeriesPlot.getDataset(collectionIndex);
-            final XYItemRenderer renderer = timeSeriesPlot.getRenderer(collectionIndex);
-            dataset.removeAllSeries();
-            final String[] dataSourceNames = getDataSourceNames(type, aliasName);
-            for (int posIdx = 0; posIdx < numPositions; posIdx++) {
-                final Shape posShape = getShapeForPosition(type, posIdx);
-                for (int dataSourceIdx = 0; dataSourceIdx < dataSourceNames.length; dataSourceIdx++) {
-                    final int timeSeriesIdx = posIdx * timeSeriesCount + dataSourceIdx;
-                    dataset.addSeries(timeSeries.get(timeSeriesIdx));
-                    renderer.setSeriesShape(timeSeriesIdx, posShape);
-                    renderer.setSeriesPaint(timeSeriesIdx, renderer.getSeriesPaint(dataSourceIdx));
-                }
-            }
-        }
-    }
-
     private int getCollectionIndex(int collectionOffset, int aliasIdx) {
         final int aliasIndexOffset = aliasIdx * 3;
         return aliasIndexOffset + collectionOffset;
@@ -509,4 +500,5 @@ class TimeSeriesGraphModel {
     private ProductSceneView getCurrentView() {
         return VisatApp.getApp().getSelectedProductSceneView();
     }
+
 }

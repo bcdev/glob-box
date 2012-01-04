@@ -72,7 +72,7 @@ class TimeSeriesGraphUpdater extends SwingWorker<List<TimeSeries>, Void> {
             if (dataSources.getCurrentVersion() != version) {
                 return;
             }
-            dataHandler.collectTimeSeries(get(), type);
+            dataHandler.addTimeSeries(get(), type);
         } catch (InterruptedException ignore) {
             ignore.printStackTrace();
         } catch (ExecutionException ignore) {
@@ -197,7 +197,7 @@ class TimeSeriesGraphUpdater extends SwingWorker<List<TimeSeries>, Void> {
 
     static interface TimeSeriesDataHandler {
 
-        void collectTimeSeries(List<TimeSeries> data, TimeSeriesType type);
+        void addTimeSeries(List<TimeSeries> data, TimeSeriesType type);
     }
 
     static interface WorkerChainSupport {
