@@ -18,15 +18,16 @@ import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.FlowLayout;
+import java.awt.Rectangle;
+import java.awt.Shape;
+import java.awt.Stroke;
 import java.awt.event.ActionEvent;
-import java.awt.geom.Ellipse2D;
 
 public class Main {
 
     public static void main(String[] args) {
 
         TimeSeries s1 = new TimeSeries("L&G European Index Trust");
-        TimeSeries s2 = new TimeSeries("L&G UK Index Trust");
 
         s1.add(new Month(2, 2001), 181.8);
         s1.add(new Month(3, 2001), 167.3);
@@ -50,6 +51,7 @@ public class Main {
         s1.add(new Month(6, 2002), 137.0);
         s1.add(new Month(7, 2002), 132.8);
 
+        TimeSeries s2 = new TimeSeries("L&G UK Index Trust");
         s2.add(new Month(2, 2001), 129.6);
         s2.add(new Month(3, 2001), 123.2);
         s2.add(new Month(4, 2001), 117.2);
@@ -69,10 +71,26 @@ public class Main {
         s2.add(new Month(6, 2002), 108.8);
         s2.add(new Month(7, 2002), 101.6);
 
+        TimeSeries s3 = new TimeSeries("L&G UK Index Trust_blah");
+        s3.add(new Month(2, 2001), 29.6);
+        s3.add(new Month(3, 2001), 23.2);
+        s3.add(new Month(4, 2001), 17.2);
+        s3.add(new Month(5, 2001), 24.1);
+        s3.add(new Month(6, 2001), 22.6);
+        s3.add(new Month(7, 2001), 19.2);
+        s3.add(new Month(8, 2001), 16.5);
+        s3.add(new Month(9, 2001), 12.7);
+        s3.add(new Month(10, 2001), 1.5);
+        s3.add(new Month(11, 2001), 6.1);
+        s3.add(new Month(12, 2001), 10.3);
+        s3.add(new Month(1, 2002), 11.7);
+        s3.add(new Month(2, 2002), 11.0);
+
         TimeSeriesCollection dataset1 = new TimeSeriesCollection();
         dataset1.addSeries(s1);
         final TimeSeriesCollection dataset2 = new TimeSeriesCollection();
         dataset2.addSeries(s2);
+        dataset2.addSeries(s3);
 
 
         final JFreeChart timeSeriesChart = ChartFactory.createTimeSeriesChart(
@@ -93,22 +111,38 @@ public class Main {
 
         final XYErrorRenderer renderer1 = createRenderer();
         renderer1.setDrawXError(false);
-        renderer1.setBaseLinesVisible(true);
-        renderer1.setBaseShapesVisible(true);
-        renderer1.setBaseStroke(new BasicStroke(1.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 10.0f,
-                new float[]{10.0f}, 0.0f));
-        renderer1.setBasePaint(Color.CYAN);
-        renderer1.setBaseShape(new Ellipse2D.Double(-5, -5, 10, 10));
+//        renderer1.setSeriesLinesVisible(0, true);
+//        renderer1.setSeriesShapesVisible(0, true);
+//        renderer1.setSeriesStroke(0, new BasicStroke(1.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 10.0f,
+//                new float[]{10.0f}, 0.0f));
+//        renderer1.setSeriesPaint(0, Color.CYAN);
+//        renderer1.setSeriesShape(0, new Ellipse2D.Double(-5, -5, 10, 10));
+//        renderer1.setSeriesShapesFilled(0, false);
+
+        renderer1.setSeriesPaint(0, Color.BLACK);
+        renderer1.setBaseLinesVisible(false);
         renderer1.setBaseShapesFilled(false);
+        renderer1.setBaseStroke(new Stroke() {
+            @Override
+            public Shape createStrokedShape(Shape p) {
+                return new Rectangle(0, 0);
+            }
+        });
 
         plot.setRenderer(0, renderer1);
 
         final XYErrorRenderer renderer2 = createRenderer();
         renderer2.setDrawXError(false);
-        renderer2.setBaseLinesVisible(true);
-        renderer2.setBaseShapesVisible(true);
-        renderer2.setBaseStroke(new BasicStroke());
-        renderer2.setBasePaint(Color.GREEN);
+        renderer2.setSeriesLinesVisible(0, true);
+        renderer2.setSeriesShapesVisible(0, true);
+        renderer2.setSeriesStroke(0, new BasicStroke());
+        renderer2.setSeriesPaint(0, Color.GREEN);
+//        renderer1.setBaseShape(new Ellipse2D.Double(-5, -5, 10, 10));
+//        renderer1.setBaseShapesFilled(false);
+        renderer2.setSeriesLinesVisible(1, true);
+        renderer2.setSeriesShapesVisible(1, true);
+        renderer2.setSeriesStroke(1, new BasicStroke());
+        renderer2.setSeriesPaint(1, Color.ORANGE);
 //        renderer1.setBaseShape(new Ellipse2D.Double(-5, -5, 10, 10));
 //        renderer1.setBaseShapesFilled(false);
 

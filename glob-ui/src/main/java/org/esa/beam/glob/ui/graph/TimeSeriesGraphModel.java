@@ -74,7 +74,7 @@ class TimeSeriesGraphModel {
     private static final int PIN_COLLECTION_INDEX_OFFSET = 1;
     private static final int INSITU_COLLECTION_INDEX_OFFSET = 2;
     private static final Stroke PIN_STROKE = new BasicStroke(1.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f,
-                                                             new float[]{10.0f}, 0.0f);
+            new float[]{10.0f}, 0.0f);
     private static final Stroke CURSOR_STROKE = new BasicStroke();
 
     private final Map<AbstractTimeSeries, TimeSeriesGraphDisplayController> displayControllerMap;
@@ -255,6 +255,7 @@ class TimeSeriesGraphModel {
         timeSeriesPlot.setRenderer(xyRenderer);
         timeSeriesPlot.setBackgroundPaint(DEFAULT_BACKGROUND_COLOR);
         timeSeriesPlot.setNoDataMessage(NO_DATA_MESSAGE);
+        timeSeriesPlot.setDrawingSupplier(null);
     }
 
     private void updatePlot(boolean hasData, AbstractTimeSeries timeSeries) {
@@ -335,7 +336,7 @@ class TimeSeriesGraphModel {
             final String[] insituNames = insituNamesSet.toArray(new String[insituNamesSet.size()]);
 
             for (int i = 0; i < insituNames.length; i++) {
-                insituRenderer.setSeriesOutlinePaint(i, paintListForAlias.get(i));
+                insituRenderer.setSeriesPaint(i, paintListForAlias.get(i));
             }
 
             timeSeriesPlot.setRenderer(cursorCollectionIndex, cursorRenderer);
@@ -434,7 +435,7 @@ class TimeSeriesGraphModel {
                 collectionOffset = PIN_COLLECTION_INDEX_OFFSET;
             }
         }
-        if(timeSeriesCount == 0) {
+        if (timeSeriesCount == 0) {
             return;
         }
         Assert.state(timeSeries.size() % timeSeriesCount == 0.0);
@@ -453,6 +454,7 @@ class TimeSeriesGraphModel {
                     final int timeSeriesIdx = posIdx * timeSeriesCount + dataSourceIdx;
                     dataset.addSeries(timeSeries.get(timeSeriesIdx));
                     renderer.setSeriesShape(timeSeriesIdx, posShape);
+                    renderer.setSeriesPaint(timeSeriesIdx, renderer.getSeriesPaint(dataSourceIdx));
                 }
             }
         }
