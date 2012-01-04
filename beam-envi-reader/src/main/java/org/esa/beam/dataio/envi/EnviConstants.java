@@ -25,6 +25,7 @@ class EnviConstants {
     public static final String HDR_EXTENSION = ".hdr";
     public static final String IMG_EXTENSION = ".img";
     public static final String BIN_EXTENSION = ".bin";
+    public static final String BIL_EXTENSION = ".bil";
     public static final String ZIP_EXTENSION = ".zip";
 
     public static final int TYPE_ID_BYTE = 1;

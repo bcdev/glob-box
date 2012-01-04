@@ -30,8 +30,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -49,25 +51,38 @@ class EnviProductReader extends AbstractProductReader {
         super(readerPlugIn);
     }
 
-    static File getEnviImageFile(File hdrFile) {
-        final String imgName = FileUtils.getFilenameWithoutExtension(hdrFile);
-        String bandName = imgName;
-        if (imgName.toLowerCase().endsWith(EnviConstants.IMG_EXTENSION)) {
-            bandName = FileUtils.getFilenameWithoutExtension(imgName);
+    static File getEnviImageFile(File hdrFile) throws FileNotFoundException {
+        List<File> possibleImageFiles = new ArrayList<File>(20);
+        String baseName = FileUtils.getFilenameWithoutExtension(hdrFile);
+        possibleImageFiles.add(new File(hdrFile.getParent(), baseName));
+        possibleImageFiles.add(new File(hdrFile.getParent(), baseName + EnviConstants.IMG_EXTENSION));
+        possibleImageFiles.add(new File(hdrFile.getParent(), baseName + EnviConstants.IMG_EXTENSION.toUpperCase()));
+        possibleImageFiles.add(new File(hdrFile.getParent(), baseName + EnviConstants.BIN_EXTENSION));
+        possibleImageFiles.add(new File(hdrFile.getParent(), baseName + EnviConstants.BIN_EXTENSION.toUpperCase()));
+        possibleImageFiles.add(new File(hdrFile.getParent(), baseName + EnviConstants.BIL_EXTENSION));
+        possibleImageFiles.add(new File(hdrFile.getParent(), baseName + EnviConstants.BIL_EXTENSION.toUpperCase()));
+
+        String lowerbase = baseName.toLowerCase();
+        if (lowerbase.endsWith(EnviConstants.IMG_EXTENSION) ||
+                lowerbase.endsWith(EnviConstants.BIN_EXTENSION) ||
+                lowerbase.endsWith(EnviConstants.BIL_EXTENSION)
+                ) {
+            baseName = FileUtils.getFilenameWithoutExtension(baseName);
+            possibleImageFiles.add(new File(hdrFile.getParent(), baseName + EnviConstants.IMG_EXTENSION));
+            possibleImageFiles.add(new File(hdrFile.getParent(), baseName + EnviConstants.IMG_EXTENSION.toUpperCase()));
+            possibleImageFiles.add(new File(hdrFile.getParent(), baseName + EnviConstants.BIN_EXTENSION));
+            possibleImageFiles.add(new File(hdrFile.getParent(), baseName + EnviConstants.BIN_EXTENSION.toUpperCase()));
+            possibleImageFiles.add(new File(hdrFile.getParent(), baseName + EnviConstants.BIL_EXTENSION));
+            possibleImageFiles.add(new File(hdrFile.getParent(), baseName + EnviConstants.BIL_EXTENSION.toUpperCase()));
+
         }
-        File[] possibleImageFiles = new File[4];
-        possibleImageFiles[0] = new File(hdrFile.getParent(), bandName + EnviConstants.IMG_EXTENSION);
-        possibleImageFiles[1] = new File(hdrFile.getParent(), bandName + EnviConstants.IMG_EXTENSION.toUpperCase());
-        possibleImageFiles[2] = new File(hdrFile.getParent(), bandName + EnviConstants.BIN_EXTENSION);
-        possibleImageFiles[3] = new File(hdrFile.getParent(), bandName + EnviConstants.BIN_EXTENSION.toUpperCase());
+
         for (File possibleImageFile : possibleImageFiles) {
-            if(possibleImageFile.exists()){
+            if (possibleImageFile.exists()) {
                 return possibleImageFile;
             }
         }
-
-        // doesn't care which one to return, none of the possible images exists
-        return possibleImageFiles[0];
+        throw new FileNotFoundException("no image file found for header: <" + hdrFile.toString() + ">");
     }
 
     @Override
@@ -273,10 +288,6 @@ class EnviProductReader extends AbstractProductReader {
 
     private static ImageInputStream createImageStreamFromFile(final File file) throws IOException {
         final File imageFile = getEnviImageFile(file);
-
-        if (!imageFile.exists()) {
-            throw new FileNotFoundException("file not found: <" + imageFile + ">");
-        }
         return new FileImageInputStream(imageFile);
     }
 
