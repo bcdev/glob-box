@@ -384,8 +384,9 @@ class EnviProductReader extends AbstractProductReader {
 
         bandStreamPositionMap = new HashMap<String, Long>();
         final int headerOffset = header.getHeaderOffset();
-
+        
         final String[] bandNames = getBandNames(header);
+        float[] wavelength = getWavelength(header, bandNames);
         for (int i = 0; i < bandNames.length; i++) {
             final String originalBandName = bandNames[i];
             final String validBandName;
@@ -402,6 +403,7 @@ class EnviProductReader extends AbstractProductReader {
                                        product.getSceneRasterWidth(),
                                        product.getSceneRasterHeight());
             band.setDescription(description);
+            band.setSpectralWavelength(wavelength[i]);
             product.addBand(band);
 
             long bandStartPosition = headerOffset + bandSizeInBytes * i;
@@ -409,7 +411,7 @@ class EnviProductReader extends AbstractProductReader {
         }
     }
 
-    protected static String[] getBandNames(final Header header) {
+    static String[] getBandNames(final Header header) {
         String[] bandNames = header.getBandNames();
         // there must be at least 1 bandname because in DIMAP-Files are no bandnames given.
         if (bandNames == null || bandNames.length == 0) {
@@ -426,6 +428,22 @@ class EnviProductReader extends AbstractProductReader {
         } else {
             return bandNames;
         }
+    }
+
+    private float[] getWavelength(Header header, String[] bandNames) {
+        float[] wavelengths = new float[bandNames.length];
+        String[] wavelengthsStrings = header.getWavelengths();
+        String wavelengthsUnit = header.getWavelengthsUnit();
+        int scaleFactor = 1;
+        if (wavelengthsUnit.equalsIgnoreCase("Micrometers")) {
+            scaleFactor = 1000;
+        }
+        if (wavelengthsStrings != null && wavelengthsStrings.length == bandNames.length) {
+            for (int i = 0; i < wavelengthsStrings.length; i++) {
+                wavelengths[i] = Float.parseFloat(wavelengthsStrings[i]) * scaleFactor;
+            }
+        }
+        return wavelengths;
     }
 
     private static String createValidNodeName(final String originalBandName) {
