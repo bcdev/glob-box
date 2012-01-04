@@ -51,6 +51,7 @@ import org.jfree.data.time.TimeSeriesCollection;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Paint;
+import java.awt.Rectangle;
 import java.awt.Shape;
 import java.awt.Stroke;
 import java.awt.geom.AffineTransform;
@@ -311,8 +312,14 @@ class TimeSeriesGraphModel {
             pinRenderer.setBaseStroke(PIN_STROKE);
             cursorRenderer.setBaseStroke(CURSOR_STROKE);
 
-            insituRenderer.setBaseShapesFilled(false);
             insituRenderer.setBaseLinesVisible(false);
+            insituRenderer.setBaseShapesFilled(false);
+            insituRenderer.setBaseStroke(new Stroke() {
+                @Override
+                public Shape createStrokedShape(Shape p) {
+                    return new Rectangle(0, 0);
+                }
+            });
 
             final List<Paint> paintListForAlias = displayAxisMapping.getPaintListForAlias(aliasName);
 
@@ -328,7 +335,7 @@ class TimeSeriesGraphModel {
             final String[] insituNames = insituNamesSet.toArray(new String[insituNamesSet.size()]);
 
             for (int i = 0; i < insituNames.length; i++) {
-                insituRenderer.setSeriesPaint(i, paintListForAlias.get(i));
+                insituRenderer.setSeriesOutlinePaint(i, paintListForAlias.get(i));
             }
 
             timeSeriesPlot.setRenderer(cursorCollectionIndex, cursorRenderer);
