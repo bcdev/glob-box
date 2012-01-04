@@ -194,31 +194,12 @@ class TimeSeriesManagerForm {
         final EditTimeSpanAction editTimeSpanAction = new EditTimeSpanAction(currentTimeSeries);
         timeSpanButton = ToolButtonFactory.createButton(editTimeSpanAction, false);
 
-        URL viewIconImageURL = UIUtils.getImageURL("/org/esa/beam/glob/ui/icons/ViewTS24.png", TimeSeriesManagerForm.class);
-        viewButton = ToolButtonFactory.createButton(new ImageIcon(viewIconImageURL), false);
-        viewButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                final VariableSelectionPaneModel variableModel = eoVariablePane.getModel();
-                final List<String> variableNames = variableModel.getSelectedVariableNames();
-                if (!variableNames.isEmpty() && currentTimeSeries != null) {
-                    if (variableNames.size() == 1) {
-                        showTimeSeriesView(variableNames.get(0));
-
-                    } else {
-                        JPopupMenu viewPopup = new JPopupMenu("View variable");
-                        for (String varName : variableNames) {
-                            viewPopup.add(new ViewTimeSeriesAction(varName));
-                        }
-                        final Rectangle buttonBounds = viewButton.getBounds();
-                        viewPopup.show(viewButton, 1, buttonBounds.height + 1);
-                    }
-                }
-            }
-        });
+        final Action viewTimeSeriesButtonAction = new ViewTimeSeriesButtonAction();
+        viewButton = ToolButtonFactory.createButton(viewTimeSeriesButtonAction, false);
 
         final ExportAction exportAction = new ExportAction();
         exportButton = ToolButtonFactory.createButton(exportAction, false);
+
         AbstractButton helpButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/Help24.gif"), false);
         helpButton.setToolTipText("Help");
 
@@ -530,6 +511,7 @@ class TimeSeriesManagerForm {
 
         private ExportAction() {
             putValue(LARGE_ICON_KEY, UIUtils.loadImageIcon("icons/Export24.gif"));
+            putValue(SHORT_DESCRIPTION, "Export time series");
         }
 
         @Override
@@ -543,6 +525,7 @@ class TimeSeriesManagerForm {
         private EditAxisMappingAction() {
             URL viewIconImageURL = UIUtils.getImageURL("/org/esa/beam/glob/ui/icons/AxisMapping24.gif", TimeSeriesManagerForm.class);
             putValue(LARGE_ICON_KEY, new ImageIcon(viewIconImageURL));
+            putValue(SHORT_DESCRIPTION, "Edit axis mapping");
         }
 
         @Override
@@ -550,6 +533,48 @@ class TimeSeriesManagerForm {
             final AxisMappingModel axisMappingModel = currentTimeSeries.getAxisMappingModel();
             final AxisMappingForm.NameProvider nameProvider = getNameProvider();
             new AxisMappingForm(axisMappingModel, nameProvider).show();
+        }
+    }
+
+    private class ViewTimeSeriesButtonAction extends AbstractAction {
+
+        private ViewTimeSeriesButtonAction() {
+            URL viewIconImageURL = UIUtils.getImageURL("/org/esa/beam/glob/ui/icons/ViewTS24.png", TimeSeriesManagerForm.class);
+            putValue(LARGE_ICON_KEY, new ImageIcon(viewIconImageURL));
+            putValue(SHORT_DESCRIPTION, "View Time Series");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            final VariableSelectionPaneModel variableModel = eoVariablePane.getModel();
+            final List<String> variableNames = variableModel.getSelectedVariableNames();
+            if (!variableNames.isEmpty() && currentTimeSeries != null) {
+                if (variableNames.size() == 1) {
+                    showTimeSeriesView(variableNames.get(0));
+
+                } else {
+                    JPopupMenu viewPopup = new JPopupMenu("View variable");
+                    for (String varName : variableNames) {
+                        viewPopup.add(new ViewTimeSeriesAction(varName));
+                    }
+                    final Rectangle buttonBounds = viewButton.getBounds();
+                    viewPopup.show(viewButton, 1, buttonBounds.height + 1);
+                }
+            }
+        }
+    }
+
+    private class ViewTimeSeriesAction extends AbstractAction {
+
+        private final String variableName;
+
+        private ViewTimeSeriesAction(String variableName) {
+            super("View " + variableName);
+            this.variableName = variableName;
+        }
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            showTimeSeriesView(variableName);
         }
     }
 
@@ -570,21 +595,6 @@ class TimeSeriesManagerForm {
                 }
             }
         };
-    }
-
-    private class ViewTimeSeriesAction extends AbstractAction {
-
-        private final String variableName;
-
-        private ViewTimeSeriesAction(String variableName) {
-            super("View " + variableName);
-            this.variableName = variableName;
-        }
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            showTimeSeriesView(variableName);
-        }
-
     }
 
     private class FrameClosingTimeSeriesListener extends TimeSeriesListener {
