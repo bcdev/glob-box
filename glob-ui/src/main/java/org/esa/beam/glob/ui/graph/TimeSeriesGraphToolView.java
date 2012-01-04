@@ -163,6 +163,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         @Override
         public void actionPerformed(ActionEvent e) {
             graphModel.updateTimeSeries(null, TimeSeriesType.PIN);
+            graphModel.updateTimeSeries(null, TimeSeriesType.INSITU);
         }
     }
 
