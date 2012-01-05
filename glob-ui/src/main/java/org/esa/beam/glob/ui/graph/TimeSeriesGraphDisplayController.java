@@ -63,6 +63,7 @@ class TimeSeriesGraphDisplayController {
     }
     private static final AffineTransform ROTATION_45 = AffineTransform.getRotateInstance(Math.toRadians(45));
     private static final AffineTransform ROTATION_180 = AffineTransform.getRotateInstance(Math.toRadians(180));
+    private static final AffineTransform SCALE = AffineTransform.getScaleInstance(0.6, 0.6);
 
     private static final Shape[] SHAPES = {
             new Rectangle(-5, -5, 10, 10),
@@ -141,7 +142,8 @@ class TimeSeriesGraphDisplayController {
     }
 
     public Shape getShape(int posIdx) {
-        return SHAPES[posIdx % SHAPES.length];
+        final Shape shape = SHAPES[posIdx % SHAPES.length];
+        return SCALE.createTransformedShape(shape);
     }
 
     interface PinSupport {
