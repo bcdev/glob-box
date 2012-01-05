@@ -51,7 +51,6 @@ import org.jfree.data.time.TimeSeriesCollection;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Paint;
-import java.awt.Rectangle;
 import java.awt.Shape;
 import java.awt.Stroke;
 import java.awt.geom.AffineTransform;
@@ -204,23 +203,24 @@ class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandl
         final int numPositions = timeSeriesList.size() / timeSeriesCount;
         final String[] aliasNames = getAliasNames();
         int timeSeriesIndexOffset = 0;
-        for (int aliasIdx = 0; aliasIdx < aliasNames.length; aliasIdx++) {
-            String aliasName = aliasNames[aliasIdx];
-            final int collectionIndex = getCollectionIndex(collectionOffset, aliasIdx);
-            final TimeSeriesCollection timeSeriesCollection = (TimeSeriesCollection) timeSeriesPlot.getDataset(collectionIndex);
-            final XYItemRenderer renderer = timeSeriesPlot.getRenderer(collectionIndex);
-            timeSeriesCollection.removeAllSeries();
-            final String[] dataSourceNames = getDataSourceNames(type, aliasName);
-            for (int dataSourceIdx = 0; dataSourceIdx < dataSourceNames.length; dataSourceIdx++) {
-                for (int posIdx = 0; posIdx < numPositions; posIdx++) {
-                    final Shape posShape = getShapeForPosition(type, posIdx);
-                    final int timeSeriesSourceIdx = posIdx * timeSeriesCount + timeSeriesIndexOffset;
-                    timeSeriesCollection.addSeries(timeSeriesList.get(timeSeriesSourceIdx));
-                    final int timeSeriesTargetIdx = timeSeriesCollection.getSeriesCount() - 1;
-                    renderer.setSeriesShape(timeSeriesTargetIdx, posShape);
-                    renderer.setSeriesPaint(timeSeriesTargetIdx, renderer.getSeriesPaint(dataSourceIdx));
+        for (int posIdx = 0; posIdx < numPositions; posIdx++) {
+            final Shape posShape = getShapeForPosition(type, posIdx);
+            for (int aliasIdx = 0; aliasIdx < aliasNames.length; aliasIdx++) {
+                final int targetCollectionIndex = collectionOffset + aliasIdx * 3;
+                final TimeSeriesCollection targetTimeSeriesCollection = (TimeSeriesCollection) timeSeriesPlot.getDataset(targetCollectionIndex);
+                if (posIdx == 0) {
+                    targetTimeSeriesCollection.removeAllSeries();
                 }
-                timeSeriesIndexOffset++;
+                final XYItemRenderer renderer = timeSeriesPlot.getRenderer(targetCollectionIndex);
+                final String[] dataSourceNames = getDataSourceNames(type, aliasNames[aliasIdx]);
+                for (int dataSourceIdx = 0; dataSourceIdx < dataSourceNames.length; dataSourceIdx++) {
+//                    final int timeSeriesSourceIdx = posIdx * timeSeriesCount + timeSeriesIndexOffset;
+                    targetTimeSeriesCollection.addSeries(timeSeriesList.get(timeSeriesIndexOffset));
+                    final int timeSeriesTargetIdx = targetTimeSeriesCollection.getSeriesCount() - 1;
+                    renderer.setSeriesShape(timeSeriesTargetIdx, posShape);
+                    renderer.setSeriesPaint(timeSeriesTargetIdx, renderer.getSeriesPaint(timeSeriesTargetIdx % dataSourceNames.length));
+                    timeSeriesIndexOffset++;
+                }
             }
         }
     }
@@ -338,12 +338,6 @@ class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandl
 
             insituRenderer.setBaseLinesVisible(false);
             insituRenderer.setBaseShapesFilled(false);
-            insituRenderer.setBaseStroke(new Stroke() {
-                @Override
-                public Shape createStrokedShape(Shape p) {
-                    return new Rectangle(0, 0);
-                }
-            });
 
             final List<Paint> paintListForAlias = displayAxisMapping.getPaintListForAlias(aliasName);
 
@@ -371,6 +365,7 @@ class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandl
     private XYErrorRenderer createXYErrorRenderer() {
         final XYErrorRenderer renderer = new XYErrorRenderer();
         renderer.setDrawXError(false);
+        renderer.setDrawYError(false);
         renderer.setBaseLinesVisible(true);
         renderer.setAutoPopulateSeriesStroke(false);
         renderer.setAutoPopulateSeriesPaint(false);
@@ -442,11 +437,6 @@ class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandl
         } else {
             return variableName;
         }
-    }
-
-    private int getCollectionIndex(int collectionOffset, int aliasIdx) {
-        final int aliasIndexOffset = aliasIdx * 3;
-        return aliasIndexOffset + collectionOffset;
     }
 
     private String[] getAliasNames() {
