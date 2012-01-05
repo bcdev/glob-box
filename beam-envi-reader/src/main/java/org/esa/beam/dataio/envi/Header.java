@@ -168,6 +168,10 @@ class Header {
         mapInfo.setNorthing(Double.parseDouble(tokenizer.nextToken()));
         mapInfo.setPixelSizeX(Double.parseDouble(tokenizer.nextToken()));
         mapInfo.setPixelSizeY(Double.parseDouble(tokenizer.nextToken()));
+        if (mapInfo.getProjectionName().equalsIgnoreCase("UTM")) {
+            mapInfo.setUtmZone(Integer.parseInt(tokenizer.nextToken().trim()));
+            mapInfo.setUtmHemisphere(tokenizer.nextToken().trim());
+        }
         mapInfo.setDatum(tokenizer.nextToken().trim());
         mapInfo.setUnit(tokenizer.nextToken().trim());
     }
