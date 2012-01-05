@@ -137,7 +137,7 @@ class TimeSeriesGraphForm {
                 }
             }
         });
-        exportTimeSeriesButton.setToolTipText("Export time series of all pins");
+        exportTimeSeriesButton.setToolTipText("Export raster data time series of all pins");
         exportTimeSeriesButton.setName("exportTimeSeriesButton");
         final ProductSceneView sceneView = VisatApp.getApp().getSelectedProductSceneView();
         if (sceneView != null) {
