@@ -136,6 +136,8 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
 
             final RasterDataNode raster = currentView.getRaster();
             graphModel.adaptToTimeSeries(timeSeries);
+            graphModel.updateTimeSeries(null, TimeSeriesType.INSITU);
+            graphModel.updateTimeSeries(null, TimeSeriesType.PIN);
 
             String variableName = rasterToVariableName(raster.getName());
             setTitle(String.format("%s - %s", titleBase, variableName));
@@ -147,6 +149,8 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         } else {
             graphModel.removeAnnotation();
             graphModel.adaptToTimeSeries(null);
+            graphModel.updateTimeSeries(null, TimeSeriesType.INSITU);
+            graphModel.updateTimeSeries(null, TimeSeriesType.PIN);
 
             setTitle(titleBase);
         }
@@ -227,13 +231,15 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
 
         @Override
         public void timeSeriesChanged(TimeSeriesChangeEvent event) {
-            if (event.getType() == TimeSeriesChangeEvent.PROPERTY_PRODUCT_LOCATIONS ||
-                event.getType() == TimeSeriesChangeEvent.PROPERTY_EO_VARIABLE_SELECTION) {
+            int type = event.getType();
+            if (type == TimeSeriesChangeEvent.PROPERTY_PRODUCT_LOCATIONS ||
+                    type == TimeSeriesChangeEvent.PROPERTY_EO_VARIABLE_SELECTION) {
                 graphModel.updateAnnotation(currentView.getRaster());
                 updateTimeSeries(event.getTimeSeries());
-            } else if(event.getType() == TimeSeriesChangeEvent.PROPERTY_INSITU_VARIABLE_SELECTION) {
-                updateTimeSeries(event.getTimeSeries());
-            } else if(event.getType() == TimeSeriesChangeEvent.PROPERTY_AXIS_MAPPING_CHANGED) {
+            } else if (type == TimeSeriesChangeEvent.PROPERTY_INSITU_VARIABLE_SELECTION ||
+                    type == TimeSeriesChangeEvent.PROPERTY_AXIS_MAPPING_CHANGED ||
+                    type == TimeSeriesChangeEvent.START_TIME_PROPERTY_NAME ||
+                    type == TimeSeriesChangeEvent.END_TIME_PROPERTY_NAME) {
                 updateTimeSeries(event.getTimeSeries());
             }
         }
@@ -253,6 +259,8 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
                 handlePlacemarkChanged();
             } else if (node instanceof RasterDataNode && currentView != null) {
                 graphModel.adaptToTimeSeries(getTimeSeries());
+                graphModel.updateTimeSeries(null, TimeSeriesType.INSITU);
+                graphModel.updateTimeSeries(null, TimeSeriesType.PIN);
             }
         }
 
@@ -263,6 +271,8 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
                 handlePlacemarkChanged();
             } else if (node instanceof RasterDataNode && currentView != null) {
                 graphModel.adaptToTimeSeries(getTimeSeries());
+                graphModel.updateTimeSeries(null, TimeSeriesType.INSITU);
+                graphModel.updateTimeSeries(null, TimeSeriesType.PIN);
             }
         }
 
