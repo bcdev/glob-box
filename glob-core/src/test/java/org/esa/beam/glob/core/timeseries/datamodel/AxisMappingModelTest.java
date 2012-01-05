@@ -19,13 +19,13 @@ package org.esa.beam.glob.core.timeseries.datamodel;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * @author Thomas Storm
@@ -44,11 +44,11 @@ public class AxisMappingModelTest {
         axisMappingModel.addRasterName("algal", "algal_1");
         axisMappingModel.addRasterName("algal", "algal_2");
 
-        final Set<String> rasterNames = axisMappingModel.getRasterNames("algal");
+        final List<String> rasterNames = axisMappingModel.getRasterNames("algal");
 
-        final Set<String> expectedRasterNames = new HashSet<String>(2);
-        expectedRasterNames.add("algal_2");
+        final List<String> expectedRasterNames = new ArrayList<String>(2);
         expectedRasterNames.add("algal_1");
+        expectedRasterNames.add("algal_2");
         assertEquals(expectedRasterNames, rasterNames);
     }
 
@@ -57,9 +57,9 @@ public class AxisMappingModelTest {
         axisMappingModel.addInsituName("chl", "chl_1");
         axisMappingModel.addInsituName("chl", "chl2");
 
-        final Set<String> insituNames = axisMappingModel.getInsituNames("chl");
+        final List<String> insituNames = axisMappingModel.getInsituNames("chl");
 
-        final Set<String> expectedInsituNames = new HashSet<String>(2);
+        final List<String> expectedInsituNames = new ArrayList<String>(2);
         expectedInsituNames.add("chl2");
         expectedInsituNames.add("chl_1");
         assertEquals(expectedInsituNames, insituNames);
@@ -86,9 +86,9 @@ public class AxisMappingModelTest {
         axisMappingModel.addInsituName("chl", "chl2");
 
         axisMappingModel.removeInsituName("chl", "chl2");
-        final Set<String> insituNames = axisMappingModel.getInsituNames("chl");
+        final List<String> insituNames = axisMappingModel.getInsituNames("chl");
 
-        final Set<String> expectedInsituNames = new HashSet<String>(2);
+        final List<String> expectedInsituNames = new ArrayList<String>(2);
         expectedInsituNames.add("chl_1");
         assertEquals(expectedInsituNames, insituNames);
     }
@@ -99,9 +99,9 @@ public class AxisMappingModelTest {
         axisMappingModel.addRasterName("algal", "algal2");
 
         axisMappingModel.removeRasterName("algal", "algal2");
-        final Set<String> rasterNames = axisMappingModel.getRasterNames("algal");
+        final List<String> rasterNames = axisMappingModel.getRasterNames("algal");
 
-        final Set<String> expectedRasterNames = new HashSet<String>(2);
+        final List<String> expectedRasterNames = new ArrayList<String>(1);
         expectedRasterNames.add("algal_1");
         assertEquals(expectedRasterNames, rasterNames);
     }

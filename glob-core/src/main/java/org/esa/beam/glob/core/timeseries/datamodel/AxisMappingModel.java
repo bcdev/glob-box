@@ -19,7 +19,6 @@ package org.esa.beam.glob.core.timeseries.datamodel;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -38,11 +37,11 @@ public class AxisMappingModel {
 
     private final List<ModelListener> listeners = new ArrayList<ModelListener>();
 
-    public Set<String> getInsituNames(String alias) {
+    public List<String> getInsituNames(String alias) {
         return getNamesFor(alias, insituMap);
     }
 
-    public Set<String> getRasterNames(String alias) {
+    public List<String> getRasterNames(String alias) {
         return getNamesFor(alias, rasterMap);
     }
 
@@ -61,7 +60,7 @@ public class AxisMappingModel {
     }
 
     public void addAlias(String alias) {
-        insituMap.put(alias, new HashSet<String>());
+        insituMap.put(alias, new TreeSet<String>());
         fireEvent();
     }
 
@@ -117,12 +116,14 @@ public class AxisMappingModel {
         return null;
     }
 
-    private Set<String> getNamesFor(String alias, Map<String, Set<String>> map) {
+    private List<String> getNamesFor(String alias, Map<String, Set<String>> map) {
         if(!map.containsKey(alias)) {
-            return Collections.emptySet();
+            return Collections.emptyList();
         }
         final Set<String> insituSet = map.get(alias);
-        return Collections.unmodifiableSet(insituSet);
+        final ArrayList<String> names = new ArrayList<String>();
+        names.addAll(insituSet);
+        return Collections.unmodifiableList(names);
     }
 
     private void addNameToAliasMap(String alias, String name, Map<String, Set<String>> map) {
@@ -134,7 +135,7 @@ public class AxisMappingModel {
 
     private void ensureSetAvailable(String alias, Map<String, Set<String>> map) {
         if (!map.containsKey(alias)) {
-            map.put(alias, new HashSet<String>());
+            map.put(alias, new TreeSet<String>());
         }
     }
 

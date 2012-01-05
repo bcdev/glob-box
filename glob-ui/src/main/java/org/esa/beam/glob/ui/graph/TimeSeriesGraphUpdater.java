@@ -7,6 +7,7 @@ import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.glob.core.insitu.InsituSource;
 import org.esa.beam.glob.core.insitu.csv.InsituRecord;
 import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
+import org.esa.beam.glob.core.timeseries.datamodel.AxisMappingModel;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeCoding;
 import org.esa.beam.util.ProductUtils;
 import org.jfree.data.time.Millisecond;
@@ -35,10 +36,10 @@ class TimeSeriesGraphUpdater extends SwingWorker<List<TimeSeries>, Void> {
     private final AbstractTimeSeries timeSeries;
     private final TimeSeriesDataHandler dataHandler;
     private final VersionSafeDataSources dataSources;
-    private final DisplayAxisMapping displayAxisMapping;
+    private final AxisMappingModel displayAxisMapping;
 
     TimeSeriesGraphUpdater(AbstractTimeSeries timeSeries, VersionSafeDataSources dataSources, 
-                           TimeSeriesDataHandler dataHandler, DisplayAxisMapping displayAxisMapping, 
+                           TimeSeriesDataHandler dataHandler, AxisMappingModel displayAxisMapping,
                            WorkerChainSupport workerChainSupport, Position cursorPosition, 
                            PositionSupport positionSupport, TimeSeriesType type, boolean showCursorTimeSeries, 
                            int version) {
@@ -91,9 +92,9 @@ class TimeSeriesGraphUpdater extends SwingWorker<List<TimeSeries>, Void> {
     private List<TimeSeries> computeRasterTimeSeries() {
         final List<Position> positionsToDisplay = new ArrayList<Position>();
         if (type.equals(TimeSeriesType.PIN)) {
-            final List<GeoPos> pinPositionsToDisplay = dataSources.getPinPositionsToDisplay();
-            for (GeoPos geoPos : pinPositionsToDisplay) {
-                positionsToDisplay.add(positionSupport.transformGeoPos(geoPos));
+            final List<NamedGeoPos> pinPositionsToDisplay = dataSources.getPinPositionsToDisplay();
+            for (NamedGeoPos namedGeoPos : pinPositionsToDisplay) {
+                positionsToDisplay.add(positionSupport.transformGeoPos(namedGeoPos.geopos));
             }
         } else if(showCursorTimeSeries) {
             positionsToDisplay.add(cursorPosition);
@@ -104,7 +105,7 @@ class TimeSeriesGraphUpdater extends SwingWorker<List<TimeSeries>, Void> {
 
         for (Position position : positionsToDisplay) {
             for (String aliasName : aliasNames) {
-                final Set<String> rasterNames = displayAxisMapping.getRasterNames(aliasName);
+                final List<String> rasterNames = displayAxisMapping.getRasterNames(aliasName);
                 for (String rasterName : rasterNames) {
                     final List<Band> bandsForVariable = timeSeries.getBandsForVariable(rasterName);
                     final TimeSeries timeSeries = computeSingleTimeSeries(bandsForVariable, position.pixelX,
@@ -121,14 +122,14 @@ class TimeSeriesGraphUpdater extends SwingWorker<List<TimeSeries>, Void> {
         final List<TimeSeries> insituTimeSeries = new ArrayList<TimeSeries>();
 
         final Set<String> aliasNames = displayAxisMapping.getAliasNames();
-        final List<GeoPos> pinPositionsToDisplay = dataSources.getPinPositionsToDisplay();
+        final List<NamedGeoPos> pinPositionsToDisplay = dataSources.getPinPositionsToDisplay();
 
-        for (GeoPos pinPos : pinPositionsToDisplay) {
+        for (NamedGeoPos insituPin : pinPositionsToDisplay) {
             for (String aliasName : aliasNames) {
-                final Set<String> insituNames = displayAxisMapping.getInsituNames(aliasName);
+                final List<String> insituNames = displayAxisMapping.getInsituNames(aliasName);
                 for (String insituName : insituNames) {
-                    InsituRecord[] insituRecords = insituSource.getValuesFor(insituName, pinPos);
-                    final TimeSeries timeSeries = computeSingleTimeSeries(insituRecords);
+                    InsituRecord[] insituRecords = insituSource.getValuesFor(insituName, insituPin.geopos);
+                    final TimeSeries timeSeries = computeSingleTimeSeries(insituRecords, insituName + "_" + insituPin.name);
                     insituTimeSeries.add(timeSeries);
                 }
             }
@@ -137,8 +138,8 @@ class TimeSeriesGraphUpdater extends SwingWorker<List<TimeSeries>, Void> {
         return insituTimeSeries;
     }
 
-    private TimeSeries computeSingleTimeSeries(InsituRecord[] insituRecords) {
-        TimeSeries timeSeries = new TimeSeries("insitu");
+    private TimeSeries computeSingleTimeSeries(InsituRecord[] insituRecords, String insituName) {
+        TimeSeries timeSeries = new TimeSeries(insituName);
         for (InsituRecord insituRecord : insituRecords) {
             final ProductData.UTC startTime = ProductData.UTC.create(insituRecord.time, 0);
             final Millisecond timePeriod = new Millisecond(startTime.getAsDate(),
@@ -213,15 +214,15 @@ class TimeSeriesGraphUpdater extends SwingWorker<List<TimeSeries>, Void> {
 
     static abstract class VersionSafeDataSources {
 
-        private final List<GeoPos> pinPositionsToDisplay;
+        private final List<NamedGeoPos> pinPositionsToDisplay;
         private final int version;
 
-        protected VersionSafeDataSources(List<GeoPos> pinPositionsToDisplay, final int version) {
+        protected VersionSafeDataSources(List<NamedGeoPos> pinPositionsToDisplay, final int version) {
             this.pinPositionsToDisplay = pinPositionsToDisplay;
             this.version = version;
         }
 
-        public List<GeoPos> getPinPositionsToDisplay() {
+        public List<NamedGeoPos> getPinPositionsToDisplay() {
             if (canReturnValues()) {
                 return pinPositionsToDisplay;
             }
@@ -239,4 +240,13 @@ class TimeSeriesGraphUpdater extends SwingWorker<List<TimeSeries>, Void> {
         Position transformGeoPos(GeoPos geoPos);
     }
 
+    public static class NamedGeoPos {
+        private final GeoPos geopos;
+        private final String name;
+
+        NamedGeoPos(GeoPos geopos, String name) {
+            this.geopos = geopos;
+            this.name = name;
+        }
+    }
 }

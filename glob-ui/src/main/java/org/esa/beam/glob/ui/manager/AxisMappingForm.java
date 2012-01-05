@@ -351,13 +351,13 @@ class AxisMappingForm extends ModalDialog {
 
         private int[] getSelectedRasterIndices() {
             final String currentAlias = getCurrentAlias();
-            final Set<String> selectedRasterNames = axisMappingModel.getRasterNames(currentAlias);
+            final List<String> selectedRasterNames = axisMappingModel.getRasterNames(currentAlias);
             return getSelectedIndices(selectedRasterNames, rasterNames);
         }
 
         private int[] getSelectedInsituIndices() {
             final String currentAlias = getCurrentAlias();
-            final Set<String> selectedInsituNames = axisMappingModel.getInsituNames(currentAlias);
+            final List<String> selectedInsituNames = axisMappingModel.getInsituNames(currentAlias);
             return getSelectedIndices(selectedInsituNames, insituNames);
         }
 
@@ -366,7 +366,7 @@ class AxisMappingForm extends ModalDialog {
             return aliasNames.getModel().getValueAt(minSelectionIndex, 0).toString();
         }
 
-        private int[] getSelectedIndices(Set<String> selectedVariableNames, JList variableNames) {
+        private int[] getSelectedIndices(List<String> selectedVariableNames, JList variableNames) {
             final List<Integer> selectedIndices = new ArrayList<Integer>(selectedVariableNames.size());
             final ListModel variableNamesModel = variableNames.getModel();
             for(int i = 0; i < variableNamesModel.getSize(); i++) {

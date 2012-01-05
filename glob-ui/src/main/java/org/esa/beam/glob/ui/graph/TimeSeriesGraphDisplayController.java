@@ -1,6 +1,5 @@
 package org.esa.beam.glob.ui.graph;
 
-import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.framework.datamodel.Placemark;
 import org.esa.beam.framework.datamodel.PlacemarkGroup;
 import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
@@ -124,18 +123,18 @@ class TimeSeriesGraphDisplayController {
         }
     }
 
-    public List<GeoPos> getPinPositionsToDisplay() {
-        final ArrayList<GeoPos> pinPositionsToDisplay = new ArrayList<GeoPos>(0);
+    public List<TimeSeriesGraphUpdater.NamedGeoPos> getPinPositionsToDisplay() {
+        final ArrayList<TimeSeriesGraphUpdater.NamedGeoPos> pinPositionsToDisplay = new ArrayList<TimeSeriesGraphUpdater.NamedGeoPos>(0);
         if (pinSupport.isShowingAllPins()) {
             final PlacemarkGroup pinGroup = timeSeries.getTsProduct().getPinGroup();
             for (int i = 0; i < pinGroup.getNodeCount(); i++) {
                 final Placemark pin = pinGroup.get(i);
-                pinPositionsToDisplay.add(pin.getGeoPos());
+                pinPositionsToDisplay.add(new TimeSeriesGraphUpdater.NamedGeoPos(pin.getGeoPos(), pin.getName()));
             }
         } else if (pinSupport.isShowingSelectedPins()) {
             final Placemark[] selectedPins = pinSupport.getSelectedPins();
             for (Placemark selectedPin : selectedPins) {
-                pinPositionsToDisplay.add(selectedPin.getGeoPos());
+                pinPositionsToDisplay.add(new TimeSeriesGraphUpdater.NamedGeoPos(selectedPin.getGeoPos(), selectedPin.getName()));
             }
         }
         return pinPositionsToDisplay;

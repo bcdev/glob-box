@@ -75,10 +75,13 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
     protected JComponent createControl() {
         titleBase = getDescriptor().getTitle();
 
+        final boolean displayLegend = true;
+        final boolean showTooltips = true;
+        final boolean showUrls = false;
         chart = ChartFactory.createTimeSeriesChart(null,
                                                    DEFAULT_DOMAIN_LABEL,
                                                    DEFAULT_RANGE_LABEL,
-                                                   null, true, true, false);
+                                                   null, displayLegend, showTooltips, showUrls);
         graphModel = new TimeSeriesGraphModel(chart.getXYPlot());
         graphForm = new TimeSeriesGraphForm(graphModel, chart,
                 getDescriptor().getHelpId());
@@ -130,15 +133,14 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
             currentView.addPropertyChangeListener(TimeSeriesPlayerToolView.TIME_PROPERTY, sliderListener);
 
             final RasterDataNode raster = currentView.getRaster();
+
             graphModel.adaptToTimeSeries(timeSeries);
+            graphModel.updateAnnotation(raster);
             graphModel.updateTimeSeries(null, TimeSeriesType.INSITU);
             graphModel.updateTimeSeries(null, TimeSeriesType.PIN);
 
             String variableName = rasterToVariableName(raster.getName());
             setTitle(String.format("%s - %s", titleBase, variableName));
-
-            graphModel.updateAnnotation(raster);
-            graphModel.updateTimeSeries(null, TimeSeriesType.PIN);
         } else {
             graphModel.removeAnnotation();
             graphModel.adaptToTimeSeries(null);
@@ -212,9 +214,9 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
 
         @Override
         public void propertyChange(PropertyChangeEvent evt) {
-            Placemark pin = (Placemark) evt.getNewValue();
-            if (!graphModel.isShowingAllPins()) {
+            if (graphModel.isShowingSelectedPins()) {
                 graphModel.updateTimeSeries(null, TimeSeriesType.PIN);
+                graphModel.updateTimeSeries(null, TimeSeriesType.INSITU);
             }
         }
     }
