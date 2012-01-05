@@ -207,7 +207,9 @@ class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandl
         for (int aliasIdx = 0; aliasIdx < aliasNames.length; aliasIdx++) {
             final int targetCollectionIndex = collectionOffset + aliasIdx * 3;
             final TimeSeriesCollection targetTimeSeriesCollection = (TimeSeriesCollection) timeSeriesPlot.getDataset(targetCollectionIndex);
-            targetTimeSeriesCollection.removeAllSeries();
+            if(targetTimeSeriesCollection != null) {
+                targetTimeSeriesCollection.removeAllSeries();
+            }
         }
         if(timeSeriesCount == 0) {
             return;
@@ -219,6 +221,9 @@ class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandl
             for (int aliasIdx = 0; aliasIdx < aliasNames.length; aliasIdx++) {
                 final int targetCollectionIndex = collectionOffset + aliasIdx * 3;
                 final TimeSeriesCollection targetTimeSeriesCollection = (TimeSeriesCollection) timeSeriesPlot.getDataset(targetCollectionIndex);
+                if (targetTimeSeriesCollection == null) {
+                    continue;
+                }
                 final XYItemRenderer renderer = timeSeriesPlot.getRenderer(targetCollectionIndex);
                 final int dataSourceCount = getDataSourceCount(type, aliasNames[aliasIdx]);
                 for (int ignoredIndex = 0; ignoredIndex < dataSourceCount; ignoredIndex++) {
