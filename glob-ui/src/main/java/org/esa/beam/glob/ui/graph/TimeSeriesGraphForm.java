@@ -29,7 +29,6 @@ import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 
 import javax.swing.AbstractButton;
-import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
@@ -49,13 +48,12 @@ class TimeSeriesGraphForm {
     private AbstractButton showCursorTimeSeriesButton;
     private TimeSeriesGraphModel graphModel;
 
-    TimeSeriesGraphForm(TimeSeriesGraphModel graphModel, JFreeChart chart, Action showSelectedPinsAction, Action showAllPinsAction,
-                        final String helpID) {
+    TimeSeriesGraphForm(TimeSeriesGraphModel graphModel, JFreeChart chart, final String helpID) {
         this.graphModel = graphModel;
-        createUI(chart, showSelectedPinsAction, showAllPinsAction, helpID);
+        createUI(chart, helpID);
     }
 
-    private void createUI(JFreeChart chart, Action showSelectedPinsAction, Action showAllPinsAction, String helpID) {
+    private void createUI(JFreeChart chart, String helpID) {
         final TableLayout tableLayout = new TableLayout(2);
         tableLayout.setTablePadding(4, 4);
         tableLayout.setTableAnchor(TableLayout.Anchor.NORTHWEST);
@@ -72,15 +70,14 @@ class TimeSeriesGraphForm {
         chartPanel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createBevelBorder(BevelBorder.LOWERED),
                 BorderFactory.createEmptyBorder(2, 2, 2, 2)));
-        JPanel buttonPanel = createButtonPanel(showSelectedPinsAction, showAllPinsAction, helpID);
+        JPanel buttonPanel = createButtonPanel(helpID);
         mainPanel.add(chartPanel);
         mainPanel.add(buttonPanel);
     }
 
-    private JPanel createButtonPanel(Action showSelectedPinsAction, Action showAllPinsAction, final String helpID) {
+    private JPanel createButtonPanel(final String helpID) {
         showTimeSeriesForSelectedPinsButton = ToolButtonFactory.createButton(
                 UIUtils.loadImageIcon("icons/SelectedPinSpectra24.gif"), true);
-        showTimeSeriesForSelectedPinsButton.addActionListener(showSelectedPinsAction);
         showTimeSeriesForSelectedPinsButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -96,7 +93,6 @@ class TimeSeriesGraphForm {
         //////////////////////////////////////////
         showTimeSeriesForAllPinsButton = ToolButtonFactory.createButton(
                 UIUtils.loadImageIcon("icons/PinSpectra24.gif"), true);
-        showTimeSeriesForAllPinsButton.addActionListener(showAllPinsAction);
         showTimeSeriesForAllPinsButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {

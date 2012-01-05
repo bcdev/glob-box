@@ -36,7 +36,6 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.XYPlot;
 
 import javax.swing.AbstractAction;
-import javax.swing.Action;
 import javax.swing.JComponent;
 import javax.swing.event.InternalFrameAdapter;
 import javax.swing.event.InternalFrameEvent;
@@ -57,8 +56,6 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
     private final PropertyChangeListener pinSelectionListener;
     private final PropertyChangeListener sliderListener;
     private final TimeSeriesListener timeSeriesGraphTSL;
-    private final Action showSelectedPinAction;
-    private final Action showAllPinAction;
 
     private String titleBase;
     private JFreeChart chart;
@@ -72,8 +69,6 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         pinSelectionListener = new PinSelectionListener();
         sliderListener = new SliderListener();
         timeSeriesGraphTSL = new TimeSeriesGraphTSL();
-        showSelectedPinAction = new ShowPinAction();
-        showAllPinAction = new ShowPinAction();
     }
 
     @Override
@@ -85,8 +80,8 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
                                                    DEFAULT_RANGE_LABEL,
                                                    null, true, true, false);
         graphModel = new TimeSeriesGraphModel(chart.getXYPlot());
-        graphForm = new TimeSeriesGraphForm(graphModel, chart, showSelectedPinAction, showAllPinAction,
-                                            getDescriptor().getHelpId());
+        graphForm = new TimeSeriesGraphForm(graphModel, chart,
+                getDescriptor().getHelpId());
 
         final VisatApp visatApp = VisatApp.getApp();
         visatApp.addInternalFrameListener(new TimeSeriesIFL());
@@ -144,8 +139,6 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
 
             graphModel.updateAnnotation(raster);
             graphModel.updateTimeSeries(null, TimeSeriesType.PIN);
-            showSelectedPinAction.setEnabled(currentView.getSelectedPin() != null);
-            showAllPinAction.setEnabled(currentProduct.getPinGroup().getNodeCount() > 0);
         } else {
             graphModel.removeAnnotation();
             graphModel.adaptToTimeSeries(null);
@@ -220,7 +213,6 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         @Override
         public void propertyChange(PropertyChangeEvent evt) {
             Placemark pin = (Placemark) evt.getNewValue();
-            showSelectedPinAction.setEnabled(pin != null);
             if (!graphModel.isShowingAllPins()) {
                 graphModel.updateTimeSeries(null, TimeSeriesType.PIN);
             }
@@ -282,9 +274,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         }
 
         private void handlePlacemarkChanged() {
-            showSelectedPinAction.setEnabled(currentView.getSelectedPin() != null);
             final boolean placemarksSet = currentView.getProduct().getPinGroup().getNodeCount() > 0;
-            showAllPinAction.setEnabled(placemarksSet);
             graphForm.setExportEnabled(placemarksSet);
             updateTimeSeries(getTimeSeries());
         }

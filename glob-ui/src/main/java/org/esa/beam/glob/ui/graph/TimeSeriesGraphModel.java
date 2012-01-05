@@ -114,8 +114,6 @@ class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandl
             for (String eoVariableName : displayController.getEoVariablesToDisplay()) {
                 eoVariableBands.add(timeSeries.getBandsForVariable(eoVariableName));
             }
-        } else {
-            displayController = null;
         }
         updatePlot(hasData, timeSeries);
     }
@@ -173,6 +171,9 @@ class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandl
     }
 
     synchronized void updateTimeSeries(TimeSeriesGraphUpdater.Position cursorPosition, TimeSeriesType type) {
+        if(getTimeSeries() == null) {
+            return;
+        }
         final TimeSeriesGraphUpdater.PositionSupport positionSupport = createPositionSupport();
         final TimeSeriesGraphUpdater w = new TimeSeriesGraphUpdater(getTimeSeries(), createVersionSafeDataSources(),
                 this, displayAxisMapping, workerChainSupport, cursorPosition, positionSupport, type,
@@ -196,21 +197,22 @@ class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandl
                 collectionOffset = PIN_COLLECTION_INDEX_OFFSET;
             }
         }
-        if (timeSeriesCount == 0) {
-            return;
-        }
         Assert.state(timeSeriesList.size() % timeSeriesCount == 0.0);
         final int numPositions = timeSeriesList.size() / timeSeriesCount;
         final String[] aliasNames = getAliasNames();
+
+        for (int aliasIdx = 0; aliasIdx < aliasNames.length; aliasIdx++) {
+            final int targetCollectionIndex = collectionOffset + aliasIdx * 3;
+            final TimeSeriesCollection targetTimeSeriesCollection = (TimeSeriesCollection) timeSeriesPlot.getDataset(targetCollectionIndex);
+            targetTimeSeriesCollection.removeAllSeries();
+        }
+
         int timeSeriesIndexOffset = 0;
         for (int posIdx = 0; posIdx < numPositions; posIdx++) {
             final Shape posShape = getShapeForPosition(type, posIdx);
             for (int aliasIdx = 0; aliasIdx < aliasNames.length; aliasIdx++) {
                 final int targetCollectionIndex = collectionOffset + aliasIdx * 3;
                 final TimeSeriesCollection targetTimeSeriesCollection = (TimeSeriesCollection) timeSeriesPlot.getDataset(targetCollectionIndex);
-                if (posIdx == 0) {
-                    targetTimeSeriesCollection.removeAllSeries();
-                }
                 final XYItemRenderer renderer = timeSeriesPlot.getRenderer(targetCollectionIndex);
                 final int dataSourceCount = getDataSourceCount(type, aliasNames[aliasIdx]);
                 for (int ignoredIndex = 0; ignoredIndex < dataSourceCount; ignoredIndex++) {
@@ -473,6 +475,9 @@ class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandl
 
     private AbstractTimeSeries getTimeSeries() {
         final ProductSceneView sceneView = getCurrentView();
+        if(sceneView == null) {
+            return null;
+        }
         final Product sceneViewProduct = sceneView.getProduct();
         return TimeSeriesMapper.getInstance().getTimeSeries(sceneViewProduct);
     }
