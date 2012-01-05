@@ -252,7 +252,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
             if (node instanceof Placemark) {
                 handlePlacemarkChanged();
             } else if (node instanceof RasterDataNode && currentView != null) {
-                graphModel.adaptToTimeSeries(TimeSeriesMapper.getInstance().getTimeSeries(currentView.getProduct()));
+                graphModel.adaptToTimeSeries(getTimeSeries());
             }
         }
 
@@ -262,8 +262,13 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
             if (node instanceof Placemark) {
                 handlePlacemarkChanged();
             } else if (node instanceof RasterDataNode && currentView != null) {
-                graphModel.adaptToTimeSeries(TimeSeriesMapper.getInstance().getTimeSeries(currentView.getProduct()));
+                graphModel.adaptToTimeSeries(getTimeSeries());
             }
+        }
+
+        private AbstractTimeSeries getTimeSeries() {
+            final Product product = currentView.getProduct();
+            return TimeSeriesMapper.getInstance().getTimeSeries(product);
         }
 
         private void handlePlacemarkChanged() {
@@ -271,6 +276,7 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
             final boolean placemarksSet = currentView.getProduct().getPinGroup().getNodeCount() > 0;
             showAllPinAction.setEnabled(placemarksSet);
             graphForm.setExportEnabled(placemarksSet);
+            updateTimeSeries(getTimeSeries());
         }
     }
 
