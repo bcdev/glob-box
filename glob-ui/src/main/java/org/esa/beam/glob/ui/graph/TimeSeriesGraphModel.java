@@ -183,7 +183,7 @@ class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandl
     }
 
     @Override
-    public void addTimeSeries(List<TimeSeries> data, TimeSeriesType type) {
+    public void addTimeSeries(List<TimeSeries> timeSeriesList, TimeSeriesType type) {
         final int timeSeriesCount;
         final int collectionOffset;
         if (TimeSeriesType.INSITU.equals(type)) {
@@ -200,25 +200,27 @@ class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandl
         if (timeSeriesCount == 0) {
             return;
         }
-        Assert.state(data.size() % timeSeriesCount == 0.0);
-        final int numPositions = data.size() / timeSeriesCount;
+        Assert.state(timeSeriesList.size() % timeSeriesCount == 0.0);
+        final int numPositions = timeSeriesList.size() / timeSeriesCount;
         final String[] aliasNames = getAliasNames();
+        int timeSeriesIndexOffset = 0;
         for (int aliasIdx = 0; aliasIdx < aliasNames.length; aliasIdx++) {
             String aliasName = aliasNames[aliasIdx];
             final int collectionIndex = getCollectionIndex(collectionOffset, aliasIdx);
-            final TimeSeriesCollection dataset = (TimeSeriesCollection) timeSeriesPlot.getDataset(collectionIndex);
+            final TimeSeriesCollection timeSeriesCollection = (TimeSeriesCollection) timeSeriesPlot.getDataset(collectionIndex);
             final XYItemRenderer renderer = timeSeriesPlot.getRenderer(collectionIndex);
-            dataset.removeAllSeries();
+            timeSeriesCollection.removeAllSeries();
             final String[] dataSourceNames = getDataSourceNames(type, aliasName);
-            for (int posIdx = 0; posIdx < numPositions; posIdx++) {
-                final Shape posShape = getShapeForPosition(type, posIdx);
-                for (int dataSourceIdx = 0; dataSourceIdx < dataSourceNames.length; dataSourceIdx++) {
-                    final int timeSeriesIdx = posIdx * timeSeriesCount + dataSourceIdx;
-//                    final int timeSeriesIdx = posIdx * timeSeriesCount + aliasIdx * dataSourceNames.length + dataSourceIdx;
-                    dataset.addSeries(data.get(timeSeriesIdx));
-                    renderer.setSeriesShape(timeSeriesIdx, posShape);
-                    renderer.setSeriesPaint(timeSeriesIdx, renderer.getSeriesPaint(dataSourceIdx));
+            for (int dataSourceIdx = 0; dataSourceIdx < dataSourceNames.length; dataSourceIdx++) {
+                for (int posIdx = 0; posIdx < numPositions; posIdx++) {
+                    final Shape posShape = getShapeForPosition(type, posIdx);
+                    final int timeSeriesSourceIdx = posIdx * timeSeriesCount + timeSeriesIndexOffset;
+                    timeSeriesCollection.addSeries(timeSeriesList.get(timeSeriesSourceIdx));
+                    final int timeSeriesTargetIdx = timeSeriesCollection.getSeriesCount() - 1;
+                    renderer.setSeriesShape(timeSeriesTargetIdx, posShape);
+                    renderer.setSeriesPaint(timeSeriesTargetIdx, renderer.getSeriesPaint(dataSourceIdx));
                 }
+                timeSeriesIndexOffset++;
             }
         }
     }
@@ -454,10 +456,10 @@ class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandl
 
     private Shape getShapeForPosition(TimeSeriesType type, int posIdx) {
         final Shape posShape;
-        if (!TimeSeriesType.CURSOR.equals(type)) {
-            posShape = displayController.getShape(posIdx);
-        } else {
+        if (TimeSeriesType.CURSOR.equals(type)) {
             posShape = TimeSeriesGraphDisplayController.CURSOR_SHAPE;
+        } else {
+            posShape = displayController.getShape(posIdx);
         }
         return posShape;
     }
