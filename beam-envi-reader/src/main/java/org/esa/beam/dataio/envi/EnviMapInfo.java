@@ -75,6 +75,39 @@ class EnviMapInfo {
         this.unit = unit;
     }
 
+    public int getUtmZone() {
+        return utmZone;
+    }
+
+    public void setUtmZone(int utmZone) {
+        this.utmZone = utmZone;
+    }
+
+    public String getUtmHemisphere() {
+        return utmHemisphere;
+    }
+
+    public void setUtmHemisphere(String utmHemisphere) {
+        this.utmHemisphere = utmHemisphere;
+    }
+
+    @Override
+    public String toString() {
+        return "EnviMapInfo{" +
+                "projectionName='" + projectionName + '\'' +
+                ", referencePixelX=" + referencePixelX +
+                ", referencePixelY=" + referencePixelY +
+                ", easting=" + easting +
+                ", northing=" + northing +
+                ", pixelSizeX=" + pixelSizeX +
+                ", pixelSizeY=" + pixelSizeY +
+                ", datum='" + datum + '\'' +
+                ", unit='" + unit + '\'' +
+                ", utmZone=" + utmZone +
+                ", utmHemisphere='" + utmHemisphere + '\'' +
+                '}';
+    }
+
     ///////////////////////////////////////////////////////////////////////////
     /////// END OF PUBLIC
     ///////////////////////////////////////////////////////////////////////////
@@ -88,4 +121,6 @@ class EnviMapInfo {
     private double pixelSizeY;
     private String datum;
     private String unit;
+    private int utmZone;
+    private String utmHemisphere;
 }

@@ -14,8 +14,11 @@ import org.esa.beam.util.Debug;
 import org.esa.beam.util.StringUtils;
 import org.esa.beam.util.TreeNode;
 import org.esa.beam.util.io.FileUtils;
+import org.geotools.referencing.ReferencingFactoryFinder;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.referencing.FactoryException;
+import org.opengis.referencing.NoSuchAuthorityCodeException;
+import org.opengis.referencing.crs.CRSAuthorityFactory;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.TransformException;
 
@@ -165,7 +168,7 @@ class EnviProductReader extends AbstractProductReader {
                         break;
                     }
                     synchronized (imageInputStream) {
-                        long lineStartPos = headerOffset +sourceY * numBands * lineSizeInBytes + bandIndex * lineSizeInBytes;
+                        long lineStartPos = headerOffset + sourceY * numBands * lineSizeInBytes + bandIndex * lineSizeInBytes;
                         imageInputStream.seek(lineStartPos + elemSize * sourceMinX);
                         destBuffer.readFrom(destPos, destWidth, imageInputStream);
                         destPos += destWidth;
@@ -326,6 +329,7 @@ class EnviProductReader extends AbstractProductReader {
         if (enviMapInfo == null) {
             return;
         }
+        System.out.println("enviMapInfo = " + enviMapInfo);
         final EnviProjectionInfo projectionInfo = header.getProjectionInfo();
         CoordinateReferenceSystem crs = null;
         if (projectionInfo != null) {
@@ -337,6 +341,24 @@ class EnviProductReader extends AbstractProductReader {
         }
         if (EnviConstants.PROJECTION_NAME_WGS84.equalsIgnoreCase(enviMapInfo.getProjectionName())) {
             crs = DefaultGeographicCRS.WGS84;
+        } else if ("UTM".equalsIgnoreCase(enviMapInfo.getProjectionName())) {
+            try {
+                final int zone = enviMapInfo.getUtmZone();
+                final String hemisphere = enviMapInfo.getUtmHemisphere();
+
+                if (zone >= 1 && zone <= 60) {
+                    final CRSAuthorityFactory factory = ReferencingFactoryFinder.getCRSAuthorityFactory("EPSG", null);
+                    if ("North".equalsIgnoreCase(hemisphere)) {
+                        final int WGS84_UTM_zone_N_BASE = 32600;
+                        crs = factory.createProjectedCRS("EPSG:" + (WGS84_UTM_zone_N_BASE + zone));
+                    } else {
+                        final int WGS84_UTM_zone_S_BASE = 32700;
+                        crs = factory.createProjectedCRS("EPSG:" + (WGS84_UTM_zone_S_BASE + zone));
+                    }
+                }
+            } catch (NoSuchAuthorityCodeException ignore) {
+            } catch (FactoryException ignore) {
+            }
         }
 
 
