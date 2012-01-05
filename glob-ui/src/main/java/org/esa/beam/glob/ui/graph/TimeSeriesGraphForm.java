@@ -111,7 +111,7 @@ class TimeSeriesGraphForm {
         showTimeSeriesForAllPinsButton.setToolTipText("Show time series for all pins");
         //////////////////////////////////////////
         showCursorTimeSeriesButton = ToolButtonFactory.createButton(
-                UIUtils.loadImageIcon("/org/esa/beam/glob/ui/icons/ViewCursor24.gif"), true);
+                UIUtils.loadImageIcon("icons/CursorSpectrum24.gif"), true);
         showCursorTimeSeriesButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
