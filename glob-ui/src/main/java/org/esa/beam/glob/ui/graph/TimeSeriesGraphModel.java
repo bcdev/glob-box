@@ -212,13 +212,12 @@ class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandl
                     targetTimeSeriesCollection.removeAllSeries();
                 }
                 final XYItemRenderer renderer = timeSeriesPlot.getRenderer(targetCollectionIndex);
-                final String[] dataSourceNames = getDataSourceNames(type, aliasNames[aliasIdx]);
-                for (int dataSourceIdx = 0; dataSourceIdx < dataSourceNames.length; dataSourceIdx++) {
-//                    final int timeSeriesSourceIdx = posIdx * timeSeriesCount + timeSeriesIndexOffset;
+                final int dataSourceCount = getDataSourceCount(type, aliasNames[aliasIdx]);
+                for (int ignoredIndex = 0; ignoredIndex < dataSourceCount; ignoredIndex++) {
                     targetTimeSeriesCollection.addSeries(timeSeriesList.get(timeSeriesIndexOffset));
                     final int timeSeriesTargetIdx = targetTimeSeriesCollection.getSeriesCount() - 1;
                     renderer.setSeriesShape(timeSeriesTargetIdx, posShape);
-                    renderer.setSeriesPaint(timeSeriesTargetIdx, renderer.getSeriesPaint(timeSeriesTargetIdx % dataSourceNames.length));
+                    renderer.setSeriesPaint(timeSeriesTargetIdx, renderer.getSeriesPaint(timeSeriesTargetIdx % dataSourceCount));
                     timeSeriesIndexOffset++;
                 }
             }
@@ -454,14 +453,12 @@ class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandl
         return posShape;
     }
 
-    private String[] getDataSourceNames(TimeSeriesType type, String aliasName) {
-        final Set<String> dataSourceNameSet;
+    private int getDataSourceCount(TimeSeriesType type, String aliasName) {
         if (TimeSeriesType.INSITU.equals(type)) {
-            dataSourceNameSet = displayAxisMapping.getInsituNames(aliasName);
+            return displayAxisMapping.getInsituNames(aliasName).size();
         } else {
-            dataSourceNameSet = displayAxisMapping.getRasterNames(aliasName);
+            return displayAxisMapping.getRasterNames(aliasName).size();
         }
-        return dataSourceNameSet.toArray(new String[dataSourceNameSet.size()]);
     }
 
     private TimeSeriesGraphUpdater.VersionSafeDataSources createVersionSafeDataSources() {
