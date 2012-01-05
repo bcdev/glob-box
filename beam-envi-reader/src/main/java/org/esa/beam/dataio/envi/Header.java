@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
+import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.StringTokenizer;
 
@@ -159,21 +160,25 @@ class Header {
     private BeamProperties beamProperties = null;
 
     private void parseMapInfo(String line) {
-        mapInfo = new EnviMapInfo();
-        final StringTokenizer tokenizer = createTokenizerFromLine(line);
-        mapInfo.setProjectionName(tokenizer.nextToken().trim());
-        mapInfo.setReferencePixelX(Double.parseDouble(tokenizer.nextToken()));
-        mapInfo.setReferencePixelY(Double.parseDouble(tokenizer.nextToken()));
-        mapInfo.setEasting(Double.parseDouble(tokenizer.nextToken()));
-        mapInfo.setNorthing(Double.parseDouble(tokenizer.nextToken()));
-        mapInfo.setPixelSizeX(Double.parseDouble(tokenizer.nextToken()));
-        mapInfo.setPixelSizeY(Double.parseDouble(tokenizer.nextToken()));
-        if (mapInfo.getProjectionName().equalsIgnoreCase("UTM")) {
-            mapInfo.setUtmZone(Integer.parseInt(tokenizer.nextToken().trim()));
-            mapInfo.setUtmHemisphere(tokenizer.nextToken().trim());
+        try {
+            mapInfo = new EnviMapInfo();
+            final StringTokenizer tokenizer = createTokenizerFromLine(line);
+            mapInfo.setProjectionName(tokenizer.nextToken().trim());
+            mapInfo.setReferencePixelX(Double.parseDouble(tokenizer.nextToken()));
+            mapInfo.setReferencePixelY(Double.parseDouble(tokenizer.nextToken()));
+            mapInfo.setEasting(Double.parseDouble(tokenizer.nextToken()));
+            mapInfo.setNorthing(Double.parseDouble(tokenizer.nextToken()));
+            mapInfo.setPixelSizeX(Double.parseDouble(tokenizer.nextToken()));
+            mapInfo.setPixelSizeY(Double.parseDouble(tokenizer.nextToken()));
+            if (mapInfo.getProjectionName().equalsIgnoreCase("UTM")) {
+                mapInfo.setUtmZone(Integer.parseInt(tokenizer.nextToken().trim()));
+                mapInfo.setUtmHemisphere(tokenizer.nextToken().trim());
+            }
+            mapInfo.setDatum(tokenizer.nextToken().trim());
+            mapInfo.setUnit(tokenizer.nextToken().trim());
+        } catch (NoSuchElementException e) {
+            // handle shorter string gracefully
         }
-        mapInfo.setDatum(tokenizer.nextToken().trim());
-        mapInfo.setUnit(tokenizer.nextToken().trim());
     }
 
     private static StringTokenizer createTokenizerFromLine(String line) {
