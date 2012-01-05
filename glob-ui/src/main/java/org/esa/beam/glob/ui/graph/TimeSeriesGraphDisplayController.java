@@ -19,19 +19,19 @@ import java.util.List;
 class TimeSeriesGraphDisplayController {
 
     private static final Color[] COLORS = {
-                Color.red,
-                Color.blue,
                 Color.green.darker(),
-                Color.magenta.darker(),
+                Color.blue.darker(),
                 Color.orange,
                 Color.gray,
+                Color.red.darker(),
+                Color.blue,
+                Color.magenta.darker(),
                 Color.pink,
                 Color.cyan.darker(),
                 Color.yellow.darker(),
-                Color.red.darker(),
                 Color.green.darker().darker(),
-                Color.blue.darker(),
-                Color.magenta.brighter(),
+                Color.red,
+                Color.magenta,
                 Color.orange.darker(),
     };
 
