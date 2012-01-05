@@ -644,7 +644,9 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
     }
 
     private void fireChangeEvent(TimeSeriesChangeEvent event) {
-        for (TimeSeriesListener listener : listeners) {
+        final ArrayList<TimeSeriesListener> listenersCopy = new ArrayList<TimeSeriesListener>();
+        listenersCopy.addAll(listeners);
+        for (TimeSeriesListener listener : listenersCopy) {
             listener.timeSeriesChanged(event);
         }
     }
