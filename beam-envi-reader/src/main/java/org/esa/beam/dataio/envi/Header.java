@@ -37,6 +37,8 @@ class Header {
                 interleave = line.substring(line.indexOf('=') + 1).trim();
             } else if (line.startsWith(EnviConstants.HEADER_KEY_SENSOR_TYPE)) {
                 sensorType = line.substring(line.indexOf('=') + 1).trim();
+            } else if (line.startsWith(EnviConstants.HEADER_KEY_WAVELENGTH_UNITS)) {
+                wavelengthsUnits = line.substring(line.indexOf('=') + 1).trim();
             } else if (line.startsWith(EnviConstants.HEADER_KEY_BYTE_ORDER)) {
                 byteOrder = Integer.parseInt(line.substring(line.indexOf('=') + 1).trim());
             } else if (line.startsWith(EnviConstants.HEADER_KEY_MAP_INFO)) {
@@ -47,7 +49,10 @@ class Header {
                 parseProjectionInfo(line);
             } else if (line.startsWith(EnviConstants.HEADER_KEY_BAND_NAMES)) {
                 line = assembleMultilineString(reader, line);
-                parseBandNames(line);
+                bandNames = parseCommaSeparated(line);
+            } else if (line.startsWith(EnviConstants.HEADER_KEY_WAVELENGTH)) {
+                line = assembleMultilineString(reader, line);
+                wavelengths = parseCommaSeparated(line);
             } else if (line.startsWith(EnviConstants.HEADER_KEY_DESCRIPTION)) {
                 line = assembleMultilineString(reader, line);
                 description = line.substring(line.indexOf('{') + 1, line.lastIndexOf('}')).trim();
@@ -123,6 +128,15 @@ class Header {
     public BeamProperties getBeamProperties() {
         return beamProperties;
     }
+
+    public String[] getWavelengths() {
+        return wavelengths;
+    }
+
+    public String getWavelengthsUnit() {
+        return wavelengthsUnits;
+    }
+
     ///////////////////////////////////////////////////////////////////////////
     /////// END OF PUBLIC
     ///////////////////////////////////////////////////////////////////////////
@@ -139,6 +153,8 @@ class Header {
     private EnviMapInfo mapInfo = null;
     private EnviProjectionInfo projectionInfo = null;
     private String[] bandNames = null;
+    private String[] wavelengths = null;
+    private String wavelengthsUnits = null;
     private String description = null;
     private BeamProperties beamProperties = null;
 
@@ -203,14 +219,15 @@ class Header {
         return line;
     }
 
-    private void parseBandNames(String line) {
+    private String[] parseCommaSeparated(String line) {
         final StringTokenizer tokenizer = createTokenizerFromLine(line);
-        bandNames = new String[tokenizer.countTokens()];
+        String[] elems = new String[tokenizer.countTokens()];
         int index = 0;
         while (tokenizer.hasMoreTokens()) {
-            bandNames[index] = tokenizer.nextToken().trim();
+            elems[index] = tokenizer.nextToken().trim();
             ++index;
         }
+        return elems;
     }
 
     private void parseBeamProperties(final String txt) throws IOException {
