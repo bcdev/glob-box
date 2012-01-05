@@ -180,7 +180,7 @@ class EnviProductReader extends AbstractProductReader {
             }
         } else if (interleave.equalsIgnoreCase("bip")) {
             // band interleaved by pixel
-
+            throw new UnsupportedOperationException("BIP not supported");
         } else {
             // band sequential (bsq), the default
             final int bandSizeInBytes = header.getNumSamples() * header.getNumLines() * elemSize;
