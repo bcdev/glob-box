@@ -46,6 +46,7 @@ class TimeSeriesGraphForm {
     private AbstractButton showTimeSeriesForSelectedPinsButton;
     private AbstractButton showTimeSeriesForAllPinsButton;
     private AbstractButton exportTimeSeriesButton;
+    private AbstractButton showCursorTimeSeriesButton;
     private TimeSeriesGraphModel graphModel;
 
     TimeSeriesGraphForm(TimeSeriesGraphModel graphModel, JFreeChart chart, Action showSelectedPinsAction, Action showAllPinsAction,
@@ -109,6 +110,17 @@ class TimeSeriesGraphForm {
         showTimeSeriesForAllPinsButton.setName("showTimeSeriesForAllPinsButton");
         showTimeSeriesForAllPinsButton.setToolTipText("Show time series for all pins");
         //////////////////////////////////////////
+        showCursorTimeSeriesButton = ToolButtonFactory.createButton(
+                UIUtils.loadImageIcon("/org/esa/beam/glob/ui/icons/ViewCursor24.gif"), true);
+        showCursorTimeSeriesButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                graphModel.setIsShowingCursorTimeSeries(showCursorTimeSeriesButton.isSelected());
+            }
+        });
+        showCursorTimeSeriesButton.setToolTipText("Show time series for cursor");
+        showCursorTimeSeriesButton.setSelected(true);
+        //////////////////////////////////////////
         exportTimeSeriesButton = ToolButtonFactory.createButton(
                 UIUtils.loadImageIcon("icons/Export24.gif"),
                 false);
@@ -151,6 +163,7 @@ class TimeSeriesGraphForm {
 
         buttonPanel.add(showTimeSeriesForSelectedPinsButton);
         buttonPanel.add(showTimeSeriesForAllPinsButton);
+        buttonPanel.add(showCursorTimeSeriesButton);
         buttonPanel.add(exportTimeSeriesButton);
         buttonPanel.add(tableLayout.createVerticalSpacer());
         buttonPanel.add(helpButton);

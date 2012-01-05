@@ -65,7 +65,7 @@ import java.util.WeakHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
-class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandler {
+class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandler, TimeSeriesGraphDisplayController.PinSupport {
 
     private static final Color DEFAULT_FOREGROUND_COLOR = Color.BLACK;
     private static final Color DEFAULT_BACKGROUND_COLOR = new Color(180, 180, 180);
@@ -80,23 +80,21 @@ class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandl
     private final Map<AbstractTimeSeries, TimeSeriesGraphDisplayController> displayControllerMap;
     private final XYPlot timeSeriesPlot;
     private final List<List<Band>> eoVariableBands;
+    private final AtomicInteger version = new AtomicInteger(0);
+    private final TimeSeriesGraphUpdater.WorkerChainSupport workerChainSupport;
+    private final WorkerChain workerChain;
 
-    final private AtomicInteger version = new AtomicInteger(0);
     private TimeSeriesGraphDisplayController displayController;
-
     private boolean isShowingSelectedPins;
     private boolean isShowingAllPins;
     private DisplayAxisMapping displayAxisMapping;
-    private final TimeSeriesGraphUpdater.WorkerChainSupport workerChainSupport;
-    private final TimeSeriesGraphDisplayController.PinSupport pinSupport;
-    private final WorkerChain workerChain;
+    private boolean showCursorTimeSeries = true;
 
     TimeSeriesGraphModel(XYPlot plot) {
         timeSeriesPlot = plot;
         eoVariableBands = new ArrayList<List<Band>>();
         displayControllerMap = new WeakHashMap<AbstractTimeSeries, TimeSeriesGraphDisplayController>();
         workerChainSupport = createWorkerChainSupport();
-        pinSupport = createPinSupport();
         workerChain = new WorkerChain();
         initPlot();
     }
@@ -110,7 +108,7 @@ class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandl
         if (hasData) {
             displayController = displayControllerMap.get(timeSeries);
             if (displayController == null) {
-                displayController = new TimeSeriesGraphDisplayController(pinSupport);
+                displayController = new TimeSeriesGraphDisplayController(this);
                 displayControllerMap.put(timeSeries, displayController);
             }
             displayController.adaptTo(timeSeries);
@@ -171,18 +169,15 @@ class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandl
         updateTimeSeries(null, TimeSeriesType.PIN);
     }
 
-    boolean isShowingSelectedPins() {
-        return isShowingSelectedPins;
-    }
-
-    boolean isShowingAllPins() {
-        return isShowingAllPins;
+    void setIsShowingCursorTimeSeries(boolean showCursorTimeSeries) {
+        this.showCursorTimeSeries = showCursorTimeSeries;
     }
 
     synchronized void updateTimeSeries(TimeSeriesGraphUpdater.Position cursorPosition, TimeSeriesType type) {
         final TimeSeriesGraphUpdater.PositionSupport positionSupport = createPositionSupport();
         final TimeSeriesGraphUpdater w = new TimeSeriesGraphUpdater(getTimeSeries(), createVersionSafeDataSources(),
-                this, displayAxisMapping, workerChainSupport, cursorPosition, positionSupport, type, version.get());
+                this, displayAxisMapping, workerChainSupport, cursorPosition, positionSupport, type,
+                showCursorTimeSeries, version.get());
         final boolean chained = type != TimeSeriesType.CURSOR;
         workerChain.setOrExecuteNextWorker(w, chained);
     }
@@ -228,30 +223,26 @@ class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandl
         }
     }
 
+    @Override
+    public boolean isShowingSelectedPins() {
+        return isShowingSelectedPins;
+    }
+
+    @Override
+    public Placemark[] getSelectedPins() {
+        return getCurrentView().getSelectedPins();
+    }
+
+    @Override
+    public boolean isShowingAllPins() {
+        return isShowingAllPins;
+    }
+
     private TimeSeriesGraphUpdater.WorkerChainSupport createWorkerChainSupport() {
         return new TimeSeriesGraphUpdater.WorkerChainSupport() {
             @Override
             public void removeWorkerAndStartNext(TimeSeriesGraphUpdater worker) {
                 workerChain.removeCurrentWorkerAndExecuteNext(worker);
-            }
-        };
-    }
-
-    private TimeSeriesGraphDisplayController.PinSupport createPinSupport() {
-        return new TimeSeriesGraphDisplayController.PinSupport() {
-            @Override
-            public boolean isShowingAllPins() {
-                return isShowingAllPins;
-            }
-
-            @Override
-            public boolean isShowingSelectedPins() {
-                return isShowingSelectedPins;
-            }
-
-            @Override
-            public Placemark[] getSelectedPins() {
-                return getCurrentView().getSelectedPins();
             }
         };
     }
@@ -500,5 +491,4 @@ class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandl
     private ProductSceneView getCurrentView() {
         return VisatApp.getApp().getSelectedProductSceneView();
     }
-
 }

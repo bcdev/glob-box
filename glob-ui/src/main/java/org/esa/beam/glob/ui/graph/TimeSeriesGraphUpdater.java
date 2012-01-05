@@ -30,13 +30,18 @@ class TimeSeriesGraphUpdater extends SwingWorker<List<TimeSeries>, Void> {
     private final Position cursorPosition;
     private final PositionSupport positionSupport;
     private final TimeSeriesType type;
+    private final boolean showCursorTimeSeries;
     private final int version;
     private final AbstractTimeSeries timeSeries;
     private final TimeSeriesDataHandler dataHandler;
     private final VersionSafeDataSources dataSources;
     private final DisplayAxisMapping displayAxisMapping;
 
-    TimeSeriesGraphUpdater(AbstractTimeSeries timeSeries, VersionSafeDataSources dataSources, TimeSeriesDataHandler dataHandler, DisplayAxisMapping displayAxisMapping, WorkerChainSupport workerChainSupport, Position cursorPosition, PositionSupport positionSupport, TimeSeriesType type, int version) {
+    TimeSeriesGraphUpdater(AbstractTimeSeries timeSeries, VersionSafeDataSources dataSources, 
+                           TimeSeriesDataHandler dataHandler, DisplayAxisMapping displayAxisMapping, 
+                           WorkerChainSupport workerChainSupport, Position cursorPosition, 
+                           PositionSupport positionSupport, TimeSeriesType type, boolean showCursorTimeSeries, 
+                           int version) {
         super();
         this.timeSeries = timeSeries;
         this.dataHandler = dataHandler;
@@ -46,6 +51,7 @@ class TimeSeriesGraphUpdater extends SwingWorker<List<TimeSeries>, Void> {
         this.cursorPosition = cursorPosition;
         this.positionSupport = positionSupport;
         this.type = type;
+        this.showCursorTimeSeries = showCursorTimeSeries;
         this.version = version;
         if (TimeSeriesType.CURSOR.equals(type)) {
             Assert.notNull(cursorPosition);
@@ -89,7 +95,7 @@ class TimeSeriesGraphUpdater extends SwingWorker<List<TimeSeries>, Void> {
             for (GeoPos geoPos : pinPositionsToDisplay) {
                 positionsToDisplay.add(positionSupport.transformGeoPos(geoPos));
             }
-        } else {
+        } else if(showCursorTimeSeries) {
             positionsToDisplay.add(cursorPosition);
         }
 
