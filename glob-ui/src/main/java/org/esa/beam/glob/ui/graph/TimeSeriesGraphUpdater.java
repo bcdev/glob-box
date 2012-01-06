@@ -112,6 +112,7 @@ class TimeSeriesGraphUpdater extends SwingWorker<List<TimeSeries>, Void> {
                             validatedTimeSeries.add(dataItem);
                         }
                     }
+                    timeSeries.clear();
                     rasterTimeSeries.add(validatedTimeSeries);
                 }
             }
