@@ -18,6 +18,7 @@ package org.esa.beam.glob.ui.graph;
 
 import com.bc.ceres.glayer.support.ImageLayer;
 import com.bc.ceres.grender.Viewport;
+import com.bc.jexp.ParseException;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.GeoCoding;
 import org.esa.beam.framework.datamodel.GeoPos;
@@ -33,6 +34,7 @@ import org.esa.beam.glob.core.timeseries.datamodel.AxisMappingModel;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeCoding;
 import org.esa.beam.glob.ui.WorkerChain;
 import org.esa.beam.util.StringUtils;
+import org.esa.beam.util.logging.BeamLogManager;
 import org.esa.beam.visat.VisatApp;
 import org.jfree.chart.annotations.XYAnnotation;
 import org.jfree.chart.annotations.XYLineAnnotation;
@@ -62,6 +64,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
 
 
 class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandler, TimeSeriesGraphDisplayController.PinSupport {
@@ -245,7 +248,12 @@ class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandl
 
     @Override
     public boolean isValid(double value, String dataSourceName, TimeSeriesType type) {
-        return validation.validate(value, dataSourceName, type);
+        try {
+            return validation.validate(value, dataSourceName, type);
+        } catch (ParseException e) {
+            BeamLogManager.getSystemLogger().log(Level.SEVERE, e.getMessage(), e);
+            throw new IllegalStateException(e);
+        }
     }
 
     @Override
@@ -515,7 +523,7 @@ class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandl
 
     static interface Validation {
 
-        boolean validate(double value, String sourceName, TimeSeriesType type);
+        boolean validate(double value, String sourceName, TimeSeriesType type) throws ParseException;
 
         void adaptTo(Object timeSeriesKey, AxisMappingModel axisMappingModel);
     }

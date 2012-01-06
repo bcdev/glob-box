@@ -43,8 +43,7 @@ import java.util.Map;
 import java.util.logging.Level;
 
 /**
- * TODO fill out or delete
- *
+ * @author Sabine Embacher
  * @author Thomas Storm
  */
 class TimeSeriesValidator implements TimeSeriesGraphForm.ValidatorUI, TimeSeriesGraphModel.Validation {
@@ -53,8 +52,8 @@ class TimeSeriesValidator implements TimeSeriesGraphForm.ValidatorUI, TimeSeries
     private List<String> insituNames;
     private MyExpressionPane expressionPane;
     private Parser parser;
-    private Map<Object, Map<String, Term>> timeSeriesExpressionsMap = new HashMap<Object, Map<String, Term>>();
-    private Map<String, Term> currentTermMap;
+    private Map<Object, Map<String, String>> timeSeriesExpressionsMap = new HashMap<Object, Map<String, String>>();
+    private Map<String, String> currentExpressionMap;
     private DefaultNamespace namespace;
     private final Term trueTerm;
 
@@ -81,7 +80,7 @@ class TimeSeriesValidator implements TimeSeriesGraphForm.ValidatorUI, TimeSeries
     }
 
     @Override
-    public boolean validate(double value, String sourceName, TimeSeriesType type) {
+    public boolean validate(double value, String sourceName, TimeSeriesType type) throws ParseException {
         String sourceIdentifier;
         if(TimeSeriesType.INSITU.equals(type)) {
             sourceIdentifier = TimeSeriesGraphModel.QUALIFIER_INSITU + sourceName;
@@ -89,17 +88,22 @@ class TimeSeriesValidator implements TimeSeriesGraphForm.ValidatorUI, TimeSeries
             sourceIdentifier = TimeSeriesGraphModel.QUALIFIER_RASTER + sourceName;
         }
         final Symbol symbol = namespace.resolveSymbol(sourceIdentifier);
+        if(symbol == null) {
+            throw new ParseException("No variable for identifier '" + sourceIdentifier + "' registered.");
+        }
         ((Variable) symbol).assignD(null, value);
-        return currentTermMap.get(sourceIdentifier).evalB(null);
+        final String expression = currentExpressionMap.get(sourceIdentifier);
+        final Term term = parser.parse(expression, namespace);
+        return term.evalB(null);
     }
 
     @Override
     public void adaptTo(Object timeSeriesKey, AxisMappingModel axisMappingModel) {
         if (timeSeriesExpressionsMap.containsKey(timeSeriesKey)) {
-            currentTermMap = timeSeriesExpressionsMap.get(timeSeriesKey);
+            currentExpressionMap = timeSeriesExpressionsMap.get(timeSeriesKey);
         } else {
-            currentTermMap = new HashMap<String, Term>();
-            timeSeriesExpressionsMap.put(timeSeriesKey, currentTermMap);
+            currentExpressionMap = new HashMap<String, String>();
+            timeSeriesExpressionsMap.put(timeSeriesKey, currentExpressionMap);
         }
         namespace = new DefaultNamespace();
         rasterNames = new ArrayList<String>();
@@ -110,15 +114,14 @@ class TimeSeriesValidator implements TimeSeriesGraphForm.ValidatorUI, TimeSeries
         }
     }
 
-    void setExpression(String sourceName, String expression, TimeSeriesType type) throws ParseException {
+    void setExpression(String sourceName, String expression, TimeSeriesType type) {
         final String qualifiedSourceName;
         if (TimeSeriesType.INSITU.equals(type)) {
             qualifiedSourceName = TimeSeriesGraphModel.QUALIFIER_INSITU + sourceName;
         } else {
             qualifiedSourceName = TimeSeriesGraphModel.QUALIFIER_RASTER + sourceName;
         }
-        final Term term = parser.parse(expression, namespace);
-        currentTermMap.put(qualifiedSourceName, term);
+        currentExpressionMap.put(qualifiedSourceName, expression);
     }
 
     private void adaptToSourceNames(final List<String> sourceNames, final String qualifier, List<String> qualifiedSourcNames) {
@@ -126,8 +129,8 @@ class TimeSeriesValidator implements TimeSeriesGraphForm.ValidatorUI, TimeSeries
             final String qualifiedSourceName = qualifier + sourceName;
             namespace.registerSymbol(SymbolFactory.createVariable(qualifiedSourceName, 0.0));
             qualifiedSourcNames.add(qualifiedSourceName);
-            if (!currentTermMap.containsKey(qualifiedSourceName)) {
-                currentTermMap.put(qualifiedSourceName, trueTerm);
+            if (!currentExpressionMap.containsKey(qualifiedSourceName)) {
+                currentExpressionMap.put(qualifiedSourceName, "true");
             }
         }
     }

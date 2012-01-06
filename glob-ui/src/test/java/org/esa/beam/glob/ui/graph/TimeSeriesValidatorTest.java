@@ -31,7 +31,8 @@ public class TimeSeriesValidatorTest {
 
     @Test(expected = ParseException.class)
     public void testValidateWithWrongType() throws Exception {
-        validator.setExpression("raster1", "raster1 > 5", TimeSeriesType.INSITU);
+        validator.setExpression("raster1", "raster1 groesserAls 5", TimeSeriesType.INSITU);
+        validator.validate(0.0, "raster1", TimeSeriesType.INSITU);
     }
 
     @Test
@@ -53,11 +54,11 @@ public class TimeSeriesValidatorTest {
         assertFalse(validator.validate(4, "raster1", TimeSeriesType.CURSOR));
 
         validator.adaptTo("key2", new AxisMappingModel());
+        validator.setExpression("raster1", "r.raster1 > 5", TimeSeriesType.CURSOR);
         try {
-            validator.setExpression("raster1", "r.raster1 > 5", TimeSeriesType.CURSOR);
+            validator.validate(6, "raster1", TimeSeriesType.CURSOR);
             fail();
         } catch (ParseException expected) {
-
         }
 
         validator.adaptTo("key1", mappingModel);
