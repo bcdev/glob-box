@@ -331,7 +331,6 @@ class EnviProductReader extends AbstractProductReader {
         if (enviMapInfo == null) {
             return;
         }
-        System.out.println("enviMapInfo = " + enviMapInfo);
         final EnviProjectionInfo projectionInfo = header.getProjectionInfo();
         CoordinateReferenceSystem crs = null;
         if (projectionInfo != null) {
