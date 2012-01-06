@@ -25,6 +25,8 @@ import org.opengis.referencing.operation.TransformException;
 import javax.imageio.stream.FileCacheImageInputStream;
 import javax.imageio.stream.FileImageInputStream;
 import javax.imageio.stream.ImageInputStream;
+import java.awt.Rectangle;
+import java.awt.geom.AffineTransform;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -364,15 +366,14 @@ class EnviProductReader extends AbstractProductReader {
 
         if (crs != null) {
             try {
-                GeoCoding geoCoding = new CrsGeoCoding(crs,
-                                                       product.getSceneRasterWidth(),
-                                                       product.getSceneRasterHeight(),
-                                                       enviMapInfo.getEasting(),
-                                                       enviMapInfo.getNorthing(),
-                                                       enviMapInfo.getPixelSizeX(),
-                                                       enviMapInfo.getPixelSizeY(),
-                                                       enviMapInfo.getReferencePixelX() - 1,
-                                                       enviMapInfo.getReferencePixelY() - 1);
+                AffineTransform i2m = new AffineTransform();
+                i2m.translate(enviMapInfo.getEasting(), enviMapInfo.getNorthing());
+                i2m.scale(enviMapInfo.getPixelSizeX(), -enviMapInfo.getPixelSizeY());
+                i2m.rotate(Math.toRadians(-enviMapInfo.getOrientation()));
+                i2m.translate(-(enviMapInfo.getReferencePixelX() - 1), -(enviMapInfo.getReferencePixelY() - 1));
+                Rectangle rect = new Rectangle(product.getSceneRasterWidth(), product.getSceneRasterHeight());
+                GeoCoding geoCoding = new CrsGeoCoding(crs, rect, i2m);
+
                 product.setGeoCoding(geoCoding);
             } catch (FactoryException fe) {
                 Debug.trace(fe);

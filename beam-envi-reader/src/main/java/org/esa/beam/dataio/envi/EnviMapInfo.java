@@ -91,6 +91,14 @@ class EnviMapInfo {
         this.utmHemisphere = utmHemisphere;
     }
 
+    public double getOrientation() {
+        return orientation;
+    }
+
+    public void setOrientation(double orientation) {
+        this.orientation = orientation;
+    }
+
     @Override
     public String toString() {
         return "EnviMapInfo{" +
@@ -105,6 +113,7 @@ class EnviMapInfo {
                 ", unit='" + unit + '\'' +
                 ", utmZone=" + utmZone +
                 ", utmHemisphere='" + utmHemisphere + '\'' +
+                ", orientation='" + orientation + '\'' +
                 '}';
     }
 
@@ -123,4 +132,6 @@ class EnviMapInfo {
     private String unit;
     private int utmZone;
     private String utmHemisphere;
+    private double orientation;
+
 }
