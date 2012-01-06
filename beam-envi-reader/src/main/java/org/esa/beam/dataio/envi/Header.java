@@ -175,7 +175,15 @@ class Header {
                 mapInfo.setUtmHemisphere(tokenizer.nextToken().trim());
             }
             mapInfo.setDatum(tokenizer.nextToken().trim());
-            mapInfo.setUnit(tokenizer.nextToken().trim());
+            while(tokenizer.hasMoreTokens()) {
+                String token = tokenizer.nextToken().trim();
+                if (token.startsWith("units=")) {
+                    mapInfo.setUnit(token.substring("units=".length()));
+                } else if (token.startsWith("rotation=")) {
+                    String rotation = token.substring("rotation=".length());
+                    mapInfo.setOrientation(Double.parseDouble(rotation));
+                }
+            }
         } catch (NoSuchElementException e) {
             // handle shorter string gracefully
         }
