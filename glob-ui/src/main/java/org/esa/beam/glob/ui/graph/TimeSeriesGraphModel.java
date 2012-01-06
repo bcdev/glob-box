@@ -66,6 +66,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandler, TimeSeriesGraphDisplayController.PinSupport {
 
+    static final String QUALIFIER_RASTER = "r.";
+    static final String QUALIFIER_INSITU = "i.";
+
     private static final Color DEFAULT_FOREGROUND_COLOR = Color.BLACK;
     private static final Color DEFAULT_BACKGROUND_COLOR = new Color(180, 180, 180);
     private static final String NO_DATA_MESSAGE = "No data to display";
@@ -75,8 +78,6 @@ class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandl
     private static final Stroke PIN_STROKE = new BasicStroke(1.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f,
             new float[]{10.0f}, 0.0f);
     private static final Stroke CURSOR_STROKE = new BasicStroke();
-    private static final String IDENTIFIER_RASTER = "_r_";
-    private static final String IDENTIFIER_INSITU = "_i_";
 
     private final Map<AbstractTimeSeries, TimeSeriesGraphDisplayController> displayControllerMap;
     private final XYPlot timeSeriesPlot;
@@ -120,6 +121,9 @@ class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandl
                 eoVariableBands.add(timeSeries.getBandsForVariable(eoVariableName));
             }
         }
+        displayAxisMapping = createDisplayAxisMapping(timeSeries);
+        validation.adaptTo(timeSeries, displayAxisMapping);
+
         updatePlot(hasData, timeSeries);
     }
 
@@ -315,13 +319,12 @@ class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandl
         }
 
         paintMap.clear();
-        displayAxisMapping = createDisplayAxisMapping(timeSeries);
         final Set<String> aliasNamesSet = displayAxisMapping.getAliasNames();
         final String[] aliasNames = aliasNamesSet.toArray(new String[aliasNamesSet.size()]);
 
         for (String aliasName : aliasNamesSet) {
-            consumeColors(aliasName, displayAxisMapping.getRasterNames(aliasName), IDENTIFIER_RASTER);
-            consumeColors(aliasName, displayAxisMapping.getInsituNames(aliasName), IDENTIFIER_INSITU);
+            consumeColors(aliasName, displayAxisMapping.getRasterNames(aliasName), QUALIFIER_RASTER);
+            consumeColors(aliasName, displayAxisMapping.getInsituNames(aliasName), QUALIFIER_INSITU);
         }
 
         for (int aliasIdx = 0; aliasIdx < aliasNames.length; aliasIdx++) {
@@ -362,7 +365,7 @@ class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandl
             final String[] rasterNames = rasterNamesSet.toArray(new String[rasterNamesSet.size()]);
 
             for (int i = 0; i < rasterNames.length; i++) {
-                final String paintKey = aliasName + IDENTIFIER_RASTER + rasterNames[i];
+                final String paintKey = aliasName + QUALIFIER_RASTER + rasterNames[i];
                 final Paint paint = paintMap.get(paintKey);
                 cursorRenderer.setSeriesPaint(i, paint);
                 pinRenderer.setSeriesPaint(i, paint);
@@ -372,7 +375,7 @@ class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandl
             final String[] insituNames = insituNamesSet.toArray(new String[insituNamesSet.size()]);
 
             for (int i = 0; i < insituNames.length; i++) {
-                final String paintKey = aliasName + IDENTIFIER_INSITU + insituNames[i];
+                final String paintKey = aliasName + QUALIFIER_INSITU + insituNames[i];
                 final Paint paint = paintMap.get(paintKey);
                 insituRenderer.setSeriesPaint(i, paint);
             }
@@ -514,6 +517,6 @@ class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandl
 
         boolean validate(double value, String sourceName, TimeSeriesType type);
 
-        void adaptTo(String[] rasterNames, String[] insituNames);
+        void adaptTo(Object timeSeriesKey, AxisMappingModel axisMappingModel);
     }
 }

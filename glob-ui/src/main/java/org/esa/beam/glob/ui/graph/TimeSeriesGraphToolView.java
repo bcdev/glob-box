@@ -63,12 +63,14 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
     private TimeSeriesGraphModel graphModel;
 
     private ProductSceneView currentView;
+    private final TimeSeriesValidator validator;
 
     public TimeSeriesGraphToolView() {
         pixelPosListener = new TimeSeriesPPL();
         pinSelectionListener = new PinSelectionListener();
         sliderListener = new SliderListener();
         timeSeriesGraphTSL = new TimeSeriesGraphTSL();
+        validator = new TimeSeriesValidator();
     }
 
     @Override
@@ -82,9 +84,8 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
                                                    DEFAULT_DOMAIN_LABEL,
                                                    DEFAULT_RANGE_LABEL,
                                                    null, displayLegend, showTooltips, showUrls);
-        final TimeSeriesValidator timeSeriesValidator = new TimeSeriesValidator();
-        graphModel = new TimeSeriesGraphModel(chart.getXYPlot(), timeSeriesValidator);
-        graphForm = new TimeSeriesGraphForm(graphModel, chart, timeSeriesValidator, getDescriptor().getHelpId());
+        graphModel = new TimeSeriesGraphModel(chart.getXYPlot(), validator);
+        graphForm = new TimeSeriesGraphForm(graphModel, chart, validator, getDescriptor().getHelpId());
 
         final VisatApp visatApp = VisatApp.getApp();
         visatApp.addInternalFrameListener(new TimeSeriesIFL());
