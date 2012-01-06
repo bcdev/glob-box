@@ -83,6 +83,7 @@ class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandl
     private final List<List<Band>> eoVariableBands;
     private final AtomicInteger version = new AtomicInteger(0);
     private final TimeSeriesGraphUpdater.WorkerChainSupport workerChainSupport;
+    private final Validation validation;
     private final WorkerChain workerChain;
     private final Map<String, Paint> paintMap = new HashMap<String, Paint>();
 
@@ -92,8 +93,9 @@ class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandl
     private AxisMappingModel displayAxisMapping;
     private boolean showCursorTimeSeries = true;
 
-    TimeSeriesGraphModel(XYPlot plot) {
+    TimeSeriesGraphModel(XYPlot plot, Validation validation) {
         timeSeriesPlot = plot;
+        this.validation = validation;
         eoVariableBands = new ArrayList<List<Band>>();
         displayControllerMap = new WeakHashMap<AbstractTimeSeries, TimeSeriesGraphDisplayController>();
         workerChainSupport = createWorkerChainSupport();
@@ -235,6 +237,11 @@ class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandl
                 }
             }
         }
+    }
+
+    @Override
+    public boolean isValid(double value, String dataSourceName, TimeSeriesType type) {
+        return validation.validate(value, dataSourceName, type);
     }
 
     @Override
@@ -501,5 +508,12 @@ class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandl
 
     private ProductSceneView getCurrentView() {
         return VisatApp.getApp().getSelectedProductSceneView();
+    }
+
+    static interface Validation {
+
+        boolean validate(double value, String sourceName, TimeSeriesType type);
+
+        void adaptTo(String[] rasterNames, String[] insituNames);
     }
 }

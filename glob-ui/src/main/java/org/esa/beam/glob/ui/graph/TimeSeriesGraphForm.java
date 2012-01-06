@@ -46,10 +46,13 @@ class TimeSeriesGraphForm {
     private AbstractButton showTimeSeriesForAllPinsButton;
     private AbstractButton exportTimeSeriesButton;
     private AbstractButton showCursorTimeSeriesButton;
+    private AbstractButton editValidExpressionButton;
     private TimeSeriesGraphModel graphModel;
+    private final ValidatorUI validatorUI;
 
-    TimeSeriesGraphForm(TimeSeriesGraphModel graphModel, JFreeChart chart, final String helpID) {
+    TimeSeriesGraphForm(TimeSeriesGraphModel graphModel, JFreeChart chart, ValidatorUI validatorUI, final String helpID) {
         this.graphModel = graphModel;
+        this.validatorUI = validatorUI;
         createUI(chart, helpID);
     }
 
@@ -117,6 +120,16 @@ class TimeSeriesGraphForm {
         showCursorTimeSeriesButton.setToolTipText("Show time series for cursor");
         showCursorTimeSeriesButton.setSelected(true);
         //////////////////////////////////////////
+        editValidExpressionButton = ToolButtonFactory.createButton(
+                UIUtils.loadImageIcon("icons/EditExpression24.gif"), false);
+        editValidExpressionButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                validatorUI.show();
+            }
+        });
+        editValidExpressionButton.setToolTipText("Edit valid expression");
+        //////////////////////////////////////////
         exportTimeSeriesButton = ToolButtonFactory.createButton(
                     UIUtils.loadImageIcon("icons/Export24.gif"),
                     false);
@@ -175,12 +188,15 @@ class TimeSeriesGraphForm {
     }
 
     void setButtonsEnabled(boolean enabled) {
-//        filterButton.setEnabled(enabled);
         showTimeSeriesForSelectedPinsButton.setEnabled(enabled);
         showTimeSeriesForAllPinsButton.setEnabled(enabled);
     }
 
     public void setExportEnabled(boolean placemarksSet) {
         exportTimeSeriesButton.setEnabled(placemarksSet);
+    }
+
+    static interface ValidatorUI {
+        void show();
     }
 }

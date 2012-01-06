@@ -1,8 +1,6 @@
 package time.series.chart;
 
-import com.bc.jexp.impl.NamespaceImpl;
-import com.bc.jexp.impl.ParserImpl;
-import com.bc.jexp.impl.SymbolFactory;
+import com.bc.jexp.ParseException;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -26,9 +24,9 @@ import java.awt.Shape;
 import java.awt.Stroke;
 import java.awt.event.ActionEvent;
 
-public class Main {
+public class TimeSeriesGraphMain {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws ParseException {
 
         TimeSeries s1 = new TimeSeries("L&G European Index Trust");
 
@@ -88,12 +86,6 @@ public class Main {
         s3.add(new Month(12, 2001), 10.3);
         s3.add(new Month(1, 2002), 11.7);
         s3.add(new Month(2, 2002), 11.0);
-
-
-        final NamespaceImpl namespace = new NamespaceImpl();
-        namespace.registerSymbol(SymbolFactory.createVariable("tsValue", 3.3));
-        final ParserImpl parser = new ParserImpl(namespace);
-
 
         TimeSeriesCollection dataset1 = new TimeSeriesCollection();
         dataset1.addSeries(s1);

@@ -104,7 +104,15 @@ class TimeSeriesGraphUpdater extends SwingWorker<List<TimeSeries>, Void> {
                     final List<Band> bandsForVariable = timeSeries.getBandsForVariable(rasterName);
                     final TimeSeries timeSeries = computeSingleTimeSeries(bandsForVariable, position.pixelX,
                             position.pixelY, position.currentLevel);
-                    rasterTimeSeries.add(timeSeries);
+                    final TimeSeries validatedTimeSeries = new TimeSeries(rasterName);
+                    for (int i = 0; i < timeSeries.getItemCount(); i++) {
+                        final TimeSeriesDataItem dataItem = timeSeries.getDataItem(i);
+                        final Number value = dataItem.getValue();
+                        if (dataHandler.isValid(value.doubleValue(), rasterName, type)) {
+                            validatedTimeSeries.add(dataItem);
+                        }
+                    }
+                    rasterTimeSeries.add(validatedTimeSeries);
                 }
             }
         }
@@ -160,9 +168,7 @@ class TimeSeriesGraphUpdater extends SwingWorker<List<TimeSeries>, Void> {
                         ProductData.UTC.UTC_TIME_ZONE,
                         Locale.getDefault());
                 final double value = getValue(band, pixelX, pixelY, currentLevel);
-                if (value != noDataValue) {
-                    timeSeries.add(new TimeSeriesDataItem(timePeriod, value));
-                }
+                timeSeries.add(new TimeSeriesDataItem(timePeriod, value));
             }
         }
         return timeSeries;
@@ -199,6 +205,7 @@ class TimeSeriesGraphUpdater extends SwingWorker<List<TimeSeries>, Void> {
     static interface TimeSeriesDataHandler {
 
         void addTimeSeries(List<TimeSeries> data, TimeSeriesType type);
+        boolean isValid(double value, String dataSourceName, TimeSeriesType type);
     }
 
     static interface WorkerChainSupport {

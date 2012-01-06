@@ -82,9 +82,9 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
                                                    DEFAULT_DOMAIN_LABEL,
                                                    DEFAULT_RANGE_LABEL,
                                                    null, displayLegend, showTooltips, showUrls);
-        graphModel = new TimeSeriesGraphModel(chart.getXYPlot());
-        graphForm = new TimeSeriesGraphForm(graphModel, chart,
-                getDescriptor().getHelpId());
+        final TimeSeriesValidator timeSeriesValidator = new TimeSeriesValidator();
+        graphModel = new TimeSeriesGraphModel(chart.getXYPlot(), timeSeriesValidator);
+        graphForm = new TimeSeriesGraphForm(graphModel, chart, timeSeriesValidator, getDescriptor().getHelpId());
 
         final VisatApp visatApp = VisatApp.getApp();
         visatApp.addInternalFrameListener(new TimeSeriesIFL());
