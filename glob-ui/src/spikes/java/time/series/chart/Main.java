@@ -1,5 +1,8 @@
 package time.series.chart;
 
+import com.bc.jexp.impl.NamespaceImpl;
+import com.bc.jexp.impl.ParserImpl;
+import com.bc.jexp.impl.SymbolFactory;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -77,14 +80,20 @@ public class Main {
         s3.add(new Month(4, 2001), 17.2);
         s3.add(new Month(5, 2001), 24.1);
         s3.add(new Month(6, 2001), 22.6);
-        s3.add(new Month(7, 2001), 19.2);
-        s3.add(new Month(8, 2001), 16.5);
+        s3.add(new Month(7, 2001), 0);
+        s3.add(new Month(8, 2001), 0);
         s3.add(new Month(9, 2001), 12.7);
-        s3.add(new Month(10, 2001), 1.5);
+        s3.add(new Month(10, 2001), 0);
         s3.add(new Month(11, 2001), 6.1);
         s3.add(new Month(12, 2001), 10.3);
         s3.add(new Month(1, 2002), 11.7);
         s3.add(new Month(2, 2002), 11.0);
+
+
+        final NamespaceImpl namespace = new NamespaceImpl();
+        namespace.registerSymbol(SymbolFactory.createVariable("tsValue", 3.3));
+        final ParserImpl parser = new ParserImpl(namespace);
+
 
         TimeSeriesCollection dataset1 = new TimeSeriesCollection();
         dataset1.addSeries(s1);
@@ -177,6 +186,7 @@ public class Main {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setVisible(true);
         frame.pack();
+
     }
 
     private static XYErrorRenderer createRenderer() {

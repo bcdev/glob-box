@@ -190,6 +190,9 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         @Override
         public void pixelPosChanged(ImageLayer imageLayer, int pixelX, int pixelY,
                                     int currentLevel, boolean pixelPosValid, MouseEvent e) {
+            if (!graphModel.isShowCursorTimeSeries()) {
+                return;
+            }
             if (pixelPosValid && isVisible() && currentView != null) {
                 final TimeSeriesGraphUpdater.Position position = new TimeSeriesGraphUpdater.Position(pixelX, pixelY, currentLevel);
                 graphModel.updateTimeSeries(position, TimeSeriesType.CURSOR);
@@ -205,8 +208,10 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
 
         @Override
         public void pixelPosNotAvailable() {
-            final AbstractTimeSeries timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(currentView.getProduct());
-            updateTimeSeries(timeSeries);
+            if (!graphModel.isShowCursorTimeSeries()) {
+                return;
+            }
+            graphModel.updateTimeSeries(null, TimeSeriesType.CURSOR);
         }
     }
 

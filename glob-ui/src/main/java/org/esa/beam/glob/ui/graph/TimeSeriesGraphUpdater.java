@@ -1,6 +1,5 @@
 package org.esa.beam.glob.ui.graph;
 
-import com.bc.ceres.core.Assert;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.framework.datamodel.ProductData;
@@ -38,10 +37,10 @@ class TimeSeriesGraphUpdater extends SwingWorker<List<TimeSeries>, Void> {
     private final VersionSafeDataSources dataSources;
     private final AxisMappingModel displayAxisMapping;
 
-    TimeSeriesGraphUpdater(AbstractTimeSeries timeSeries, VersionSafeDataSources dataSources, 
+    TimeSeriesGraphUpdater(AbstractTimeSeries timeSeries, VersionSafeDataSources dataSources,
                            TimeSeriesDataHandler dataHandler, AxisMappingModel displayAxisMapping,
-                           WorkerChainSupport workerChainSupport, Position cursorPosition, 
-                           PositionSupport positionSupport, TimeSeriesType type, boolean showCursorTimeSeries, 
+                           WorkerChainSupport workerChainSupport, Position cursorPosition,
+                           PositionSupport positionSupport, TimeSeriesType type, boolean showCursorTimeSeries,
                            int version) {
         super();
         this.timeSeries = timeSeries;
@@ -54,11 +53,6 @@ class TimeSeriesGraphUpdater extends SwingWorker<List<TimeSeries>, Void> {
         this.type = type;
         this.showCursorTimeSeries = showCursorTimeSeries;
         this.version = version;
-        if (TimeSeriesType.CURSOR.equals(type)) {
-            Assert.notNull(cursorPosition);
-        } else {
-            Assert.argument(cursorPosition == null);
-        }
     }
 
     @Override
@@ -96,7 +90,7 @@ class TimeSeriesGraphUpdater extends SwingWorker<List<TimeSeries>, Void> {
             for (NamedGeoPos namedGeoPos : pinPositionsToDisplay) {
                 positionsToDisplay.add(positionSupport.transformGeoPos(namedGeoPos.geopos));
             }
-        } else if(showCursorTimeSeries) {
+        } else if(showCursorTimeSeries && cursorPosition != null) {
             positionsToDisplay.add(cursorPosition);
         }
 

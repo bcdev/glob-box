@@ -68,8 +68,8 @@ class TimeSeriesGraphForm {
 
         ChartPanel chartPanel = new ChartPanel(chart);
         chartPanel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createBevelBorder(BevelBorder.LOWERED),
-                BorderFactory.createEmptyBorder(2, 2, 2, 2)));
+                    BorderFactory.createBevelBorder(BevelBorder.LOWERED),
+                    BorderFactory.createEmptyBorder(2, 2, 2, 2)));
         JPanel buttonPanel = createButtonPanel(helpID);
         mainPanel.add(chartPanel);
         mainPanel.add(buttonPanel);
@@ -77,7 +77,7 @@ class TimeSeriesGraphForm {
 
     private JPanel createButtonPanel(final String helpID) {
         showTimeSeriesForSelectedPinsButton = ToolButtonFactory.createButton(
-                UIUtils.loadImageIcon("icons/SelectedPinSpectra24.gif"), true);
+                    UIUtils.loadImageIcon("icons/SelectedPinSpectra24.gif"), true);
         showTimeSeriesForSelectedPinsButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -92,7 +92,7 @@ class TimeSeriesGraphForm {
         showTimeSeriesForSelectedPinsButton.setToolTipText("Show time series for selected pin");
         //////////////////////////////////////////
         showTimeSeriesForAllPinsButton = ToolButtonFactory.createButton(
-                UIUtils.loadImageIcon("icons/PinSpectra24.gif"), true);
+                    UIUtils.loadImageIcon("icons/PinSpectra24.gif"), true);
         showTimeSeriesForAllPinsButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -107,19 +107,22 @@ class TimeSeriesGraphForm {
         showTimeSeriesForAllPinsButton.setToolTipText("Show time series for all pins");
         //////////////////////////////////////////
         showCursorTimeSeriesButton = ToolButtonFactory.createButton(
-                UIUtils.loadImageIcon("icons/CursorSpectrum24.gif"), true);
+                    UIUtils.loadImageIcon("icons/CursorSpectrum24.gif"), true);
         showCursorTimeSeriesButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 graphModel.setIsShowingCursorTimeSeries(showCursorTimeSeriesButton.isSelected());
+                if (!showCursorTimeSeriesButton.isSelected()) {
+                    graphModel.updateTimeSeries(null, TimeSeriesType.CURSOR);
+                }
             }
         });
         showCursorTimeSeriesButton.setToolTipText("Show time series for cursor");
         showCursorTimeSeriesButton.setSelected(true);
         //////////////////////////////////////////
         exportTimeSeriesButton = ToolButtonFactory.createButton(
-                UIUtils.loadImageIcon("icons/Export24.gif"),
-                false);
+                    UIUtils.loadImageIcon("icons/Export24.gif"),
+                    false);
         exportTimeSeriesButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {

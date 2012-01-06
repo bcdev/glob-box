@@ -252,6 +252,10 @@ class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandl
         return isShowingAllPins;
     }
 
+    public boolean isShowCursorTimeSeries() {
+        return showCursorTimeSeries;
+    }
+
     private TimeSeriesGraphUpdater.WorkerChainSupport createWorkerChainSupport() {
         return new TimeSeriesGraphUpdater.WorkerChainSupport() {
             @Override
