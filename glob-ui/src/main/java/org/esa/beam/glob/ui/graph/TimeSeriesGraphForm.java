@@ -112,9 +112,6 @@ class TimeSeriesGraphForm {
             @Override
             public void actionPerformed(ActionEvent e) {
                 graphModel.setIsShowingCursorTimeSeries(showCursorTimeSeriesButton.isSelected());
-                if (!showCursorTimeSeriesButton.isSelected()) {
-                    graphModel.updateTimeSeries(null, TimeSeriesType.CURSOR);
-                }
             }
         });
         showCursorTimeSeriesButton.setToolTipText("Show time series for cursor");
