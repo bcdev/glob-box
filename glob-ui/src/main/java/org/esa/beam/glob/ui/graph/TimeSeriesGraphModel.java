@@ -236,11 +236,12 @@ class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandl
                 final XYItemRenderer renderer = timeSeriesPlot.getRenderer(targetCollectionIndex);
                 final int dataSourceCount = getDataSourceCount(type, aliasNames[aliasIdx]);
                 for (int ignoredIndex = 0; ignoredIndex < dataSourceCount; ignoredIndex++) {
-                    targetTimeSeriesCollection.addSeries(timeSeriesList.get(timeSeriesIndexOffset));
+                    final TimeSeries currentTimeSeries = timeSeriesList.get(timeSeriesIndexOffset);
+                    targetTimeSeriesCollection.addSeries(currentTimeSeries);
                     final int timeSeriesTargetIdx = targetTimeSeriesCollection.getSeriesCount() - 1;
                     renderer.setSeriesShape(timeSeriesTargetIdx, posShape);
                     renderer.setSeriesPaint(timeSeriesTargetIdx, renderer.getSeriesPaint(timeSeriesTargetIdx % dataSourceCount));
-                    renderer.setSeriesVisibleInLegend(timeSeriesTargetIdx, !timeSeriesList.get(timeSeriesIndexOffset).isEmpty());
+                    renderer.setSeriesVisibleInLegend(timeSeriesTargetIdx, !currentTimeSeries.isEmpty());
                     timeSeriesIndexOffset++;
                 }
             }
