@@ -21,7 +21,7 @@ package org.esa.beam.glob.ui.graph;
  *
  * @author Thomas Storm
  */
-public enum TimeSeriesType {
+enum TimeSeriesType {
 
     CURSOR,
     PIN,

@@ -52,20 +52,21 @@ import java.util.Set;
  */
 class TimeSeriesValidator implements TimeSeriesGraphForm.ValidatorUI, TimeSeriesGraphModel.Validation {
 
-    private List<String> rasterNames;
-    private List<String> insituNames;
-    private Parser parser;
-    private Map<String, String> currentExpressionMap;
-    private JComboBox sourceNamesDropDown;
-    private JTextField expressionField;
-    private boolean hasUI = false;
+    private static final String QUALIFIER_RASTER = "r.";
+    private static final String QUALIFIER_INSITU = "i.";
+
     private final DefaultNamespace namespace = new DefaultNamespace();
     private final Map<Object, Map<String, String>> timeSeriesExpressionsMap = new HashMap<Object, Map<String, String>>();
     private final Set<TimeSeriesGraphModel.ValidationListener> validationListeners = new HashSet<TimeSeriesGraphModel.ValidationListener>();
+    private final Parser parser = new ParserImpl();
 
-    TimeSeriesValidator() {
-        parser = new ParserImpl();
-    }
+    private Map<String, String> currentExpressionMap;
+    private List<String> rasterNames;
+    private List<String> insituNames;
+    private JComboBox sourceNamesDropDown;
+    private JTextField expressionField;
+
+    private boolean hasUI = false;
 
     @Override
     public JComponent makeUI() {
@@ -75,16 +76,17 @@ class TimeSeriesValidator implements TimeSeriesGraphForm.ValidatorUI, TimeSeries
 
         expressionField = new JTextField("true");
 
-        final JLabel expressionErrorIndicator = new JLabel();
-        expressionErrorIndicator.setPreferredSize(new Dimension(95, 20));
-        expressionErrorIndicator.setForeground(Color.red.darker());
+        final JLabel expressionErrorLabel = new JLabel();
+        expressionErrorLabel.setPreferredSize(new Dimension(95, 20));
+        expressionErrorLabel.setForeground(Color.red.darker());
 
         sourceNamesDropDown = new JComboBox();
-        sourceNamesDropDown.setPreferredSize(new Dimension(100, 20));
+        sourceNamesDropDown.setPreferredSize(new Dimension(120, 20));
         sourceNamesDropDown.addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(ItemEvent e) {
-                if (e.getStateChange() == ItemEvent.SELECTED) {
+                final boolean isItemSelected = e.getStateChange() == ItemEvent.SELECTED;
+                if (isItemSelected) {
                     final String selectedSourceName = e.getItem().toString();
                     if (!currentExpressionMap.containsKey(selectedSourceName)) {
                         setExpression(selectedSourceName, "true");
@@ -101,10 +103,9 @@ class TimeSeriesValidator implements TimeSeriesGraphForm.ValidatorUI, TimeSeries
                 final String selectedSourceName = sourceNamesDropDown.getSelectedItem().toString();
                 final boolean hasSet = setExpression(selectedSourceName, expression);
                 if (hasSet) {
-                    expressionErrorIndicator.setText("");
-                    fireExpressionChanged();
+                    expressionErrorLabel.setText("");
                 } else {
-                    expressionErrorIndicator.setText("Invalid expression.");
+                    expressionErrorLabel.setText("Invalid expression.");
                 }
             }
         });
@@ -117,7 +118,7 @@ class TimeSeriesValidator implements TimeSeriesGraphForm.ValidatorUI, TimeSeries
         innerPanel.add(sourceNamesDropDown, BorderLayout.WEST);
         innerPanel.add(expressionField);
         ui.add(innerPanel);
-        ui.add(expressionErrorIndicator, BorderLayout.EAST);
+        ui.add(expressionErrorLabel, BorderLayout.EAST);
         hasUI = true;
         return ui;
     }
@@ -126,9 +127,9 @@ class TimeSeriesValidator implements TimeSeriesGraphForm.ValidatorUI, TimeSeries
     public boolean validate(double value, String sourceName, TimeSeriesType type) throws ParseException {
         String sourceIdentifier;
         if (TimeSeriesType.INSITU.equals(type)) {
-            sourceIdentifier = TimeSeriesGraphModel.QUALIFIER_INSITU + sourceName;
+            sourceIdentifier = QUALIFIER_INSITU + sourceName;
         } else {
-            sourceIdentifier = TimeSeriesGraphModel.QUALIFIER_RASTER + sourceName;
+            sourceIdentifier = QUALIFIER_RASTER + sourceName;
         }
         final Symbol symbol = namespace.resolveSymbol(sourceIdentifier);
         if (symbol == null) {
@@ -154,8 +155,8 @@ class TimeSeriesValidator implements TimeSeriesGraphForm.ValidatorUI, TimeSeries
             namespace.deregisterSymbol(symbol);
         }
         for (String alias : axisMappingModel.getAliasNames()) {
-            adaptToSourceNames(axisMappingModel.getInsituNames(alias), TimeSeriesGraphModel.QUALIFIER_INSITU, insituNames);
-            adaptToSourceNames(axisMappingModel.getRasterNames(alias), TimeSeriesGraphModel.QUALIFIER_RASTER, rasterNames);
+            adaptToSourceNames(axisMappingModel.getInsituNames(alias), QUALIFIER_INSITU, insituNames);
+            adaptToSourceNames(axisMappingModel.getRasterNames(alias), QUALIFIER_RASTER, rasterNames);
         }
 
         final String[] sourceNames = getSourceNames();
@@ -182,8 +183,11 @@ class TimeSeriesValidator implements TimeSeriesGraphForm.ValidatorUI, TimeSeries
                 expression = "true";
             }
             currentExpressionMap.put(qualifiedSourceName, expression);
+            fireExpressionChanged();
             return true;
         }
+        currentExpressionMap.put(qualifiedSourceName, "true");
+        fireExpressionChanged();
         return false;
     }
 
@@ -196,7 +200,7 @@ class TimeSeriesValidator implements TimeSeriesGraphForm.ValidatorUI, TimeSeries
             expressionValidationNamespace.registerSymbol(SymbolFactory.createVariable(selectedSourceName, 0.0));
             parser.parse(expression, expressionValidationNamespace);
             return true;
-        } catch (ParseException e) {
+        } catch (ParseException ignored) {
             return false;
         }
     }

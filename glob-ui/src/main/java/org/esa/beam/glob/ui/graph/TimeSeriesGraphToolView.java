@@ -35,12 +35,10 @@ import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.XYPlot;
 
-import javax.swing.AbstractAction;
 import javax.swing.JComponent;
 import javax.swing.event.InternalFrameAdapter;
 import javax.swing.event.InternalFrameEvent;
 import java.awt.Container;
-import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -156,15 +154,6 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         graphModel.adaptToTimeSeries(timeSeries);
         graphModel.updateTimeSeries(null, TimeSeriesType.INSITU);
         graphModel.updateTimeSeries(null, TimeSeriesType.PIN);
-    }
-
-    private class ShowPinAction extends AbstractAction {
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            graphModel.updateTimeSeries(null, TimeSeriesType.PIN);
-            graphModel.updateTimeSeries(null, TimeSeriesType.INSITU);
-        }
     }
 
     private class TimeSeriesIFL extends InternalFrameAdapter {

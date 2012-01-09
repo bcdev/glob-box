@@ -68,8 +68,8 @@ import java.util.logging.Level;
 
 class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandler, TimeSeriesGraphDisplayController.PinSupport {
 
-    static final String QUALIFIER_RASTER = "r.";
-    static final String QUALIFIER_INSITU = "i.";
+    private static final String QUALIFIER_RASTER = "_r_";
+    private static final String QUALIFIER_INSITU = "_i_";
 
     private static final Color DEFAULT_FOREGROUND_COLOR = Color.BLACK;
     private static final Color DEFAULT_BACKGROUND_COLOR = new Color(180, 180, 180);
