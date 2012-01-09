@@ -83,18 +83,11 @@ public class ExpressionDialog {
 
     final static class MyExpressionPane extends ExpressionPane {
 
-        /**
-         * Constructs a new expression pane.
-         *
-         * @param requiresBoolExpr if <code>true</code> the expressions are checked to return a boolean value.
-         * @param parser           the parser used to check expression syntax
-         * @param preferences      a property map which stores expression pane related properties such as the code history
-         */
-        public MyExpressionPane(boolean requiresBoolExpr, Parser parser, PropertyMap preferences) {
+        MyExpressionPane(boolean requiresBoolExpr, Parser parser, PropertyMap preferences) {
             super(requiresBoolExpr, parser, preferences);
         }
 
-        public void displayPatternInsertionPane() {
+        void displayPatternInsertionPane() {
             final JList bandList = createPatternList(new String[]{"tsValue", "band_2"});
             final JList insituList = createPatternList(new String[]{"insitu1", "insitu2"});
 
