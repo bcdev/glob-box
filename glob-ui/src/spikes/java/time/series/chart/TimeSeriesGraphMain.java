@@ -4,8 +4,6 @@ import com.bc.jexp.ParseException;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
-import org.jfree.chart.LegendItem;
-import org.jfree.chart.LegendItemCollection;
 import org.jfree.chart.event.ChartChangeEvent;
 import org.jfree.chart.event.ChartChangeEventType;
 import org.jfree.chart.event.ChartChangeListener;
@@ -158,11 +156,6 @@ public class TimeSeriesGraphMain {
         renderer2.setSeriesShapesVisible(1, true);
         renderer2.setSeriesStroke(1, new BasicStroke());
         renderer2.setSeriesPaint(1, Color.ORANGE);
-
-
-        final LegendItemCollection legendItems = plot.getLegendItems();
-        final LegendItem legendItem = legendItems.get(0);
-
 
         final Action addInsituAction = new AbstractAction("Add Insitu Time Serie") {
             @Override

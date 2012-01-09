@@ -127,7 +127,7 @@ class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandl
         displayAxisMapping = createDisplayAxisMapping(timeSeries);
         validation.adaptTo(timeSeries, displayAxisMapping);
 
-        updatePlot(hasData, timeSeries);
+        updatePlot(hasData);
     }
 
     AtomicInteger getVersion() {
@@ -240,6 +240,7 @@ class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandl
                     final int timeSeriesTargetIdx = targetTimeSeriesCollection.getSeriesCount() - 1;
                     renderer.setSeriesShape(timeSeriesTargetIdx, posShape);
                     renderer.setSeriesPaint(timeSeriesTargetIdx, renderer.getSeriesPaint(timeSeriesTargetIdx % dataSourceCount));
+                    renderer.setSeriesVisibleInLegend(timeSeriesTargetIdx, !timeSeriesList.get(timeSeriesIndexOffset).isEmpty());
                     timeSeriesIndexOffset++;
                 }
             }
@@ -316,7 +317,7 @@ class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandl
         timeSeriesPlot.setDrawingSupplier(null);
     }
 
-    private void updatePlot(boolean hasData, AbstractTimeSeries timeSeries) {
+    private void updatePlot(boolean hasData) {
         for (int i = 0; i < timeSeriesPlot.getDatasetCount(); i++) {
             timeSeriesPlot.setDataset(i, null);
         }
