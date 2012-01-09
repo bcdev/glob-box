@@ -20,7 +20,7 @@ import org.esa.beam.framework.ui.assistant.AssistantPane;
 import org.esa.beam.framework.ui.command.CommandEvent;
 import org.esa.beam.visat.actions.AbstractVisatAction;
 
-public abstract class AbstractTimeSeriesAssistantAction extends AbstractVisatAction {
+abstract class AbstractTimeSeriesAssistantAction extends AbstractVisatAction {
 
     @Override
     public void actionPerformed(CommandEvent event) {
