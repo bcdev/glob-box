@@ -4,8 +4,16 @@ import com.bc.jexp.ParseException;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.LegendItem;
+import org.jfree.chart.LegendItemCollection;
+import org.jfree.chart.event.ChartChangeEvent;
+import org.jfree.chart.event.ChartChangeEventType;
+import org.jfree.chart.event.ChartChangeListener;
+import org.jfree.chart.event.TitleChangeEvent;
+import org.jfree.chart.event.TitleChangeListener;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYErrorRenderer;
+import org.jfree.chart.title.Title;
 import org.jfree.data.time.Month;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
@@ -19,16 +27,13 @@ import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.FlowLayout;
-import java.awt.Rectangle;
-import java.awt.Shape;
-import java.awt.Stroke;
 import java.awt.event.ActionEvent;
 
 public class TimeSeriesGraphMain {
 
     public static void main(String[] args) throws ParseException {
 
-        TimeSeries s1 = new TimeSeries("L&G European Index Trust");
+        final TimeSeries s1 = new TimeSeries("L&G European Index Trust");
 
         s1.add(new Month(2, 2001), 181.8);
         s1.add(new Month(3, 2001), 167.3);
@@ -52,7 +57,10 @@ public class TimeSeriesGraphMain {
         s1.add(new Month(6, 2002), 137.0);
         s1.add(new Month(7, 2002), 132.8);
 
-        TimeSeries s2 = new TimeSeries("L&G UK Index Trust");
+        final TimeSeries insituEmpty = new TimeSeries("insitu empty");
+
+        final TimeSeries s2 = new TimeSeries("L&G UK Index Trust");
+
         s2.add(new Month(2, 2001), 129.6);
         s2.add(new Month(3, 2001), 123.2);
         s2.add(new Month(4, 2001), 117.2);
@@ -72,7 +80,8 @@ public class TimeSeriesGraphMain {
         s2.add(new Month(6, 2002), 108.8);
         s2.add(new Month(7, 2002), 101.6);
 
-        TimeSeries s3 = new TimeSeries("L&G UK Index Trust_blah");
+        final TimeSeries s3 = new TimeSeries("L&G UK Index Trust_blah");
+
         s3.add(new Month(2, 2001), 29.6);
         s3.add(new Month(3, 2001), 23.2);
         s3.add(new Month(4, 2001), 17.2);
@@ -87,8 +96,10 @@ public class TimeSeriesGraphMain {
         s3.add(new Month(1, 2002), 11.7);
         s3.add(new Month(2, 2002), 11.0);
 
-        TimeSeriesCollection dataset1 = new TimeSeriesCollection();
+        final TimeSeriesCollection dataset1 = new TimeSeriesCollection();
         dataset1.addSeries(s1);
+        dataset1.addSeries(insituEmpty);
+
         final TimeSeriesCollection dataset2 = new TimeSeriesCollection();
         dataset2.addSeries(s2);
         dataset2.addSeries(s3);
@@ -104,6 +115,21 @@ public class TimeSeriesGraphMain {
                     false // url's
         );
 
+        timeSeriesChart.getLegend().addChangeListener(new TitleChangeListener() {
+            @Override
+            public void titleChanged(TitleChangeEvent event) {
+                final Title title = event.getTitle();
+            }
+        });
+
+        timeSeriesChart.addChangeListener(new ChartChangeListener() {
+            @Override
+            public void chartChanged(ChartChangeEvent event) {
+                //Todo change body of created method. Use File | Settings | File Templates to change
+                final ChartChangeEventType chartChangeEventType = event.getType();
+            }
+        });
+
         final XYPlot plot = timeSeriesChart.getXYPlot();
         plot.setDataset(0, dataset1);
         plot.setDataset(1, dataset2);
@@ -111,49 +137,32 @@ public class TimeSeriesGraphMain {
 //        final XYLineAndShapeRenderer renderer = (XYLineAndShapeRenderer) plot.getRendererForDataset(dataset);
 
         final XYErrorRenderer renderer1 = createRenderer();
-        renderer1.setDrawXError(false);
-//        renderer1.setSeriesLinesVisible(0, true);
-//        renderer1.setSeriesShapesVisible(0, true);
-//        renderer1.setSeriesStroke(0, new BasicStroke(1.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 10.0f,
-//                new float[]{10.0f}, 0.0f));
-//        renderer1.setSeriesPaint(0, Color.CYAN);
-//        renderer1.setSeriesShape(0, new Ellipse2D.Double(-5, -5, 10, 10));
-//        renderer1.setSeriesShapesFilled(0, false);
+        plot.setRenderer(0, renderer1);
+        final XYErrorRenderer renderer2 = createRenderer();
+        plot.setRenderer(1, renderer2);
 
+
+        renderer1.setDrawXError(false);
+        renderer1.setDrawYError(false);
         renderer1.setSeriesPaint(0, Color.BLACK);
         renderer1.setBaseLinesVisible(false);
         renderer1.setBaseShapesFilled(false);
-        renderer1.setBaseStroke(new Stroke() {
-            @Override
-            public Shape createStrokedShape(Shape p) {
-                return new Rectangle(0, 0);
-            }
-        });
+        renderer1.setSeriesVisibleInLegend(1, false);
 
-        plot.setRenderer(0, renderer1);
-
-        final XYErrorRenderer renderer2 = createRenderer();
         renderer2.setDrawXError(false);
         renderer2.setSeriesLinesVisible(0, true);
         renderer2.setSeriesShapesVisible(0, true);
         renderer2.setSeriesStroke(0, new BasicStroke());
         renderer2.setSeriesPaint(0, Color.GREEN);
-//        renderer1.setBaseShape(new Ellipse2D.Double(-5, -5, 10, 10));
-//        renderer1.setBaseShapesFilled(false);
         renderer2.setSeriesLinesVisible(1, true);
         renderer2.setSeriesShapesVisible(1, true);
         renderer2.setSeriesStroke(1, new BasicStroke());
         renderer2.setSeriesPaint(1, Color.ORANGE);
-//        renderer1.setBaseShape(new Ellipse2D.Double(-5, -5, 10, 10));
-//        renderer1.setBaseShapesFilled(false);
-
-        plot.setRenderer(1, renderer2);
 
 
-//        renderer.setSeriesShape(0, new Ellipse2D.Double(-4,-4,8,8));
+        final LegendItemCollection legendItems = plot.getLegendItems();
+        final LegendItem legendItem = legendItems.get(0);
 
-
-        plot.getSeriesCount();
 
         final Action addInsituAction = new AbstractAction("Add Insitu Time Serie") {
             @Override
