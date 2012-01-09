@@ -31,32 +31,32 @@ public class TimeSeriesValidatorTest {
 
     @Test(expected = ParseException.class)
     public void testValidateWithWrongType() throws Exception {
-        validator.setExpression("raster1", "raster1 groesserAls 5", TimeSeriesType.INSITU);
+        validator.setExpression("r.raster1", "raster1 groesserAls 5");
         validator.validate(0.0, "raster1", TimeSeriesType.INSITU);
     }
 
     @Test
     public void testValidate() throws Exception {
-        validator.setExpression("raster1", "r.raster1 > 5", TimeSeriesType.CURSOR);
+        validator.setExpression("r.raster1", "r.raster1 > 5");
         assertFalse(validator.validate(4.9, "raster1", TimeSeriesType.CURSOR));
         assertTrue(validator.validate(5.1, "raster1", TimeSeriesType.CURSOR));
     }
 
     @Test
     public void testThatValidatorIsCorrectlyInitialized() throws Exception {
-        validator.setExpression("raster1", "r.raster1 > 5", TimeSeriesType.CURSOR);
+        validator.setExpression("r.raster1", "r.raster1 > 5");
     }
 
     @Test
     public void testRepeatedAdapting() throws Exception {
-        validator.setExpression("raster1", "r.raster1 >5", TimeSeriesType.CURSOR);
+        validator.setExpression("r.raster1", "r.raster1 >5");
         assertTrue( validator.validate(6, "raster1", TimeSeriesType.CURSOR));
         assertFalse(validator.validate(4, "raster1", TimeSeriesType.CURSOR));
 
         validator.adaptTo("key2", new AxisMappingModel());
-        validator.setExpression("raster1", "r.raster1 > 5", TimeSeriesType.CURSOR);
+        validator.setExpression("r.raster1", "r.raster1 > 5");
         try {
-            validator.validate(6, "raster1", TimeSeriesType.CURSOR);
+            validator.validate(6.0, "r.raster1", TimeSeriesType.CURSOR);
             fail();
         } catch (ParseException expected) {
         }
@@ -65,8 +65,19 @@ public class TimeSeriesValidatorTest {
         assertTrue( validator.validate(6, "raster1", TimeSeriesType.CURSOR));
         assertFalse(validator.validate(4, "raster1", TimeSeriesType.CURSOR));
 
-        validator.setExpression("raster1", "r.raster1 < 3", TimeSeriesType.CURSOR);
+        validator.setExpression("r.raster1", "r.raster1 < 3");
         assertTrue( validator.validate(2, "raster1", TimeSeriesType.CURSOR));
         assertFalse(validator.validate(4, "raster1", TimeSeriesType.CURSOR));
+    }
+
+    @Test
+    public void testInvalidIfExpressionEqualsSourceName() throws Exception {
+        assertFalse(validator.setExpression("r.raster1", "r.raster1"));
+    }
+
+    @Test
+    public void testEmptyExpression() throws Exception {
+        assertTrue(validator.setExpression("raster1", ""));
+        assertTrue(validator.validate(-1, "raster1", TimeSeriesType.CURSOR));
     }
 }

@@ -66,7 +66,6 @@ import java.util.WeakHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 
-
 class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandler, TimeSeriesGraphDisplayController.PinSupport {
 
     static final String QUALIFIER_RASTER = "r.";
@@ -100,6 +99,13 @@ class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandl
     TimeSeriesGraphModel(XYPlot plot, Validation validation) {
         timeSeriesPlot = plot;
         this.validation = validation;
+        validation.addValidationListener(new ValidationListener() {
+            @Override
+            public void expressionChanged() {
+                updateTimeSeries(null, TimeSeriesType.INSITU);
+                updateTimeSeries(null, TimeSeriesType.PIN);
+            }
+        });
         eoVariableBands = new ArrayList<List<Band>>();
         displayControllerMap = new WeakHashMap<AbstractTimeSeries, TimeSeriesGraphDisplayController>();
         workerChainSupport = createWorkerChainSupport();
@@ -196,6 +202,10 @@ class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandl
         workerChain.setOrExecuteNextWorker(w, chained);
     }
 
+    boolean isShowCursorTimeSeries() {
+        return showCursorTimeSeries;
+    }
+
     @Override
     public void addTimeSeries(List<TimeSeries> timeSeriesList, TimeSeriesType type) {
         final int timeSeriesCount;
@@ -271,10 +281,6 @@ class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandl
     @Override
     public boolean isShowingAllPins() {
         return isShowingAllPins;
-    }
-
-    public boolean isShowCursorTimeSeries() {
-        return showCursorTimeSeries;
     }
 
     private TimeSeriesGraphUpdater.WorkerChainSupport createWorkerChainSupport() {
@@ -523,10 +529,18 @@ class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandl
         return VisatApp.getApp().getSelectedProductSceneView();
     }
 
+    static interface ValidationListener {
+        void expressionChanged();
+    }
+
     static interface Validation {
 
         boolean validate(double value, String sourceName, TimeSeriesType type) throws ParseException;
 
         void adaptTo(Object timeSeriesKey, AxisMappingModel axisMappingModel);
+
+        void addValidationListener(ValidationListener listener);
+
+        void removeValidationListener(ValidationListener listener);
     }
 }

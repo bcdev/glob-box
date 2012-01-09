@@ -46,7 +46,6 @@ class TimeSeriesGraphForm {
     private AbstractButton showTimeSeriesForAllPinsButton;
     private AbstractButton exportTimeSeriesButton;
     private AbstractButton showCursorTimeSeriesButton;
-    private AbstractButton editValidExpressionButton;
     private TimeSeriesGraphModel graphModel;
     private final ValidatorUI validatorUI;
 
@@ -64,6 +63,9 @@ class TimeSeriesGraphForm {
         tableLayout.setTableWeightY(1.0);
         tableLayout.setColumnWeightX(0, 1.0);
         tableLayout.setColumnWeightX(1, 0.0);
+        tableLayout.setRowWeightY(0, 1.0);
+        tableLayout.setRowWeightY(1, 0.0);
+        tableLayout.setCellColspan(1, 0, 2);
 
         mainPanel = new JPanel(tableLayout);
         mainPanel.setPreferredSize(new Dimension(320, 200));
@@ -76,6 +78,7 @@ class TimeSeriesGraphForm {
         JPanel buttonPanel = createButtonPanel(helpID);
         mainPanel.add(chartPanel);
         mainPanel.add(buttonPanel);
+        mainPanel.add(validatorUI.makeUI());
     }
 
     private JPanel createButtonPanel(final String helpID) {
@@ -119,16 +122,6 @@ class TimeSeriesGraphForm {
         });
         showCursorTimeSeriesButton.setToolTipText("Show time series for cursor");
         showCursorTimeSeriesButton.setSelected(true);
-        //////////////////////////////////////////
-        editValidExpressionButton = ToolButtonFactory.createButton(
-                UIUtils.loadImageIcon("icons/EditExpression24.gif"), false);
-        editValidExpressionButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                validatorUI.show();
-            }
-        });
-        editValidExpressionButton.setToolTipText("Edit valid expression");
         //////////////////////////////////////////
         exportTimeSeriesButton = ToolButtonFactory.createButton(
                     UIUtils.loadImageIcon("icons/Export24.gif"),
@@ -197,6 +190,6 @@ class TimeSeriesGraphForm {
     }
 
     static interface ValidatorUI {
-        void show();
+        JComponent makeUI();
     }
 }

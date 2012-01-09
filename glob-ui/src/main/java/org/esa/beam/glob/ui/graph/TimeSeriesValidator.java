@@ -24,23 +24,27 @@ import com.bc.jexp.Variable;
 import com.bc.jexp.impl.DefaultNamespace;
 import com.bc.jexp.impl.ParserImpl;
 import com.bc.jexp.impl.SymbolFactory;
-import org.esa.beam.framework.ui.ExpressionPane;
-import org.esa.beam.framework.ui.ModalDialog;
 import org.esa.beam.glob.core.timeseries.datamodel.AxisMappingModel;
-import org.esa.beam.util.PropertyMap;
-import org.esa.beam.util.logging.BeamLogManager;
-import org.esa.beam.visat.VisatApp;
 
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
-import javax.swing.JList;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import java.awt.GridLayout;
+import javax.swing.JTextField;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
+import java.util.Set;
 
 /**
  * @author Sabine Embacher
@@ -50,45 +54,84 @@ class TimeSeriesValidator implements TimeSeriesGraphForm.ValidatorUI, TimeSeries
 
     private List<String> rasterNames;
     private List<String> insituNames;
-    private MyExpressionPane expressionPane;
     private Parser parser;
-    private Map<Object, Map<String, String>> timeSeriesExpressionsMap = new HashMap<Object, Map<String, String>>();
     private Map<String, String> currentExpressionMap;
-    private DefaultNamespace namespace;
-    private final Term trueTerm;
+    private JComboBox sourceNamesDropDown;
+    private JTextField expressionField;
+    private boolean hasUI = false;
+    private final DefaultNamespace namespace = new DefaultNamespace();
+    private final Map<Object, Map<String, String>> timeSeriesExpressionsMap = new HashMap<Object, Map<String, String>>();
+    private final Set<TimeSeriesGraphModel.ValidationListener> validationListeners = new HashSet<TimeSeriesGraphModel.ValidationListener>();
 
     TimeSeriesValidator() {
         parser = new ParserImpl();
-        trueTerm = createTrueTerm();
     }
 
     @Override
-    public void show() {
-        final PropertyMap preferences = new PropertyMap();
-        expressionPane = new MyExpressionPane(true, parser, preferences, rasterNames, insituNames);
-        expressionPane.displayPatternInsertionPane();
-        final ModalDialog modalDialog = new ModalDialog(VisatApp.getApp().getMainFrame(),
-                                                        "Edit valid expression", ModalDialog.ID_OK_CANCEL, "") {
+    public JComponent makeUI() {
+        JPanel ui = new JPanel(new BorderLayout(5, 0));
+
+        final JLabel introductionLabel = new JLabel("Valid expression:");
+
+        expressionField = new JTextField("true");
+
+        final JLabel expressionErrorIndicator = new JLabel();
+        expressionErrorIndicator.setPreferredSize(new Dimension(95, 20));
+        expressionErrorIndicator.setForeground(Color.red.darker());
+
+        sourceNamesDropDown = new JComboBox();
+        sourceNamesDropDown.setPreferredSize(new Dimension(100, 20));
+        sourceNamesDropDown.addItemListener(new ItemListener() {
             @Override
-            protected void onOK() {
-                super.onOK();
-//                setExpression("", expressionPane.getCode(), null);
+            public void itemStateChanged(ItemEvent e) {
+                if (e.getStateChange() == ItemEvent.SELECTED) {
+                    final String selectedSourceName = e.getItem().toString();
+                    if (!currentExpressionMap.containsKey(selectedSourceName)) {
+                        setExpression(selectedSourceName, "true");
+                    }
+                    expressionField.setText(currentExpressionMap.get(selectedSourceName));
+                }
             }
-        };
-        modalDialog.setContent(expressionPane);
-        modalDialog.show();
+        });
+
+        expressionField.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyReleased(KeyEvent e) {
+                String expression = expressionField.getText();
+                final String selectedSourceName = sourceNamesDropDown.getSelectedItem().toString();
+                final boolean hasSet = setExpression(selectedSourceName, expression);
+                if (hasSet) {
+                    expressionErrorIndicator.setText("");
+                    fireExpressionChanged();
+                } else {
+                    expressionErrorIndicator.setText("Invalid expression.");
+                }
+            }
+        });
+
+        sourceNamesDropDown.setEnabled(false);
+        expressionField.setEnabled(false);
+
+        ui.add(introductionLabel, BorderLayout.WEST);
+        final JPanel innerPanel = new JPanel(new BorderLayout(5, 0));
+        innerPanel.add(sourceNamesDropDown, BorderLayout.WEST);
+        innerPanel.add(expressionField);
+        ui.add(innerPanel);
+        ui.add(expressionErrorIndicator, BorderLayout.EAST);
+        hasUI = true;
+        return ui;
     }
 
     @Override
     public boolean validate(double value, String sourceName, TimeSeriesType type) throws ParseException {
         String sourceIdentifier;
-        if(TimeSeriesType.INSITU.equals(type)) {
+        if (TimeSeriesType.INSITU.equals(type)) {
             sourceIdentifier = TimeSeriesGraphModel.QUALIFIER_INSITU + sourceName;
         } else {
             sourceIdentifier = TimeSeriesGraphModel.QUALIFIER_RASTER + sourceName;
         }
         final Symbol symbol = namespace.resolveSymbol(sourceIdentifier);
-        if(symbol == null) {
+        if (symbol == null) {
             throw new ParseException("No variable for identifier '" + sourceIdentifier + "' registered.");
         }
         ((Variable) symbol).assignD(null, value);
@@ -105,67 +148,84 @@ class TimeSeriesValidator implements TimeSeriesGraphForm.ValidatorUI, TimeSeries
             currentExpressionMap = new HashMap<String, String>();
             timeSeriesExpressionsMap.put(timeSeriesKey, currentExpressionMap);
         }
-        namespace = new DefaultNamespace();
         rasterNames = new ArrayList<String>();
         insituNames = new ArrayList<String>();
+        for (Symbol symbol : namespace.getAllSymbols()) {
+            namespace.deregisterSymbol(symbol);
+        }
         for (String alias : axisMappingModel.getAliasNames()) {
             adaptToSourceNames(axisMappingModel.getInsituNames(alias), TimeSeriesGraphModel.QUALIFIER_INSITU, insituNames);
             adaptToSourceNames(axisMappingModel.getRasterNames(alias), TimeSeriesGraphModel.QUALIFIER_RASTER, rasterNames);
         }
-    }
 
-    void setExpression(String sourceName, String expression, TimeSeriesType type) {
-        final String qualifiedSourceName;
-        if (TimeSeriesType.INSITU.equals(type)) {
-            qualifiedSourceName = TimeSeriesGraphModel.QUALIFIER_INSITU + sourceName;
-        } else {
-            qualifiedSourceName = TimeSeriesGraphModel.QUALIFIER_RASTER + sourceName;
+        final String[] sourceNames = getSourceNames();
+        if(sourceNames.length > 0 && hasUI) {
+            expressionField.setEnabled(true);
+            sourceNamesDropDown.setEnabled(true);
+            sourceNamesDropDown.setModel(new DefaultComboBoxModel(sourceNames));
         }
-        currentExpressionMap.put(qualifiedSourceName, expression);
     }
 
-    private void adaptToSourceNames(final List<String> sourceNames, final String qualifier, List<String> qualifiedSourcNames) {
+    @Override
+    public void addValidationListener(TimeSeriesGraphModel.ValidationListener listener) {
+        validationListeners.add(listener);
+    }
+    
+    @Override
+    public void removeValidationListener(TimeSeriesGraphModel.ValidationListener listener) {
+        validationListeners.remove(listener);
+    }
+
+    boolean setExpression(String qualifiedSourceName, String expression) {
+        if(isExpressionValid(expression, qualifiedSourceName)) {
+            if(expression.isEmpty()) {
+                expression = "true";
+            }
+            currentExpressionMap.put(qualifiedSourceName, expression);
+            return true;
+        }
+        return false;
+    }
+
+    private boolean isExpressionValid(String expression, String selectedSourceName){
+        if(expression.trim().equals(selectedSourceName.trim())) {
+            return false;
+        }
+        try {
+            final DefaultNamespace expressionValidationNamespace = new DefaultNamespace();
+            expressionValidationNamespace.registerSymbol(SymbolFactory.createVariable(selectedSourceName, 0.0));
+            parser.parse(expression, expressionValidationNamespace);
+            return true;
+        } catch (ParseException e) {
+            return false;
+        }
+    }
+
+    private String[] getSourceNames() {
+        final String[] sourceNames = new String[rasterNames.size() + insituNames.size()];
+        for (int i = 0; i < rasterNames.size(); i++) {
+            sourceNames[i] = rasterNames.get(i);
+        }
+        for (int i = 0; i < insituNames.size(); i++) {
+            sourceNames[i + rasterNames.size()] = insituNames.get(i);
+        }
+        return sourceNames;
+    }
+
+    private void adaptToSourceNames(final List<String> sourceNames, final String qualifier, List<String> qualifiedSourceNames) {
         for (String sourceName : sourceNames) {
             final String qualifiedSourceName = qualifier + sourceName;
-            namespace.registerSymbol(SymbolFactory.createVariable(qualifiedSourceName, 0.0));
-            qualifiedSourcNames.add(qualifiedSourceName);
+            qualifiedSourceNames.add(qualifiedSourceName);
             if (!currentExpressionMap.containsKey(qualifiedSourceName)) {
-                currentExpressionMap.put(qualifiedSourceName, "true");
+                setExpression(qualifiedSourceName, "true");
             }
+            namespace.registerSymbol(SymbolFactory.createVariable(qualifiedSourceName, 0.0));
         }
     }
 
-    private Term createTrueTerm() {
-        try {
-            return parser.parse("true");
-        } catch (ParseException e) {
-            BeamLogManager.getSystemLogger().log(Level.SEVERE, e.getMessage(), e);
-            throw new RuntimeException(e);
-        }
-    }
-
-    final static class MyExpressionPane extends ExpressionPane {
-
-        private final String[] rasterNames;
-        private final String[] insituNames;
-
-        MyExpressionPane(boolean requiresBoolExpr, Parser parser, PropertyMap preferences, List<String> rasterNames, List<String> insituNames) {
-            super(requiresBoolExpr, parser, preferences);
-            this.rasterNames = rasterNames.toArray(new String[rasterNames.size()]);
-            this.insituNames = insituNames.toArray(new String[insituNames.size()]);
-        }
-
-        void displayPatternInsertionPane() {
-            final JList bandList = createPatternList(rasterNames);
-            final JList insituList = createPatternList(insituNames);
-
-            final JPanel panel = new JPanel(new GridLayout(4, 1));
-            panel.add(new JLabel("Bands Names"));
-            panel.add(new JScrollPane(bandList));
-            panel.add(new JLabel("Insitu Names"));
-            panel.add(new JScrollPane(insituList));
-            final JPanel defaultAccessoryPane = createDefaultAccessoryPane(panel);
-            setLeftAccessory(defaultAccessoryPane);
+    private void fireExpressionChanged() {
+        for (TimeSeriesGraphModel.ValidationListener validationListener : validationListeners) {
+            validationListener.expressionChanged();
         }
     }
 }

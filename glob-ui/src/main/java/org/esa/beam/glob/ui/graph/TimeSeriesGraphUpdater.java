@@ -112,7 +112,6 @@ class TimeSeriesGraphUpdater extends SwingWorker<List<TimeSeries>, Void> {
                             validatedTimeSeries.add(dataItem);
                         }
                     }
-                    timeSeries.clear();
                     rasterTimeSeries.add(validatedTimeSeries);
                 }
             }
@@ -133,11 +132,18 @@ class TimeSeriesGraphUpdater extends SwingWorker<List<TimeSeries>, Void> {
                 for (String insituName : insituNames) {
                     InsituRecord[] insituRecords = insituSource.getValuesFor(insituName, insituPin.geopos);
                     final TimeSeries timeSeries = computeSingleTimeSeries(insituRecords, insituName + "_" + insituPin.name);
-                    insituTimeSeries.add(timeSeries);
+                    final TimeSeries validatedTimeSeries = new TimeSeries(insituName);
+                    for (int i = 0; i < timeSeries.getItemCount(); i++) {
+                        final TimeSeriesDataItem dataItem = timeSeries.getDataItem(i);
+                        final Number value = dataItem.getValue();
+                        if (dataHandler.isValid(value.doubleValue(), insituName, type)) {
+                            validatedTimeSeries.add(dataItem);
+                        }
+                    }
+                    insituTimeSeries.add(validatedTimeSeries);
                 }
             }
         }
-
         return insituTimeSeries;
     }
 
@@ -159,8 +165,6 @@ class TimeSeriesGraphUpdater extends SwingWorker<List<TimeSeries>, Void> {
         final int lastUnderscore = firstBandName.lastIndexOf("_");
         final String timeSeriesName = firstBandName.substring(0, lastUnderscore);
         final TimeSeries timeSeries = new TimeSeries(timeSeriesName);
-        // @todo se ... find a better solution to ensure only valid entries in time series
-        final double noDataValue = firstBand.getNoDataValue();
         for (Band band : bandList) {
             final TimeCoding timeCoding = this.timeSeries.getRasterTimeMap().get(band);
             if (timeCoding != null) {
