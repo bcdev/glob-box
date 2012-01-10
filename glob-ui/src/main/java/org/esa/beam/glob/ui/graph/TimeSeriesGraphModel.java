@@ -117,7 +117,6 @@ class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandl
         version.incrementAndGet();
         eoVariableBands.clear();
 
-        // todo - replace variable hasData by behavior (remove datasets from chart)
         final boolean hasData = timeSeries != null;
         if (hasData) {
             displayController = displayControllerMap.get(timeSeries);
