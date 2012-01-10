@@ -203,7 +203,10 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
                 return;
             }
             final int currentValue = form.getTimeSlider().getValue();
-            BandImageMultiLevelSource newSource;
+            if (currentValue == value || currentValue == -1) {
+                // nothing has changed -- do nothing
+                return;
+            }
             if (currentView.getBaseImageLayer() instanceof BlendImageLayer) {
                 BlendImageLayer blendLayer = (BlendImageLayer) currentView.getBaseImageLayer();
                 int stepsPerTimespan = form.getStepsPerTimespan();
@@ -211,13 +214,10 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
                 blendLayer.setBlendFactor(transparency);
                 boolean forward = currentValue > value;
                 final List<Band> bandList = form.getBandList(currentView.getRaster().getName());
-                if (currentValue == value) {
-                    // nothing has changed -- do nothing
-                    return;
-                }
                 value = currentValue;
                 final int firstBandIndex = MathUtils.floorInt(currentValue / (float) stepsPerTimespan);
                 final int secondBandIndex = MathUtils.ceilInt(currentValue / (float) stepsPerTimespan);
+                BandImageMultiLevelSource newSource;
                 if (!forward) {
                     // go backwards in time
                     newSource = BandImageMultiLevelSource.create(bandList.get(firstBandIndex), ProgressMonitor.NULL);
@@ -264,7 +264,9 @@ public class TimeSeriesPlayerToolView extends AbstractToolView {
         public void nodeRemoved(ProductNodeEvent event) {
             final ProductNode productNode = event.getSourceNode();
             if (isValidProductNode(productNode) && currentView != null) {
-                form.configureTimeSlider((RasterDataNode) productNode);
+                if(currentView.getRaster() == productNode) {
+                    form.configureTimeSlider((RasterDataNode) productNode);
+                }
             }
         }
 
