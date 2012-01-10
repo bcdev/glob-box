@@ -129,10 +129,11 @@ class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandl
             for (String eoVariableName : displayController.getEoVariablesToDisplay()) {
                 eoVariableBands.add(timeSeries.getBandsForVariable(eoVariableName));
             }
+            displayAxisMapping = createDisplayAxisMapping(timeSeries);
+        } else {
+            displayAxisMapping = new AxisMappingModel();
         }
-        displayAxisMapping = createDisplayAxisMapping(timeSeries);
         validation.adaptTo(timeSeries, displayAxisMapping);
-
         updatePlot(hasData);
     }
 
@@ -540,7 +541,5 @@ class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandl
         void adaptTo(Object timeSeriesKey, AxisMappingModel axisMappingModel);
 
         void addValidationListener(ValidationListener listener);
-
-        void removeValidationListener(ValidationListener listener);
     }
 }

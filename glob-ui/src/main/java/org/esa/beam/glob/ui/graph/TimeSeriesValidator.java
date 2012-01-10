@@ -171,11 +171,6 @@ class TimeSeriesValidator implements TimeSeriesGraphForm.ValidatorUI, TimeSeries
     public void addValidationListener(TimeSeriesGraphModel.ValidationListener listener) {
         validationListeners.add(listener);
     }
-    
-    @Override
-    public void removeValidationListener(TimeSeriesGraphModel.ValidationListener listener) {
-        validationListeners.remove(listener);
-    }
 
     boolean setExpression(String qualifiedSourceName, String expression) {
         if(isExpressionValid(expression, qualifiedSourceName)) {
