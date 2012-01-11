@@ -36,7 +36,7 @@ class TimeSeriesGraphDisplayController {
 
     private static Shape createTriangle() {
         final GeneralPath generalPath = new GeneralPath();
-        generalPath.moveTo(-5,-5);
+        generalPath.moveTo(-5, -5);
         generalPath.lineTo(5, -5);
         generalPath.lineTo(0, 5);
         generalPath.closePath();
@@ -45,7 +45,7 @@ class TimeSeriesGraphDisplayController {
 
     private static Shape createPlus() {
         final GeneralPath generalPath = new GeneralPath();
-        generalPath.moveTo(-5,-1);
+        generalPath.moveTo(-5, -1);
         generalPath.lineTo(-1, -1);
         generalPath.lineTo(-1, -5);
         generalPath.lineTo(1, -5);
@@ -60,17 +60,51 @@ class TimeSeriesGraphDisplayController {
         generalPath.closePath();
         return generalPath;
     }
+
     private static final AffineTransform ROTATION_45 = AffineTransform.getRotateInstance(Math.toRadians(45));
     private static final AffineTransform ROTATION_180 = AffineTransform.getRotateInstance(Math.toRadians(180));
-    private static final AffineTransform SCALE = AffineTransform.getScaleInstance(0.6, 0.6);
+    private static final AffineTransform SCALE = AffineTransform.getScaleInstance(1, 1);
+
+    private static Shape createStar() {
+        final GeneralPath generalPath = new GeneralPath();
+        generalPath.moveTo(0, -5);
+        generalPath.lineTo(1.5, -2.5);
+        generalPath.lineTo(4.5, -2.5);
+        generalPath.lineTo(3, 0);
+        generalPath.lineTo(4.5, 2.5);
+        generalPath.lineTo(1.5, 2.5);
+        generalPath.lineTo(0, 5);
+        generalPath.lineTo(-1.5, 2.5);
+        generalPath.lineTo(-4.5, 2.5);
+        generalPath.lineTo(-3, 0);
+        generalPath.lineTo(-4.5, -2.5);
+        generalPath.lineTo(-1.5, -2.5);
+        generalPath.closePath();
+        return generalPath;
+    }
+
+    private static Shape createDiamond() {
+        final GeneralPath generalPath = new GeneralPath();
+        generalPath.moveTo(0, -5);
+        generalPath.lineTo(5, 0);
+        generalPath.lineTo(0, 5);
+        generalPath.lineTo(-5, 0);
+        generalPath.closePath();
+        return generalPath;
+    }
 
     private static final Shape[] SHAPES = {
-            new Rectangle(-5, -5, 10, 10),
-            new Ellipse2D.Float(-5,-5, 10,10),
-            ROTATION_45.createTransformedShape( new Rectangle(-5, -5, 10, 10)),
-            createTriangle(),
-            ROTATION_180.createTransformedShape(createTriangle()),
-            createPlus()
+                new Rectangle(-5, -5, 10, 10),
+                new Ellipse2D.Float(-5, -5, 10, 10),
+                createTriangle(),
+                ROTATION_180.createTransformedShape(createTriangle()),
+                createDiamond(),
+                createPlus(),
+                createStar(),
+                new Rectangle(-2, -5, 4, 10),
+                new Rectangle(-5, -2, 10, 4),
+                ROTATION_45.createTransformedShape(new Rectangle(-2, -5, 4, 10)),
+                ROTATION_45.createTransformedShape(new Rectangle(-5, -2, 10, 4))
     };
 
     public static final Shape CURSOR_SHAPE = ROTATION_45.createTransformedShape(createPlus());
@@ -146,8 +180,11 @@ class TimeSeriesGraphDisplayController {
     }
 
     interface PinSupport {
+
         boolean isShowingAllPins();
+
         boolean isShowingSelectedPins();
+
         Placemark[] getSelectedPins();
 
     }
