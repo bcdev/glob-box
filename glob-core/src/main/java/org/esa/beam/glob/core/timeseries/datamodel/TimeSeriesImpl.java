@@ -267,7 +267,7 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
         } else {
             final Band[] bands = tsProduct.getBands();
             for (Band band : bands) {
-                if (band.getName().startsWith(variableName)) {
+                if (variableName.equals(rasterToVariableName(band.getName()))) {
                     tsProduct.removeBand(band);
                 }
             }
@@ -364,7 +364,7 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
         final ProductData.UTC endTime = timeCoding.getEndTime();
         if (tsProduct.getEndTime().getAsCalendar().compareTo(endTime.getAsCalendar()) != 0) {
             tsProduct.setEndTime(endTime);
-            fireChangeEvent(new TimeSeriesChangeEvent(TimeSeriesChangeEvent.END_TIME_PROPERTY_NAME, endTime,this));
+            fireChangeEvent(new TimeSeriesChangeEvent(TimeSeriesChangeEvent.END_TIME_PROPERTY_NAME, endTime, this));
         }
         List<String> variables = getEoVariables();
         for (Product product : getAllProducts()) {
@@ -377,7 +377,7 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
         for (Band band : tsProduct.getBands()) {
             final TimeCoding bandTimeCoding = getRasterTimeMap().get(band);
             if (!timeCoding.contains(bandTimeCoding)) {
-                fireChangeEvent(new TimeSeriesChangeEvent(TimeSeriesChangeEvent.BAND_TO_BE_REMOVED, band,this));
+                fireChangeEvent(new TimeSeriesChangeEvent(TimeSeriesChangeEvent.BAND_TO_BE_REMOVED, band, this));
                 tsProduct.removeBand(band);
             }
         }
@@ -402,7 +402,7 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
     public void setInsituSource(InsituSource insituSource) {
         if (this.insituSource != insituSource) {
             this.insituSource = insituSource;
-            fireChangeEvent(new TimeSeriesChangeEvent(TimeSeriesChangeEvent.INSITU_SOURCE_CHANGED, this,this));
+            fireChangeEvent(new TimeSeriesChangeEvent(TimeSeriesChangeEvent.INSITU_SOURCE_CHANGED, this, this));
         }
     }
 
