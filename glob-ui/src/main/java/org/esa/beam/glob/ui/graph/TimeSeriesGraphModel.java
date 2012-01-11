@@ -259,9 +259,9 @@ class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandl
     }
 
     @Override
-    public boolean isValid(double value, String dataSourceName, TimeSeriesType type) {
+    public TimeSeries getValidatedTimeSeries(TimeSeries timeSeries, String dataSourceName, TimeSeriesType type) {
         try {
-            return validation.validate(value, dataSourceName, type);
+            return validation.validate(timeSeries, dataSourceName, type);
         } catch (ParseException e) {
             BeamLogManager.getSystemLogger().log(Level.SEVERE, e.getMessage(), e);
             throw new IllegalStateException(e);
@@ -535,7 +535,7 @@ class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandl
 
     static interface Validation {
 
-        boolean validate(double value, String sourceName, TimeSeriesType type) throws ParseException;
+        TimeSeries validate(TimeSeries timeSeries, String sourceName, TimeSeriesType type) throws ParseException;
 
         void adaptTo(Object timeSeriesKey, AxisMappingModel axisMappingModel);
 

@@ -90,7 +90,7 @@ class TimeSeriesGraphUpdater extends SwingWorker<List<TimeSeries>, Void> {
             for (NamedGeoPos namedGeoPos : pinPositionsToDisplay) {
                 positionsToDisplay.add(positionSupport.transformGeoPos(namedGeoPos.geopos));
             }
-        } else if(showCursorTimeSeries && cursorPosition != null) {
+        } else if (showCursorTimeSeries && cursorPosition != null) {
             positionsToDisplay.add(cursorPosition);
         }
 
@@ -102,17 +102,8 @@ class TimeSeriesGraphUpdater extends SwingWorker<List<TimeSeries>, Void> {
                 final List<String> rasterNames = displayAxisMapping.getRasterNames(aliasName);
                 for (String rasterName : rasterNames) {
                     final List<Band> bandsForVariable = timeSeries.getBandsForVariable(rasterName);
-                    final TimeSeries timeSeries = computeSingleTimeSeries(bandsForVariable, position.pixelX,
-                            position.pixelY, position.currentLevel);
-                    final TimeSeries validatedTimeSeries = new TimeSeries(rasterName);
-                    for (int i = 0; i < timeSeries.getItemCount(); i++) {
-                        final TimeSeriesDataItem dataItem = timeSeries.getDataItem(i);
-                        final Number value = dataItem.getValue();
-                        if (dataHandler.isValid(value.doubleValue(), rasterName, type)) {
-                            validatedTimeSeries.add(dataItem);
-                        }
-                    }
-                    rasterTimeSeries.add(validatedTimeSeries);
+                    final TimeSeries timeSeries = computeSingleTimeSeries(bandsForVariable, position.pixelX, position.pixelY, position.currentLevel);
+                    rasterTimeSeries.add(dataHandler.getValidatedTimeSeries(timeSeries, rasterName, type));
                 }
             }
         }
@@ -132,15 +123,7 @@ class TimeSeriesGraphUpdater extends SwingWorker<List<TimeSeries>, Void> {
                 for (String insituName : insituNames) {
                     InsituRecord[] insituRecords = insituSource.getValuesFor(insituName, insituPin.geopos);
                     final TimeSeries timeSeries = computeSingleTimeSeries(insituRecords, insituName + "_" + insituPin.name);
-                    final TimeSeries validatedTimeSeries = new TimeSeries(insituName);
-                    for (int i = 0; i < timeSeries.getItemCount(); i++) {
-                        final TimeSeriesDataItem dataItem = timeSeries.getDataItem(i);
-                        final Number value = dataItem.getValue();
-                        if (dataHandler.isValid(value.doubleValue(), insituName, type)) {
-                            validatedTimeSeries.add(dataItem);
-                        }
-                    }
-                    insituTimeSeries.add(validatedTimeSeries);
+                    insituTimeSeries.add(dataHandler.getValidatedTimeSeries(timeSeries, insituName, type));
                 }
             }
         }
@@ -152,8 +135,8 @@ class TimeSeriesGraphUpdater extends SwingWorker<List<TimeSeries>, Void> {
         for (InsituRecord insituRecord : insituRecords) {
             final ProductData.UTC startTime = ProductData.UTC.create(insituRecord.time, 0);
             final Millisecond timePeriod = new Millisecond(startTime.getAsDate(),
-                    ProductData.UTC.UTC_TIME_ZONE,
-                    Locale.getDefault());
+                                                           ProductData.UTC.UTC_TIME_ZONE,
+                                                           Locale.getDefault());
             timeSeries.addOrUpdate(timePeriod, insituRecord.value);
         }
         return timeSeries;
@@ -170,8 +153,8 @@ class TimeSeriesGraphUpdater extends SwingWorker<List<TimeSeries>, Void> {
             if (timeCoding != null) {
                 final ProductData.UTC startTime = timeCoding.getStartTime();
                 final Millisecond timePeriod = new Millisecond(startTime.getAsDate(),
-                        ProductData.UTC.UTC_TIME_ZONE,
-                        Locale.getDefault());
+                                                               ProductData.UTC.UTC_TIME_ZONE,
+                                                               Locale.getDefault());
                 final double value = getValue(band, pixelX, pixelY, currentLevel);
                 timeSeries.add(new TimeSeriesDataItem(timePeriod, value));
             }
@@ -210,7 +193,8 @@ class TimeSeriesGraphUpdater extends SwingWorker<List<TimeSeries>, Void> {
     static interface TimeSeriesDataHandler {
 
         void addTimeSeries(List<TimeSeries> data, TimeSeriesType type);
-        boolean isValid(double value, String dataSourceName, TimeSeriesType type);
+
+        TimeSeries getValidatedTimeSeries(TimeSeries timeSeries, String dataSourceName, TimeSeriesType type);
     }
 
     static interface WorkerChainSupport {
@@ -243,10 +227,12 @@ class TimeSeriesGraphUpdater extends SwingWorker<List<TimeSeries>, Void> {
     }
 
     static interface PositionSupport {
+
         Position transformGeoPos(GeoPos geoPos);
     }
 
     public static class NamedGeoPos {
+
         private final GeoPos geopos;
         private final String name;
 
