@@ -12,12 +12,12 @@ import static org.junit.Assert.*;
 
 public class TimeSeriesValidatorTest {
 
-    private final TimeSeriesDataItem ITEM_NAN = new TimeSeriesDataItem(Day.parseDay("11.01.2012"), Double.NaN);
-    private final TimeSeriesDataItem ITEM_0 = new TimeSeriesDataItem(Day.parseDay("12.01.2012"), 0);
-    private final TimeSeriesDataItem ITEM_3 = new TimeSeriesDataItem(Day.parseDay("13.01.2012"), 3);
-    private final TimeSeriesDataItem ITEM_4 = new TimeSeriesDataItem(Day.parseDay("14.01.2012"), 4);
-    private final TimeSeriesDataItem ITEM_7 = new TimeSeriesDataItem(Day.parseDay("15.01.2012"), 7);
-    private final TimeSeriesDataItem ITEM_24_5 = new TimeSeriesDataItem(Day.parseDay("17.01.2012"), 24.5);
+    private final TimeSeriesDataItem ITEM_NAN = new TimeSeriesDataItem(Day.parseDay("2012-01-11"), Double.NaN);
+    private final TimeSeriesDataItem ITEM_0 = new TimeSeriesDataItem(Day.parseDay("2012-01-12"), 0);
+    private final TimeSeriesDataItem ITEM_3 = new TimeSeriesDataItem(Day.parseDay("2012-01-13"), 3);
+    private final TimeSeriesDataItem ITEM_4 = new TimeSeriesDataItem(Day.parseDay("2012-01-14."), 4);
+    private final TimeSeriesDataItem ITEM_7 = new TimeSeriesDataItem(Day.parseDay("2012-01-15"), 7);
+    private final TimeSeriesDataItem ITEM_24_5 = new TimeSeriesDataItem(Day.parseDay("2012-01-16"), 24.5);
 
     private TimeSeriesValidator validator;
     private AxisMappingModel mappingModel;
