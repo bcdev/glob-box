@@ -5,19 +5,19 @@ import org.esa.beam.glob.core.timeseries.datamodel.AxisMappingModel;
 import org.jfree.data.time.Day;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesDataItem;
-import org.junit.*;
+import org.junit.Before;
+import org.junit.Test;
 
 import static org.junit.Assert.*;
 
 public class TimeSeriesValidatorTest {
 
-    private final TimeSeriesDataItem ITEM_NAN = new TimeSeriesDataItem(Day.parseDay("11.1.2012"), Double.NaN);
-    private final TimeSeriesDataItem ITEM_0 = new TimeSeriesDataItem(Day.parseDay("12.1.2012"), 0);
-    private final TimeSeriesDataItem ITEM_3 = new TimeSeriesDataItem(Day.parseDay("13.1.2012"), 3);
-    private final TimeSeriesDataItem ITEM_4 = new TimeSeriesDataItem(Day.parseDay("14.1.2012"), 4);
-    private final TimeSeriesDataItem ITEM_7 = new TimeSeriesDataItem(Day.parseDay("15.1.2012"), 7);
-    private final TimeSeriesDataItem ITEM_12 = new TimeSeriesDataItem(Day.parseDay("16.1.2012"), 12);
-    private final TimeSeriesDataItem ITEM_24_5 = new TimeSeriesDataItem(Day.parseDay("17.1.2012"), 24.5);
+    private final TimeSeriesDataItem ITEM_NAN = new TimeSeriesDataItem(Day.parseDay("11.01.2012"), Double.NaN);
+    private final TimeSeriesDataItem ITEM_0 = new TimeSeriesDataItem(Day.parseDay("12.01.2012"), 0);
+    private final TimeSeriesDataItem ITEM_3 = new TimeSeriesDataItem(Day.parseDay("13.01.2012"), 3);
+    private final TimeSeriesDataItem ITEM_4 = new TimeSeriesDataItem(Day.parseDay("14.01.2012"), 4);
+    private final TimeSeriesDataItem ITEM_7 = new TimeSeriesDataItem(Day.parseDay("15.01.2012"), 7);
+    private final TimeSeriesDataItem ITEM_24_5 = new TimeSeriesDataItem(Day.parseDay("17.01.2012"), 24.5);
 
     private TimeSeriesValidator validator;
     private AxisMappingModel mappingModel;
