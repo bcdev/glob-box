@@ -34,6 +34,7 @@ import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.border.BevelBorder;
 import java.awt.Dimension;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -66,6 +67,8 @@ class TimeSeriesGraphForm {
         tableLayout.setRowWeightY(0, 1.0);
         tableLayout.setRowWeightY(1, 0.0);
         tableLayout.setCellColspan(1, 0, 2);
+        tableLayout.setCellFill(1, 0, TableLayout.Fill.HORIZONTAL);
+        tableLayout.setCellPadding(1, 0, new Insets(15,5,5,5));
 
         mainPanel = new JPanel(tableLayout);
         mainPanel.setPreferredSize(new Dimension(320, 200));
