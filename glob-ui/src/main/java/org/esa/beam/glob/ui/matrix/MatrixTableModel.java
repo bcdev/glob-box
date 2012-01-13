@@ -38,7 +38,7 @@ class MatrixTableModel extends AbstractTableModel {
 
     @Override
     public Double getValueAt(int rowIndex, int columnIndex) {
-        if (band == null) {
+        if (unableToFetchValues()) {
             return null;
         }
 
@@ -84,5 +84,9 @@ class MatrixTableModel extends AbstractTableModel {
 
     public void clearMatrix() {
         setCenterPixel(Integer.MIN_VALUE, Integer.MIN_VALUE);
+    }
+
+    private boolean unableToFetchValues() {
+        return band == null || centerPixelX == Integer.MIN_VALUE || centerPixelY == Integer.MIN_VALUE;
     }
 }
