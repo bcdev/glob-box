@@ -254,6 +254,8 @@ class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandl
                     renderer.setSeriesVisibleInLegend(timeSeriesTargetIdx, !currentTimeSeries.isEmpty());
                     timeSeriesIndexOffset++;
                 }
+                final ValueAxis axisForDataset = timeSeriesPlot.getDomainAxisForDataset(targetCollectionIndex);
+                axisForDataset.configure();
             }
         }
     }
