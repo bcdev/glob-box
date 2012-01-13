@@ -24,23 +24,28 @@ import com.bc.jexp.Variable;
 import com.bc.jexp.impl.DefaultNamespace;
 import com.bc.jexp.impl.ParserImpl;
 import com.bc.jexp.impl.SymbolFactory;
+import org.esa.beam.framework.ui.ExpressionPane;
+import org.esa.beam.framework.ui.ModalDialog;
 import org.esa.beam.glob.core.timeseries.datamodel.AxisMappingModel;
+import org.esa.beam.util.PropertyMap;
+import org.esa.beam.visat.VisatApp;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesDataItem;
 
+import javax.swing.AbstractAction;
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.border.TitledBorder;
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.event.ActionEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -71,15 +76,11 @@ class TimeSeriesValidator implements TimeSeriesGraphForm.ValidatorUI, TimeSeries
 
     @Override
     public JComponent makeUI() {
-        JPanel uiPanel = new JPanel(new BorderLayout(5, 0));
-
-        final JLabel introductionLabel = new JLabel("Valid expression:");
 
         expressionTextField = new JTextField("true");
-
-        final JLabel expressionErrorLabel = new JLabel();
-        expressionErrorLabel.setPreferredSize(new Dimension(95, 20));
-        expressionErrorLabel.setForeground(Color.red.darker());
+        expressionTextField.setEditable(false);
+        expressionTextField.setEnabled(false);
+        expressionTextField.setColumns(30);
 
         sourceNamesDropDown = new JComboBox();
         sourceNamesDropDown.setPreferredSize(new Dimension(120, 20));
@@ -92,32 +93,40 @@ class TimeSeriesValidator implements TimeSeriesGraphForm.ValidatorUI, TimeSeries
                 }
             }
         });
+        sourceNamesDropDown.setEnabled(false);
 
-        expressionTextField.addKeyListener(new KeyAdapter() {
+        final JButton editExpressionButton = new JButton("...");
+        editExpressionButton.addActionListener(new AbstractAction() {
             @Override
-            public void keyReleased(KeyEvent e) {
-                String expression = expressionTextField.getText();
-                final String selectedSourceName = getSelectedSourceName();
-                final boolean hasSet = setExpression(selectedSourceName, expression);
-                if (hasSet) {
-                    expressionErrorLabel.setText("");
-                } else {
-                    expressionErrorLabel.setText("Invalid expression.");
+            public void actionPerformed(ActionEvent e) {
+                final DefaultNamespace namespace = new DefaultNamespace();
+                final String sourceName = (String) sourceNamesDropDown.getSelectedItem();
+                final Variable sourceVariable = SymbolFactory.createVariable(sourceName, 0.0);
+                namespace.registerSymbol(sourceVariable);
+                final ExpressionPane expressionPane = new ExpressionPane(true, new ParserImpl(namespace, true), new PropertyMap());
+                expressionPane.setEmptyExpressionAllowed(false);
+                expressionPane.setLeftAccessory(expressionPane.createPatternList(new String[]{sourceName}));
+                expressionPane.setCode(expressionTextField.getText());
+                final int status = expressionPane.showModalDialog(VisatApp.getApp().getMainFrame(), "Valid Expression for Source '" + sourceVariable + "'");
+                if (ModalDialog.ID_OK == status) {
+                    final String expression = expressionPane.getCode();
+                    expressionTextField.setText(expression);
+                    setExpression(sourceName, expression);
                 }
             }
         });
 
-        sourceNamesDropDown.setEnabled(false);
-        expressionTextField.setEnabled(false);
-
-        uiPanel.add(introductionLabel, BorderLayout.WEST);
-        final JPanel innerPanel = new JPanel(new BorderLayout(5, 0));
-        innerPanel.add(sourceNamesDropDown, BorderLayout.WEST);
-        innerPanel.add(expressionTextField);
-        uiPanel.add(innerPanel);
-        uiPanel.add(expressionErrorLabel, BorderLayout.EAST);
+        JPanel uiPanel = new JPanel();
+        uiPanel.setBorder(new TitledBorder("Valid expression"));
+        uiPanel.add(sourceNamesDropDown);
+        uiPanel.add(expressionTextField);
+        uiPanel.add(editExpressionButton);
         hasUI = true;
-        return uiPanel;
+
+        final JPanel stretchablePanel = new JPanel(new BorderLayout());
+        stretchablePanel.add(new JLabel(""));
+        stretchablePanel.add(uiPanel, BorderLayout.EAST);
+        return stretchablePanel;
     }
 
     @Override
