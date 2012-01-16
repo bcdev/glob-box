@@ -163,12 +163,12 @@ class TimeSeriesGraphDisplayController {
             final PlacemarkGroup pinGroup = timeSeries.getTsProduct().getPinGroup();
             for (int i = 0; i < pinGroup.getNodeCount(); i++) {
                 final Placemark pin = pinGroup.get(i);
-                pinPositionsToDisplay.add(new TimeSeriesGraphUpdater.NamedGeoPos(pin.getGeoPos(), pin.getName()));
+                pinPositionsToDisplay.add(new TimeSeriesGraphUpdater.NamedGeoPos(pin.getGeoPos(), pin.getLabel()));
             }
         } else if (pinSupport.isShowingSelectedPins()) {
             final Placemark[] selectedPins = pinSupport.getSelectedPins();
             for (Placemark selectedPin : selectedPins) {
-                pinPositionsToDisplay.add(new TimeSeriesGraphUpdater.NamedGeoPos(selectedPin.getGeoPos(), selectedPin.getName()));
+                pinPositionsToDisplay.add(new TimeSeriesGraphUpdater.NamedGeoPos(selectedPin.getGeoPos(), selectedPin.getLabel()));
             }
         }
         return pinPositionsToDisplay;

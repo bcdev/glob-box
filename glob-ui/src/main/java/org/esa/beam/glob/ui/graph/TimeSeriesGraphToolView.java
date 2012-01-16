@@ -236,8 +236,10 @@ public class TimeSeriesGraphToolView extends AbstractToolView {
         @Override
         public void nodeChanged(ProductNodeEvent event) {
             String propertyName = event.getPropertyName();
-            if (propertyName.equals(Placemark.PROPERTY_NAME_PIXELPOS)) {
+            if (propertyName.equals(Placemark.PROPERTY_NAME_PIXELPOS)
+                        || propertyName.equals(Placemark.PROPERTY_NAME_LABEL)) {
                 graphModel.updateTimeSeries(null, TimeSeriesType.PIN);
+                graphModel.updateTimeSeries(null, TimeSeriesType.INSITU);
             }
         }
 

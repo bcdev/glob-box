@@ -46,6 +46,8 @@ import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -81,6 +83,14 @@ class TimeSeriesValidator implements TimeSeriesGraphForm.ValidatorUI, TimeSeries
         expressionTextField.setEditable(false);
         expressionTextField.setEnabled(false);
         expressionTextField.setColumns(30);
+        expressionTextField.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (expressionTextField.isEnabled()) {
+                    showExpressionEditor();
+                }
+            }
+        });
 
         sourceNamesDropDown = new JComboBox();
         sourceNamesDropDown.setPreferredSize(new Dimension(120, 20));
@@ -100,17 +110,9 @@ class TimeSeriesValidator implements TimeSeriesGraphForm.ValidatorUI, TimeSeries
         editExpressionButton.addActionListener(new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                final MyExpressionPane expressionPane = new MyExpressionPane();
-                expressionPane.setEmptyExpressionAllowed(false);
-                expressionPane.setCode(expressionTextField.getText());
-                final String sourceName = getSelectedSourceName();
-                final int status = expressionPane.showModalDialog(VisatApp.getApp().getMainFrame(), "Valid Expression for Source '" + sourceName + "'");
-                if (ModalDialog.ID_OK == status) {
-                    final String expression = expressionPane.getCode();
-                    expressionTextField.setText(expression);
-                    setExpression(sourceName, expression);
-                }
+                showExpressionEditor();
             }
+
         });
 
         JPanel uiPanel = new JPanel();
@@ -165,7 +167,7 @@ class TimeSeriesValidator implements TimeSeriesGraphForm.ValidatorUI, TimeSeries
         final Term term = parser.parse(expression, namespace);
 
         final int seriesCount = timeSeries.getItemCount();
-        final TimeSeries validatedSeries = new TimeSeries(sourceName);
+        final TimeSeries validatedSeries = new TimeSeries(timeSeries.getKey());
         for (int i = 0; i < seriesCount; i++) {
             final TimeSeriesDataItem dataItem = timeSeries.getDataItem(i);
             final Number value = dataItem.getValue();
@@ -194,6 +196,19 @@ class TimeSeriesValidator implements TimeSeriesGraphForm.ValidatorUI, TimeSeries
             return true;
         }
         return false;
+    }
+
+    private void showExpressionEditor() {
+        final MyExpressionPane expressionPane = new MyExpressionPane();
+        expressionPane.setEmptyExpressionAllowed(false);
+        expressionPane.setCode(expressionTextField.getText());
+        final String sourceName = getSelectedSourceName();
+        final int status = expressionPane.showModalDialog(VisatApp.getApp().getMainFrame(), "Valid Expression for Source '" + sourceName + "'");
+        if (ModalDialog.ID_OK == status) {
+            final String expression = expressionPane.getCode();
+            expressionTextField.setText(expression);
+            setExpression(sourceName, expression);
+        }
     }
 
     private boolean isExpressionValid(String expression, String qualifiedSorceName) {

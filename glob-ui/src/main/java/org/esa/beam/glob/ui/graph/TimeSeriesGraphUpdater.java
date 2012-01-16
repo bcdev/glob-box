@@ -85,24 +85,29 @@ class TimeSeriesGraphUpdater extends SwingWorker<List<TimeSeries>, Void> {
 
     private List<TimeSeries> computeRasterTimeSeries() {
         final List<Position> positionsToDisplay = new ArrayList<Position>();
+        final ArrayList<String> positionNames = new ArrayList<String>();
         if (type.equals(TimeSeriesType.PIN)) {
             final List<NamedGeoPos> pinPositionsToDisplay = dataSources.getPinPositionsToDisplay();
             for (NamedGeoPos namedGeoPos : pinPositionsToDisplay) {
                 positionsToDisplay.add(positionSupport.transformGeoPos(namedGeoPos.geopos));
+                positionNames.add(namedGeoPos.name);
             }
         } else if (showCursorTimeSeries && cursorPosition != null) {
             positionsToDisplay.add(cursorPosition);
+            positionNames.add("");
         }
 
         final Set<String> aliasNames = displayAxisMapping.getAliasNames();
         final List<TimeSeries> rasterTimeSeries = new ArrayList<TimeSeries>();
 
-        for (Position position : positionsToDisplay) {
+        for (int i = 0, positionsToDisplaySize = positionsToDisplay.size(); i < positionsToDisplaySize; i++) {
+            final Position position = positionsToDisplay.get(i);
+            final String positionName = positionNames.get(i);
             for (String aliasName : aliasNames) {
                 final List<String> rasterNames = displayAxisMapping.getRasterNames(aliasName);
                 for (String rasterName : rasterNames) {
                     final List<Band> bandsForVariable = timeSeries.getBandsForVariable(rasterName);
-                    final TimeSeries timeSeries = computeSingleTimeSeries(bandsForVariable, position.pixelX, position.pixelY, position.currentLevel);
+                    final TimeSeries timeSeries = computeSingleTimeSeries(bandsForVariable, position.pixelX, position.pixelY, position.currentLevel, positionName);
                     rasterTimeSeries.add(dataHandler.getValidatedTimeSeries(timeSeries, rasterName, type));
                 }
             }
@@ -142,12 +147,13 @@ class TimeSeriesGraphUpdater extends SwingWorker<List<TimeSeries>, Void> {
         return timeSeries;
     }
 
-    private TimeSeries computeSingleTimeSeries(final List<Band> bandList, int pixelX, int pixelY, int currentLevel) {
+    private TimeSeries computeSingleTimeSeries(final List<Band> bandList, int pixelX, int pixelY, int currentLevel, String positionName) {
         final Band firstBand = bandList.get(0);
         final String firstBandName = firstBand.getName();
         final int lastUnderscore = firstBandName.lastIndexOf("_");
+        final String suffix = positionName.isEmpty()?positionName: "_" + positionName;
         final String timeSeriesName = firstBandName.substring(0, lastUnderscore);
-        final TimeSeries timeSeries = new TimeSeries(timeSeriesName);
+        final TimeSeries timeSeries = new TimeSeries(timeSeriesName + suffix);
         for (Band band : bandList) {
             final TimeCoding timeCoding = this.timeSeries.getRasterTimeMap().get(band);
             if (timeCoding != null) {
