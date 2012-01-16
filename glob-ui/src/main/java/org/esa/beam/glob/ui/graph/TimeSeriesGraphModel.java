@@ -16,8 +16,6 @@
 
 package org.esa.beam.glob.ui.graph;
 
-import com.bc.ceres.glayer.support.ImageLayer;
-import com.bc.ceres.grender.Viewport;
 import com.bc.jexp.ParseException;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.GeoCoding;
@@ -54,8 +52,6 @@ import java.awt.Color;
 import java.awt.Paint;
 import java.awt.Shape;
 import java.awt.Stroke;
-import java.awt.geom.AffineTransform;
-import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -258,6 +254,7 @@ class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandl
                 axisForDataset.configure();
             }
         }
+        updateAnnotation(getCurrentView().getRaster());
     }
 
     @Override
@@ -299,18 +296,11 @@ class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandl
 
             private final GeoCoding geoCoding = getTimeSeries().getTsProduct().getGeoCoding();
             private final PixelPos pixelPos = new PixelPos();
-            private final Viewport viewport = getCurrentView().getViewport();
-            private final ImageLayer baseLayer = getCurrentView().getBaseImageLayer();
-            private final int currentLevel = baseLayer.getLevel(viewport);
-            private final AffineTransform levelZeroToModel = baseLayer.getImageToModelTransform();
-            private final AffineTransform modelToCurrentLevel = baseLayer.getModelToImageTransform(currentLevel);
 
             @Override
             public TimeSeriesGraphUpdater.Position transformGeoPos(GeoPos geoPos) {
                 geoCoding.getPixelPos(geoPos, pixelPos);
-                final Point2D modelPos = levelZeroToModel.transform(pixelPos, null);
-                final Point2D currentPos = modelToCurrentLevel.transform(modelPos, null);
-                return new TimeSeriesGraphUpdater.Position((int) currentPos.getX(), (int) currentPos.getY(), currentLevel);
+                return new TimeSeriesGraphUpdater.Position((int) pixelPos.getX(), (int) pixelPos.getY(), 0);
             }
         };
     }
