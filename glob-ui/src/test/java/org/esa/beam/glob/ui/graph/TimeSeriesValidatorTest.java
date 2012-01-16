@@ -5,8 +5,7 @@ import org.esa.beam.glob.core.timeseries.datamodel.AxisMappingModel;
 import org.jfree.data.time.Day;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesDataItem;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 
 import static org.junit.Assert.*;
 
@@ -44,7 +43,7 @@ public class TimeSeriesValidatorTest {
 
         final TimeSeries validatedTimeSeries = validator.validate(unvalidatedTimeSeries, "insitu1", TimeSeriesType.INSITU);
 
-        assertNotSame(unvalidatedTimeSeries, validatedTimeSeries);
+        assertSame(unvalidatedTimeSeries, validatedTimeSeries);
         assertEquals(3, validatedTimeSeries.getItemCount());
         assertEquals(ITEM_NAN, validatedTimeSeries.getDataItem(0));
         assertEquals(ITEM_0, validatedTimeSeries.getDataItem(1));
@@ -172,7 +171,12 @@ public class TimeSeriesValidatorTest {
         validated = validator.validate(series, "raster1", TimeSeriesType.CURSOR);
         assertEquals(1, validated.getItemCount());
 
-        assertFalse(validator.setExpression("r.raster1", ""));
+        assertTrue(validator.setExpression("r.raster1", ""));
+
+        validated = validator.validate(series, "raster1", TimeSeriesType.CURSOR);
+        assertEquals(2, validated.getItemCount());
+
+        assertTrue(validator.setExpression("r.raster1", "r.raster1 < 4"));
 
         validated = validator.validate(series, "raster1", TimeSeriesType.CURSOR);
         assertEquals(1, validated.getItemCount());

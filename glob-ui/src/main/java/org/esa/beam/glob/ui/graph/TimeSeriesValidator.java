@@ -77,7 +77,7 @@ class TimeSeriesValidator implements TimeSeriesGraphForm.ValidatorUI, TimeSeries
     @Override
     public JComponent makeUI() {
 
-        expressionTextField = new JTextField("true");
+        expressionTextField = new JTextField("");
         expressionTextField.setEditable(false);
         expressionTextField.setEnabled(false);
         expressionTextField.setColumns(30);
@@ -89,7 +89,8 @@ class TimeSeriesValidator implements TimeSeriesGraphForm.ValidatorUI, TimeSeries
             public void itemStateChanged(ItemEvent e) {
                 if (ItemEvent.SELECTED == e.getStateChange()) {
                     final String selectedSourceName = e.getItem().toString();
-                    expressionTextField.setText(getExpressionFor(selectedSourceName));
+                    final String expression = getExpressionFor(selectedSourceName);
+                    expressionTextField.setText(expression == null ? "" : expression);
                 }
             }
         });
@@ -99,15 +100,11 @@ class TimeSeriesValidator implements TimeSeriesGraphForm.ValidatorUI, TimeSeries
         editExpressionButton.addActionListener(new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                final DefaultNamespace namespace = new DefaultNamespace();
-                final String sourceName = (String) sourceNamesDropDown.getSelectedItem();
-                final Variable sourceVariable = SymbolFactory.createVariable(sourceName, 0.0);
-                namespace.registerSymbol(sourceVariable);
-                final ExpressionPane expressionPane = new ExpressionPane(true, new ParserImpl(namespace, true), new PropertyMap());
+                final MyExpressionPane expressionPane = new MyExpressionPane();
                 expressionPane.setEmptyExpressionAllowed(false);
-                expressionPane.setLeftAccessory(expressionPane.createPatternList(new String[]{sourceName}));
                 expressionPane.setCode(expressionTextField.getText());
-                final int status = expressionPane.showModalDialog(VisatApp.getApp().getMainFrame(), "Valid Expression for Source '" + sourceVariable + "'");
+                final String sourceName = getSelectedSourceName();
+                final int status = expressionPane.showModalDialog(VisatApp.getApp().getMainFrame(), "Valid Expression for Source '" + sourceName + "'");
                 if (ModalDialog.ID_OK == status) {
                     final String expression = expressionPane.getCode();
                     expressionTextField.setText(expression);
@@ -148,7 +145,8 @@ class TimeSeriesValidator implements TimeSeriesGraphForm.ValidatorUI, TimeSeries
             expressionTextField.setEnabled(true);
             sourceNamesDropDown.setEnabled(true);
             sourceNamesDropDown.setModel(new DefaultComboBoxModel(getSourceNames()));
-            expressionTextField.setText(getExpressionFor(getSelectedSourceName()));
+            final String expression = getExpressionFor(getSelectedSourceName());
+            expressionTextField.setText(expression == null ? "" : expression);
         }
     }
 
@@ -159,8 +157,11 @@ class TimeSeriesValidator implements TimeSeriesGraphForm.ValidatorUI, TimeSeries
         if (symbol == null) {
             throw new ParseException("No variable for identifier '" + qualifiedSourceName + "' registered.");
         }
-        final Variable variable = (Variable) symbol;
         final String expression = getExpressionFor(qualifiedSourceName);
+        if (expression == null || expression.trim().isEmpty()) {
+            return timeSeries;
+        }
+        final Variable variable = (Variable) symbol;
         final Term term = parser.parse(expression, namespace);
 
         final int seriesCount = timeSeries.getItemCount();
@@ -188,19 +189,17 @@ class TimeSeriesValidator implements TimeSeriesGraphForm.ValidatorUI, TimeSeries
             return false;
         }
         if (isExpressionValid(expression, qualifiedSourceName)) {
-            if (expression.isEmpty()) {
-                expression = "true";
-            }
             currentExpressionMap.put(qualifiedSourceName, expression);
             fireExpressionChanged();
             return true;
         }
-//        currentExpressionMap.put(qualifiedSourceName, "true");
-//        fireExpressionChanged();
         return false;
     }
 
     private boolean isExpressionValid(String expression, String qualifiedSorceName) {
+        if (expression == null || expression.trim().isEmpty()) {
+            return true;
+        }
         if (expression.trim().equals(qualifiedSorceName.trim())) {
             return false;
         }
@@ -255,9 +254,41 @@ class TimeSeriesValidator implements TimeSeriesGraphForm.ValidatorUI, TimeSeries
     }
 
     private String getExpressionFor(String qualifiedSourceName) {
-        if (!currentExpressionMap.containsKey(qualifiedSourceName)) {
-            setExpression(qualifiedSourceName, "true");
-        }
         return currentExpressionMap.get(qualifiedSourceName);
+    }
+
+    private class MyExpressionPane extends ExpressionPane {
+
+        public MyExpressionPane() {
+            super(true, null, new PropertyMap());
+            initParser();
+            initLeftAccessory();
+        }
+
+        private void initParser() {
+            final String sourceName = getSelectedSourceName();
+            final Variable sourceVariable = SymbolFactory.createVariable(sourceName, 0.0);
+            final DefaultNamespace namespace = new DefaultNamespace();
+            namespace.registerSymbol(sourceVariable);
+            setParser(new ParserImpl(namespace, true));
+        }
+
+        private void initLeftAccessory() {
+
+            final String sourceName = getSelectedSourceName();
+            final JButton insertButton = createInsertButton(sourceName);
+
+            final JPanel sourcePane = new JPanel(new BorderLayout());
+            sourcePane.add(new JLabel("Data Source:"), BorderLayout.NORTH);
+            sourcePane.add(insertButton);
+
+            final JPanel patternInsertionPane = createPatternInsertionPane();
+
+            final JPanel leftAccessory = new JPanel(new BorderLayout(4, 4));
+            leftAccessory.add(sourcePane, BorderLayout.NORTH);
+            leftAccessory.add(patternInsertionPane);
+
+            setLeftAccessory(leftAccessory);
+        }
     }
 }
