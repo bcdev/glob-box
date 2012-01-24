@@ -1,17 +1,20 @@
 package org.esa.beam.glob.core.insitu.csv;
 
 import org.esa.beam.framework.datamodel.GeoPos;
+
 import java.util.Date;
 
 public class InsituRecord {
 
     public final GeoPos pos;
     public final Date time;
+    public final String stationName;
     public final double value;
 
-    public InsituRecord(GeoPos pos, Date time, double value) {
+    public InsituRecord(GeoPos pos, Date time, String stationName, double value) {
         this.pos = pos;
         this.time = time;
+        this.stationName = stationName;
         this.value = value;
     }
 
@@ -24,12 +27,15 @@ public class InsituRecord {
             return false;
         }
 
-        final InsituRecord that = (InsituRecord) o;
+        InsituRecord that = (InsituRecord) o;
 
         if (Double.compare(that.value, value) != 0) {
             return false;
         }
         if (pos != null ? !pos.equals(that.pos) : that.pos != null) {
+            return false;
+        }
+        if (stationName != null ? !stationName.equals(that.stationName) : that.stationName != null) {
             return false;
         }
         if (time != null ? !time.equals(that.time) : that.time != null) {
@@ -41,9 +47,12 @@ public class InsituRecord {
 
     @Override
     public int hashCode() {
-        int result = pos != null ? pos.hashCode() : 0;
+        int result;
+        long temp;
+        result = pos != null ? pos.hashCode() : 0;
         result = 31 * result + (time != null ? time.hashCode() : 0);
-        long temp = value != +0.0d ? Double.doubleToLongBits(value) : 0L;
+        result = 31 * result + (stationName != null ? stationName.hashCode() : 0);
+        temp = value != +0.0d ? Double.doubleToLongBits(value) : 0L;
         result = 31 * result + (int) (temp ^ (temp >>> 32));
         return result;
     }

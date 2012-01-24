@@ -2,7 +2,9 @@ package org.esa.beam.glob.core.insitu.csv;
 
 import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.framework.datamodel.ProductData;
-import org.junit.Test;
+import org.esa.beam.glob.core.insitu.Header;
+import org.esa.beam.glob.core.insitu.Record;
+import org.junit.*;
 
 import java.io.InputStreamReader;
 import java.io.StringReader;
@@ -17,10 +19,10 @@ public class CsvRecordSourceTest {
     public void testSimpleCsv() throws Exception {
         final String CSV = ""
                 + "# Test CSV\n"
-                + "ID\tLAT\tLONG\tTIME\tSITE\tCHL\tFLAG\n"
-                + "16\t53.1\t13.6\t03.04.2003\tA\t0.5\t1\n"
-                + "17\t53.3\t13.4\t08.04.2003\tA\t0.9\t0\n"
-                + "18\t53.1\t13.5\t11.04.2003\tA\t0.4\t1\n";
+                + "ID\tLAT\tLONG\tTIME\tName\tCHL\tFLAG\n"
+                + "16\t53.1\t13.6\t03.04.2003\tName 1\t0.5\t1\n"
+                + "17\t53.3\t13.4\t08.04.2003\tName 2\t0.9\t0\n"
+                + "18\t53.1\t13.5\t11.04.2003\tName 3\t0.4\t1\n";
 
         DateFormat dateFormat = ProductData.UTC.createDateFormat("dd.MM.yyyy");
 
@@ -28,7 +30,7 @@ public class CsvRecordSourceTest {
         Header header = recordSource.getHeader();
         assertNotNull(header);
         assertNotNull(header.getColumnNames());
-        assertArrayEquals(new String[]{"ID", "LAT", "LONG", "TIME", "SITE", "CHL", "FLAG"},
+        assertArrayEquals(new String[]{"ID", "LAT", "LONG", "TIME", "Name", "CHL", "FLAG"},
                           header.getColumnNames());
         assertEquals(true, header.hasLocation());
         assertEquals(true, header.hasTime());
@@ -42,26 +44,29 @@ public class CsvRecordSourceTest {
         assertTrue(iterator.hasNext());
         Record rec1 = iterator.next();
         assertNotNull(rec1);
-        assertArrayEquals(new Object[]{(double) 16, 53.1, 13.6, dateFormat.parse("03.04.2003"), "A", 0.5, (double) 1},
+        assertArrayEquals(new Object[]{(double) 16, 53.1, 13.6, dateFormat.parse("03.04.2003"), "Name 1", 0.5, (double) 1},
                           rec1.getAttributeValues());
         assertEquals(new GeoPos(53.1F, 13.6F), rec1.getLocation());
         assertEquals(dateFormat.parse("03.04.2003"), rec1.getTime());
+        assertEquals("Name 1", rec1.getStationName());
 
         assertTrue(iterator.hasNext());
         Record rec2 = iterator.next();
         assertNotNull(rec2);
-        assertArrayEquals(new Object[]{(double) 17, 53.3, 13.4, dateFormat.parse("08.04.2003"), "A", 0.9, (double) 0},
+        assertArrayEquals(new Object[]{(double) 17, 53.3, 13.4, dateFormat.parse("08.04.2003"), "Name 2", 0.9, (double) 0},
                           rec2.getAttributeValues());
         assertEquals(new GeoPos(53.3F, 13.4F), rec2.getLocation());
         assertEquals(dateFormat.parse("08.04.2003"), rec2.getTime());
+        assertEquals("Name 2", rec2.getStationName());
 
         assertTrue(iterator.hasNext());
         Record rec3 = iterator.next();
         assertNotNull(rec3);
-        assertArrayEquals(new Object[]{(double) 18, 53.1, 13.5, dateFormat.parse("11.04.2003"), "A", 0.4, (double) 1},
+        assertArrayEquals(new Object[]{(double) 18, 53.1, 13.5, dateFormat.parse("11.04.2003"), "Name 3", 0.4, (double) 1},
                           rec3.getAttributeValues());
         assertEquals(new GeoPos(53.1F, 13.5F), rec3.getLocation());
         assertEquals(dateFormat.parse("11.04.2003"), rec3.getTime());
+        assertEquals("Name 3", rec3.getStationName());
     }
 
     @Test
@@ -70,7 +75,7 @@ public class CsvRecordSourceTest {
                 + "\n"
                 + "# Test CSV\n"
                 + "\n"
-                + "ID\tLAT\tLONG\tTIME\tSITE\tCHL\tFLAG\n"
+                + "ID\tLAT\tLONG\tTIME\tName\tCHL\tFLAG\n"
                 + "16\t53.1\t13.6\t03.04.2003\t\t0.5\t1\n"
                 + "17\t53.3\t13.4\t08.04.2003\t\t\t\n"
                 + "18\t53.1\t13.5\t11.04.2003\tA\t0.4\t\n";
@@ -82,7 +87,7 @@ public class CsvRecordSourceTest {
         Header header = recordSource.getHeader();
         assertNotNull(header);
         assertNotNull(header.getColumnNames());
-        assertArrayEquals(new String[]{"ID", "LAT", "LONG", "TIME", "SITE", "CHL", "FLAG"},
+        assertArrayEquals(new String[]{"ID", "LAT", "LONG", "TIME", "Name", "CHL", "FLAG"},
                           header.getColumnNames());
         assertEquals(true, header.hasLocation());
         assertEquals(true, header.hasTime());
@@ -100,6 +105,7 @@ public class CsvRecordSourceTest {
                           rec1.getAttributeValues());
         assertEquals(new GeoPos(53.1F, 13.6F), rec1.getLocation());
         assertEquals(dateFormat.parse("03.04.2003"), rec1.getTime());
+        assertEquals(null, rec1.getStationName());
 
         assertTrue(iterator.hasNext());
         Record rec2 = iterator.next();
@@ -108,6 +114,7 @@ public class CsvRecordSourceTest {
                           rec2.getAttributeValues());
         assertEquals(new GeoPos(53.3F, 13.4F), rec2.getLocation());
         assertEquals(dateFormat.parse("08.04.2003"), rec2.getTime());
+        assertEquals(null, rec2.getStationName());
 
         assertTrue(iterator.hasNext());
         Record rec3 = iterator.next();
@@ -116,6 +123,7 @@ public class CsvRecordSourceTest {
                           rec3.getAttributeValues());
         assertEquals(new GeoPos(53.1F, 13.5F), rec3.getLocation());
         assertEquals(dateFormat.parse("11.04.2003"), rec3.getTime());
+        assertEquals("A", rec3.getStationName());
     }
 
     @Test

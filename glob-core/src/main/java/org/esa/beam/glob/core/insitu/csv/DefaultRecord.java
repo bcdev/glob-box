@@ -1,6 +1,7 @@
 package org.esa.beam.glob.core.insitu.csv;
 
 import org.esa.beam.framework.datamodel.GeoPos;
+import org.esa.beam.glob.core.insitu.Record;
 
 import java.util.Arrays;
 import java.util.Date;
@@ -12,13 +13,16 @@ import java.util.Date;
  * @author Norman
  */
 class DefaultRecord implements Record {
+
     private final GeoPos location;
     private final Date time;
+    private final String stationName;
     private final Object[] values;
 
-    DefaultRecord(GeoPos location, Date time, Object[] values) {
+    DefaultRecord(GeoPos location, Date time, String stationName, Object[] values) {
         this.location = location;
         this.time = time;
+        this.stationName = stationName;
         this.values = values;
     }
 
@@ -33,6 +37,11 @@ class DefaultRecord implements Record {
     }
 
     @Override
+    public String getStationName() {
+        return stationName;
+    }
+
+    @Override
     public Object[] getAttributeValues() {
         return values;
     }
@@ -40,9 +49,10 @@ class DefaultRecord implements Record {
     @Override
     public String toString() {
         return "DefaultRecord{" +
-                "location=" + location +
-                ", time=" + time +
-                ", values=" + Arrays.asList(values) +
-                '}';
+               "  location=" + location +
+               "  , time=" + time +
+               "  , stationName=" + stationName +
+               "  , values=" + Arrays.asList(values) +
+               '}';
     }
 }

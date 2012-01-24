@@ -1,6 +1,9 @@
 package org.esa.beam.glob.core.insitu.csv;
 
 import org.esa.beam.framework.datamodel.GeoPos;
+import org.esa.beam.glob.core.insitu.Header;
+import org.esa.beam.glob.core.insitu.Record;
+import org.esa.beam.glob.core.insitu.RecordSource;
 
 import java.io.IOException;
 import java.io.LineNumberReader;
@@ -25,6 +28,7 @@ public class CsvRecordSource implements RecordSource {
     private static final String[] LAT_NAMES = new String[]{"lat", "latitude", "northing"};
     private static final String[] LON_NAMES = new String[]{"lon", "long", "longitude", "easting"};
     private static final String[] TIME_NAMES = new String[]{"time", "date"};
+    private static final String[] STATION_NAMES = new String[]{"name", "station", "label"};
     private final LineNumberReader reader;
     private final Header header;
     private final int recordLength;
@@ -32,6 +36,7 @@ public class CsvRecordSource implements RecordSource {
     private final int latIndex;
     private final int lonIndex;
     private final int timeIndex;
+    private final int stationNameIndex;
     private final Class<?>[] attributeTypes;
     private Iterable<Record> recordIterable;
     private CsvRecordIterator csvRecordIterator;
@@ -51,9 +56,13 @@ public class CsvRecordSource implements RecordSource {
         latIndex = indexOf(columnNames, LAT_NAMES);
         lonIndex = indexOf(columnNames, LON_NAMES);
         timeIndex = indexOf(columnNames, TIME_NAMES);
+        stationNameIndex = indexOf(columnNames, STATION_NAMES);
 
         final String[] parameterNames = getParameterNames(columnNames);
-        header = new DefaultHeader(latIndex >= 0 && lonIndex >= 0, timeIndex >= 0, columnNames, parameterNames);
+        final boolean hasLocation = latIndex >= 0 && lonIndex >= 0;
+        final boolean hasTime = timeIndex >= 0;
+        final boolean hasStationName = stationNameIndex >= 0;
+        header = new DefaultHeader(hasLocation, hasTime, hasStationName, columnNames, parameterNames);
         recordLength = columnNames.length;
     }
 
@@ -99,7 +108,7 @@ public class CsvRecordSource implements RecordSource {
     }
 
     private String[] getParameterNames(String[] columnNames) {
-        final int[] sortedIndices = {latIndex, lonIndex, timeIndex};
+        final int[] sortedIndices = {latIndex, lonIndex, timeIndex, stationNameIndex};
         Arrays.sort(sortedIndices);
 
         final List<String> parameterNames = new ArrayList<String>();
@@ -277,7 +286,14 @@ public class CsvRecordSource implements RecordSource {
                 time = null;
             }
 
-            return new DefaultRecord(location, time, values);
+            final String stationName;
+            if (header.hasStationName()) {
+                stationName = (String) values[stationNameIndex];
+            } else {
+                stationName = time.toString();
+            }
+
+            return new DefaultRecord(location, time, stationName, values);
         }
 
     }

@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2011 Brockmann Consult GmbH (info@brockmann-consult.de)
- * 
+ *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
  * Software Foundation; either version 3 of the License, or (at your option)
@@ -9,7 +9,7 @@
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
  * more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, see http://www.gnu.org/licenses/
  */
@@ -18,12 +18,10 @@ package org.esa.beam.glob.core.insitu;
 
 import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.glob.core.insitu.csv.CsvInsituLoader;
+import org.esa.beam.glob.core.insitu.csv.CsvRecordSource;
 import org.esa.beam.glob.core.insitu.csv.InsituRecord;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 
-import java.io.Reader;
 import java.io.StringReader;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -38,79 +36,83 @@ import static org.junit.Assert.*;
 public class InsituSourceTest {
 
     private DateFormat dateFormat;
-    private CsvInsituLoader insituLoader;
     private InsituSource insituSource;
 
     @Before
     public void setUp() throws Exception {
         dateFormat = ProductData.UTC.createDateFormat("dd.MM.yyyy");
-        Reader csvReader = new StringReader("# Test CSV\n"
-                                                  + "LAT\tLON\tTIME\tCHL\tys\n"
-                                                  + "53.3\t13.4\t08.04.2003\t0.9\t20\n"
-                                                  + "53.1\t13.6\t03.04.2003\t0.5\t30\n"
-                                                  + "53.1\t13.6\t05.04.2003\t0.6\t40\n"
-                                                  + "53.1\t13.5\t11.04.2003\t0.4\t50\n");
-        insituLoader = new CsvInsituLoader();
-        insituLoader.setCsvReader(csvReader);
-        insituLoader.setDateFormat(ProductData.UTC.createDateFormat("dd.MM.yyyy"));
-        insituSource = new InsituSource(insituLoader);
+        final StringReader csvReader = new StringReader("# Test CSV\n"
+                                                        + "LAT\tLON\tTIME\tStation\tCHL\tys\n"
+                                                        + "10\t30\t08.04.2003\tName 1\t0.9\t20\n"
+                                                        + "20\t40\t03.04.2003\tName 2\t0.5\t30\n"
+                                                        + "20\t40\t05.04.2003\tName 2\t0.6\t40\n"
+                                                        + "20\t50\t11.04.2003\tName 3\t0.4\t50\n");
+        final CsvRecordSource csvRecordSource = new CsvRecordSource(csvReader, dateFormat);
+        insituSource = new InsituSource(csvRecordSource);
     }
 
     @Test
     public void testGetValuesForCHL_TimeOrdered() throws Exception {
         // execution
-        InsituRecord[] chlRecords = insituSource.getValuesFor("CHL");
+        InsituRecord[] chlRecords = insituSource.getValuesFor("CHL", null);
 
         // verification
-        InsituRecord expectedRecord = new InsituRecord(new GeoPos(53.1f, 13.6f), getDate("03.04.2003"), 0.5);
+        assertEquals(4, chlRecords.length);
+
+        InsituRecord expectedRecord;
+        expectedRecord = new InsituRecord(new GeoPos(20, 40), getDate("03.04.2003"), "Name 2", 0.5);
         assertEquals(expectedRecord, chlRecords[0]);
 
-        expectedRecord = new InsituRecord(new GeoPos(53.1f, 13.6f), getDate("05.04.2003"), 0.6);
+        expectedRecord = new InsituRecord(new GeoPos(20, 40), getDate("05.04.2003"), "Name 2", 0.6);
         assertEquals(expectedRecord, chlRecords[1]);
 
-        expectedRecord = new InsituRecord(new GeoPos(53.3f, 13.4f), getDate("08.04.2003"), 0.9);
+        expectedRecord = new InsituRecord(new GeoPos(10, 30), getDate("08.04.2003"), "Name 1", 0.9);
         assertEquals(expectedRecord, chlRecords[2]);
 
-        expectedRecord = new InsituRecord(new GeoPos(53.1f, 13.5f), getDate("11.04.2003"), 0.4);
+        expectedRecord = new InsituRecord(new GeoPos(20, 50), getDate("11.04.2003"), "Name 3", 0.4);
         assertEquals(expectedRecord, chlRecords[3]);
     }
 
     @Test
     public void testGetValuesForYS_TimeOrdered() throws Exception {
         // execution
-        InsituRecord[] chlRecords = insituSource.getValuesFor("ys");
+        InsituRecord[] ysRecords = insituSource.getValuesFor("ys", null);
 
         // verification
-        InsituRecord expectedRecord = new InsituRecord(new GeoPos(53.1f, 13.6f), getDate("03.04.2003"), 30);
-        assertEquals(expectedRecord, chlRecords[0]);
+        assertEquals(4, ysRecords.length);
 
-        expectedRecord = new InsituRecord(new GeoPos(53.1f, 13.6f), getDate("05.04.2003"), 40);
-        assertEquals(expectedRecord, chlRecords[1]);
+        InsituRecord expectedRecord;
+        expectedRecord = new InsituRecord(new GeoPos(20, 40), getDate("03.04.2003"), "Name 2", 30);
+        assertEquals(expectedRecord, ysRecords[0]);
 
-        expectedRecord = new InsituRecord(new GeoPos(53.3f, 13.4f), getDate("08.04.2003"), 20);
-        assertEquals(expectedRecord, chlRecords[2]);
+        expectedRecord = new InsituRecord(new GeoPos(20, 40), getDate("05.04.2003"), "Name 2", 40);
+        assertEquals(expectedRecord, ysRecords[1]);
 
-        expectedRecord = new InsituRecord(new GeoPos(53.1f, 13.5f), getDate("11.04.2003"), 50);
-        assertEquals(expectedRecord, chlRecords[3]);
+        expectedRecord = new InsituRecord(new GeoPos(10, 30), getDate("08.04.2003"), "Name 1", 20);
+        assertEquals(expectedRecord, ysRecords[2]);
+
+        expectedRecord = new InsituRecord(new GeoPos(20, 50), getDate("11.04.2003"), "Name 3", 50);
+        assertEquals(expectedRecord, ysRecords[3]);
     }
 
     @Test
     public void testGetValuesForGeoPos() throws Exception {
         // execution
-        InsituRecord[] chlRecordsPos1 = insituSource.getValuesFor("ys", new GeoPos(53.1f, 13.6f));
-        InsituRecord[] chlRecordsPos2 = insituSource.getValuesFor("ys", new GeoPos(53.3f, 13.4f));
+        InsituRecord[] chlRecordsPos1 = insituSource.getValuesFor("ys", new GeoPos(20, 40));
+        InsituRecord[] chlRecordsPos2 = insituSource.getValuesFor("ys", new GeoPos(10, 30));
 
         // verification
         assertEquals(2, chlRecordsPos1.length);
         assertEquals(1, chlRecordsPos2.length);
 
-        InsituRecord expectedRecord = new InsituRecord(new GeoPos(53.1f, 13.6f), getDate("03.04.2003"), 30);
+        InsituRecord expectedRecord;
+        expectedRecord = new InsituRecord(new GeoPos(20, 40), getDate("03.04.2003"), "Name 2", 30);
         assertEquals(expectedRecord, chlRecordsPos1[0]);
 
-        expectedRecord = new InsituRecord(new GeoPos(53.1f, 13.6f), getDate("05.04.2003"), 40);
+        expectedRecord = new InsituRecord(new GeoPos(20, 40), getDate("05.04.2003"), "Name 2", 40);
         assertEquals(expectedRecord, chlRecordsPos1[1]);
 
-        expectedRecord = new InsituRecord(new GeoPos(53.3f, 13.4f), getDate("08.04.2003"), 20);
+        expectedRecord = new InsituRecord(new GeoPos(10, 30), getDate("08.04.2003"), "Name 1", 20);
         assertEquals(expectedRecord, chlRecordsPos2[0]);
     }
 

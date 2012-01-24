@@ -35,15 +35,15 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
 
     private final Map<RasterDataNode, TimeCoding> rasterTimeMap = new WeakHashMap<RasterDataNode, TimeCoding>();
     private final List<TimeSeriesListener> listeners = new ArrayList<TimeSeriesListener>();
-    private final List<Placemark> insituPins = new ArrayList<Placemark>();
     private final AxisMappingModel axisMappingModel = new AxisMappingModel();
+    private final Map<Placemark,GeoPos> pinRelationMap = new HashMap<Placemark, GeoPos>();
 
     private Product tsProduct;
     private List<ProductLocation> productLocationList;
     private Map<String, Product> productTimeMap;
     private InsituSource insituSource;
-    private Set<String> insituVariablesSelections = new HashSet<String>();
 
+    private Set<String> insituVariablesSelections = new HashSet<String>();
     private volatile boolean isAdjustingImageInfos;
 
     /**
@@ -412,8 +412,23 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
     }
 
     @Override
-    public List<Placemark> getInsituPlacemarks() {
-        return insituPins;
+    public void clearInsituPlacemarks() {
+        final PlacemarkGroup pinGroup = tsProduct.getPinGroup();
+        for (Placemark insituPin : pinRelationMap.keySet()) {
+            pinGroup.remove(insituPin);
+        }
+        pinRelationMap.clear();
+    }
+
+    @Override
+    public GeoPos getInsituGeoposFor(Placemark placemark) {
+        return pinRelationMap.get(placemark);
+    }
+
+    @Override
+    public void registerRelation(Placemark placemark, GeoPos insituGeopos) {
+        pinRelationMap.put(placemark, insituGeopos);
+        tsProduct.getPinGroup().add(placemark);
     }
 
     @Override

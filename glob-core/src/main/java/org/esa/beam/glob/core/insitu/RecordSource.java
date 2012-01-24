@@ -1,4 +1,4 @@
-package org.esa.beam.glob.core.insitu.csv;
+package org.esa.beam.glob.core.insitu;
 
 public interface RecordSource {
     /**

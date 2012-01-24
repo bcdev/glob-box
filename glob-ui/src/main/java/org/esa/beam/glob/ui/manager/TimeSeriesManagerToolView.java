@@ -21,7 +21,6 @@ import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.framework.datamodel.PinDescriptor;
 import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Placemark;
-import org.esa.beam.framework.datamodel.PlacemarkGroup;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductNode;
 import org.esa.beam.framework.datamodel.ProductNodeEvent;
@@ -41,9 +40,10 @@ import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 import java.awt.BorderLayout;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.WeakHashMap;
 
 
@@ -147,68 +147,54 @@ public class TimeSeriesManagerToolView extends AbstractToolView {
         return activeForm;
     }
 
-    private void updateInsituPins(String insituVariable) {
+    private void updateInsituPins() {
         final AbstractTimeSeries timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(selectedProduct);
-        final Product tsProduct = timeSeries.getTsProduct();
-        final PlacemarkGroup pinGroup = tsProduct.getPinGroup();
-        if(!timeSeries.hasInsituData()) {
-            for (Placemark insituPin : timeSeries.getInsituPlacemarks()) {
-                pinGroup.remove(insituPin);
-            }
-            return;
-        }
+        timeSeries.clearInsituPlacemarks();
+        addPlacemarks(timeSeries);
+    }
+
+    private void addPlacemarks(AbstractTimeSeries timeSeries) {
         final InsituSource insituSource = timeSeries.getInsituSource();
         final List<String> selectedInsituVariables = getSelectedInsituVariables(timeSeries, insituSource);
-        if(selectedInsituVariables.contains(insituVariable)) {
-            removePlacemarks(timeSeries.getInsituPlacemarks(), pinGroup);
-        }
-
-        addPlacemarks(tsProduct, timeSeries, selectedInsituVariables);
-    }
-
-    private void addPlacemarks(Product tsProduct, AbstractTimeSeries timeSeries, List<String> selectedInsituVariables) {
-        final InsituSource insituSource = timeSeries.getInsituSource();
-        PlacemarkGroup pinGroup = tsProduct.getPinGroup();
-        final Map<String, GeoPos[]> geoPoses = new HashMap<String, GeoPos[]>();
+        final Set<GeoPos> geoPoses = new TreeSet<GeoPos>(createGeoPosComparator());
         for (String selectedInsituVariable : selectedInsituVariables) {
-            geoPoses.put(selectedInsituVariable, insituSource.getInsituPositionsFor(selectedInsituVariable));
+            geoPoses.addAll(insituSource.getInsituPositionsFor(selectedInsituVariable));
         }
+
+        final Product tsProduct = timeSeries.getTsProduct();
         final GeoCoding geoCoding = tsProduct.getGeoCoding();
 
-        int counter = 1;
         final PixelPos pixelPos = new PixelPos();
-        for (Map.Entry<String, GeoPos[]> entry : geoPoses.entrySet()) {
-            for (GeoPos geoPos : entry.getValue()) {
-                geoCoding.getPixelPos(geoPos, pixelPos);
-                if (!AbstractTimeSeries.isPixelValid(tsProduct, pixelPos)) {
-                    continue;
-                }
-                final String name = "Insitu_" + entry.getKey() + "_" + counter;
-                // todo - ts - create better name, label, and description
-                final Placemark placemark = Placemark.createPointPlacemark(
-                        PinDescriptor.getInstance(),
-                        name,
-                        name,
-                        name,
-                        null,
-                        geoPos,
-                        geoCoding);
-                if (placemark != null) {
-                    pinGroup.add(placemark);
-                }
-                counter++;
-                timeSeries.getInsituPlacemarks().add(placemark);
+        for (GeoPos geoPos : geoPoses) {
+            geoCoding.getPixelPos(geoPos, pixelPos);
+            if (!AbstractTimeSeries.isPixelValid(tsProduct, pixelPos)) {
+                continue;
             }
+            String name;
+            if (insituSource.hasStationNames()) {
+                name = insituSource.getNameFor(geoPos);
+            } else {
+                name = geoPos.getLatString() + "_" + geoPos.getLonString();
+            }
+
+            final String pinName = "Insitu_" + name;
+            final String pinLabel = name;
+            final String pinDescription = name;
+            final Placemark placemark = Placemark.createPointPlacemark(
+                        PinDescriptor.getInstance(),
+                        pinName, pinLabel, pinDescription,
+                        null, geoPos, geoCoding);
+            timeSeries.registerRelation(placemark, geoPos);
         }
     }
 
-    private void removePlacemarks(List<Placemark> insituVariable, PlacemarkGroup pinGroup) {
-        for (int i = 0; i < pinGroup.getNodeCount(); i++) {
-            final Placemark placemark = pinGroup.get(i);
-            if(insituVariable.contains(placemark)) {
-                pinGroup.remove(placemark);
+    private Comparator<GeoPos> createGeoPosComparator() {
+        return new Comparator<GeoPos>() {
+            @Override
+            public int compare(GeoPos o1, GeoPos o2) {
+                return o1.toString().compareTo(o2.toString());
             }
-        }
+        };
     }
 
     private List<String> getSelectedInsituVariables(AbstractTimeSeries timeSeries, InsituSource insituSource) {
@@ -256,8 +242,8 @@ public class TimeSeriesManagerToolView extends AbstractToolView {
             if (type == TimeSeriesChangeEvent.START_TIME_PROPERTY_NAME ||
                 type == TimeSeriesChangeEvent.END_TIME_PROPERTY_NAME) {
                 activeForm.updateFormControl(getSelectedProduct());
-            } else if(type == TimeSeriesChangeEvent.PROPERTY_INSITU_VARIABLE_SELECTION) {
-                updateInsituPins(event.getValue().toString());
+            } else if (type == TimeSeriesChangeEvent.PROPERTY_INSITU_VARIABLE_SELECTION) {
+                updateInsituPins();
             }
         }
 

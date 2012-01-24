@@ -17,6 +17,7 @@
 package org.esa.beam.glob.core.timeseries.datamodel;
 
 import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Placemark;
 import org.esa.beam.framework.datamodel.Product;
@@ -106,7 +107,11 @@ public abstract class AbstractTimeSeries {
 
     public abstract InsituSource getInsituSource();
 
-    public abstract List<Placemark> getInsituPlacemarks();
+    public abstract void clearInsituPlacemarks();
+
+    public abstract GeoPos getInsituGeoposFor(Placemark placemark);
+
+    public abstract void registerRelation(Placemark placemark, GeoPos insituGeopos);
 
     public static String variableToRasterName(String variableName, TimeCoding timeCoding) {
         final ProductData.UTC rasterStartTime = timeCoding.getStartTime();

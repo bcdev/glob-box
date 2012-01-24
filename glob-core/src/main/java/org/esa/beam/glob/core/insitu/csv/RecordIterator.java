@@ -1,10 +1,12 @@
 package org.esa.beam.glob.core.insitu.csv;
 
+import org.esa.beam.glob.core.insitu.Record;
+
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 /**
- * An iterator used in various implementations of the {@link RecordSource} interface.
+ * An iterator used in various implementations of the {@link org.esa.beam.glob.core.insitu.RecordSource} interface.
  *
  * @author Norman
  */
