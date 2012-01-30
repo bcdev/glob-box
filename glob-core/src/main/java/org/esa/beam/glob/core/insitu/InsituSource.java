@@ -96,6 +96,12 @@ public class InsituSource {
     }
 
     public String getNameFor(GeoPos geoPos) {
+        Iterable<Record> records = recordSource.getRecords();
+        for (Record record : records) {
+            if (record.getLocation().equals(geoPos)) {
+                return record.getStationName();
+            }
+        }
         return "";
     }
 

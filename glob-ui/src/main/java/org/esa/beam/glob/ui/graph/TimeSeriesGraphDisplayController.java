@@ -157,21 +157,14 @@ class TimeSeriesGraphDisplayController {
         }
     }
 
-    public List<TimeSeriesGraphUpdater.NamedGeoPos> getPinPositionsToDisplay() {
-        final ArrayList<TimeSeriesGraphUpdater.NamedGeoPos> pinPositionsToDisplay = new ArrayList<TimeSeriesGraphUpdater.NamedGeoPos>(0);
+    public Placemark[] getPinPositionsToDisplay() {
         if (pinSupport.isShowingAllPins()) {
             final PlacemarkGroup pinGroup = timeSeries.getTsProduct().getPinGroup();
-            for (int i = 0; i < pinGroup.getNodeCount(); i++) {
-                final Placemark pin = pinGroup.get(i);
-                pinPositionsToDisplay.add(new TimeSeriesGraphUpdater.NamedGeoPos(pin.getGeoPos(), pin.getLabel()));
-            }
+            return pinGroup.toArray(new Placemark[pinGroup.getNodeCount()]);
         } else if (pinSupport.isShowingSelectedPins()) {
-            final Placemark[] selectedPins = pinSupport.getSelectedPins();
-            for (Placemark selectedPin : selectedPins) {
-                pinPositionsToDisplay.add(new TimeSeriesGraphUpdater.NamedGeoPos(selectedPin.getGeoPos(), selectedPin.getLabel()));
-            }
+            return pinSupport.getSelectedPins();
         }
-        return pinPositionsToDisplay;
+        return new Placemark[0];
     }
 
     public Shape getShape(int posIdx) {
@@ -186,6 +179,5 @@ class TimeSeriesGraphDisplayController {
         boolean isShowingSelectedPins();
 
         Placemark[] getSelectedPins();
-
     }
 }

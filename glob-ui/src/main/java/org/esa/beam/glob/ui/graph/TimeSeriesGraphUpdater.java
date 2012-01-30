@@ -2,6 +2,7 @@ package org.esa.beam.glob.ui.graph;
 
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.GeoPos;
+import org.esa.beam.framework.datamodel.Placemark;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.glob.core.insitu.InsituSource;
 import org.esa.beam.glob.core.insitu.csv.InsituRecord;
@@ -87,10 +88,10 @@ class TimeSeriesGraphUpdater extends SwingWorker<List<TimeSeries>, Void> {
         final List<Position> positionsToDisplay = new ArrayList<Position>();
         final ArrayList<String> positionNames = new ArrayList<String>();
         if (type.equals(TimeSeriesType.PIN)) {
-            final List<NamedGeoPos> pinPositionsToDisplay = dataSources.getPinPositionsToDisplay();
-            for (NamedGeoPos namedGeoPos : pinPositionsToDisplay) {
-                positionsToDisplay.add(positionSupport.transformGeoPos(namedGeoPos.geopos));
-                positionNames.add(namedGeoPos.name);
+            final Placemark[] pinPositionsToDisplay = dataSources.getPinPositionsToDisplay();
+            for (Placemark namedGeoPos : pinPositionsToDisplay) {
+                positionsToDisplay.add(positionSupport.transformGeoPos(namedGeoPos.getGeoPos()));
+                positionNames.add(namedGeoPos.getLabel());
             }
         } else if (showCursorTimeSeries && cursorPosition != null) {
             positionsToDisplay.add(cursorPosition);
@@ -120,16 +121,15 @@ class TimeSeriesGraphUpdater extends SwingWorker<List<TimeSeries>, Void> {
         final List<TimeSeries> insituTimeSeries = new ArrayList<TimeSeries>();
 
         final Set<String> aliasNames = displayAxisMapping.getAliasNames();
-        final List<NamedGeoPos> pinPositionsToDisplay = dataSources.getPinPositionsToDisplay();
+        final Placemark[] pinPositionsToDisplay = dataSources.getPinPositionsToDisplay();
 
-        for (NamedGeoPos insituPin : pinPositionsToDisplay) {
+        for (Placemark insituPin : pinPositionsToDisplay) {
             for (String aliasName : aliasNames) {
                 final List<String> insituNames = displayAxisMapping.getInsituNames(aliasName);
                 for (String insituName : insituNames) {
                     // todo
-//                    InsituRecord[] insituRecords = insituSource.getValuesFor(insituName, timeSeries.getInsituGeoposFor(insituPin);
-                    InsituRecord[] insituRecords = insituSource.getValuesFor(insituName, insituPin.geopos);
-                    final TimeSeries timeSeries = computeSingleTimeSeries(insituRecords, insituName + "_" + insituPin.name);
+                    InsituRecord[] insituRecords = insituSource.getValuesFor(insituName, timeSeries.getInsituGeoposFor(insituPin));
+                    final TimeSeries timeSeries = computeSingleTimeSeries(insituRecords, insituName + "_" + insituPin.getLabel());
                     insituTimeSeries.add(dataHandler.getValidatedTimeSeries(timeSeries, insituName, type));
                 }
             }
@@ -212,19 +212,19 @@ class TimeSeriesGraphUpdater extends SwingWorker<List<TimeSeries>, Void> {
 
     static abstract class VersionSafeDataSources {
 
-        private final List<NamedGeoPos> pinPositionsToDisplay;
+        private final Placemark[] pinPositionsToDisplay;
         private final int version;
 
-        protected VersionSafeDataSources(List<NamedGeoPos> pinPositionsToDisplay, final int version) {
+        protected VersionSafeDataSources(Placemark[] pinPositionsToDisplay, final int version) {
             this.pinPositionsToDisplay = pinPositionsToDisplay;
             this.version = version;
         }
 
-        public List<NamedGeoPos> getPinPositionsToDisplay() {
+        public Placemark[] getPinPositionsToDisplay() {
             if (canReturnValues()) {
                 return pinPositionsToDisplay;
             }
-            return Collections.emptyList();
+            return new Placemark[0];
         }
 
         protected abstract int getCurrentVersion();
@@ -237,16 +237,5 @@ class TimeSeriesGraphUpdater extends SwingWorker<List<TimeSeries>, Void> {
     static interface PositionSupport {
 
         Position transformGeoPos(GeoPos geoPos);
-    }
-
-    public static class NamedGeoPos {
-
-        private final GeoPos geopos;
-        private final String name;
-
-        NamedGeoPos(GeoPos geopos, String name) {
-            this.geopos = geopos;
-            this.name = name;
-        }
     }
 }

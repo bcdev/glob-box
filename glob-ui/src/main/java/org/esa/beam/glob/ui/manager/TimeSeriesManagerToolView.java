@@ -183,7 +183,7 @@ public class TimeSeriesManagerToolView extends AbstractToolView {
             final Placemark placemark = Placemark.createPointPlacemark(
                         PinDescriptor.getInstance(),
                         pinName, pinLabel, pinDescription,
-                        null, geoPos, geoCoding);
+                        null, new GeoPos(geoPos), geoCoding);
             timeSeries.registerRelation(placemark, geoPos);
         }
     }
