@@ -7,6 +7,7 @@ import com.bc.ceres.swing.selection.SelectionChangeEvent;
 import org.esa.beam.framework.datamodel.CrsGeoCoding;
 import org.esa.beam.framework.datamodel.GeoCoding;
 import org.esa.beam.framework.datamodel.GeoPos;
+import org.esa.beam.framework.datamodel.MapGeoCoding;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductFilter;
 import org.esa.beam.framework.gpf.GPF;
@@ -213,7 +214,8 @@ class TimeSeriesAssistantPage_ReprojectingSources extends AbstractTimeSeriesAssi
                 return false;
             }
             final GeoCoding geoCoding = collocationProduct.getGeoCoding();
-            if (geoCoding.canGetGeoPos() && geoCoding.canGetPixelPos() && (geoCoding instanceof CrsGeoCoding)) {
+            if (geoCoding.canGetGeoPos() && geoCoding.canGetPixelPos()
+                && ((geoCoding instanceof CrsGeoCoding)||(geoCoding instanceof MapGeoCoding))) {
                 final GeneralPath[] sourcePaths = ProductUtils.createGeoBoundaryPaths(timeSeriesSourceProduct);
                 final GeneralPath[] collocationPaths = ProductUtils.createGeoBoundaryPaths(collocationProduct);
                 for (GeneralPath sourcePath : sourcePaths) {
