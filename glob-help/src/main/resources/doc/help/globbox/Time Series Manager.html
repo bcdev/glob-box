@@ -25,10 +25,8 @@
 
 <table class="header">
     <tr class="header">
-        <td class="header">GlobToolbox
-        </td>
-        <td class="header" align="right"><img src="../images/GlobToolboxHeader.png" border=0>
-        </td>
+        <td class="header">GlobToolbox</td>
+        <td class="header" align="right"><img src="../images/GlobToolboxHeader.png" border=0 alt=""></td>
     </tr>
 </table>
 <hr/>
@@ -40,28 +38,50 @@
     Time Series are created and edited using the GlobToolbox Time Series Manager tool.
 </p>
 
-<h4>Time Series Specification</h4>
+<h4>Time Series</h4>
 
 <p>
-    Within the GlobToolbox, a <i>Time Series</i> is specified by several source products and variables. Every product
-    comprising remote-sensing bands may be used as source product of a Time Series; Glob*-products in particular.
-    However, a Time Series is limited to contain <i>compatible</i> source products, that is, to source products which
-    have the same bounds.
-</p>
-
-<p>
-    Variables in the context of the GlobToolbox are types of bands, such as <code>TSM_mean</code> or <code>SST</code>.
-    Thus, a time series comprises several bands of different variables, for example, 4 bands of <code>TSM_mean</code>,
+    Within the GlobToolbox, a <i>time series</i> is specified by several source products and variables. Every product
+    comprising remote-sensing bands may be used as source product of a time series; Glob*-products in particular.
+    However, products need to share at least one remote-sensing band in order to create a meaningful time series.
+    A time series comprises several bands of different variables, for example, 4 bands of <code>TSM_mean</code>,
     each originating from a different source product.
 </p>
 
 <h4>Time Series Manager Tool</h4>
 
 <p>
-    The Time Series Manager, opened by a click on <img src="../images/ts-manager-button.gif" alt="ts-manager-button">,
-    allows to define and edit such time series. It provides a wizard which allows to specify source
-    products in three different ways: either a directory is scanned for compatible products or a directory is scanned
-    together with its sub-directories, or single products may be chosen (see Screenshot 1).
+    The <i>Time Series Manager</i>, opened by a click on <img src="../images/ts-manager-button.gif" alt="ts-manager-button" />,
+    allows to manage time series in a broad sense. In short, it allows the user to
+    <ul>
+        <li>create a time series</li>
+        <li>import in-situ data</li>
+        <li>map band names</li>
+        <li>edit a time series' time frame</li>
+        <li>view a time series</li>
+        <li>export a time series</li>
+    </ul>
+</p>
+
+<p>&nbsp;</p>
+
+<p>
+    Screenshot 1 shows the time series manager in its initial state.
+</p>
+
+<p>&nbsp;</p>
+
+<div class="image">
+    <img src="../images/ts-manager_unfilled.png" alt="ts-manager_unfilled">
+
+    <div align="center"><font size="2">Screenshot 1 - Time Series Manager in initial state</font></div>
+</div>
+
+<p>
+    The point of entry is the <i>Time Series Wizard</i>, which is started by clicking on
+    <img src="../images/New24.gif" alt="new-button">. It allows to specify source products in three
+    different ways: either a directory is scanned for products or a directory is scanned together with its
+    sub-directories, or single products may be chosen (see Screenshot 2).
 </p>
 
 <p>&nbsp;</p>
@@ -69,15 +89,32 @@
 <div class="image">
     <img src="../images/wizard-product-locations.png" alt="wizard-product-locations">
 
-    <div align="center"><font size="2">Screenshot 1 - Defining Time Series source products</font></div>
+    <div align="center"><font size="2">Screenshot 2 - Defining Time Series source products</font></div>
 </div>
 
 <p>&nbsp;</p>
 
 <p>
-    In the second step, the wizard allows to specify the variables the Time Series shall contain. The list of possible
-    variables is derived from the products which have been chosen in the previous step. The second step is displayed in
-    Screenshot 2.
+    If all specified products are on the same grid and have the same bounds, the following step is skipped. If not, the
+    products need to be reprojected for the time series. Reprojection is done by specifying an already projected
+    reference product and using its CRS and its bounds. Therefore, these reference products needs to intersect the
+    products which shall appear in the time series. See Screenshot 3 for the wizard's reprojection page.
+</p>
+
+<p>&nbsp;</p>
+
+<div class="image">
+    <img src="../images/wizard-reprojection.png" alt="wizard-reprojection">
+
+    <div align="center"><font size="2">Screenshot 3 - Reprojecting time series source products</font></div>
+</div>
+
+<p>&nbsp;</p>
+
+<p>
+    In the next step, the wizard allows to specify the variables the time series shall contain. The list of possible
+    variables is derived from the products which have been chosen in the previous step. This step is displayed in
+    Screenshot 4.
 </p>
 
 <p>&nbsp;</p>
@@ -85,17 +122,27 @@
 <div class="image">
     <img src="../images/wizard-variables.png" alt="wizard-variables">
 
-    <div align="center"><font size="2">Screenshot 2 - Specifying the variables</font></div>
+    <div align="center"><font size="2">Screenshot 4 - Specifying the variables</font></div>
 </div>
 
 <p>&nbsp;</p>
 
 <p>
-    After that, the user may assign the Time Series a name and finish the wizard. The Time Series Manager now looks as
-    displayed in Screenshot 3: the variables may be selected and de-selected and the product sources may be edited.
-    Additionally, information about the Time Series is provided, such as the start and end time, the CRS and the
-    dimensions. The view button on the right <img src="../images/view-button.png" alt="view-button"> allows to show one
-    of the selected variables in the VISAT Product Scene View.
+    After that, the user may assign the time series a name and finish the wizard. See Screenshot 5.
+</p>
+
+<p>&nbsp;</p>
+
+<div class="image">
+    <img src="../images/wizard-time_series_name.png" alt="wizard-time_series_name">
+
+    <div align="center"><font size="2">Screenshot 5 - Setting the name and finishing the wizard</font></div>
+</div>
+
+<p>&nbsp;</p>
+
+<p>
+    After the wizard is finished, the Time Series Manager now looks as displayed in Screenshot 6.
 </p>
 
 <p>&nbsp;</p>
@@ -103,14 +150,78 @@
 <div class="image">
     <img src="../images/ts-manager.png" alt="ts-manager">
 
-    <div align="center"><font size="2">Screenshot 3 - The Time Series Manager</font></div>
+    <div align="center"><font size="2">Screenshot 6 - The Time Series Manager</font></div>
 </div>
 
 <p>&nbsp;</p>
 
+<p>
+    On the upper left, there are provided some general information about the time series, such as the start and end
+    time, the CRS and the dimensions. In the upper middle, the variables from the bands may be selected and de-selected
+    On the upper right, in-situ variables may be added or removed. The lower panel displays the product sources and
+    allows the user to add or remove products of the time series.
+</p>
+
+<p>
+    On the panel's right, there are a number of buttons which become active after creating the time series.
+    The <img src="../images/Import24.gif" alt="insitu-button">-button allows the user to load in-situ data from a
+    CSV-file. See listing 1 for an exemplary in-situ source file.
+</p>
+
+<table border="0" style="left: 5px; top: 5px; background-color:#f0f0f0">
+    <tr>
+        <td>Name</td>
+        <td>Lon</td>
+        <td>Lat</td>
+        <td>Time</td>
+        <td>Fo</td>
+        <td>CHL</td>
+    </tr>
+    <tr>
+        <td>AMRU2</td>
+        <td>7.8333</td>
+        <td>54.6667</td>
+        <td>2010-01-23 01:21</td>
+        <td>19.9</td>
+        <td>0.46</td>
+    </tr>
+    <tr>
+        <td>DTEND</td>
+        <td>4</td>
+        <td>55.5</td>
+        <td>2010-01-25 18:35</td>
+        <td>16.9</td>
+        <td>0.39</td>
+    </tr>
+    <tr>
+        <td>DTEND</td>
+        <td>4</td>
+        <td>55.5</td>
+        <td>2010-01-25 19:35</td>
+        <td>16.8</td>
+        <td>0.41</td>
+    </tr>
+    <tr>
+        <td colspan="6"><div align="center"><font size="2">Listing 1 - An exemplary in-situ source file</font></div></td>
+    </tr>
+</table>
+
+<p>
+    The <img src="../images/AxisMapping24.gif" alt="axismapping-button">-button allows the user to create a mapping
+    between satellite and in-situ data. This is needed if the names in the satellite products are different from the
+    names within the in-situ data, but shall be handled equally.
+</p>
+
+// TODO - add screenshot of band mapping dialog and explain
+
+<p>
+    The view button on the right <img src="../images/view-button.png" alt="view-button"> allows to show one
+    of the selected variables in the VISAT Product Scene View.
+</p>
+
 <hr/>
 
-<p><i>Copyright &copy; 2010 by Brockmann Consult (beam-issues@brockmann-consult.de). All rights reserved.</i></p>
+<p><i>Copyright &copy; 2012 by Brockmann Consult (beam-issues@brockmann-consult.de). All rights reserved.</i></p>
 
 </body>
 </html>
