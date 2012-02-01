@@ -155,6 +155,10 @@
 
 <p>&nbsp;</p>
 
+
+<h4>
+    General Information
+</h4>
 <p>
     On the upper left, there are provided some general information about the time series, such as the start and end
     time, the CRS and the dimensions. In the upper middle, the variables from the bands may be selected and de-selected
@@ -162,10 +166,19 @@
     allows the user to add or remove products of the time series.
 </p>
 
+<h4>
+    Buttons at the right side
+</h4>
 <p>
     On the panel's right, there are a number of buttons which become active after creating the time series.
-    The <img src="../images/Import24.gif" alt="insitu-button">-button allows the user to load in-situ data from a
-    CSV-file. See listing 1 for an exemplary in-situ source file.
+</p>
+
+<h5>
+    Import In-Situ Data ... <img src="../images/Import24.gif" alt="insitu-button">
+</h5>
+<p>
+    The button allows the user to load in-situ data from a CSV-file. The columns must be tab (char='\t') separated.
+    <br> See listing 1 for an exemplary in-situ source file.
 </p>
 
 <table border="0" style="left: 5px; top: 5px; background-color:#f0f0f0">
@@ -202,16 +215,37 @@
         <td>0.41</td>
     </tr>
     <tr>
-        <td colspan="6"><div align="center"><font size="2">Listing 1 - An exemplary in-situ source file</font></div></td>
+        <td colspan="6" align="center" style="font-size: 10px;">.<br>.<br>.</td>
+    </tr>
+    <tr>
+        <td colspan="6" align="center" style="font-size: 12px;">Listing 1 - An exemplary in-situ source file</td>
     </tr>
 </table>
 
 <p>
-    The <img src="../images/AxisMapping24.gif" alt="axismapping-button">-button allows the user to create a mapping
-    between satellite and in-situ data. This is needed if the names in the satellite products are different from the
-    names within the in-situ data, but shall be handled equally.
+    The import mechanism is intelligent enough to automatically detect columns for Station Name, Latitude column,
+    Longitude column and Time Column. All other columns are interpreted as measurement parameter.
+    <br>All the valid column names are case insensitive!
+    <table>
+    <tr><th>Column</th><th>valid names</th></tr>
+    <tr><td>Latitude</td><td>"lat", "latitude", "northing"</td></tr>
+    <tr><td>Longitude</td><td>"lon", "long", "longitude", "easting"</td></tr>
+    <tr><td>Time</td><td>"time", "date"</td></tr>
+    <tr><td>Station name</td><td>"name", "station", "label"</td></tr>
+    </table>
 </p>
 
+<h5>
+    Axis Mapping ... <img src="../images/AxisMapping24.gif" alt="axismapping-button">
+</h5>
+<p>
+    The button allows the user to create a mapping between satellite and in-situ data. This is needed if the names
+    in the satellite products are different from the names within the in-situ data, but shall be handled equally.
+</p>
+<br>
+<br>
+<br>
+<br>
 // TODO - add screenshot of band mapping dialog and explain
 
 <p>
