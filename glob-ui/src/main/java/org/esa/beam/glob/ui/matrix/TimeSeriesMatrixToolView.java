@@ -16,51 +16,30 @@
 
 package org.esa.beam.glob.ui.matrix;
 
-import com.bc.ceres.glayer.support.ImageLayer;
-import com.bc.ceres.glayer.swing.LayerCanvas;
-import com.bc.ceres.swing.TableLayout;
-import com.jidesoft.grid.JideTable;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.ProductNode;
-import org.esa.beam.framework.datamodel.ProductNodeEvent;
-import org.esa.beam.framework.datamodel.RasterDataNode;
-import org.esa.beam.framework.ui.PixelPositionListener;
-import org.esa.beam.framework.ui.UIUtils;
-import org.esa.beam.framework.ui.application.support.AbstractToolView;
-import org.esa.beam.framework.ui.product.ProductSceneView;
-import org.esa.beam.framework.ui.tool.ToolButtonFactory;
-import org.esa.beam.glob.core.TimeSeriesMapper;
-import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
-import org.esa.beam.glob.core.timeseries.datamodel.TimeCoding;
-import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesListener;
-import org.esa.beam.util.math.MathUtils;
-import org.esa.beam.visat.VisatApp;
+import com.bc.ceres.glayer.support.*;
+import com.bc.ceres.glayer.swing.*;
+import com.bc.ceres.swing.*;
+import com.jidesoft.grid.*;
+import org.esa.beam.framework.datamodel.*;
+import org.esa.beam.framework.help.*;
+import org.esa.beam.framework.ui.*;
+import org.esa.beam.framework.ui.application.*;
+import org.esa.beam.framework.ui.application.support.*;
+import org.esa.beam.framework.ui.product.*;
+import org.esa.beam.framework.ui.tool.*;
+import org.esa.beam.glob.core.*;
+import org.esa.beam.glob.core.timeseries.datamodel.*;
+import org.esa.beam.util.math.*;
+import org.esa.beam.visat.*;
 
-import javax.swing.AbstractButton;
-import javax.swing.BorderFactory;
-import javax.swing.JComponent;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JSpinner;
-import javax.swing.SpinnerNumberModel;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-import javax.swing.event.InternalFrameAdapter;
-import javax.swing.event.InternalFrameEvent;
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Container;
-import java.awt.Insets;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseWheelEvent;
-import java.awt.event.MouseWheelListener;
-import java.awt.geom.AffineTransform;
-import java.awt.geom.Point2D;
-import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Date;
+import javax.swing.*;
+import javax.swing.event.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.awt.geom.*;
+import java.text.*;
+import java.util.*;
 import java.util.List;
-import java.util.Locale;
 
 public class TimeSeriesMatrixToolView extends AbstractToolView {
 
@@ -188,6 +167,13 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
         buttonPanel.add(matrixSizeSpinner);
         buttonPanel.add(tableLayout.createVerticalSpacer());
         buttonPanel.add(helpButton);
+
+        final PageComponentDescriptor descriptor = getDescriptor();
+        if (descriptor.getHelpId() != null) {
+            HelpSys.enableHelpOnButton(helpButton, descriptor.getHelpId());
+            HelpSys.enableHelpKey(buttonPanel, descriptor.getHelpId());
+        }
+
         return buttonPanel;
     }
 

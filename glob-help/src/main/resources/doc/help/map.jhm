@@ -7,10 +7,11 @@
 
     <mapID target="globboxIntroduction" url="globbox/Introduction.html"/>
     <mapID target="globboxReaders" url="globbox/Readers.html"/>
-    <mapID target="timeSeriesManager" url="globbox/Time Series Manager.html"/>
-    <mapID target="timeSeriesGraph" url="globbox/Time Series Graph.html"/>
-    <mapID target="timeSeriesPlayer" url="globbox/Time Series Player.html"/>
-    <mapID target="netCdfExport" url="globbox/Export as NetCDF.html"/>
-    <mapID target="kmzExport" url="globbox/Export as Google Earth KMZ-file.html"/>
+    <mapID target="timeSeriesManager" url="globbox/TimeSeriesManager.html"/>
+    <mapID target="timeSeriesGraph" url="globbox/TimeSeriesGraph.html"/>
+    <mapID target="timeSeriesPlayer" url="globbox/TimeSeriesPlayer.html"/>
+    <mapID target="timeSeriesMatrix" url="globbox/TimeSeriesMatrix.html"/>
+    <mapID target="netCdfExport" url="globbox/ExportAsNetCDF.html"/>
+    <mapID target="kmzExport" url="globbox/ExportAsKMZ.html"/>
 
 </map>

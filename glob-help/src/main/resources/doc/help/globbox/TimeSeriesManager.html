@@ -44,7 +44,7 @@
     Within the GlobToolbox, a <i>time series</i> is specified by several source products and variables. Every product
     comprising remote-sensing bands may be used as source product of a time series; Glob*-products in particular.
     However, products need to share at least one remote-sensing band in order to create a meaningful time series.
-    A time series comprises several bands of different variables, for example, 4 bands of <code>TSM_mean</code>,
+    A time series comprises several bands of the same variable, for example, 4 bands of <code>TSM_mean</code>,
     each originating from a different source product.
 </p>
 
@@ -79,7 +79,7 @@
 
 <p>
     The point of entry is the <i>Time Series Wizard</i>, which is started by clicking on
-    <img src="../images/New24.gif" alt="new-button">. It allows to specify source products in three
+    <img src="../images/New24.gif" alt="new-button">. It allows the user to specify source products in three
     different ways: either a directory is scanned for products or a directory is scanned together with its
     sub-directories, or single products may be chosen (see Screenshot 2).
 </p>
@@ -149,7 +149,6 @@
 
 <div class="image">
     <img src="../images/ts-manager.png" alt="ts-manager">
-
     <div align="center"><font size="2">Screenshot 6 - The Time Series Manager</font></div>
 </div>
 
@@ -161,8 +160,10 @@
 </h4>
 <p>
     On the upper left, there are provided some general information about the time series, such as the start and end
-    time, the CRS and the dimensions. In the upper middle, the variables from the bands may be selected and de-selected
-    On the upper right, in-situ variables may be added or removed. The lower panel displays the product sources and
+    time, the CRS and the dimensions. In the upper middle, the variables from the bands may be selected and de-selected.
+    Only selected variables are featured in the time series, thus, if a variable becomes de-selected, it is instantly
+    excluded from the time series.
+    <br>On the upper right, in-situ variables may be added or removed. The lower panel displays the product sources and
     allows the user to add or remove products of the time series.
 </p>
 
@@ -174,10 +175,11 @@
 </p>
 
 <h5>
-    Import In-Situ Data ... <img src="../images/Import24.gif" alt="insitu-button">
+    Import in-situ data
 </h5>
 <p>
-    The button allows the user to load in-situ data from a CSV-file. The columns must be tab (char='\t') separated.
+    The <img src="../images/Import24.gif" alt="insitu-button">-button allows the user to load in-situ data from a
+    CSV-file. The columns within that file need to be tab (char='\t') separated.
     <br> See listing 1 for an exemplary in-situ source file.
 </p>
 
@@ -218,14 +220,14 @@
         <td colspan="6" align="center" style="font-size: 10px;">.<br>.<br>.</td>
     </tr>
     <tr>
-        <td colspan="6" align="center" style="font-size: 12px;">Listing 1 - An exemplary in-situ source file</td>
+        <td colspan="6" align="center" style="font-size: 2;">Listing 1 - An exemplary in-situ source file</td>
     </tr>
 </table>
 
 <p>
-    The import mechanism is intelligent enough to automatically detect columns for Station Name, Latitude column,
-    Longitude column and Time Column. All other columns are interpreted as measurement parameter.
-    <br>All the valid column names are case insensitive!
+    The import mechanism automatically detects columns for station name, latitude, longitude, and time. All
+    other columns are interpreted as measurement parameter.
+    <br>Note that all valid column names are case insensitive.
     <table>
     <tr><th>Column</th><th>valid names</th></tr>
     <tr><td>Latitude</td><td>"lat", "latitude", "northing"</td></tr>
@@ -236,21 +238,45 @@
 </p>
 
 <h5>
-    Axis Mapping ... <img src="../images/AxisMapping24.gif" alt="axismapping-button">
+    Axis Mapping
 </h5>
 <p>
-    The button allows the user to create a mapping between satellite and in-situ data. This is needed if the names
-    in the satellite products are different from the names within the in-situ data, but shall be handled equally.
+    On click on the <img src="../images/AxisMapping24.gif" alt="axismapping-button">-Button, the axis mapping dialog
+    (see Screenshot 7) opens.
 </p>
-<br>
-<br>
-<br>
-<br>
-// TODO - add screenshot of band mapping dialog and explain
+
+<div class="image">
+    <img src="../images/axis-mapping.png" alt="ts-manager">
+    <div align="center"><font size="2">Screenshot 7 - Axis Mapping</font></div>
+</div>
 
 <p>
-    The view button on the right <img src="../images/view-button.png" alt="view-button"> allows to show one
-    of the selected variables in the VISAT Product Scene View.
+    That dialog allows the user to create a mapping between satellite and in-situ data. This is needed if the names
+    in the satellite products are different from the names within the in-situ data, but shall be handled equally.
+    The first step is to create a new alias name (in the example 'algal_2') and then choose from the list of band names
+    and the list of in-situ variable names the names which are to be grouped within that alias. Multiple list entries
+    from a single list may be chosen by holding the <i>Ctrl</i>-button while clicking.
+</p>
+
+<p>
+    The <img src="../images/edit-time-span-button.png" alt="edit-time-span-button">-button allows to edit the valid time
+    span of the time series. The respective dialog is shown in Screenshot 8. Products whose time bounds do not fit into
+    the time span specified in the tool are excluded from the time series.
+</p>
+
+<div class="image">
+    <img src="../images/edit-time-span.png" alt="ts-manager">
+    <div align="center"><font size="2">Screenshot 8 - Edit time span</font></div>
+</div>
+
+<p>
+    The <img src="../images/view-button.png" alt="view-button">-button allows the user to show one of the selected variables in
+    the VISAT Product Scene View.
+</p>
+
+<p>
+    Finally, the using the <img src="../images/export.gif" alt="export-button">-button the time series may be saved
+    to disk in the BEAM-DIMAP format.
 </p>
 
 <hr/>
