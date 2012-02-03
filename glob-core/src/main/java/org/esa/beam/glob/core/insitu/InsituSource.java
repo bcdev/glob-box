@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Represents a source for in situ data
+ * Represents a source for in situ data.
  *
  * @author Thomas Storm
  * @author Sabine Embacher
@@ -44,6 +44,11 @@ public class InsituSource {
         this.recordSource = recordSource;
     }
 
+    /**
+     * Returns a collection of in-situ positions, where data for the given parameter name are given.
+     * @param parameterName the parameter name which is needed at the position
+     * @return a collection of in-situ positions
+     */
     public Collection<GeoPos> getInsituPositionsFor(String parameterName) {
         Set<GeoPos> result = new HashSet<GeoPos>();
         final int columnIndex = getIndexForParameter(parameterName);
@@ -58,6 +63,12 @@ public class InsituSource {
         return result;
     }
 
+    /**
+     * Returns an array of {@link InsituRecord}s for the given variable name and the given {@link GeoPos}.
+     * @param parameterName the variable name to get the records for
+     * @param position the position to get the records for
+     * @return an array of in-situ records
+     */
     public InsituRecord[] getValuesFor(String parameterName, GeoPos position) {
         final int columnIndex = getIndexForParameter(parameterName);
         final Iterable<Record> records = recordSource.getRecords();
@@ -81,20 +92,25 @@ public class InsituSource {
         return parameterRecords.toArray(new InsituRecord[parameterRecords.size()]);
     }
 
+    /**
+     * @return {@code true}, if records that conform to this header return station name values (see {@link Record#getStationName()}).
+     */
     public boolean hasStationNames() {
         return recordSource.getHeader().hasStationName();
     }
 
-    private int getIndexForParameter(String parameterName) {
-        final Header header = recordSource.getHeader();
-        final String[] columnNames = header.getColumnNames();
-        return StringUtils.indexOf(columnNames, parameterName);
-    }
-
+    /**
+     * @return The array of parameter names.
+     */
     public String[] getParameterNames() {
         return recordSource.getHeader().getParameterNames();
     }
 
+    /**
+     * Returns the name for the given {@link GeoPos}, or an empty string if there is no such name.
+     * @param geoPos the geo position to get the name for
+     * @return the name, or an empty string if no such name exists
+     */
     public String getNameFor(GeoPos geoPos) {
         Iterable<Record> records = recordSource.getRecords();
         for (Record record : records) {
@@ -105,8 +121,17 @@ public class InsituSource {
         return "";
     }
 
+    /**
+     * Closes this in-situ source.
+     */
     public void close() {
         recordSource.close();
+    }
+
+    private int getIndexForParameter(String parameterName) {
+        final Header header = recordSource.getHeader();
+        final String[] columnNames = header.getColumnNames();
+        return StringUtils.indexOf(columnNames, parameterName);
     }
 
     private void sortRecordsAscending(List<InsituRecord> parameterRecords) {

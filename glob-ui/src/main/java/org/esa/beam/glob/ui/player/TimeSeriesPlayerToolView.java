@@ -49,6 +49,7 @@ import java.lang.reflect.Field;
 import java.util.List;
 
 /**
+ * Main class for the player tool.
  * @author Thomas Storm
  */
 public class TimeSeriesPlayerToolView extends AbstractToolView {

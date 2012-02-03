@@ -45,6 +45,9 @@ import java.beans.PropertyChangeListener;
 
 import static org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries.rasterToVariableName;
 
+/**
+ * Main class for the graph tool.
+ */
 public class TimeSeriesGraphToolView extends AbstractToolView {
 
     private static final String DEFAULT_RANGE_LABEL = "Value";

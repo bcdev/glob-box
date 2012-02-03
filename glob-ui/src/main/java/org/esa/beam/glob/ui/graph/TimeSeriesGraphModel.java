@@ -30,7 +30,6 @@ import org.esa.beam.glob.core.TimeSeriesMapper;
 import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
 import org.esa.beam.glob.core.timeseries.datamodel.AxisMappingModel;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeCoding;
-import org.esa.beam.glob.ui.WorkerChain;
 import org.esa.beam.util.StringUtils;
 import org.esa.beam.util.logging.BeamLogManager;
 import org.esa.beam.visat.VisatApp;

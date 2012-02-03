@@ -32,6 +32,9 @@ import java.awt.Component;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * UI component for selecting variables, working on a {@link VariableSelectionPaneModel}.
+ */
 public class VariableSelectionPane extends JPanel {
 
     private VariableSelectionPaneModel model;

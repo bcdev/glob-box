@@ -41,6 +41,9 @@ import java.text.*;
 import java.util.*;
 import java.util.List;
 
+/**
+ * Main class for the matrix tool.
+ */
 public class TimeSeriesMatrixToolView extends AbstractToolView {
 
     private static final int MATRIX_MINIMUM = 3;

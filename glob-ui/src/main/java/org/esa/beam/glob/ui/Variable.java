@@ -16,6 +16,9 @@
 
 package org.esa.beam.glob.ui;
 
+/**
+ * Data container representing a variable with name and selection state.
+ */
 public class Variable {
     private String name;
     private boolean selected;

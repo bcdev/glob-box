@@ -16,20 +16,40 @@
 
 package org.esa.beam.glob.ui;
 
-import javax.swing.ListModel;
-import java.io.Serializable;
-import java.util.List;
+import javax.swing.*;
+import java.io.*;
+import java.util.*;
 
+/**
+ * Simple model interface for variable selections.
+ */
 public interface VariableSelectionPaneModel extends ListModel, Serializable {
 
     @Override
     Variable getElementAt(int index);
 
+    /**
+     * Clears the model and sets the given {@link Variable}s.
+     * @param variables the variables to set
+     */
     void set(Variable... variables);
 
+    /**
+     * Adds the given {@link Variable}s to the model.
+     * @param variables the variables to add
+     */
     void add(Variable... variables);
 
+    /**
+     * Sets the {@link Variable} at the given index to <code>selected</code>.
+     * @param index the index of the variable
+     * @param selected true if the variable shall be selected
+     */
     void setSelectedVariableAt(int index, boolean selected);
 
+    /**
+     * Returns the names of the selected variables.
+     * @return the names of the selected variables
+     */
     List<String> getSelectedVariableNames();
 }

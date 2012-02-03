@@ -21,6 +21,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Default implementation of {@link VariableSelectionPaneModel}.
+ */
 public class DefaultVariableSelectionPaneModel extends AbstractListModel implements VariableSelectionPaneModel {
 
     private final List<Variable> variableList;

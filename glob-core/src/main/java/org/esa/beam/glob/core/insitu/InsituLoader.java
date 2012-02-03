@@ -26,5 +26,10 @@ import java.io.IOException;
  */
 public interface InsituLoader {
 
+    /**
+     * Loads in-situ data. Implementors need to specify the source.
+     * @return an instance of {@link RecordSource}
+     * @throws IOException if loading fails
+     */
     RecordSource loadSource() throws IOException;
 }

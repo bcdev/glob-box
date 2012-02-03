@@ -47,6 +47,9 @@ import java.util.TreeSet;
 import java.util.WeakHashMap;
 
 
+/**
+ * Main class for the manager tool.
+ */
 public class TimeSeriesManagerToolView extends AbstractToolView {
 
     private final AppContext appContext;

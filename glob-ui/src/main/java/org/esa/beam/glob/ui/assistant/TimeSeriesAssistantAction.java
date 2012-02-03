@@ -16,6 +16,9 @@
 
 package org.esa.beam.glob.ui.assistant;
 
+/**
+ * Action for creating a {@link TimeSeriesAssistantModel}.
+ */
 public class TimeSeriesAssistantAction extends AbstractTimeSeriesAssistantAction {
 
     public static final String ID = "newTimeSeriesAssistantAction";

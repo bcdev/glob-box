@@ -1,21 +1,21 @@
-package org.esa.beam.glob.ui;
+package org.esa.beam.glob.ui.graph;
 
 import javax.swing.SwingWorker;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class WorkerChain {
+class WorkerChain {
 
     private final List<SwingWorker> synchronizedWorkerChain;
     private SwingWorker unchainedWorker;
     private boolean workerIsRunning = false;
 
-    public WorkerChain() {
+    WorkerChain() {
         synchronizedWorkerChain = Collections.synchronizedList(new ArrayList<SwingWorker>());
     }
 
-    public synchronized void setOrExecuteNextWorker(SwingWorker w, boolean chained) {
+    synchronized void setOrExecuteNextWorker(SwingWorker w, boolean chained) {
         if (w == null) {
             return;
         }
@@ -37,7 +37,7 @@ public class WorkerChain {
         }
     }
 
-    public synchronized void removeCurrentWorkerAndExecuteNext(SwingWorker currentWorker) {
+    synchronized void removeCurrentWorkerAndExecuteNext(SwingWorker currentWorker) {
         synchronizedWorkerChain.remove(currentWorker);
         if (unchainedWorker == currentWorker) {
             unchainedWorker = null;

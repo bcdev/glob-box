@@ -24,6 +24,9 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * A default implementation of ${@link ProductLocationsPaneModel}.
+ */
 public class DefaultProductLocationsPaneModel extends AbstractListModel implements ProductLocationsPaneModel {
 
     private final List<ProductLocation> productLocationList;

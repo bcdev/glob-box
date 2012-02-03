@@ -23,16 +23,41 @@ import java.io.File;
 import java.io.Serializable;
 import java.util.List;
 
+/**
+ * Simple model interface for ${@link ProductLocation}s.
+ */
 public interface ProductLocationsPaneModel extends ListModel, Serializable {
 
+    /**
+     * Returns the value at the specified index.
+     * @param index the requested index
+     * @return the value at <code>index</code>
+     */
     @Override
     ProductLocation getElementAt(int index);
 
+    /**
+     * Adds single files to the model.
+     * @param files the files to be added
+     */
     void addFiles(File... files);
 
+    /**
+     * Adds a complete directory to the model.
+     * @param directory the directory to add.
+     * @param recursive specify if directory is to be added recursively
+     */
     void addDirectory(File directory, boolean recursive);
 
+    /**
+     * Removes {@link ProductLocation}s with the given indices.
+     * @param indices the indices of the product locations to be removed
+     */
     void remove(int... indices);
 
+    /**
+     * Returns the {@link ProductLocation}s.
+     * @return the product locations
+     */
     List<ProductLocation> getProductLocations();
 }
