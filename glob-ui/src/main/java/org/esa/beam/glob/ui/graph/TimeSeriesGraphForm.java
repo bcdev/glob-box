@@ -68,7 +68,7 @@ class TimeSeriesGraphForm {
         tableLayout.setRowWeightY(1, 0.0);
         tableLayout.setCellColspan(1, 0, 2);
         tableLayout.setCellFill(1, 0, TableLayout.Fill.HORIZONTAL);
-        tableLayout.setCellPadding(1, 0, new Insets(15,5,5,5));
+        tableLayout.setCellPadding(1, 0, new Insets(15, 5, 5, 5));
 
         mainPanel = new JPanel(tableLayout);
         mainPanel.setPreferredSize(new Dimension(320, 200));
@@ -134,15 +134,13 @@ class TimeSeriesGraphForm {
             public void actionPerformed(ActionEvent e) {
                 final VisatApp app = VisatApp.getApp();
                 final ProductSceneView view = app.getSelectedProductSceneView();
-                if (view != null &&
-                    view.getProduct() != null &&
-                    view.getProduct().getProductType().equals(AbstractTimeSeries.TIME_SERIES_PRODUCT_TYPE) &&
-                    TimeSeriesMapper.getInstance().getTimeSeries(view.getProduct()) != null) {
+                if (view != null
+                    && view.getProduct() != null
+                    && view.getProduct().getProductType().equals(AbstractTimeSeries.TIME_SERIES_PRODUCT_TYPE)
+                    && TimeSeriesMapper.getInstance().getTimeSeries(view.getProduct()) != null) {
 
                     AbstractTimeSeries timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(view.getProduct());
-                    if (timeSeries != null) {
-                        ExportTimeBasedText.export(mainPanel, timeSeries, helpID);
-                    }
+                    ExportTimeBasedText.export(mainPanel, timeSeries, helpID);
                 }
             }
         });
@@ -193,6 +191,7 @@ class TimeSeriesGraphForm {
     }
 
     static interface ValidatorUI {
+
         JComponent makeUI();
     }
 }

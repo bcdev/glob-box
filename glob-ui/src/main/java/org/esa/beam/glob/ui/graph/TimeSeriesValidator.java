@@ -200,7 +200,7 @@ class TimeSeriesValidator implements TimeSeriesGraphForm.ValidatorUI, TimeSeries
 
     private void showExpressionEditor() {
         final MyExpressionPane expressionPane = new MyExpressionPane();
-        expressionPane.setEmptyExpressionAllowed(false);
+        expressionPane.setEmptyExpressionAllowed(true);
         expressionPane.setCode(expressionTextField.getText());
         final String sourceName = getSelectedSourceName();
         final int status = expressionPane.showModalDialog(VisatApp.getApp().getMainFrame(), "Valid Expression for Source '" + sourceName + "'");

@@ -69,7 +69,7 @@
             <largeIcon>/org/esa/beam/glob/ui/icons/GlobToolbox24.gif</largeIcon>
             <initState>FLOATING</initState>
             <initSide>EAST</initSide>
-            <initIndex>3</initIndex>
+            <initIndex>0</initIndex>
             <toolBarId>GlobToolbox</toolBarId>
             <helpId>timeSeriesManager</helpId>
         </toolView>
@@ -86,7 +86,7 @@
             <largeIcon>/org/esa/beam/glob/ui/icons/TimeSeriesGraph24.png</largeIcon>
             <initState>FLOATING</initState>
             <initSide>EAST</initSide>
-            <initIndex>4</initIndex>
+            <initIndex>1</initIndex>
             <helpId>timeSeriesGraph</helpId>
             <toolBarId>GlobToolbox</toolBarId>
         </toolView>
@@ -103,7 +103,7 @@
             <largeIcon>/org/esa/beam/glob/ui/icons/TimeSeriesMatrix24.png</largeIcon>
             <initState>FLOATING</initState>
             <initSide>EAST</initSide>
-            <initIndex>4</initIndex>
+            <initIndex>2</initIndex>
             <helpId>timeSeriesMatrix</helpId>
             <toolBarId>GlobToolbox</toolBarId>
         </toolView>

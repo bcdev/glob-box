@@ -16,30 +16,44 @@
 
 package org.esa.beam.glob.ui.manager;
 
-import com.bc.ceres.swing.*;
-import com.jidesoft.swing.*;
-import org.esa.beam.framework.datamodel.*;
-import org.esa.beam.framework.help.*;
-import org.esa.beam.framework.ui.*;
-import org.esa.beam.framework.ui.application.*;
-import org.esa.beam.framework.ui.command.*;
-import org.esa.beam.framework.ui.tool.*;
-import org.esa.beam.glob.core.*;
-import org.esa.beam.glob.core.timeseries.datamodel.*;
-import org.esa.beam.glob.ui.*;
-import org.esa.beam.glob.ui.assistant.*;
-import org.esa.beam.util.*;
-import org.esa.beam.visat.*;
+import com.bc.ceres.swing.TableLayout;
+import com.jidesoft.swing.TitledSeparator;
+import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.help.HelpSys;
+import org.esa.beam.framework.ui.UIUtils;
+import org.esa.beam.framework.ui.application.PageComponentDescriptor;
+import org.esa.beam.framework.ui.command.Command;
+import org.esa.beam.framework.ui.tool.ToolButtonFactory;
+import org.esa.beam.glob.core.TimeSeriesMapper;
+import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
+import org.esa.beam.glob.core.timeseries.datamodel.AxisMappingModel;
+import org.esa.beam.glob.core.timeseries.datamodel.ProductLocation;
+import org.esa.beam.glob.core.timeseries.datamodel.ProductLocationType;
+import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesChangeEvent;
+import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesListener;
+import org.esa.beam.glob.ui.DefaultProductLocationsPaneModel;
+import org.esa.beam.glob.ui.DefaultVariableSelectionPaneModel;
+import org.esa.beam.glob.ui.ProductLocationsPane;
+import org.esa.beam.glob.ui.ProductLocationsPaneModel;
+import org.esa.beam.glob.ui.Variable;
+import org.esa.beam.glob.ui.VariableSelectionPane;
+import org.esa.beam.glob.ui.VariableSelectionPaneModel;
+import org.esa.beam.glob.ui.assistant.TimeSeriesAssistantAction;
+import org.esa.beam.util.Debug;
+import org.esa.beam.visat.VisatApp;
 
 import javax.swing.*;
-import java.awt.*;
-import java.awt.event.*;
-import java.beans.*;
-import java.io.*;
-import java.net.*;
-import java.text.*;
-import java.util.*;
+import java.awt.Dimension;
+import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.beans.PropertyVetoException;
+import java.io.File;
+import java.net.URL;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 class TimeSeriesManagerForm {
 
@@ -75,13 +89,13 @@ class TimeSeriesManagerForm {
         layout.setTablePadding(4, 4);
         layout.setTableFill(TableLayout.Fill.BOTH);
         layout.setColumnFill(3, TableLayout.Fill.BOTH);
-        layout.setRowWeightY(0, 0.0);
+        layout.setRowWeightY(0, 1.0);
         layout.setCellWeightY(0, 3, 1.0);
-        layout.setColumnWeightX(0, 0.2);
-        layout.setColumnWeightX(1, 0.4);
-        layout.setColumnWeightX(2, 0.4);
+        layout.setColumnWeightX(0, 1.0);
+        layout.setColumnWeightX(1, 2.0);
+        layout.setColumnWeightX(2, 2.0);
         layout.setColumnWeightX(3, 0.0);
-        layout.setRowWeightY(1, 1.0);
+        layout.setRowWeightY(1, 2.0);
         layout.setCellFill(0, 0, TableLayout.Fill.HORIZONTAL);
         layout.setCellRowspan(0, 3, 2);
         layout.setCellColspan(1, 0, 3);
@@ -101,6 +115,7 @@ class TimeSeriesManagerForm {
         control.add(insituVariablePanel);
         control.add(buttonPanel);
         control.add(productsPanel);
+
         return control;
     }
 

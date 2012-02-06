@@ -37,6 +37,7 @@ import org.jfree.chart.annotations.XYAnnotation;
 import org.jfree.chart.annotations.XYLineAnnotation;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.axis.ValueAxis;
+import org.jfree.chart.labels.StandardXYToolTipGenerator;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYErrorRenderer;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
@@ -51,6 +52,8 @@ import java.awt.Color;
 import java.awt.Paint;
 import java.awt.Shape;
 import java.awt.Stroke;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -412,6 +415,9 @@ class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandl
         renderer.setAutoPopulateSeriesOutlinePaint(false);
         renderer.setAutoPopulateSeriesOutlineStroke(false);
         renderer.setAutoPopulateSeriesShape(false);
+        final StandardXYToolTipGenerator tipGenerator;
+        tipGenerator = new StandardXYToolTipGenerator("Value: {2}   Date: {1}", new SimpleDateFormat(), new DecimalFormat());
+        renderer.setBaseToolTipGenerator(tipGenerator);
         return renderer;
     }
 

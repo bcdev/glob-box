@@ -128,9 +128,12 @@ class TimeSeriesGraphUpdater extends SwingWorker<List<TimeSeries>, Void> {
                 final List<String> insituNames = displayAxisMapping.getInsituNames(aliasName);
                 for (String insituName : insituNames) {
                     // todo
-                    InsituRecord[] insituRecords = insituSource.getValuesFor(insituName, timeSeries.getInsituGeoposFor(insituPin));
-                    final TimeSeries timeSeries = computeSingleTimeSeries(insituRecords, insituName + "_" + insituPin.getLabel());
-                    insituTimeSeries.add(dataHandler.getValidatedTimeSeries(timeSeries, insituName, type));
+                    final GeoPos insituGeoposFor = timeSeries.getInsituGeoposFor(insituPin);
+                    if (insituGeoposFor != null) {
+                        InsituRecord[] insituRecords = insituSource.getValuesFor(insituName, insituGeoposFor);
+                        final TimeSeries timeSeries = computeSingleTimeSeries(insituRecords, insituName + "_" + insituPin.getLabel());
+                        insituTimeSeries.add(dataHandler.getValidatedTimeSeries(timeSeries, insituName, type));
+                    }
                 }
             }
         }
