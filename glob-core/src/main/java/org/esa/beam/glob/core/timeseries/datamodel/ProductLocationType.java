@@ -121,6 +121,7 @@ public enum ProductLocationType {
             product.setEndTime(utcs[1]);
             return product;
         } catch (IllegalArgumentException e) {
+            //todo inform the User with Popup Dialog
             BeamLogManager.getSystemLogger().log(Level.WARNING, "Product '" + productName +
                                                                 "' does not contain readable time information.", e);
             return null;

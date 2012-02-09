@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2011 Brockmann Consult GmbH (info@brockmann-consult.de)
- * 
+ *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
  * Software Foundation; either version 3 of the License, or (at your option)
@@ -9,7 +9,7 @@
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
  * more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, see http://www.gnu.org/licenses/
  */
@@ -17,7 +17,7 @@
 package org.esa.beam.glob.core.timeseries.datamodel;
 
 import org.esa.beam.framework.datamodel.ProductData;
-import org.junit.Test;
+import org.junit.*;
 
 import static org.junit.Assert.*;
 
@@ -29,6 +29,14 @@ public class DateRangeParserTest {
     @Test
     public void testTryToGetDateRangeFromValidDailyProduct() throws Exception {
         ProductData.UTC[] dateRange = DateRangeParser.tryToGetDateRange("20111103_est_wac_wew_1200.dim");
+        assertEquals(dateRange.length, 2);
+        assertEquals(ProductData.UTC.parse("2011-11-03", "yyyy-MM-dd").getAsDate().getTime(), dateRange[0].getAsDate().getTime());
+        assertEquals(dateRange[0].getAsDate().getTime(), dateRange[1].getAsDate().getTime());
+    }
+
+    @Test
+    public void testTryToGetDateRangeFromValidDailyProductWithLeadingCharacters() throws Exception {
+        ProductData.UTC[] dateRange = DateRangeParser.tryToGetDateRange("leading_characters_20111103_est_wac_wew_1200.dim");
         assertEquals(dateRange.length, 2);
         assertEquals(ProductData.UTC.parse("2011-11-03", "yyyy-MM-dd").getAsDate().getTime(), dateRange[0].getAsDate().getTime());
         assertEquals(dateRange[0].getAsDate().getTime(), dateRange[1].getAsDate().getTime());
