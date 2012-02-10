@@ -22,9 +22,12 @@ import org.esa.beam.glob.core.insitu.InsituSource;
 import org.esa.beam.util.Guardian;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.StringUtils;
+import org.esa.beam.util.logging.BeamLogManager;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * <p><i>Note that this class is not yet public API. Interface may change in future releases.</i></p>
@@ -36,7 +39,7 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
     private final Map<RasterDataNode, TimeCoding> rasterTimeMap = new WeakHashMap<RasterDataNode, TimeCoding>();
     private final List<TimeSeriesListener> listeners = new ArrayList<TimeSeriesListener>();
     private final AxisMappingModel axisMappingModel = new AxisMappingModel();
-    private final Map<Placemark,GeoPos> pinRelationMap = new HashMap<Placemark, GeoPos>();
+    private final Map<Placemark, GeoPos> pinRelationMap = new HashMap<Placemark, GeoPos>();
 
     private Product tsProduct;
     private List<ProductLocation> productLocationList;
@@ -116,6 +119,10 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
             productLocationList = new ArrayList<ProductLocation>();
         }
         if (!productLocationList.contains(productLocation)) {
+            final Logger logger = BeamLogManager.getSystemLogger();
+            final ProductLocationType type = productLocation.getProductLocationType();
+            final String path = productLocation.getPath();
+            logger.log(Level.INFO, "Try to load product location type: '" + type + "' at path: '" + path +"'");
             addProductLocationMetadata(productLocation);
             productLocationList.add(productLocation);
             List<String> variables = getEoVariables();
@@ -133,6 +140,8 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
                     }
                 } else {
                     // todo log in gui as well as in console
+                    final String absolutePath = product.getFileLocation().getAbsolutePath();
+                    logger.log(Level.WARNING, "The product '" + absolutePath + "' does not contain time information.");
                 }
             }
             fireChangeEvent(new TimeSeriesChangeEvent(TimeSeriesChangeEvent.PROPERTY_PRODUCT_LOCATIONS,
