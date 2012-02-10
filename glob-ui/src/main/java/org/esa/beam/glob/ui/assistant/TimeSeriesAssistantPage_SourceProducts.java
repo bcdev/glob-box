@@ -140,7 +140,8 @@ class TimeSeriesAssistantPage_SourceProducts extends AbstractTimeSeriesAssistant
                             variables[j] = new Variable(bandNames[j]);
                         }
                         location.closeProducts();
-//                        @todo se - ?? return variables ?? - really a shortcut after the first product?
+// @todo se - ?? return variables ?? - really a shortcut after the first product?
+// in this case only the variables of the first product are returnded.
                         return variables;
                     } else {
                         location.closeProducts();
