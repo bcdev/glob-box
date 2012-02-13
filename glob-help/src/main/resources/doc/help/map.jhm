@@ -8,6 +8,7 @@
     <mapID target="globboxIntroduction" url="globbox/Introduction.html"/>
     <mapID target="globboxReaders" url="globbox/Readers.html"/>
     <mapID target="timeSeriesManager" url="globbox/TimeSeriesManager.html"/>
+    <mapID target="associations" url="globbox/TimeSeriesManager.html#associations"/>
     <mapID target="timeSeriesGraph" url="globbox/TimeSeriesGraph.html"/>
     <mapID target="timeSeriesPlayer" url="globbox/TimeSeriesPlayer.html"/>
     <mapID target="timeSeriesMatrix" url="globbox/TimeSeriesMatrix.html"/>

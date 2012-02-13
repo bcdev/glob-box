@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2011 Brockmann Consult GmbH (info@brockmann-consult.de)
- * 
+ *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
  * Software Foundation; either version 3 of the License, or (at your option)
@@ -9,15 +9,14 @@
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
  * more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
 package org.esa.beam.glob.core.timeseries.datamodel;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -110,7 +109,7 @@ public class AxisMappingModelTest {
     public void testGetAliasNames() throws Exception {
         axisMappingModel.addRasterName("ra", "rn");
         axisMappingModel.addInsituName("ia", "in");
-        
+
         final Set<String> names = axisMappingModel.getAliasNames();
 
         assertTrue(names instanceof SortedSet);
@@ -152,7 +151,7 @@ public class AxisMappingModelTest {
     public void testGetAliasNameForRasterName() {
         axisMappingModel.addRasterName("alias1", "rasterName1");
         axisMappingModel.addRasterName("alias2", "rasterName2");
-        
+
         assertEquals("alias1", axisMappingModel.getRasterAlias("rasterName1"));
         assertNull(axisMappingModel.getRasterAlias("rasterName3"));
     }
@@ -161,7 +160,7 @@ public class AxisMappingModelTest {
     public void testGetAliasNameForInsituName() {
         axisMappingModel.addInsituName("alias1", "insituName1");
         axisMappingModel.addInsituName("alias2", "insituName2");
-        
+
         assertEquals("alias1", axisMappingModel.getInsituAlias("insituName1"));
         assertNull(axisMappingModel.getInsituAlias("insituName3"));
     }
@@ -174,7 +173,7 @@ public class AxisMappingModelTest {
         axisMappingModel.addRasterName("alias1", "raster1_1");
         axisMappingModel.addRasterName("alias1", "raster2");
         final int rasterCount2 = axisMappingModel.getRasterCount();
-        
+
         assertEquals(0, rasterCount);
         assertEquals(4, rasterCount2);
     }

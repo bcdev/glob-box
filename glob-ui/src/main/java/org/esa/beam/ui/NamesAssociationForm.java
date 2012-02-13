@@ -14,13 +14,12 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package org.esa.beam.glob.ui.manager;
+package org.esa.beam.ui;
 
 import com.bc.ceres.swing.TableLayout;
 import org.esa.beam.framework.ui.ModalDialog;
 import org.esa.beam.framework.ui.UIUtils;
 import org.esa.beam.framework.ui.tool.ToolButtonFactory;
-import org.esa.beam.glob.core.timeseries.datamodel.AxisMappingModel;
 import org.esa.beam.visat.VisatApp;
 
 import javax.swing.*;
@@ -36,27 +35,26 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * UI component for the axis mapping.
+ * UI component for names association.
  *
  * @author Sabine Embacher
  * @author Thomas Storm
  */
-class AxisMappingForm extends ModalDialog {
+public class NamesAssociationForm extends ModalDialog {
 
-    private final AxisMappingModel axisMappingModel;
+    private final AssociationModel associationModel;
     private final NameProvider nameProvider;
 
     private JTable aliasNames;
     private JScrollPane aliasNameScrollPane;
-    private JList rasterNames;
-    private JList insituNames;
+    private JList centerNames;
+    private JList rightNames;
     private AbstractButton removeButton;
     private boolean shown = false;
 
-    AxisMappingForm(AxisMappingModel axisMappingModel, NameProvider nameProvider) {
-        // TODO - validate help id
-        super(VisatApp.getApp().getMainFrame(), "Axis Mapping", ModalDialog.ID_OK, "axis mapping help");
-        this.axisMappingModel = axisMappingModel;
+    public NamesAssociationForm(AssociationModel associationModel, NameProvider nameProvider, String helpId) {
+        super(VisatApp.getApp().getMainFrame(), nameProvider.windowTitle, ModalDialog.ID_OK, helpId);
+        this.associationModel = associationModel;
         this.nameProvider = nameProvider;
         init();
     }
@@ -75,17 +73,58 @@ class AxisMappingForm extends ModalDialog {
         return getButtonID();
     }
 
+    public static interface AssociationModel {
+
+        List<String> getRightListNames(String alias);
+
+        List<String> getCenterListNames(String alias);
+
+        void addFromCenterList(String alias, String name);
+
+        void addFromRightList(String alias, String name);
+
+        void removeAlias(String alias);
+
+        void addAlias(String alias);
+
+        void removeFromRightList(String alias, String name);
+
+        void removeFromCenterList(String alias, String name);
+
+        Set<String> getAliasNames();
+
+        void replaceAlias(String beforeName, String changedName);
+    }
+
+    public static abstract class NameProvider {
+        final String windowTitle;
+        final String aliasHeaderName;
+        final String centerHeaderName;
+        final String rightHeaderName;
+
+        public NameProvider(String windowTitle, String aliasHeaderName, String centerHeaderName, String rightHeaderName) {
+            this.aliasHeaderName = aliasHeaderName;
+            this.centerHeaderName = centerHeaderName;
+            this.rightHeaderName = rightHeaderName;
+            this.windowTitle = windowTitle;
+        }
+
+        public abstract String[] getCenterNames();
+
+        public abstract String[] getRightNames();
+    }
+
     private void init() {
         final TableLayout layout = createLayout();
         final JPanel mainPanel = new JPanel(layout);
-        mainPanel.add(new JLabel("Alias names"));
+        mainPanel.add(new JLabel(nameProvider.aliasHeaderName));
         mainPanel.add(new JLabel(""));
-        mainPanel.add(new JLabel("Raster names"));
-        mainPanel.add(new JLabel("Insitu variable names"));
+        mainPanel.add(new JLabel(nameProvider.centerHeaderName));
+        mainPanel.add(new JLabel(nameProvider.rightHeaderName));
         mainPanel.add(createAliasList());
         mainPanel.add(createButtonsPanel());
-        mainPanel.add(createRasterNames());
-        mainPanel.add(createInsituNames());
+        mainPanel.add(createCenterList());
+        mainPanel.add(createRightList());
         setContent(mainPanel);
     }
 
@@ -109,7 +148,7 @@ class AxisMappingForm extends ModalDialog {
         layout.setColumnFill(2, TableLayout.Fill.BOTH);
         layout.setColumnFill(3, TableLayout.Fill.BOTH);
         layout.setRowFill(0, TableLayout.Fill.NONE);
-        layout.setRowAnchor(0, TableLayout.Anchor.SOUTHEAST);
+        layout.setRowAnchor(0, TableLayout.Anchor.SOUTHWEST);
         layout.setRowWeightY(1, 100);
         layout.setColumnWeightX(0, 100);
         layout.setColumnWeightX(2, 100);
@@ -132,7 +171,7 @@ class AxisMappingForm extends ModalDialog {
 
             @Override
             public int getRowCount() {
-                return axisMappingModel.getAliasNames().size();
+                return associationModel.getAliasNames().size();
             }
 
             @Override
@@ -144,7 +183,7 @@ class AxisMappingForm extends ModalDialog {
             public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
                 final String beforeName = getAliasNameAt(rowIndex);
                 final String changedName = aValue.toString();
-                axisMappingModel.replaceAlias(beforeName, changedName);
+                associationModel.replaceAlias(beforeName, changedName);
                 aliasNameScrollPane.repaint();
             }
 
@@ -166,56 +205,49 @@ class AxisMappingForm extends ModalDialog {
     }
 
     private String getAliasNameAt(int rowIndex) {
-        final Set<String> names = axisMappingModel.getAliasNames();
+        final Set<String> names = associationModel.getAliasNames();
         return names.toArray(new String[names.size()])[rowIndex];
     }
 
-    private JComponent createRasterNames() {
-        rasterNames = new JList(new AbstractListModel() {
+    private JComponent createCenterList() {
+        centerNames = new JList(new AbstractListModel() {
             @Override
             public int getSize() {
-                return nameProvider.getRasterNames().length;
+                return nameProvider.getCenterNames().length;
             }
 
             @Override
             public Object getElementAt(int index) {
-                return nameProvider.getRasterNames()[index];
+                return nameProvider.getCenterNames()[index];
             }
         });
-        rasterNames.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-        rasterNames.addListSelectionListener(new RasterNamesSelectionListener(rasterNames));
-        rasterNames.setEnabled(false);
-        final JScrollPane scrollPane = new JScrollPane(rasterNames);
+        centerNames.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        centerNames.addListSelectionListener(new CenterListSelectionListener(centerNames));
+        centerNames.setEnabled(false);
+        final JScrollPane scrollPane = new JScrollPane(centerNames);
         scrollPane.setPreferredSize(new Dimension(160, 200));
         return scrollPane;
     }
 
-    private JComponent createInsituNames() {
-        insituNames = new JList(new AbstractListModel() {
+    private JComponent createRightList() {
+        rightNames = new JList(new AbstractListModel() {
 
             @Override
             public int getSize() {
-                return nameProvider.getInsituNames().length;
+                return nameProvider.getRightNames().length;
             }
 
             @Override
             public Object getElementAt(int index) {
-                return nameProvider.getInsituNames()[index];
+                return nameProvider.getRightNames()[index];
             }
         });
-        insituNames.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-        insituNames.addListSelectionListener(new InsituNamesSelectionListener(insituNames));
-        insituNames.setEnabled(false);
-        final JScrollPane scrollPane = new JScrollPane(insituNames);
+        rightNames.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        rightNames.addListSelectionListener(new RightListSelectionListener(rightNames));
+        rightNames.setEnabled(false);
+        final JScrollPane scrollPane = new JScrollPane(rightNames);
         scrollPane.setPreferredSize(new Dimension(160, 200));
         return scrollPane;
-    }
-
-    static interface NameProvider {
-
-        String[] getRasterNames();
-
-        String[] getInsituNames();
     }
 
     private class AddAliasAction extends AbstractAction {
@@ -225,11 +257,11 @@ class AxisMappingForm extends ModalDialog {
         }
         @Override
         public void actionPerformed(ActionEvent e) {
-            axisMappingModel.addAlias("...");
+            associationModel.addAlias("...");
             removeButton.setEnabled(true);
             aliasNameScrollPane.repaint();
             int rowIndex = 0;
-            for (String aliasName : axisMappingModel.getAliasNames()) {
+            for (String aliasName : associationModel.getAliasNames()) {
                 if (aliasName.equals("...")) {
                     break;
                 }
@@ -257,10 +289,10 @@ class AxisMappingForm extends ModalDialog {
             selectionModel.clearSelection();
             if (minSelectionIndex != -1) {
                 for (int i = maxSelectionIndex; i >= minSelectionIndex; i--) {
-                    axisMappingModel.removeAlias(getAliasNameAt(i));
+                    associationModel.removeAlias(getAliasNameAt(i));
                 }
             }
-            removeButton.setEnabled(axisMappingModel.getAliasNames().size() > 0);
+            removeButton.setEnabled(associationModel.getAliasNames().size() > 0);
             aliasNameScrollPane.repaint();
         }
 
@@ -276,7 +308,7 @@ class AxisMappingForm extends ModalDialog {
 
         @Override
         public void valueChanged(ListSelectionEvent e) {
-        // todo - don't allow the the user to select raster/insitu names which are already selected for another alias
+        // todo - don't allow the the user to select center/right names which are already selected for another alias
             final ArrayList<Integer> selectedIndices = new ArrayList<Integer>();
             for (int index : variableNames.getSelectedIndices()) {
                 selectedIndices.add(index);
@@ -299,37 +331,37 @@ class AxisMappingForm extends ModalDialog {
         abstract void removeVariableName(String currentAlias, String name);
     }
 
-    private class RasterNamesSelectionListener extends VariableNamesSelectionListener {
+    private class CenterListSelectionListener extends VariableNamesSelectionListener {
 
-        private RasterNamesSelectionListener(JList variableNames) {
+        private CenterListSelectionListener(JList variableNames) {
             super(variableNames);
         }
 
         @Override
         void addVariableName(String currentAlias, String variableName) {
-            axisMappingModel.addRasterName(currentAlias, variableName);
+            associationModel.addFromCenterList(currentAlias, variableName);
         }
 
         @Override
         void removeVariableName(String currentAlias, String variableName) {
-            axisMappingModel.removeRasterName(currentAlias, variableName);
+            associationModel.removeFromCenterList(currentAlias, variableName);
         }
     }
 
-    private class InsituNamesSelectionListener extends VariableNamesSelectionListener {
+    private class RightListSelectionListener extends VariableNamesSelectionListener {
 
-        private InsituNamesSelectionListener(JList variableNames) {
+        private RightListSelectionListener(JList variableNames) {
             super(variableNames);
         }
 
         @Override
         void addVariableName(String currentAlias, String variableName) {
-            axisMappingModel.addInsituName(currentAlias, variableName);
+            associationModel.addFromRightList(currentAlias, variableName);
         }
 
         @Override
         void removeVariableName(String currentAlias, String variableName) {
-            axisMappingModel.removeInsituName(currentAlias, variableName);
+            associationModel.removeFromRightList(currentAlias, variableName);
         }
     }
 
@@ -338,31 +370,31 @@ class AxisMappingForm extends ModalDialog {
         @Override
         public void valueChanged(ListSelectionEvent e) {
             final boolean isSomeAliasSelected = aliasNames.getSelectionModel().getMinSelectionIndex() != -1;
-            rasterNames.setEnabled(isSomeAliasSelected);
-            insituNames.setEnabled(isSomeAliasSelected);
+            centerNames.setEnabled(isSomeAliasSelected);
+            rightNames.setEnabled(isSomeAliasSelected);
             removeButton.setEnabled(isSomeAliasSelected);
 
             if(isSomeAliasSelected) {
-                final int[] selectedRasterIndices = getSelectedRasterIndices();
-                final int[] selectedInsituIndices = getSelectedInsituIndices();
-                rasterNames.setSelectedIndices(selectedRasterIndices);
-                insituNames.setSelectedIndices(selectedInsituIndices);
+                final int[] selectedCenterIndices = getSelectedCenterIndices();
+                final int[] selectedRightIndices = getSelectedRightIndices();
+                centerNames.setSelectedIndices(selectedCenterIndices);
+                rightNames.setSelectedIndices(selectedRightIndices);
             } else {
-                rasterNames.clearSelection();
-                insituNames.clearSelection();
+                centerNames.clearSelection();
+                rightNames.clearSelection();
             }
         }
 
-        private int[] getSelectedRasterIndices() {
+        private int[] getSelectedCenterIndices() {
             final String currentAlias = getCurrentAlias();
-            final List<String> selectedRasterNames = axisMappingModel.getRasterNames(currentAlias);
-            return getSelectedIndices(selectedRasterNames, rasterNames);
+            final List<String> selectedCenterNames = associationModel.getCenterListNames(currentAlias);
+            return getSelectedIndices(selectedCenterNames, centerNames);
         }
 
-        private int[] getSelectedInsituIndices() {
+        private int[] getSelectedRightIndices() {
             final String currentAlias = getCurrentAlias();
-            final List<String> selectedInsituNames = axisMappingModel.getInsituNames(currentAlias);
-            return getSelectedIndices(selectedInsituNames, insituNames);
+            final List<String> selectedRightNames = associationModel.getRightListNames(currentAlias);
+            return getSelectedIndices(selectedRightNames, rightNames);
         }
 
         private String getCurrentAlias() {
@@ -374,8 +406,8 @@ class AxisMappingForm extends ModalDialog {
             final List<Integer> selectedIndices = new ArrayList<Integer>(selectedVariableNames.size());
             final ListModel variableNamesModel = variableNames.getModel();
             for(int i = 0; i < variableNamesModel.getSize(); i++) {
-                final String rasterName = variableNamesModel.getElementAt(i).toString();
-                if (selectedVariableNames.contains(rasterName)) {
+                final String name = variableNamesModel.getElementAt(i).toString();
+                if (selectedVariableNames.contains(name)) {
                     selectedIndices.add(i);
                 }
             }

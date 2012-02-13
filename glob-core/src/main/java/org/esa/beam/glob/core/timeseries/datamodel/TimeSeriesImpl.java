@@ -130,6 +130,10 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
             final Map<String, Product> products = productLocation.getProducts();
             for (Map.Entry<String, Product> productEntry : products.entrySet()) {
                 final Product product = productEntry.getValue();
+
+//                  todo - see jira issue AQUAMAR-4
+//                  test if the added source product is compatible with the existing time series product (CRS, width, height)
+//                  If not ... reproject the product before it can be added.
                 if (product.getStartTime() != null) {
                     addProductMetadata(productEntry);
                     addToVariableList(product);

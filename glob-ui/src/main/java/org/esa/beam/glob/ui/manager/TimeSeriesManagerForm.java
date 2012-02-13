@@ -40,6 +40,7 @@ import org.esa.beam.glob.ui.Variable;
 import org.esa.beam.glob.ui.VariableSelectionPane;
 import org.esa.beam.glob.ui.VariableSelectionPaneModel;
 import org.esa.beam.glob.ui.assistant.TimeSeriesAssistantAction;
+import org.esa.beam.ui.NamesAssociationForm;
 import org.esa.beam.util.Debug;
 import org.esa.beam.visat.VisatApp;
 
@@ -54,6 +55,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 class TimeSeriesManagerForm {
 
@@ -72,9 +74,8 @@ class TimeSeriesManagerForm {
     private AbstractButton loadInsituButton;
     private AbstractButton timeSpanButton;
     private AbstractButton viewButton;
-    private AbstractButton exportButton;
     private AbstractTimeSeries currentTimeSeries;
-    private AbstractButton editAxisMappingButton;
+    private AbstractButton editNamesAssociationButton;
 
     TimeSeriesManagerForm(PageComponentDescriptor descriptor) {
         this.descriptor = descriptor;
@@ -203,17 +204,13 @@ class TimeSeriesManagerForm {
         final Action loadInsituAction = new LoadInsituAction(currentTimeSeries);
         loadInsituButton = ToolButtonFactory.createButton(loadInsituAction, false);
 
-        final Action editAxisMappingAction = new EditAxisMappingAction();
-        editAxisMappingButton = ToolButtonFactory.createButton(editAxisMappingAction, false);
+        editNamesAssociationButton = ToolButtonFactory.createButton(new EditNameAssociationAction(), false);
 
         final EditTimeSpanAction editTimeSpanAction = new EditTimeSpanAction(currentTimeSeries);
         timeSpanButton = ToolButtonFactory.createButton(editTimeSpanAction, false);
 
         final Action viewTimeSeriesButtonAction = new ViewTimeSeriesButtonAction();
         viewButton = ToolButtonFactory.createButton(viewTimeSeriesButtonAction, false);
-
-        final ExportAction exportAction = new ExportAction();
-        exportButton = ToolButtonFactory.createButton(exportAction, false);
 
         AbstractButton helpButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/Help24.gif"), false);
         helpButton.setToolTipText("Help");
@@ -226,10 +223,9 @@ class TimeSeriesManagerForm {
         final JPanel panel = new JPanel(layout);
         panel.add(newButton);
         panel.add(loadInsituButton);
-        panel.add(editAxisMappingButton);
+        panel.add(editNamesAssociationButton);
         panel.add(timeSpanButton);
         panel.add(viewButton);
-        panel.add(exportButton);
         panel.add(layout.createVerticalSpacer());
         panel.add(helpButton);
 
@@ -258,9 +254,8 @@ class TimeSeriesManagerForm {
     private void updateButtonPanel(AbstractTimeSeries timeSeries) {
         boolean enabled = timeSeries != null;
         viewButton.setEnabled(enabled);
-        exportButton.setEnabled(enabled);
         loadInsituButton.setEnabled(enabled);
-        editAxisMappingButton.setEnabled(enabled);
+        editNamesAssociationButton.setEnabled(enabled);
     }
 
     private JPanel createVariablePanel(String title, VariableSelectionPane variablePane) {
@@ -522,32 +517,19 @@ class TimeSeriesManagerForm {
         }
     }
 
-    private static class ExportAction extends AbstractAction {
+    private class EditNameAssociationAction extends AbstractAction {
 
-        private ExportAction() {
-            putValue(LARGE_ICON_KEY, UIUtils.loadImageIcon("icons/Export24.gif"));
-            putValue(SHORT_DESCRIPTION, "Export time series");
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            VisatApp.getApp().saveSelectedProductAs();
-        }
-    }
-
-    private class EditAxisMappingAction extends AbstractAction {
-
-        private EditAxisMappingAction() {
-            URL viewIconImageURL = UIUtils.getImageURL("/org/esa/beam/glob/ui/icons/AxisMapping24.gif", TimeSeriesManagerForm.class);
+        private EditNameAssociationAction() {
+            URL viewIconImageURL = UIUtils.getImageURL("/org/esa/beam/glob/ui/icons/NamesAssociation24.gif", TimeSeriesManagerForm.class);
             putValue(LARGE_ICON_KEY, new ImageIcon(viewIconImageURL));
-            putValue(SHORT_DESCRIPTION, "Edit axis mapping");
+            putValue(SHORT_DESCRIPTION, "Edit names association");
         }
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            final AxisMappingModel axisMappingModel = currentTimeSeries.getAxisMappingModel();
-            final AxisMappingForm.NameProvider nameProvider = getNameProvider();
-            new AxisMappingForm(axisMappingModel, nameProvider).show();
+            final NamesAssociationForm.AssociationModel associationModel = getAssociationModel();
+            final NamesAssociationForm.NameProvider nameProvider = getNameProvider();
+            new NamesAssociationForm(associationModel, nameProvider, "associations").show();
         }
     }
 
@@ -593,16 +575,72 @@ class TimeSeriesManagerForm {
         }
     }
 
-    private AxisMappingForm.NameProvider getNameProvider() {
-        return new AxisMappingForm.NameProvider() {
+    private NamesAssociationForm.AssociationModel getAssociationModel() {
+        final AxisMappingModel axisMappingModel = currentTimeSeries.getAxisMappingModel();
+        return new NamesAssociationForm.AssociationModel() {
             @Override
-            public String[] getRasterNames() {
+            public List<String> getRightListNames(String alias) {
+                return axisMappingModel.getInsituNames(alias);
+            }
+
+            @Override
+            public List<String> getCenterListNames(String alias) {
+                return axisMappingModel.getRasterNames(alias);
+            }
+
+            @Override
+            public void addFromCenterList(String alias, String name) {
+                axisMappingModel.addRasterName(alias, name);
+            }
+
+            @Override
+            public void addFromRightList(String alias, String name) {
+                axisMappingModel.addInsituName(alias, name);
+            }
+
+            @Override
+            public void removeAlias(String alias) {
+                axisMappingModel.removeAlias(alias);
+            }
+
+            @Override
+            public void addAlias(String alias) {
+                axisMappingModel.addAlias(alias);
+            }
+
+            @Override
+            public void removeFromRightList(String alias, String name) {
+                axisMappingModel.removeInsituName(alias, name);
+            }
+
+            @Override
+            public void removeFromCenterList(String alias, String name) {
+                axisMappingModel.removeRasterName(alias, name);
+            }
+
+            @Override
+            public Set<String> getAliasNames() {
+                return axisMappingModel.getAliasNames();
+            }
+
+            @Override
+            public void replaceAlias(String beforeName, String changedName) {
+                axisMappingModel.replaceAlias(beforeName, changedName);
+            }
+        };
+    }
+
+    private NamesAssociationForm.NameProvider getNameProvider() {
+        return new NamesAssociationForm.NameProvider("Names Association", "Association name:", "Names from time series:", "Names from insitu file:") {
+
+            @Override
+            public String[] getCenterNames() {
                 final List<String> eoVariables = currentTimeSeries.getEoVariables();
                 return eoVariables.toArray(new String[eoVariables.size()]);
             }
 
             @Override
-            public String[] getInsituNames() {
+            public String[] getRightNames() {
                 if (currentTimeSeries.getInsituSource() != null) {
                     return currentTimeSeries.getInsituSource().getParameterNames();
                 } else {

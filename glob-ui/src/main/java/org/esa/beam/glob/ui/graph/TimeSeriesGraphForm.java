@@ -21,9 +21,6 @@ import org.esa.beam.framework.help.HelpSys;
 import org.esa.beam.framework.ui.UIUtils;
 import org.esa.beam.framework.ui.product.ProductSceneView;
 import org.esa.beam.framework.ui.tool.ToolButtonFactory;
-import org.esa.beam.glob.core.TimeSeriesMapper;
-import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
-import org.esa.beam.glob.export.text.ExportTimeBasedText;
 import org.esa.beam.visat.VisatApp;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -31,6 +28,7 @@ import org.jfree.chart.JFreeChart;
 import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
 import javax.swing.JComponent;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.border.BevelBorder;
 import java.awt.Dimension;
@@ -78,9 +76,8 @@ class TimeSeriesGraphForm {
         chartPanel.setBorder(BorderFactory.createCompoundBorder(
                     BorderFactory.createBevelBorder(BevelBorder.LOWERED),
                     BorderFactory.createEmptyBorder(2, 2, 2, 2)));
-        JPanel buttonPanel = createButtonPanel(helpID);
         mainPanel.add(chartPanel);
-        mainPanel.add(buttonPanel);
+        mainPanel.add(createButtonPanel(helpID));
         mainPanel.add(validatorUI.makeUI());
     }
 
@@ -99,7 +96,9 @@ class TimeSeriesGraphForm {
         });
         showTimeSeriesForSelectedPinsButton.setName("showTimeSeriesForSelectedPinsButton");
         showTimeSeriesForSelectedPinsButton.setToolTipText("Show time series for selected pin");
+
         //////////////////////////////////////////
+
         showTimeSeriesForAllPinsButton = ToolButtonFactory.createButton(
                     UIUtils.loadImageIcon("icons/PinSpectra24.gif"), true);
         showTimeSeriesForAllPinsButton.addActionListener(new ActionListener() {
@@ -114,7 +113,9 @@ class TimeSeriesGraphForm {
         });
         showTimeSeriesForAllPinsButton.setName("showTimeSeriesForAllPinsButton");
         showTimeSeriesForAllPinsButton.setToolTipText("Show time series for all pins");
+
         //////////////////////////////////////////
+
         showCursorTimeSeriesButton = ToolButtonFactory.createButton(
                     UIUtils.loadImageIcon("icons/CursorSpectrum24.gif"), true);
         showCursorTimeSeriesButton.addActionListener(new ActionListener() {
@@ -125,7 +126,9 @@ class TimeSeriesGraphForm {
         });
         showCursorTimeSeriesButton.setToolTipText("Show time series for cursor");
         showCursorTimeSeriesButton.setSelected(true);
+
         //////////////////////////////////////////
+
         exportTimeSeriesButton = ToolButtonFactory.createButton(
                     UIUtils.loadImageIcon("icons/Export24.gif"),
                     false);
@@ -134,14 +137,18 @@ class TimeSeriesGraphForm {
             public void actionPerformed(ActionEvent e) {
                 final VisatApp app = VisatApp.getApp();
                 final ProductSceneView view = app.getSelectedProductSceneView();
-                if (view != null
-                    && view.getProduct() != null
-                    && view.getProduct().getProductType().equals(AbstractTimeSeries.TIME_SERIES_PRODUCT_TYPE)
-                    && TimeSeriesMapper.getInstance().getTimeSeries(view.getProduct()) != null) {
 
-                    AbstractTimeSeries timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(view.getProduct());
-                    ExportTimeBasedText.export(mainPanel, timeSeries, helpID);
-                }
+                JOptionPane.showMessageDialog(view, "Not available in the current version.", "Export data", JOptionPane.INFORMATION_MESSAGE);
+
+                //@todo se remove message dialog and fix export that only the visible graph data will be exported
+//                if (view != null
+//                    && view.getProduct() != null
+//                    && view.getProduct().getProductType().equals(AbstractTimeSeries.TIME_SERIES_PRODUCT_TYPE)
+//                    && TimeSeriesMapper.getInstance().getTimeSeries(view.getProduct()) != null) {
+//
+//                    AbstractTimeSeries timeSeries = TimeSeriesMapper.getInstance().getTimeSeries(view.getProduct());
+//                    ExportTimeBasedText.export(mainPanel, timeSeries, helpID);
+//                }
             }
         });
         exportTimeSeriesButton.setToolTipText("Export raster data time series of all pins");
