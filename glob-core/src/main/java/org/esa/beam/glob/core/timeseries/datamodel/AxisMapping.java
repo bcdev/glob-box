@@ -25,17 +25,17 @@ import java.util.Set;
 import java.util.TreeSet;
 
 /**
- * Model class for axis mapping.
+ * Class for mapping between raster names and insitu names.
  *
  * @author Thomas Storm
  * @author Sabine Embacher
  */
-public class AxisMappingModel {
+public class AxisMapping {
 
     private final Map<String, Set<String>> insituMap = new HashMap<String, Set<String>>();
     private final Map<String, Set<String>> rasterMap = new HashMap<String, Set<String>>();
 
-    private final List<ModelListener> listeners = new ArrayList<ModelListener>();
+    private final List<AxisMappingListener> listeners = new ArrayList<AxisMappingListener>();
 
     public List<String> getInsituNames(String alias) {
         return getNamesFor(alias, insituMap);
@@ -93,8 +93,8 @@ public class AxisMappingModel {
         return getAlias(insituName, insituMap);
     }
 
-    public void addAxisMappingModelListener(ModelListener axisMappingModelListener) {
-        listeners.add(axisMappingModelListener);
+    public void addAxisMappingListener(AxisMappingListener axisMappingListener) {
+        listeners.add(axisMappingListener);
     }
 
     public int getRasterCount() {
@@ -153,7 +153,7 @@ public class AxisMappingModel {
     }
 
     private void fireEvent() {
-        for (ModelListener listener : listeners) {
+        for (AxisMappingListener listener : listeners) {
             listener.hasChanged();
         }
     }
@@ -166,7 +166,7 @@ public class AxisMappingModel {
         return count;
     }
 
-    interface ModelListener {
+    interface AxisMappingListener {
         void hasChanged();
     }
 }

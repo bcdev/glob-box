@@ -28,7 +28,7 @@ import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.framework.ui.product.ProductSceneView;
 import org.esa.beam.glob.core.TimeSeriesMapper;
 import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
-import org.esa.beam.glob.core.timeseries.datamodel.AxisMappingModel;
+import org.esa.beam.glob.core.timeseries.datamodel.AxisMapping;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeCoding;
 import org.esa.beam.util.StringUtils;
 import org.esa.beam.util.logging.BeamLogManager;
@@ -91,7 +91,7 @@ class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandl
     private TimeSeriesGraphDisplayController displayController;
     private boolean isShowingSelectedPins;
     private boolean isShowingAllPins;
-    private AxisMappingModel displayAxisMapping;
+    private AxisMapping displayAxisMapping;
     private boolean showCursorTimeSeries = true;
 
     TimeSeriesGraphModel(XYPlot plot, Validation validation) {
@@ -128,7 +128,7 @@ class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandl
             }
             displayAxisMapping = createDisplayAxisMapping(timeSeries);
         } else {
-            displayAxisMapping = new AxisMappingModel();
+            displayAxisMapping = new AxisMapping();
         }
         validation.adaptTo(timeSeries, displayAxisMapping);
         updatePlot(hasData);
@@ -429,18 +429,18 @@ class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandl
         return valueAxis;
     }
 
-    private AxisMappingModel createDisplayAxisMapping(AbstractTimeSeries timeSeries) {
+    private AxisMapping createDisplayAxisMapping(AbstractTimeSeries timeSeries) {
         final List<String> eoVariables = displayController.getEoVariablesToDisplay();
         final List<String> insituVariables = displayController.getInsituVariablesToDisplay();
-        final AxisMappingModel axisMappingModel = timeSeries.getAxisMappingModel();
-        return createDisplayAxisMapping(eoVariables, insituVariables, axisMappingModel);
+        final AxisMapping axisMapping = timeSeries.getAxisMapping();
+        return createDisplayAxisMapping(eoVariables, insituVariables, axisMapping);
     }
 
-    private AxisMappingModel createDisplayAxisMapping(List<String> eoVariables, List<String> insituVariables, AxisMappingModel axisMappingModel) {
-        final AxisMappingModel displayAxisMapping = new AxisMappingModel();
+    private AxisMapping createDisplayAxisMapping(List<String> eoVariables, List<String> insituVariables, AxisMapping axisMapping) {
+        final AxisMapping displayAxisMapping = new AxisMapping();
 
         for (String eoVariable : eoVariables) {
-            final String aliasName = axisMappingModel.getRasterAlias(eoVariable);
+            final String aliasName = axisMapping.getRasterAlias(eoVariable);
             if (aliasName == null) {
                 displayAxisMapping.addRasterName(eoVariable, eoVariable);
             } else {
@@ -449,7 +449,7 @@ class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandl
         }
 
         for (String insituVariable : insituVariables) {
-            final String aliasName = axisMappingModel.getInsituAlias(insituVariable);
+            final String aliasName = axisMapping.getInsituAlias(insituVariable);
             if (aliasName == null) {
                 displayAxisMapping.addInsituName(insituVariable, insituVariable);
             } else {
@@ -459,8 +459,8 @@ class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandl
         return displayAxisMapping;
     }
 
-    private String getUnit(AxisMappingModel axisMappingModel, String aliasName) {
-        final List<String> rasterNames = axisMappingModel.getRasterNames(aliasName);
+    private String getUnit(AxisMapping axisMapping, String aliasName) {
+        final List<String> rasterNames = axisMapping.getRasterNames(aliasName);
         for (List<Band> eoVariableBandList : eoVariableBands) {
             for (String rasterName : rasterNames) {
                 final Band raster = eoVariableBandList.get(0);
@@ -534,7 +534,7 @@ class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandl
 
         TimeSeries validate(TimeSeries timeSeries, String sourceName, TimeSeriesType type) throws ParseException;
 
-        void adaptTo(Object timeSeriesKey, AxisMappingModel axisMappingModel);
+        void adaptTo(Object timeSeriesKey, AxisMapping axisMapping);
 
         void addValidationListener(ValidationListener listener);
     }

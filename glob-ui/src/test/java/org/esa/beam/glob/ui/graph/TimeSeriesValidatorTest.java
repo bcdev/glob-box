@@ -1,7 +1,7 @@
 package org.esa.beam.glob.ui.graph;
 
 import com.bc.jexp.ParseException;
-import org.esa.beam.glob.core.timeseries.datamodel.AxisMappingModel;
+import org.esa.beam.glob.core.timeseries.datamodel.AxisMapping;
 import org.jfree.data.time.Day;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesDataItem;
@@ -19,19 +19,19 @@ public class TimeSeriesValidatorTest {
     private final TimeSeriesDataItem ITEM_24_5 = new TimeSeriesDataItem(Day.parseDay("2012-01-16"), 24.5);
 
     private TimeSeriesValidator validator;
-    private AxisMappingModel mappingModel;
+    private AxisMapping mapping;
 
     @Before
     public void setUp() throws Exception {
         validator = new TimeSeriesValidator();
-        mappingModel = new AxisMappingModel();
-        mappingModel.addRasterName("alias1", "raster1");
-        mappingModel.addRasterName("alias2", "raster2");
-        mappingModel.addRasterName("alias1", "raster3");
-        mappingModel.addInsituName("alias1", "insitu1");
-        mappingModel.addInsituName("alias1", "insitu2");
-        mappingModel.addInsituName("alias2", "insitu3");
-        validator.adaptTo("key1", mappingModel);
+        mapping = new AxisMapping();
+        mapping.addRasterName("alias1", "raster1");
+        mapping.addRasterName("alias2", "raster2");
+        mapping.addRasterName("alias1", "raster3");
+        mapping.addInsituName("alias1", "insitu1");
+        mapping.addInsituName("alias1", "insitu2");
+        mapping.addInsituName("alias2", "insitu3");
+        validator.adaptTo("key1", mapping);
     }
 
     @Test
@@ -130,7 +130,7 @@ public class TimeSeriesValidatorTest {
         validated = validator.validate(series, "raster1", TimeSeriesType.CURSOR);
         assertEquals(2, validated.getItemCount());
 
-        validator.adaptTo("key2", new AxisMappingModel());
+        validator.adaptTo("key2", new AxisMapping());
         assertFalse(validator.setExpression("r.raster1", "r.raster1 > 3"));
 
         try {
@@ -140,7 +140,7 @@ public class TimeSeriesValidatorTest {
             assertEquals("No variable for identifier 'r.raster1' registered.", expected.getMessage());
         }
 
-        validator.adaptTo("key1", mappingModel);
+        validator.adaptTo("key1", mapping);
 
         validated = validator.validate(series, "raster1", TimeSeriesType.CURSOR);
         assertEquals(2, validated.getItemCount());

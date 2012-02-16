@@ -38,7 +38,7 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
 
     private final Map<RasterDataNode, TimeCoding> rasterTimeMap = new WeakHashMap<RasterDataNode, TimeCoding>();
     private final List<TimeSeriesListener> listeners = new ArrayList<TimeSeriesListener>();
-    private final AxisMappingModel axisMappingModel = new AxisMappingModel();
+    private final AxisMapping axisMapping = new AxisMapping();
     private final Map<Placemark, GeoPos> pinRelationMap = new HashMap<Placemark, GeoPos>();
 
     private Product tsProduct;
@@ -243,7 +243,7 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
         // to reconstruct the source image which will be nulled when
         // a product is reopened after saving
         tsProduct.addProductNodeListener(new SourceImageReconstructor());
-        axisMappingModel.addAxisMappingModelListener(new AxisMappingModelListener());
+        axisMapping.addAxisMappingListener(new AxisMappingListener());
     }
 
     private void storeProductsInMap() {
@@ -455,8 +455,8 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
     }
 
     @Override
-    public AxisMappingModel getAxisMappingModel() {
-        return axisMappingModel;
+    public AxisMapping getAxisMapping() {
+        return axisMapping;
     }
 
     /////////////////////////////////////////////////////////////////////////////////
@@ -703,7 +703,7 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
         }
     }
 
-    private class AxisMappingModelListener implements AxisMappingModel.ModelListener {
+    private class AxisMappingListener implements AxisMapping.AxisMappingListener {
 
         @Override
         public void hasChanged() {

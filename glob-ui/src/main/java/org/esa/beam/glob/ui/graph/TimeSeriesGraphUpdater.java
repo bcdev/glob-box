@@ -7,7 +7,7 @@ import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.glob.core.insitu.InsituSource;
 import org.esa.beam.glob.core.insitu.csv.InsituRecord;
 import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
-import org.esa.beam.glob.core.timeseries.datamodel.AxisMappingModel;
+import org.esa.beam.glob.core.timeseries.datamodel.AxisMapping;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeCoding;
 import org.esa.beam.util.ProductUtils;
 import org.jfree.data.time.Millisecond;
@@ -36,10 +36,10 @@ class TimeSeriesGraphUpdater extends SwingWorker<List<TimeSeries>, Void> {
     private final AbstractTimeSeries timeSeries;
     private final TimeSeriesDataHandler dataHandler;
     private final VersionSafeDataSources dataSources;
-    private final AxisMappingModel displayAxisMapping;
+    private final AxisMapping displayAxisMapping;
 
     TimeSeriesGraphUpdater(AbstractTimeSeries timeSeries, VersionSafeDataSources dataSources,
-                           TimeSeriesDataHandler dataHandler, AxisMappingModel displayAxisMapping,
+                           TimeSeriesDataHandler dataHandler, AxisMapping displayAxisMapping,
                            WorkerChainSupport workerChainSupport, Position cursorPosition,
                            PositionSupport positionSupport, TimeSeriesType type, boolean showCursorTimeSeries,
                            int version) {

@@ -27,7 +27,7 @@ import org.esa.beam.framework.ui.command.Command;
 import org.esa.beam.framework.ui.tool.ToolButtonFactory;
 import org.esa.beam.glob.core.TimeSeriesMapper;
 import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
-import org.esa.beam.glob.core.timeseries.datamodel.AxisMappingModel;
+import org.esa.beam.glob.core.timeseries.datamodel.AxisMapping;
 import org.esa.beam.glob.core.timeseries.datamodel.ProductLocation;
 import org.esa.beam.glob.core.timeseries.datamodel.ProductLocationType;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesChangeEvent;
@@ -40,7 +40,7 @@ import org.esa.beam.glob.ui.Variable;
 import org.esa.beam.glob.ui.VariableSelectionPane;
 import org.esa.beam.glob.ui.VariableSelectionPaneModel;
 import org.esa.beam.glob.ui.assistant.TimeSeriesAssistantAction;
-import org.esa.beam.ui.NamesAssociationForm;
+import org.esa.beam.ui.NamesAssociationDialog;
 import org.esa.beam.util.Debug;
 import org.esa.beam.visat.VisatApp;
 
@@ -527,9 +527,10 @@ class TimeSeriesManagerForm {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            final NamesAssociationForm.AssociationModel associationModel = getAssociationModel();
-            final NamesAssociationForm.NameProvider nameProvider = getNameProvider();
-            new NamesAssociationForm(associationModel, nameProvider, "associations").show();
+            final NamesAssociationDialog.AssociationModel associationModel = getAssociationModel();
+            final NamesAssociationDialog.NameProvider nameProvider = getNameProvider();
+            final String helpId = "associations";
+            NamesAssociationDialog.show(associationModel, nameProvider, helpId);
         }
     }
 
@@ -575,63 +576,67 @@ class TimeSeriesManagerForm {
         }
     }
 
-    private NamesAssociationForm.AssociationModel getAssociationModel() {
-        final AxisMappingModel axisMappingModel = currentTimeSeries.getAxisMappingModel();
-        return new NamesAssociationForm.AssociationModel() {
+    private NamesAssociationDialog.AssociationModel getAssociationModel() {
+        final AxisMapping axisMapping = currentTimeSeries.getAxisMapping();
+        return new NamesAssociationDialog.AssociationModel() {
             @Override
             public List<String> getRightListNames(String alias) {
-                return axisMappingModel.getInsituNames(alias);
+                return axisMapping.getInsituNames(alias);
             }
 
             @Override
             public List<String> getCenterListNames(String alias) {
-                return axisMappingModel.getRasterNames(alias);
+                return axisMapping.getRasterNames(alias);
             }
 
             @Override
             public void addFromCenterList(String alias, String name) {
-                axisMappingModel.addRasterName(alias, name);
+                axisMapping.addRasterName(alias, name);
             }
 
             @Override
             public void addFromRightList(String alias, String name) {
-                axisMappingModel.addInsituName(alias, name);
+                axisMapping.addInsituName(alias, name);
             }
 
             @Override
             public void removeAlias(String alias) {
-                axisMappingModel.removeAlias(alias);
+                axisMapping.removeAlias(alias);
             }
 
             @Override
             public void addAlias(String alias) {
-                axisMappingModel.addAlias(alias);
+                axisMapping.addAlias(alias);
             }
 
             @Override
             public void removeFromRightList(String alias, String name) {
-                axisMappingModel.removeInsituName(alias, name);
+                axisMapping.removeInsituName(alias, name);
             }
 
             @Override
             public void removeFromCenterList(String alias, String name) {
-                axisMappingModel.removeRasterName(alias, name);
+                axisMapping.removeRasterName(alias, name);
             }
 
             @Override
             public Set<String> getAliasNames() {
-                return axisMappingModel.getAliasNames();
+                return axisMapping.getAliasNames();
             }
 
             @Override
             public void replaceAlias(String beforeName, String changedName) {
-                axisMappingModel.replaceAlias(beforeName, changedName);
+                axisMapping.replaceAlias(beforeName, changedName);
             }
         };
     }
 
-    private NamesAssociationForm.NameProvider getNameProvider() {
-        return new NamesAssociationForm.NameProvider("Names Association", "Association name:", "Names from time series:", "Names from insitu file:") {
+    private NamesAssociationDialog.NameProvider getNameProvider() {
+        final String windowTitle = "Names Association";
+        final String aliasHeaderName = "Association name:";
+        final String centerHeaderName = "Names from time series:";
+        final String rightHeaderName = "Names from insitu file:";
+        return new NamesAssociationDialog.NameProvider(windowTitle, aliasHeaderName, centerHeaderName, rightHeaderName) {
 
             @Override
             public String[] getCenterNames() {

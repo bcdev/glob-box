@@ -129,5 +129,5 @@ public abstract class AbstractTimeSeries {
 
     public abstract Set<String> getSelectedInsituVariables();
 
-    public abstract AxisMappingModel getAxisMappingModel();
+    public abstract AxisMapping getAxisMapping();
 }

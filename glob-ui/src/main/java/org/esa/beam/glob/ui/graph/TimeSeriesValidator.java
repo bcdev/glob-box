@@ -26,7 +26,7 @@ import com.bc.jexp.impl.ParserImpl;
 import com.bc.jexp.impl.SymbolFactory;
 import org.esa.beam.framework.ui.ExpressionPane;
 import org.esa.beam.framework.ui.ModalDialog;
-import org.esa.beam.glob.core.timeseries.datamodel.AxisMappingModel;
+import org.esa.beam.glob.core.timeseries.datamodel.AxisMapping;
 import org.esa.beam.util.PropertyMap;
 import org.esa.beam.visat.VisatApp;
 import org.jfree.data.time.TimeSeries;
@@ -129,14 +129,14 @@ class TimeSeriesValidator implements TimeSeriesGraphForm.ValidatorUI, TimeSeries
     }
 
     @Override
-    public void adaptTo(Object timeSeriesKey, AxisMappingModel axisMappingModel) {
+    public void adaptTo(Object timeSeriesKey, AxisMapping axisMapping) {
         if (timeSeriesExpressionsMap.containsKey(timeSeriesKey)) {
             currentExpressionMap = timeSeriesExpressionsMap.get(timeSeriesKey);
         } else {
             currentExpressionMap = new HashMap<String, String>();
             timeSeriesExpressionsMap.put(timeSeriesKey, currentExpressionMap);
         }
-        qualifiedSourceNames = extractQualifiedSourceNames(axisMappingModel);
+        qualifiedSourceNames = extractQualifiedSourceNames(axisMapping);
 
         namespace = new DefaultNamespace();
         for (String qualifiedSourceName : qualifiedSourceNames) {
@@ -249,11 +249,11 @@ class TimeSeriesValidator implements TimeSeriesGraphForm.ValidatorUI, TimeSeries
         }
     }
 
-    private List<String> extractQualifiedSourceNames(AxisMappingModel axisMappingModel) {
+    private List<String> extractQualifiedSourceNames(AxisMapping axisMapping) {
         final ArrayList<String> names = new ArrayList<String>();
-        for (String alias : axisMappingModel.getAliasNames()) {
-            collectSourceNames(names, axisMappingModel.getInsituNames(alias), QUALIFIER_INSITU);
-            collectSourceNames(names, axisMappingModel.getRasterNames(alias), QUALIFIER_RASTER);
+        for (String alias : axisMapping.getAliasNames()) {
+            collectSourceNames(names, axisMapping.getInsituNames(alias), QUALIFIER_INSITU);
+            collectSourceNames(names, axisMapping.getRasterNames(alias), QUALIFIER_RASTER);
         }
         return names;
     }

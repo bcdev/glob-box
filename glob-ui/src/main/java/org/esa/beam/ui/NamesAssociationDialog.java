@@ -40,7 +40,7 @@ import java.util.Set;
  * @author Sabine Embacher
  * @author Thomas Storm
  */
-public class NamesAssociationForm extends ModalDialog {
+public class NamesAssociationDialog extends ModalDialog {
 
     private final AssociationModel associationModel;
     private final NameProvider nameProvider;
@@ -52,7 +52,11 @@ public class NamesAssociationForm extends ModalDialog {
     private AbstractButton removeButton;
     private boolean shown = false;
 
-    public NamesAssociationForm(AssociationModel associationModel, NameProvider nameProvider, String helpId) {
+    public static void show(AssociationModel associationModel, NameProvider nameProvider, String helpId) {
+        new NamesAssociationDialog(associationModel, nameProvider, helpId).show();
+    }
+
+    private NamesAssociationDialog(AssociationModel associationModel, NameProvider nameProvider, String helpId) {
         super(VisatApp.getApp().getMainFrame(), nameProvider.windowTitle, ModalDialog.ID_OK, helpId);
         this.associationModel = associationModel;
         this.nameProvider = nameProvider;
