@@ -29,6 +29,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 
+/**
+ * Different types of {@link ProductLocation}.
+ *
+ * @author Marco Peters
+ * @author Thomas Storm
+ */
 public enum ProductLocationType {
 
     FILE {

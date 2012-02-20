@@ -25,8 +25,13 @@ import java.util.Map;
 import java.util.WeakHashMap;
 
 /**
- * This TimeSeriesMapper singleton should be used to map between a
+ * The TimeSeriesMapper is a singleton used to map between a
  * {@link org.esa.beam.framework.datamodel.Product} and an {@link AbstractTimeSeries}.
+ *
+ *  *<p><i>Note that this class is not yet public API. Interface may change in future releases.</i></p>
+ *
+ * @author Marco Peters
+ * @author Thomas Storm
  */
 public class TimeSeriesMapper {
 

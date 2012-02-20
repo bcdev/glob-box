@@ -19,6 +19,8 @@ package org.esa.beam.glob.core.timeseries.datamodel;
 import org.esa.beam.framework.datamodel.ProductNodeListenerAdapter;
 
 /**
+ * Listener for events of type {@link TimeSeriesChangeEvent}.
+ *
  * @author Thomas Storm
  */
 public abstract class TimeSeriesListener extends ProductNodeListenerAdapter {

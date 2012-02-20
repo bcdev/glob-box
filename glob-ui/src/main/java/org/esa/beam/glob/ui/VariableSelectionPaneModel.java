@@ -22,6 +22,8 @@ import java.util.*;
 
 /**
  * Simple model interface for variable selections.
+ *
+ * @author Marco Peters
  */
 public interface VariableSelectionPaneModel extends ListModel, Serializable {
 

@@ -34,6 +34,8 @@ import java.util.List;
 
 /**
  * UI component for selecting variables, working on a {@link VariableSelectionPaneModel}.
+ *
+ * @author Marco Peters
  */
 public class VariableSelectionPane extends JPanel {
 

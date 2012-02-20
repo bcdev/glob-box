@@ -26,7 +26,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * <p><i>Note that this class is not yet public API. Interface may chhange in future releases.</i></p>
+ * Factory class for creating instances of {@link AbstractTimeSeries}.
+ *
+ * <p><i>Note that this class is not yet public API. Interface may change in future releases.</i></p>
  *
  * @author Thomas Storm
  */

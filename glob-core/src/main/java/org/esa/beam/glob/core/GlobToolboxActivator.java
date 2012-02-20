@@ -30,6 +30,14 @@ import org.esa.beam.framework.dataio.ProductWriterPlugIn;
 
 import java.util.Iterator;
 
+/**
+ * Activator class for patching the default reader and writer.
+ *
+ *<p><i>Note that this class is not yet public API. Interface may change in future releases.</i></p>
+ *
+ * @author Marco Peters
+ * @author Thomas Storm
+ */
 public class GlobToolboxActivator implements Activator {
 
     public GlobToolboxActivator() {

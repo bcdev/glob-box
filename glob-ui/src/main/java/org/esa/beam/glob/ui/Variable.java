@@ -18,6 +18,8 @@ package org.esa.beam.glob.ui;
 
 /**
  * Data container representing a variable with name and selection state.
+ *
+ * @author Marco Peters
  */
 public class Variable {
     private String name;

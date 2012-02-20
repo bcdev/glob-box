@@ -43,6 +43,9 @@ import java.util.List;
 
 /**
  * Main class for the matrix tool.
+ *
+ * @author Marco Peters
+ * @author Thomas Storm
  */
 public class TimeSeriesMatrixToolView extends AbstractToolView {
 

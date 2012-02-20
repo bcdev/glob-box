@@ -21,9 +21,11 @@ import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 
 /**
- * <p><i>Note that this class is not yet public API. Interface may chhange in future releases.</i></p>
+ * <p><i>Note that this class is not yet public API. Interface may change in future releases.</i></p>
  * <p/>
- * Grid implementation of {@link TimeCoding}. It simply return the central value of start and end time.
+ * Grid implementation of {@link TimeCoding}. It simply returns the central value of start and end time.
+ *
+ * @author Thomas Storm
  */
 public class GridTimeCoding extends TimeCoding {
 

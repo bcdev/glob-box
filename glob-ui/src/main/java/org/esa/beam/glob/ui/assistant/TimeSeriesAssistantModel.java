@@ -16,8 +16,6 @@
 
 package org.esa.beam.glob.ui.assistant;
 
-import org.esa.beam.framework.dataio.ProductWriterPlugIn;
-import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.glob.ui.DefaultProductLocationsPaneModel;
 import org.esa.beam.glob.ui.DefaultVariableSelectionPaneModel;
 import org.esa.beam.glob.ui.ProductLocationsPaneModel;

@@ -47,6 +47,10 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.Iterator;
 
+/**
+ * UI element for managing product locations.
+ * @author Marco Peters
+ */
 public class ProductLocationsPane extends JPanel {
     private static final String PROPERTY_KEY_LAST_OPEN_TS_DIR = "glob.file.lastOpenDir";
 

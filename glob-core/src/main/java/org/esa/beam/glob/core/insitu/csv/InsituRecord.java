@@ -4,6 +4,13 @@ import org.esa.beam.framework.datamodel.GeoPos;
 
 import java.util.Date;
 
+/**
+ * An insitu record represents a single item of insitu data, given by position, time, station name, and
+ * measurement value.
+ *
+ * @author Sabine Embacher
+ * @author Thomas Storm
+ */
 public class InsituRecord {
 
     public final GeoPos pos;
@@ -47,12 +54,10 @@ public class InsituRecord {
 
     @Override
     public int hashCode() {
-        int result;
-        long temp;
-        result = pos != null ? pos.hashCode() : 0;
+        int result = pos != null ? pos.hashCode() : 0;
         result = 31 * result + (time != null ? time.hashCode() : 0);
         result = 31 * result + (stationName != null ? stationName.hashCode() : 0);
-        temp = value != +0.0d ? Double.doubleToLongBits(value) : 0L;
+        long temp = value != +0.0d ? Double.doubleToLongBits(value) : 0L;
         result = 31 * result + (int) (temp ^ (temp >>> 32));
         return result;
     }

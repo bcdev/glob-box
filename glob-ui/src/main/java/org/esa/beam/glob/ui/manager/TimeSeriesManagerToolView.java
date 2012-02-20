@@ -49,6 +49,10 @@ import java.util.WeakHashMap;
 
 /**
  * Main class for the manager tool.
+ *
+  * @author Marco Peters
+ * @author Thomas Storm
+ * @author Sabine Embacher
  */
 public class TimeSeriesManagerToolView extends AbstractToolView {
 

@@ -18,6 +18,8 @@ package org.esa.beam.glob.ui.assistant;
 
 /**
  * Action for creating a {@link TimeSeriesAssistantModel}.
+ *
+ * @author Marco Peters
  */
 public class TimeSeriesAssistantAction extends AbstractTimeSeriesAssistantAction {
 

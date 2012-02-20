@@ -2,6 +2,9 @@ package org.esa.beam.glob.core.insitu;
 
 /**
  * Interface for accessing meta-information about in-situ data.
+ *
+ * @author Sabine Embacher
+ * @author Thomas Storm
  */
 public interface Header {
 

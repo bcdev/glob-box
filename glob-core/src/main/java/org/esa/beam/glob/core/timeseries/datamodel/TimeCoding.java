@@ -21,7 +21,7 @@ import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.util.Guardian;
 
 /**
- * <p><i>Note that this class is not yet public API. Interface may chhange in future releases.</i></p>
+ * <p><i>Note that this class is not yet public API. Interface may change in future releases.</i></p>
  * <p/>
  * Abstract class representing a time-coding. A time-coding is defined by a start and an end time and thus represents
  * a time span. It maps time information to pixel-positions.

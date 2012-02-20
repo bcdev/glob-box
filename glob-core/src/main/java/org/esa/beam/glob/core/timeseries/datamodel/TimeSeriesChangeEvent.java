@@ -17,6 +17,8 @@
 package org.esa.beam.glob.core.timeseries.datamodel;
 
 /**
+ * Event that gets fired when a time series has been changed.
+ *
  * @author Thomas Storm
  */
 public class TimeSeriesChangeEvent {

@@ -47,6 +47,10 @@ import static org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries.ras
 
 /**
  * Main class for the graph tool.
+ *
+ * @author Marco Peters
+ * @author Thomas Storm
+ * @author Sabine Embacher
  */
 public class TimeSeriesGraphToolView extends AbstractToolView {
 

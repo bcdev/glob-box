@@ -33,6 +33,15 @@ import java.util.Map;
 import java.util.Set;
 
 /**
+ * Instances of AbstractTimeSeries allow the framework user access to every kind of data needed when dealing with time
+ * series. Additionally, it provides methods to
+ * <ul>
+ *  <li>register listeners (of type TimeSeriesListener) in order to get informed about changes of the time series</li>
+ *  <li>retrieve the user-selected variables, either in-situ or EO data</li>
+ *  <li>retrieve the product, which is internally used as container for the time series</li>
+ *  <li>retrieve an instance of {@link AxisMapping}</li>
+ * </ul>
+ *
  * <p><i>Note that this class is not yet public API. Interface may change in future releases.</i></p>
  *
  * @author Thomas Storm

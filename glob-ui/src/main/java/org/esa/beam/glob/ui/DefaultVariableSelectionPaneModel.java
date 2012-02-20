@@ -23,6 +23,8 @@ import java.util.List;
 
 /**
  * Default implementation of {@link VariableSelectionPaneModel}.
+ *
+ * @author Marco Peters
  */
 public class DefaultVariableSelectionPaneModel extends AbstractListModel implements VariableSelectionPaneModel {
 

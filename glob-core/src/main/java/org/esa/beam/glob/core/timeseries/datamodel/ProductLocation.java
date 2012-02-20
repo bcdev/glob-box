@@ -22,7 +22,12 @@ import org.esa.beam.framework.datamodel.Product;
 import java.util.Map;
 
 /**
- * <p><i>Note that this class is not yet public API. Interface may chhange in future releases.</i></p>
+ * Class representing a location in the filesystem where data products reside.
+ *
+ * <p><i>Note that this class is not yet public API. Interface may change in future releases.</i></p>
+ *
+ * @author Marco Zühlke
+ * @author Thomas Storm
  */
 public class ProductLocation {
 
