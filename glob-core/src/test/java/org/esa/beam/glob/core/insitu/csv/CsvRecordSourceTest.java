@@ -129,7 +129,7 @@ public class CsvRecordSourceTest {
     @Test
     public void testRealLifeCsv() throws Exception {
         InputStreamReader reader = new InputStreamReader(getClass().getResourceAsStream("cc-matchup-test-insitu.csv"));
-        CsvRecordSource recordSource = new CsvRecordSource(reader, ProductData.UTC.createDateFormat("yyyy-MM-dd hh:mm:ss"));
+        CsvRecordSource recordSource = new CsvRecordSource(reader, ProductData.UTC.createDateFormat("yyyy-MM-dd HH:mm:ss"));
 
         Header header = recordSource.getHeader();
         assertNotNull(header);

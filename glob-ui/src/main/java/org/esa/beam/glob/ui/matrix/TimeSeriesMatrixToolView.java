@@ -73,7 +73,7 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
         sceneViewListener = new SceneViewListener();
         mouseWheelListener = new MatrixMouseWheelListener();
         timeSeriesMatrixTSL = new TimeSeriesMatrixTSL();
-        dateFormat = new SimpleDateFormat("dd-MMM-yyyy hh:mm:ss", Locale.getDefault());
+        dateFormat = new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss", Locale.getDefault());
     }
 
     @Override
