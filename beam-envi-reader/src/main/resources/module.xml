@@ -26,7 +26,6 @@
 
     <extension point="beam-ui:actions">
         <action>
-            <text>Import ENVI Product...</text>
             <class>org.esa.beam.visat.actions.ProductImportAction</class>
             <formatName>ENVI</formatName>
             <useAllFileFilter>false</useAllFileFilter>

@@ -45,7 +45,7 @@
             <helpId>importGlobCoverTileProduct</helpId>
             <formatName>GLOBCOVER-L3-MOSAIC-TILE</formatName>
             <useAllFileFilter>false</useAllFileFilter>
-            <text>Import GlobCover Bimonthly or Annual MERIS FR Mosaic Tile Product...</text>
+            <text>GlobCover Bimonthly or Annual MERIS FR Mosaic Tile</text>
             <mnemonic/>
             <shortDescr>Import a GlobCover Bimonthly or Annual MERIS FR Mosaic Tile data product or product subset.
             </shortDescr>
@@ -58,7 +58,7 @@
             <helpId>importGlobCoverMosaicProduct</helpId>
             <formatName>GLOBCOVER-L3-MOSAIC</formatName>
             <useAllFileFilter>false</useAllFileFilter>
-            <text>Import GlobCover Bimonthly or Annual MERIS FR Mosaic Product...</text>
+            <text>GlobCover Bimonthly or Annual MERIS FR Mosaic</text>
             <mnemonic/>
             <shortDescr>Import a GlobCover Bimonthly or Annual MERIS FR Mosaic data product or product subset.
             </shortDescr>
@@ -71,7 +71,7 @@
             <helpId>importGlobCoverGeoTiffProduct</helpId>
             <formatName>GeoTIFF-GC</formatName>
             <useAllFileFilter>false</useAllFileFilter>
-            <text>Import GlobCover Global/Regional Land Cover Product...</text>
+            <text>GlobCover Global/Regional Land Cover</text>
             <mnemonic/>
             <shortDescr>Import a GlobCover Global/Regional Land Cover data product or product subset.
             </shortDescr>

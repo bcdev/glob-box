@@ -41,7 +41,6 @@
             <helpId>importMedspirationProduct</helpId>
             <formatName>Medspiration</formatName>
             <useAllFileFilter>false</useAllFileFilter>
-            <text>Import Medspiration Product...</text>
             <mnemonic/>
             <shortDescr>Import a Medspiration data product or product subset.</shortDescr>
             <description>Import a Medspiration data product or product subset.</description>

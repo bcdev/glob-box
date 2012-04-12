@@ -39,6 +39,7 @@
             <useAllFileFilter>true</useAllFileFilter>
             <shortDescr>Import a GlobCarbon data product.</shortDescr>
             <description>Import a GlobCarbon data product or product subset.</description>
+            <text>GlobCarbon</text>
         </action>
         <!--<action>-->
         <!--<class>org.esa.beam.visat.actions.ProductImportAction</class>-->

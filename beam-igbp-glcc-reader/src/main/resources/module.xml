@@ -38,7 +38,6 @@
             <helpId>importIgbpGlcc</helpId>
             <formatName>IGBP_GLCC</formatName>
             <useAllFileFilter>false</useAllFileFilter>
-            <text>Import IGBP GLCC product...</text>
             <shortDescr>Import a IGBP GLCC product or product subset.</shortDescr>
             <description>Import a IGBP Global Land Cover Classification product or product subset.</description>
         </action>

@@ -42,7 +42,7 @@
             <helpId>importGlobAerosolProduct</helpId>
             <formatName>GLOBAEROSOL-L3</formatName>
             <useAllFileFilter>false</useAllFileFilter>
-            <text>Import GlobAerosol Product...</text>
+            <text>GlobAerosol</text>
             <mnemonic/>
             <shortDescr>Import a GlobAerosol data product or product subset.</shortDescr>
             <description>Import a GlobAerosol data product or product subset.</description>
