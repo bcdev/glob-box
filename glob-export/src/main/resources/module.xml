@@ -36,7 +36,7 @@
             <parent>export</parent>
             <id>exportTimeBasedKmz</id>
             <class>org.esa.beam.glob.export.kmz.ExportTimeBasedKmz</class>
-            <text>Export Time Series as Google Earth KMZ...</text>
+            <text>Time Series as Google Earth KMZ...</text>
             <mnemonic>K</mnemonic>
             <shortDescr>Export Time Series as KMZ.</shortDescr>
             <description>Export Time Series as KMZ.</description>
