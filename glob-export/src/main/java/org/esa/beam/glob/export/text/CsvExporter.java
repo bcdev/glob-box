@@ -17,6 +17,7 @@
 package org.esa.beam.glob.export.text;
 
 import com.bc.ceres.core.ProgressMonitor;
+import com.bc.ceres.glevel.MultiLevelImage;
 import org.esa.beam.framework.datamodel.RasterDataNode;
 
 import java.awt.Rectangle;
@@ -84,10 +85,14 @@ abstract class CsvExporter {
         final RenderedImage image = raster.getGeophysicalImage().getImage(currentLevel);
         final Rectangle pixelRect = new Rectangle(pixelX, pixelY, 1, 1);
         final Raster data = image.getData(pixelRect);
-        final RenderedImage validMask = raster.getValidMaskImage().getImage(currentLevel);
-        final Raster validMaskData = validMask.getData(pixelRect);
+        final MultiLevelImage validMaskImage = raster.getValidMaskImage();
+        Raster validMaskData = null;
+        if (validMaskImage != null) {
+            final RenderedImage validMask = validMaskImage.getImage(currentLevel);
+            validMaskData = validMask.getData(pixelRect);
+        }
         final double value;
-        if (validMaskData.getSample(pixelX, pixelY, 0) > 0) {
+        if (validMaskData == null || validMaskData.getSample(pixelX, pixelY, 0) > 0) {
             value = data.getSampleDouble(pixelX, pixelY, 0);
         } else {
             value = Double.NaN;
