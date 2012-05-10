@@ -29,7 +29,6 @@
            TODO: Move the sourceEncoding property to the build tag if version 3.0 is released
            -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <geotools.version>2.6.5</geotools.version>
         <beam.version>4.10</beam.version>
         <ceres.version>0.13</ceres.version>
     </properties>
@@ -87,11 +86,6 @@
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-geotiff</artifactId>
                 <version>1.1.1</version>
-            </dependency>
-            <dependency> <!-- used to read Dbase files (*.dbf) -->
-                <groupId>org.geotools</groupId>
-                <artifactId>gt-shapefile</artifactId>
-                <version>${geotools.version}</version>
             </dependency>
             <dependency>
                 <groupId>net.sourceforge.jexcelapi</groupId>
