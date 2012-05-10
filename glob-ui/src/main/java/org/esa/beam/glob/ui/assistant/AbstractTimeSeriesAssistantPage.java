@@ -21,7 +21,6 @@ import com.bc.ceres.swing.progress.ProgressMonitorSwingWorker;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductManager;
 import org.esa.beam.framework.ui.assistant.AbstractAssistantPage;
-import org.esa.beam.framework.ui.assistant.AssistantPage;
 import org.esa.beam.glob.core.TimeSeriesMapper;
 import org.esa.beam.glob.core.timeseries.datamodel.AbstractTimeSeries;
 import org.esa.beam.glob.core.timeseries.datamodel.TimeSeriesFactory;
@@ -33,7 +32,6 @@ import org.esa.beam.visat.VisatApp;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import java.awt.Component;
-import java.util.concurrent.TimeUnit;
 
 abstract class AbstractTimeSeriesAssistantPage extends AbstractAssistantPage {
 
@@ -87,7 +85,11 @@ abstract class AbstractTimeSeriesAssistantPage extends AbstractAssistantPage {
     }
 
     private static class CloseListener implements ProductManager.Listener {
-
+        //todo ... se refactoring
+        // this class is not necessary because the TimeSeriesManager.remove() do the same
+        // job automatically. Only one instance of a CloseListener without tsProduct
+        // field is necessary, which directly delegates to the TimeSeriesMapper.
+        // Or the TimeSeriesMapper implements the interface ProductManager.Listener.
         private Product tsProduct;
 
         private CloseListener(Product tsProduct) {
