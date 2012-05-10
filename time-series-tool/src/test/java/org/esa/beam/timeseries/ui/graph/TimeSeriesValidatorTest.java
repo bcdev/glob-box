@@ -19,12 +19,12 @@ public class TimeSeriesValidatorTest {
     private final TimeSeriesDataItem ITEM_24_5 = new TimeSeriesDataItem(Day.parseDay("2012-01-16"), 24.5);
 
     private TimeSeriesValidator validator;
-    private org.esa.beam.timeseries.core.timeseries.datamodel.AxisMapping mapping;
+    private AxisMapping mapping;
 
     @Before
     public void setUp() throws Exception {
         validator = new TimeSeriesValidator();
-        mapping = new org.esa.beam.timeseries.core.timeseries.datamodel.AxisMapping();
+        mapping = new AxisMapping();
         mapping.addRasterName("alias1", "raster1");
         mapping.addRasterName("alias2", "raster2");
         mapping.addRasterName("alias1", "raster3");
@@ -130,7 +130,7 @@ public class TimeSeriesValidatorTest {
         validated = validator.validate(series, "raster1", TimeSeriesType.CURSOR);
         assertEquals(2, validated.getItemCount());
 
-        validator.adaptTo("key2", new org.esa.beam.timeseries.core.timeseries.datamodel.AxisMapping());
+        validator.adaptTo("key2", new AxisMapping());
         assertFalse(validator.setExpression("r.raster1", "r.raster1 > 3"));
 
         try {
