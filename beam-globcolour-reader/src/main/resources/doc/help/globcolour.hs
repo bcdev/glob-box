@@ -9,10 +9,10 @@
         <homeID>top</homeID>
         <mapref location="map.jhm"/>
     </maps>
-    <view mergetype="javax.doc.doc.help.UniteAppendMerge">
+    <view mergetype="javax.doc.help.UniteAppendMerge">
         <name>TOC</name>
         <label>Contents</label>
-        <type>javax.doc.doc.help.TOCView</type>
+        <type>javax.doc.help.TOCView</type>
         <data>toc.xml</data>
     </view>
 </helpset>

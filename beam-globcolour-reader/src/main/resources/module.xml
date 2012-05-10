@@ -54,8 +54,8 @@
 
     <extension point="beam-ui:helpSets">
         <helpSet>
-            <parent>beam-doc.help</parent>
-            <path>doc/doc.help/globcolour.hs</path>
+            <parent>beam-help</parent>
+            <path>doc/help/globcolour.hs</path>
         </helpSet>
     </extension>
 
