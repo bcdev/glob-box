@@ -140,4 +140,6 @@
         </helpSet>
     </extension>
 
+    <activator>org.esa.beam.timeseries.core.TimeSeriesToolActivator</activator>
+
 </module>

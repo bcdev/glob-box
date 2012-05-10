@@ -38,9 +38,9 @@ import java.util.Iterator;
  * @author Marco Peters
  * @author Thomas Storm
  */
-public class GlobToolboxActivator implements Activator {
+public class TimeSeriesToolActivator implements Activator {
 
-    public GlobToolboxActivator() {
+    public TimeSeriesToolActivator() {
     }
 
 

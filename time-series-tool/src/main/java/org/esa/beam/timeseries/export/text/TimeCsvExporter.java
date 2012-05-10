@@ -59,7 +59,7 @@ class TimeCsvExporter extends CsvExporter {
         if (!variablesList.isEmpty()) {
 
         }
-        header.add("GlobToolbox pin time series export table");
+        header.add("Time Series Tool pin time series export table");
         header.add("");
         header.add("Product:\t" + resolveProductName());
         header.add("Created on:\t" + new Date());

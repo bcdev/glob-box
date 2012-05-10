@@ -6,7 +6,7 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 /**
- * An iterator used in various implementations of the {@link org.esa.beam.glob.core.insitu.RecordSource} interface.
+ * An iterator used in various implementations of the {@link org.esa.beam.timeseries.core.insitu.RecordSource} interface.
  *
  * @author Norman
  */

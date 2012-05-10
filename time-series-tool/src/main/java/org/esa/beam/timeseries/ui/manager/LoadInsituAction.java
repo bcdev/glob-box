@@ -43,7 +43,7 @@ import java.util.logging.Level;
  */
 class LoadInsituAction extends AbstractAction {
 
-    private static final String PROPERTY_KEY_LAST_OPEN_INSITU_DIR = "glob.file.lastInsituOpenDir";
+    private static final String PROPERTY_KEY_LAST_OPEN_INSITU_DIR = "timeseries.file.lastInsituOpenDir";
 
     private final AbstractTimeSeries currentTimeSeries;
     private InsituSource insituSource;

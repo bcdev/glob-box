@@ -52,7 +52,7 @@ import java.util.Iterator;
  * @author Marco Peters
  */
 public class ProductLocationsPane extends JPanel {
-    private static final String PROPERTY_KEY_LAST_OPEN_TS_DIR = "glob.file.lastOpenDir";
+    private static final String PROPERTY_KEY_LAST_OPEN_TS_DIR = "timeseries.file.lastOpenDir";
 
     private ProductLocationsPaneModel model;
     private JList sourceList;
