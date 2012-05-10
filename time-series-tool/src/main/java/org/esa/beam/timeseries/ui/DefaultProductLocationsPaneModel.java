@@ -31,7 +31,7 @@ import java.util.List;
  */
 public class DefaultProductLocationsPaneModel extends AbstractListModel implements ProductLocationsPaneModel {
 
-    private final List<org.esa.beam.timeseries.core.timeseries.datamodel.ProductLocation> productLocationList;
+    private final List<ProductLocation> productLocationList;
 
     public DefaultProductLocationsPaneModel() {
         productLocationList = new ArrayList<ProductLocation>();
@@ -51,7 +51,7 @@ public class DefaultProductLocationsPaneModel extends AbstractListModel implemen
     public void addFiles(File... files) {
         final int startIndex = productLocationList.size();
         for (File file : files) {
-            productLocationList.add(new ProductLocation(org.esa.beam.timeseries.core.timeseries.datamodel.ProductLocationType.FILE, file.getAbsolutePath()));
+            productLocationList.add(new ProductLocation(ProductLocationType.FILE, file.getAbsolutePath()));
         }
         final int stopIndex = productLocationList.size() - 1;
         fireIntervalAdded(this, startIndex, stopIndex);
@@ -59,7 +59,7 @@ public class DefaultProductLocationsPaneModel extends AbstractListModel implemen
 
     @Override
     public void addDirectory(File directory, boolean recursive) {
-        final org.esa.beam.timeseries.core.timeseries.datamodel.ProductLocationType locationType = recursive ? org.esa.beam.timeseries.core.timeseries.datamodel.ProductLocationType.DIRECTORY_REC : org.esa.beam.timeseries.core.timeseries.datamodel.ProductLocationType.DIRECTORY;
+        final ProductLocationType locationType = recursive ? ProductLocationType.DIRECTORY_REC : ProductLocationType.DIRECTORY;
         productLocationList.add(new ProductLocation(locationType, directory.getPath()));
         final int index = productLocationList.size() - 1;
         fireIntervalAdded(this, index, index);
@@ -78,7 +78,7 @@ public class DefaultProductLocationsPaneModel extends AbstractListModel implemen
     }
 
     @Override
-    public List<org.esa.beam.timeseries.core.timeseries.datamodel.ProductLocation> getProductLocations() {
+    public List<ProductLocation> getProductLocations() {
         return new ArrayList<ProductLocation>(productLocationList);
     }
 }
