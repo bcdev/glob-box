@@ -38,7 +38,7 @@ public class CsvRecordSourceTest {
         Iterable<Record> records = recordSource.getRecords();
         assertNotNull(records);
 
-        Iterator<org.esa.beam.timeseries.core.insitu.Record> iterator = records.iterator();
+        Iterator<Record> iterator = records.iterator();
         assertNotNull(iterator);
 
         assertTrue(iterator.hasNext());
@@ -60,7 +60,7 @@ public class CsvRecordSourceTest {
         assertEquals("Name 2", rec2.getStationName());
 
         assertTrue(iterator.hasNext());
-        org.esa.beam.timeseries.core.insitu.Record rec3 = iterator.next();
+        Record rec3 = iterator.next();
         assertNotNull(rec3);
         assertArrayEquals(new Object[]{(double) 18, 53.1, 13.5, dateFormat.parse("11.04.2003"), "Name 3", 0.4, (double) 1},
                           rec3.getAttributeValues());
@@ -84,7 +84,7 @@ public class CsvRecordSourceTest {
         DateFormat dateFormat = ProductData.UTC.createDateFormat("dd.MM.yyyy");
 
         CsvRecordSource recordSource = new CsvRecordSource(new StringReader(CSV), dateFormat);
-        org.esa.beam.timeseries.core.insitu.Header header = recordSource.getHeader();
+        Header header = recordSource.getHeader();
         assertNotNull(header);
         assertNotNull(header.getColumnNames());
         assertArrayEquals(new String[]{"ID", "LAT", "LONG", "TIME", "Name", "CHL", "FLAG"},
@@ -92,14 +92,14 @@ public class CsvRecordSourceTest {
         assertEquals(true, header.hasLocation());
         assertEquals(true, header.hasTime());
 
-        Iterable<org.esa.beam.timeseries.core.insitu.Record> records = recordSource.getRecords();
+        Iterable<Record> records = recordSource.getRecords();
         assertNotNull(records);
 
         Iterator<Record> iterator = records.iterator();
         assertNotNull(iterator);
 
         assertTrue(iterator.hasNext());
-        org.esa.beam.timeseries.core.insitu.Record rec1 = iterator.next();
+        Record rec1 = iterator.next();
         assertNotNull(rec1);
         assertArrayEquals(new Object[]{(double) 16, 53.1, 13.6, dateFormat.parse("03.04.2003"), null, 0.5, (double) 1},
                           rec1.getAttributeValues());
@@ -108,7 +108,7 @@ public class CsvRecordSourceTest {
         assertEquals(null, rec1.getStationName());
 
         assertTrue(iterator.hasNext());
-        org.esa.beam.timeseries.core.insitu.Record rec2 = iterator.next();
+        Record rec2 = iterator.next();
         assertNotNull(rec2);
         assertArrayEquals(new Object[]{(double) 17, 53.3, 13.4, dateFormat.parse("08.04.2003"), null, null, null},
                           rec2.getAttributeValues());
@@ -117,7 +117,7 @@ public class CsvRecordSourceTest {
         assertEquals(null, rec2.getStationName());
 
         assertTrue(iterator.hasNext());
-        org.esa.beam.timeseries.core.insitu.Record rec3 = iterator.next();
+        Record rec3 = iterator.next();
         assertNotNull(rec3);
         assertArrayEquals(new Object[]{(double) 18, 53.1, 13.5, dateFormat.parse("11.04.2003"), "A", 0.4, null},
                           rec3.getAttributeValues());
@@ -131,7 +131,7 @@ public class CsvRecordSourceTest {
         InputStreamReader reader = new InputStreamReader(getClass().getResourceAsStream("cc-matchup-test-insitu.csv"));
         CsvRecordSource recordSource = new CsvRecordSource(reader, ProductData.UTC.createDateFormat("yyyy-MM-dd HH:mm:ss"));
 
-        org.esa.beam.timeseries.core.insitu.Header header = recordSource.getHeader();
+        Header header = recordSource.getHeader();
         assertNotNull(header);
         String[] headerAttributeNames = header.getColumnNames();
         assertNotNull(headerAttributeNames);
@@ -143,7 +143,7 @@ public class CsvRecordSourceTest {
         long t0 = System.currentTimeMillis();
         Iterable<Record> records = recordSource.getRecords();
         int n = 0;
-        for (org.esa.beam.timeseries.core.insitu.Record record : records) {
+        for (Record record : records) {
             Object[] dataAttributeValues = record.getAttributeValues();
             assertEquals(8, dataAttributeValues.length);
             assertType(n, Double.class, dataAttributeValues[0]);

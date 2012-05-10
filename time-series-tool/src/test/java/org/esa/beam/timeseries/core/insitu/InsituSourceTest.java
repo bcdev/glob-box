@@ -18,7 +18,6 @@ package org.esa.beam.timeseries.core.insitu;
 
 import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.timeseries.core.insitu.InsituSource;
 import org.esa.beam.timeseries.core.insitu.csv.CsvRecordSource;
 import org.esa.beam.timeseries.core.insitu.csv.InsituRecord;
 import org.junit.Before;
@@ -50,72 +49,72 @@ public class InsituSourceTest {
                                                         + "20\t40\t03.04.2003\tName 2\t0.5\t30\n"
                                                         + "20\t40\t05.04.2003\tName 2\t0.6\t40\n"
                                                         + "20\t50\t11.04.2003\tName 3\t0.4\t50\n");
-        final org.esa.beam.timeseries.core.insitu.csv.CsvRecordSource csvRecordSource = new org.esa.beam.timeseries.core.insitu.csv.CsvRecordSource(csvReader, dateFormat);
+        final CsvRecordSource csvRecordSource = new CsvRecordSource(csvReader, dateFormat);
         insituSource = new InsituSource(csvRecordSource);
     }
 
     @Test
     public void testGetValuesForCHL_TimeOrdered() throws Exception {
         // execution
-        org.esa.beam.timeseries.core.insitu.csv.InsituRecord[] chlRecords = insituSource.getValuesFor("CHL", null);
+        InsituRecord[] chlRecords = insituSource.getValuesFor("CHL", null);
 
         // verification
         assertEquals(4, chlRecords.length);
 
-        org.esa.beam.timeseries.core.insitu.csv.InsituRecord expectedRecord;
-        expectedRecord = new org.esa.beam.timeseries.core.insitu.csv.InsituRecord(new GeoPos(20, 40), getDate("03.04.2003"), "Name 2", 0.5);
+        InsituRecord expectedRecord;
+        expectedRecord = new InsituRecord(new GeoPos(20, 40), getDate("03.04.2003"), "Name 2", 0.5);
         assertEquals(expectedRecord, chlRecords[0]);
 
-        expectedRecord = new org.esa.beam.timeseries.core.insitu.csv.InsituRecord(new GeoPos(20, 40), getDate("05.04.2003"), "Name 2", 0.6);
+        expectedRecord = new InsituRecord(new GeoPos(20, 40), getDate("05.04.2003"), "Name 2", 0.6);
         assertEquals(expectedRecord, chlRecords[1]);
 
-        expectedRecord = new org.esa.beam.timeseries.core.insitu.csv.InsituRecord(new GeoPos(10, 30), getDate("08.04.2003"), "Name 1", 0.9);
+        expectedRecord = new InsituRecord(new GeoPos(10, 30), getDate("08.04.2003"), "Name 1", 0.9);
         assertEquals(expectedRecord, chlRecords[2]);
 
-        expectedRecord = new org.esa.beam.timeseries.core.insitu.csv.InsituRecord(new GeoPos(20, 50), getDate("11.04.2003"), "Name 3", 0.4);
+        expectedRecord = new InsituRecord(new GeoPos(20, 50), getDate("11.04.2003"), "Name 3", 0.4);
         assertEquals(expectedRecord, chlRecords[3]);
     }
 
     @Test
     public void testGetValuesForYS_TimeOrdered() throws Exception {
         // execution
-        org.esa.beam.timeseries.core.insitu.csv.InsituRecord[] ysRecords = insituSource.getValuesFor("ys", null);
+        InsituRecord[] ysRecords = insituSource.getValuesFor("ys", null);
 
         // verification
         assertEquals(4, ysRecords.length);
 
-        org.esa.beam.timeseries.core.insitu.csv.InsituRecord expectedRecord;
-        expectedRecord = new org.esa.beam.timeseries.core.insitu.csv.InsituRecord(new GeoPos(20, 40), getDate("03.04.2003"), "Name 2", 30);
+        InsituRecord expectedRecord;
+        expectedRecord = new InsituRecord(new GeoPos(20, 40), getDate("03.04.2003"), "Name 2", 30);
         assertEquals(expectedRecord, ysRecords[0]);
 
-        expectedRecord = new org.esa.beam.timeseries.core.insitu.csv.InsituRecord(new GeoPos(20, 40), getDate("05.04.2003"), "Name 2", 40);
+        expectedRecord = new InsituRecord(new GeoPos(20, 40), getDate("05.04.2003"), "Name 2", 40);
         assertEquals(expectedRecord, ysRecords[1]);
 
-        expectedRecord = new org.esa.beam.timeseries.core.insitu.csv.InsituRecord(new GeoPos(10, 30), getDate("08.04.2003"), "Name 1", 20);
+        expectedRecord = new InsituRecord(new GeoPos(10, 30), getDate("08.04.2003"), "Name 1", 20);
         assertEquals(expectedRecord, ysRecords[2]);
 
-        expectedRecord = new org.esa.beam.timeseries.core.insitu.csv.InsituRecord(new GeoPos(20, 50), getDate("11.04.2003"), "Name 3", 50);
+        expectedRecord = new InsituRecord(new GeoPos(20, 50), getDate("11.04.2003"), "Name 3", 50);
         assertEquals(expectedRecord, ysRecords[3]);
     }
 
     @Test
     public void testGetValuesForGeoPos() throws Exception {
         // execution
-        org.esa.beam.timeseries.core.insitu.csv.InsituRecord[] chlRecordsPos1 = insituSource.getValuesFor("ys", new GeoPos(20, 40));
-        org.esa.beam.timeseries.core.insitu.csv.InsituRecord[] chlRecordsPos2 = insituSource.getValuesFor("ys", new GeoPos(10, 30));
+        InsituRecord[] chlRecordsPos1 = insituSource.getValuesFor("ys", new GeoPos(20, 40));
+        InsituRecord[] chlRecordsPos2 = insituSource.getValuesFor("ys", new GeoPos(10, 30));
 
         // verification
         assertEquals(2, chlRecordsPos1.length);
         assertEquals(1, chlRecordsPos2.length);
 
-        org.esa.beam.timeseries.core.insitu.csv.InsituRecord expectedRecord;
-        expectedRecord = new org.esa.beam.timeseries.core.insitu.csv.InsituRecord(new GeoPos(20, 40), getDate("03.04.2003"), "Name 2", 30);
+        InsituRecord expectedRecord;
+        expectedRecord = new InsituRecord(new GeoPos(20, 40), getDate("03.04.2003"), "Name 2", 30);
         assertEquals(expectedRecord, chlRecordsPos1[0]);
 
-        expectedRecord = new org.esa.beam.timeseries.core.insitu.csv.InsituRecord(new GeoPos(20, 40), getDate("05.04.2003"), "Name 2", 40);
+        expectedRecord = new InsituRecord(new GeoPos(20, 40), getDate("05.04.2003"), "Name 2", 40);
         assertEquals(expectedRecord, chlRecordsPos1[1]);
 
-        expectedRecord = new org.esa.beam.timeseries.core.insitu.csv.InsituRecord(new GeoPos(10, 30), getDate("08.04.2003"), "Name 1", 20);
+        expectedRecord = new InsituRecord(new GeoPos(10, 30), getDate("08.04.2003"), "Name 1", 20);
         assertEquals(expectedRecord, chlRecordsPos2[0]);
     }
 
