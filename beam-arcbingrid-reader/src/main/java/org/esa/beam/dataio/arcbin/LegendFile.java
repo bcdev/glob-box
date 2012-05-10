@@ -116,7 +116,7 @@ public class LegendFile {
         try {
             while (reader.hasNext()) {
                 DbaseFileReader.Row row = reader.readRow();
-                map.put(((Double) row.read(0)).intValue(), row.read(1).toString());
+                map.put((Integer) row.read(0), row.read(1).toString());
             }
         } finally {
             reader.close();
