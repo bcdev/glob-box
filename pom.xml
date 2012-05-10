@@ -43,11 +43,7 @@
         <module>beam-globcolour-reader</module>
         <module>beam-medspiration-reader</module>
         <module>beam-worldfire-reader</module>
-        <module>glob-ui</module>
-        <module>glob-help</module>
-        <module>glob-export</module>
-        <module>glob-core</module>
-        <module>glob-bootstrap</module>
+        <module>time-series-tool</module>
     </modules>
 
     <dependencyManagement>

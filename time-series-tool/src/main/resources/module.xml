@@ -1,0 +1,143 @@
+<module>
+    <manifestVersion>1.0.0</manifestVersion>
+
+    <symbolicName>time-series-tool</symbolicName>
+    <version>3.0</version>
+    <name>Time Series Tool</name>
+
+    <description>
+        <![CDATA[
+        This module provides the time series tool. In the user interface components are
+        the <i>Time Series Manager</i>, the <i>Time Series Player</i> and the <i>Time Series Graph</i>.
+        It additionally provides export components, such as export of time
+        series as Google Earth KMZ file, animated gif, and CSV-file.
+        ]]>
+    </description>
+
+    <changelog>
+        <![CDATA[
+        <p>Changes in 2.1<br/>
+          [GLOB-007] When adding geometries to time series, an ArrayIndexOutOfBoundsException is thrown<br/>
+                ]]>
+    </changelog>
+
+    <vendor>Brockmann Consult GmbH</vendor>
+    <contactAddress>Max Planck Str.2, 21502 Geesthacht (Germany)</contactAddress>
+    <copyright>(C) 2010 by Brockmann Consult GmbH</copyright>
+    <url>http://envisat.esa.int/beam</url>
+    <licenseUrl>http://www.gnu.org/licenses/gpl.html</licenseUrl>
+
+
+    <categories>ui</categories>
+
+    <dependency>
+        <module>beam-visat-rcp</module>
+    </dependency>
+
+    <extension point="beam-ui:toolViews">
+
+        <toolView>
+            <id>timeSeriesPlayerToolView</id>
+            <class>org.esa.beam.timeseries.ui.player.TimeSeriesPlayerToolView</class>
+            <title>Time Series Player</title>
+            <tabTitle>Time Series</tabTitle>
+            <mnemonic>T</mnemonic>
+            <description>Time Series Player</description>
+            <accelerator>ctrl alt T</accelerator>
+            <smallIcon>/org/esa/beam/timeseries/ui/icons/TSPlayer16.png</smallIcon>
+            <largeIcon>/org/esa/beam/timeseries/ui/icons/TSPlayer24.png</largeIcon>
+            <initState>FLOATING</initState>
+            <initSide>EAST</initSide>
+            <initIndex>3</initIndex>
+            <toolBarId>TimeSeriesTool</toolBarId>
+            <helpId>timeSeriesPlayer</helpId>
+        </toolView>
+
+        <toolView>
+            <id>timeSeriesManagerToolView</id>
+            <class>org.esa.beam.timeseries.ui.manager.TimeSeriesManagerToolView</class>
+            <title>Time Series Manager</title>
+            <tabTitle>Time Series Manager</tabTitle>
+            <description>Time Series Manager</description>
+            <mnemonic>C</mnemonic>
+            <accelerator>ctrl alt C</accelerator>
+            <smallIcon>/org/esa/beam/timeseries/ui/icons/GlobToolbox16.gif</smallIcon>
+            <largeIcon>/org/esa/beam/timeseries/ui/icons/GlobToolbox24.gif</largeIcon>
+            <initState>FLOATING</initState>
+            <initSide>EAST</initSide>
+            <initIndex>0</initIndex>
+            <toolBarId>TimeSeriesTool</toolBarId>
+            <helpId>timeSeriesManager</helpId>
+        </toolView>
+
+        <toolView>
+            <id>timeSeriesGraphToolView</id>
+            <class>org.esa.beam.timeseries.ui.graph.TimeSeriesGraphToolView</class>
+            <title>Time Series Graph</title>
+            <tabTitle>Time Series Graph</tabTitle>
+            <description>Time Series Graph</description>
+            <mnemonic>T</mnemonic>
+            <accelerator>ctrl alt T</accelerator>
+            <smallIcon>/org/esa/beam/timeseries/ui/icons/TimeSeriesGraph16.png</smallIcon>
+            <largeIcon>/org/esa/beam/timeseries/ui/icons/TimeSeriesGraph24.png</largeIcon>
+            <initState>FLOATING</initState>
+            <initSide>EAST</initSide>
+            <initIndex>1</initIndex>
+            <helpId>timeSeriesGraph</helpId>
+            <toolBarId>TimeSeriesTool</toolBarId>
+        </toolView>
+
+        <toolView>
+            <id>timeSeriesMatrixToolView</id>
+            <class>org.esa.beam.timeseries.ui.matrix.TimeSeriesMatrixToolView</class>
+            <title>Time Series Matrix</title>
+            <tabTitle>Time Series Matrix</tabTitle>
+            <description>Time Series Matrix</description>
+            <mnemonic>M</mnemonic>
+            <accelerator>ctrl alt M</accelerator>
+            <smallIcon>/org/esa/beam/timeseries/ui/icons/TimeSeriesMatrix16.png</smallIcon>
+            <largeIcon>/org/esa/beam/timeseries/ui/icons/TimeSeriesMatrix24.png</largeIcon>
+            <initState>FLOATING</initState>
+            <initSide>EAST</initSide>
+            <initIndex>2</initIndex>
+            <helpId>timeSeriesMatrix</helpId>
+            <toolBarId>TimeSeriesTool</toolBarId>
+        </toolView>
+
+    </extension>
+
+    <extension point="beam-ui:actions">
+
+        <action>
+            <id>newTimeSeriesAssistantAction</id>
+            <parent>file</parent>
+            <class>org.esa.beam.timeseries.ui.assistant.TimeSeriesAssistantAction</class>
+            <text>New Time Series...</text>
+            <smallIcon>icons/New16.gif</smallIcon>
+            <largeIcon>icons/New24.gif</largeIcon>
+            <shortDescr>Create a new time series</shortDescr>
+            <helpId>newTimeSeriesAssistantAction</helpId>
+            <placeAfter>new</placeAfter>
+            <placeBefore>open</placeBefore>
+        </action>
+
+        <action>
+            <parent>export</parent>
+            <id>exportTimeBasedKmz</id>
+            <class>org.esa.beam.timeseries.export.kmz.ExportTimeBasedKmz</class>
+            <text>Time Series as Google Earth KMZ...</text>
+            <mnemonic>K</mnemonic>
+            <shortDescr>Export Time Series as KMZ.</shortDescr>
+            <description>Export Time Series as KMZ.</description>
+        </action>
+
+    </extension>
+
+    <extension point="beam-ui:helpSets">
+        <helpSet>
+            <parent>beam-help</parent>
+            <path>doc/help/time-series-tool.hs</path>
+        </helpSet>
+    </extension>
+
+</module>

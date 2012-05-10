@@ -54,8 +54,8 @@
 
     <extension point="beam-ui:helpSets">
         <helpSet>
-            <parent>beam-help</parent>
-            <path>doc/help/globcarbon.hs</path>
+            <parent>beam-doc.help</parent>
+            <path>doc/doc.help/globcarbon.hs</path>
         </helpSet>
     </extension>
 
