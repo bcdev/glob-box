@@ -7,12 +7,6 @@
     <tocitem text="GlobToolbox">
         <tocitem text="Introduction" target="globboxIntroduction"/>
         <tocitem text="Readers" target="globboxReaders"/>
-        <tocitem text="Time Series Manager" target="timeSeriesManager"/>
-        <tocitem text="Time Series Graph" target="timeSeriesGraph"/>
-        <tocitem text="Time Series Player" target="timeSeriesPlayer"/>
-        <tocitem text="Time Series Matrix" target="timeSeriesMatrix"/>
-        <tocitem text="Export as NetCDF/CF" target="netCdfExport"/>
-        <tocitem text="Export as Google Earth KMZ-file" target="kmzExport"/>
     </tocitem>
 
 </toc>
