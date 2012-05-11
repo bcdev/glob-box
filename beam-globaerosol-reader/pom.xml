@@ -5,7 +5,7 @@
     <parent>
         <artifactId>glob-box</artifactId>
         <groupId>org.esa.beam.glob</groupId>
-        <version>3.0-SNAPSHOT</version>
+        <version>3.0</version>
     </parent>
 
     <artifactId>beam-globaerosol-reader</artifactId>
@@ -21,7 +21,7 @@
         <dependency>
             <groupId>org.esa.beam</groupId>
             <artifactId>beam-merisl3-reader</artifactId>
-            <version>1.1</version>
+            <version>1.2</version>
         </dependency>
     </dependencies>
 </project>

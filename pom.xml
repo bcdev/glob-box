@@ -5,7 +5,7 @@
     <groupId>org.esa.beam.glob</groupId>
     <artifactId>glob-box</artifactId>
     <packaging>pom</packaging>
-    <version>3.0-SNAPSHOT</version>
+    <version>3.0</version>
     <name>GlobToolbox</name>
 
     <organization>
@@ -43,6 +43,8 @@
         <module>beam-globcolour-reader</module>
         <module>beam-medspiration-reader</module>
         <module>beam-worldfire-reader</module>
+        <module>glob-help</module>
+        <module>glob-bootstrap</module>
         <module>time-series-tool</module>
     </modules>
 
@@ -76,12 +78,12 @@
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-netcdf</artifactId>
-                <version>1.0.101</version>
+                <version>1.1</version>
             </dependency>
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-geotiff</artifactId>
-                <version>1.1.1</version>
+                <version>1.2</version>
             </dependency>
             <dependency>
                 <groupId>net.sourceforge.jexcelapi</groupId>
