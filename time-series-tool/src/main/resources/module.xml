@@ -4,6 +4,7 @@
     <symbolicName>time-series-tool</symbolicName>
     <version>3.0</version>
     <name>Time Series Tool</name>
+    <funding>ESA, EU</funding>
 
     <description>
         <![CDATA[
