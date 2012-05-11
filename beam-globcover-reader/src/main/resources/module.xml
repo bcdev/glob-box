@@ -3,6 +3,7 @@
     <symbolicName>beam-globcover-reader</symbolicName>
     <version>3.0</version>
     <name>GlobCover Reader</name>
+    <funding>ESA</funding>
 
     <description>
         <![CDATA[

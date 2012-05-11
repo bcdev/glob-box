@@ -3,6 +3,7 @@
     <symbolicName>beam-worldfire-reader</symbolicName>
     <version>3.0</version>
     <name>World Fire Reader</name>
+    <funding>ESA</funding>
 
     <description>
         <![CDATA[

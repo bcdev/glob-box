@@ -4,6 +4,7 @@
     <symbolicName>glob-help</symbolicName>
     <version>3.0</version>
     <name>GlobToolbox Help</name>
+    <funding>ESA</funding>
 
     <description>This module provides the software user manual for the GlobToolbox product readers.</description>
 

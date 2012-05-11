@@ -3,6 +3,7 @@
     <symbolicName>beam-envi-reader</symbolicName>
     <version>3.0</version>
     <name>ENVI Product Reader</name>
+    <funding>ESA</funding>
 
     <description>
         Enables BEAM to read data products in ESRI-ENVI format.

@@ -3,6 +3,7 @@
     <symbolicName>beam-globcolour-reader</symbolicName>
     <version>3.0</version>
     <name>GlobColour Product Readers</name>
+    <funding>ESA</funding>
 
     <description>
         <![CDATA[

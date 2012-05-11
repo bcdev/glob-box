@@ -3,6 +3,7 @@
     <symbolicName>beam-igbp-glcc-reader</symbolicName>
     <version>3.0</version>
     <name>IGBP GLCC Reader</name>
+    <funding>ESA</funding>
 
     <description>
         <![CDATA[

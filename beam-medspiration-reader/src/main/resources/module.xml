@@ -3,6 +3,7 @@
     <symbolicName>beam-medspiration-reader</symbolicName>
     <version>3.0</version>
     <name>Medspiration Reader</name>
+    <funding>ESA</funding>
 
     <description>
         <![CDATA[
