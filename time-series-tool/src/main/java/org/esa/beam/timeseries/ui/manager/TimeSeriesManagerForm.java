@@ -221,7 +221,7 @@ class TimeSeriesManagerForm {
         final Action viewTimeSeriesButtonAction = new ViewTimeSeriesButtonAction();
         viewButton = ToolButtonFactory.createButton(viewTimeSeriesButtonAction, false);
 
-        AbstractButton helpButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/Help24.gif"), false);
+        AbstractButton helpButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/Help22.png"), false);
         helpButton.setToolTipText("Help");
 
         final TableLayout layout = new TableLayout(1);

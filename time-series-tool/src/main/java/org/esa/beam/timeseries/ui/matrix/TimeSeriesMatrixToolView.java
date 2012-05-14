@@ -191,7 +191,7 @@ public class TimeSeriesMatrixToolView extends AbstractToolView {
         tableLayout.setTableWeightY(0.0);
         JPanel buttonPanel = new JPanel(tableLayout);
 
-        AbstractButton helpButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/Help24.gif"), false);
+        AbstractButton helpButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/Help22.png"), false);
         helpButton.setToolTipText("Help");
         buttonPanel.add(matrixSizeSpinner);
         buttonPanel.add(tableLayout.createVerticalSpacer());

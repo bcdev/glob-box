@@ -70,7 +70,7 @@ class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandl
     private static final String QUALIFIER_INSITU = "_i_";
 
     private static final Color DEFAULT_FOREGROUND_COLOR = Color.BLACK;
-    private static final Color DEFAULT_BACKGROUND_COLOR = new Color(180, 180, 180);
+    private static final Color DEFAULT_BACKGROUND_COLOR = new Color(225, 225, 225);
     private static final String NO_DATA_MESSAGE = "No data to display";
     private static final int CURSOR_COLLECTION_INDEX_OFFSET = 0;
     private static final int PIN_COLLECTION_INDEX_OFFSET = 1;

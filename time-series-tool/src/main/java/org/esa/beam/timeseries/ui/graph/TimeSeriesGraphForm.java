@@ -39,7 +39,6 @@ import java.awt.event.ActionListener;
 
 class TimeSeriesGraphForm {
 
-
     private JComponent mainPanel;
     private AbstractButton showTimeSeriesForSelectedPinsButton;
     private AbstractButton showTimeSeriesForAllPinsButton;
@@ -160,7 +159,7 @@ class TimeSeriesGraphForm {
             exportTimeSeriesButton.setEnabled(false);
         }
 
-        AbstractButton helpButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/Help24.gif"), false);
+        AbstractButton helpButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/Help22.png"), false);
         helpButton.setToolTipText("Help");
 
         final TableLayout tableLayout = new TableLayout(1);

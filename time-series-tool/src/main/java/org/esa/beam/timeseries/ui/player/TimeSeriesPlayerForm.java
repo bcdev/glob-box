@@ -115,7 +115,7 @@ class TimeSeriesPlayerForm extends JPanel {
         plusButton = createPlusButton();
         exportButton = createExportButton();
 
-        AbstractButton helpButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/Help24.gif"), false);
+        AbstractButton helpButton = ToolButtonFactory.createButton(UIUtils.loadImageIcon("icons/Help22.png"), false);
         helpButton.setToolTipText("Help");
 
         updateSpeedUnit();
