@@ -63,13 +63,12 @@ class TimeSeriesGraphForm {
         tableLayout.setColumnWeightX(1, 0.0);
         tableLayout.setRowWeightY(0, 1.0);
         tableLayout.setRowWeightY(1, 0.0);
-        tableLayout.setCellColspan(1, 0, 2);
+        tableLayout.setCellRowspan(0, 1, 2);
         tableLayout.setCellFill(1, 0, TableLayout.Fill.HORIZONTAL);
-        tableLayout.setCellPadding(1, 0, new Insets(15, 5, 5, 5));
+        tableLayout.setCellPadding(1, 0, new Insets(5, 5, 5, 5));
 
         mainPanel = new JPanel(tableLayout);
         mainPanel.setPreferredSize(new Dimension(320, 200));
-
 
         ChartPanel chartPanel = new ChartPanel(chart);
         chartPanel.setBorder(BorderFactory.createCompoundBorder(
@@ -77,7 +76,7 @@ class TimeSeriesGraphForm {
                     BorderFactory.createEmptyBorder(2, 2, 2, 2)));
         mainPanel.add(chartPanel);
         mainPanel.add(createButtonPanel(helpID));
-        mainPanel.add(validatorUI.makeUI());
+        mainPanel.add(validatorUI.createUI());
     }
 
     private JPanel createButtonPanel(final String helpID) {
@@ -198,6 +197,6 @@ class TimeSeriesGraphForm {
 
     static interface ValidatorUI {
 
-        JComponent makeUI();
+        JComponent createUI();
     }
 }

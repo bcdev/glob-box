@@ -40,7 +40,6 @@ import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-import javax.swing.border.TitledBorder;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
@@ -77,7 +76,7 @@ class TimeSeriesValidator implements TimeSeriesGraphForm.ValidatorUI, TimeSeries
     private boolean hasUI = false;
 
     @Override
-    public JComponent makeUI() {
+    public JComponent createUI() {
 
         expressionTextField = new JTextField("");
         expressionTextField.setEditable(false);
@@ -116,15 +115,14 @@ class TimeSeriesValidator implements TimeSeriesGraphForm.ValidatorUI, TimeSeries
         });
 
         JPanel uiPanel = new JPanel();
-        uiPanel.setBorder(new TitledBorder("Valid expression"));
+        uiPanel.add(new JLabel("Valid expression:"));
         uiPanel.add(sourceNamesDropDown);
         uiPanel.add(expressionTextField);
         uiPanel.add(editExpressionButton);
         hasUI = true;
 
         final JPanel stretchablePanel = new JPanel(new BorderLayout());
-        stretchablePanel.add(new JLabel(""));
-        stretchablePanel.add(uiPanel, BorderLayout.EAST);
+        stretchablePanel.add(uiPanel, BorderLayout.CENTER);
         return stretchablePanel;
     }
 
