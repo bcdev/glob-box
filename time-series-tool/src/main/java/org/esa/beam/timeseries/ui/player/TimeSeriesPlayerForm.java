@@ -45,7 +45,6 @@ import java.awt.FlowLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.net.URL;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Hashtable;
@@ -57,13 +56,11 @@ import java.util.TimeZone;
  */
 class TimeSeriesPlayerForm extends JPanel {
 
-    private final ImageIcon playIcon = UIUtils.loadImageIcon("icons/Play24.png");
-    private final ImageIcon stopIcon = UIUtils.loadImageIcon("icons/Stop24.png");
-    private final ImageIcon pauseIcon = UIUtils.loadImageIcon("icons/Pause24.png");
-    private final URL imageURL = UIUtils.getImageURL("/org/esa/beam/timeseries/ui/icons/Blend24.png",
-                                                     TimeSeriesPlayerForm.class);
-    private final ImageIcon blendIcon = new ImageIcon(imageURL);
-    private final ImageIcon repeatIcon = UIUtils.loadImageIcon("icons/Repeat24.png");
+    private final ImageIcon playIcon = UIUtils.loadImageIcon("/org/esa/beam/timeseries/ui/icons/Play24.png");
+    private final ImageIcon stopIcon = UIUtils.loadImageIcon("/org/esa/beam/timeseries/ui/icons/Stop24.png");
+    private final ImageIcon pauseIcon = UIUtils.loadImageIcon("/org/esa/beam/timeseries/ui/icons/Pause24.png");
+    private final ImageIcon blendIcon = UIUtils.loadImageIcon("/org/esa/beam/timeseries/ui/icons/Blend24.png");
+    private final ImageIcon repeatIcon = UIUtils.loadImageIcon("/org/esa/beam/timeseries/ui/icons/RepeatTS24.png");
     private final ImageIcon minusIcon = UIUtils.loadImageIcon("icons/Remove16.png");
     private final ImageIcon plusIcon = UIUtils.loadImageIcon("icons/Add16.png");
     private final ImageIcon exportIcon = UIUtils.loadImageIcon("icons/Export24.gif");
