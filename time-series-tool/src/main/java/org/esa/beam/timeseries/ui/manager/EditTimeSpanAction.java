@@ -36,7 +36,7 @@ class EditTimeSpanAction extends AbstractAction {
         this.timeSeries = timeSeries;
         setEnabled(timeSeries != null);
 //        putValue(NAME, "[?]"); // todo set name
-        URL editTimeSpanIconImageURL = UIUtils.getImageURL("/org/esa/beam/timeseries/ui/icons/TimeSeriesEditTimeSpan24.png", EditTimeSpanAction.class);
+        URL editTimeSpanIconImageURL = UIUtils.getImageURL("/org/esa/beam/timeseries/ui/icons/timeseries-rangeedit24.png", EditTimeSpanAction.class);
         putValue(LARGE_ICON_KEY, new ImageIcon(editTimeSpanIconImageURL));
         putValue(ACTION_COMMAND_KEY, getClass().getName());
         putValue(SHORT_DESCRIPTION, "Edit time span");

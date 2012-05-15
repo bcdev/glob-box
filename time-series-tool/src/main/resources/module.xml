@@ -45,8 +45,8 @@
             <mnemonic>T</mnemonic>
             <description>Time Series Player</description>
             <accelerator>ctrl alt T</accelerator>
-            <smallIcon>/org/esa/beam/timeseries/ui/icons/TSPlayer16.png</smallIcon>
-            <largeIcon>/org/esa/beam/timeseries/ui/icons/TSPlayer24.png</largeIcon>
+            <smallIcon>/org/esa/beam/timeseries/ui/icons/timeseries-player16.png</smallIcon>
+            <largeIcon>/org/esa/beam/timeseries/ui/icons/timeseries-player24.png</largeIcon>
             <initState>FLOATING</initState>
             <initSide>EAST</initSide>
             <initIndex>3</initIndex>
@@ -62,8 +62,8 @@
             <description>Time Series Manager</description>
             <mnemonic>C</mnemonic>
             <accelerator>ctrl alt C</accelerator>
-            <smallIcon>/org/esa/beam/timeseries/ui/icons/GlobToolbox16.gif</smallIcon>
-            <largeIcon>/org/esa/beam/timeseries/ui/icons/GlobToolbox24.gif</largeIcon>
+            <smallIcon>/org/esa/beam/timeseries/ui/icons/timeseries-manager16.png</smallIcon>
+            <largeIcon>/org/esa/beam/timeseries/ui/icons/timeseries-manager24.png</largeIcon>
             <initState>FLOATING</initState>
             <initSide>EAST</initSide>
             <initIndex>0</initIndex>
@@ -79,8 +79,8 @@
             <description>Time Series Graph</description>
             <mnemonic>T</mnemonic>
             <accelerator>ctrl alt T</accelerator>
-            <smallIcon>/org/esa/beam/timeseries/ui/icons/TimeSeriesGraph16.png</smallIcon>
-            <largeIcon>/org/esa/beam/timeseries/ui/icons/TimeSeriesGraph24.png</largeIcon>
+            <smallIcon>/org/esa/beam/timeseries/ui/icons/timeseries-plot16.png</smallIcon>
+            <largeIcon>/org/esa/beam/timeseries/ui/icons/timeseries-plot24.png</largeIcon>
             <initState>FLOATING</initState>
             <initSide>EAST</initSide>
             <initIndex>1</initIndex>
@@ -96,8 +96,8 @@
             <description>Time Series Matrix</description>
             <mnemonic>M</mnemonic>
             <accelerator>ctrl alt M</accelerator>
-            <smallIcon>/org/esa/beam/timeseries/ui/icons/TimeSeriesMatrix16.png</smallIcon>
-            <largeIcon>/org/esa/beam/timeseries/ui/icons/TimeSeriesMatrix24.png</largeIcon>
+            <smallIcon>/org/esa/beam/timeseries/ui/icons/timeseries-matrix16.png</smallIcon>
+            <largeIcon>/org/esa/beam/timeseries/ui/icons/timeseries-matrix24.png</largeIcon>
             <initState>FLOATING</initState>
             <initSide>EAST</initSide>
             <initIndex>2</initIndex>

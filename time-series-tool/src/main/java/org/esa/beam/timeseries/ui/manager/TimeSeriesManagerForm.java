@@ -529,7 +529,7 @@ class TimeSeriesManagerForm {
     private class EditNameAssociationAction extends AbstractAction {
 
         private EditNameAssociationAction() {
-            URL viewIconImageURL = UIUtils.getImageURL("/org/esa/beam/timeseries/ui/icons/NamesAssociation24.gif", TimeSeriesManagerForm.class);
+            URL viewIconImageURL = UIUtils.getImageURL("/org/esa/beam/timeseries/ui/icons/timeseries-combvar24.png", TimeSeriesManagerForm.class);
             putValue(LARGE_ICON_KEY, new ImageIcon(viewIconImageURL));
             putValue(SHORT_DESCRIPTION, "Edit names association");
         }
@@ -546,7 +546,7 @@ class TimeSeriesManagerForm {
     private class ViewTimeSeriesButtonAction extends AbstractAction {
 
         private ViewTimeSeriesButtonAction() {
-            URL viewIconImageURL = UIUtils.getImageURL("/org/esa/beam/timeseries/ui/icons/ViewTS24.png", TimeSeriesManagerForm.class);
+            URL viewIconImageURL = UIUtils.getImageURL("/org/esa/beam/timeseries/ui/icons/timeseries-view24.png", TimeSeriesManagerForm.class);
             putValue(LARGE_ICON_KEY, new ImageIcon(viewIconImageURL));
             putValue(SHORT_DESCRIPTION, "View Time Series");
         }
