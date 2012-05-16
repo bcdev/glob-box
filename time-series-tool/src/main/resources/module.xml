@@ -17,6 +17,15 @@
 
     <changelog>
         <![CDATA[
+        <p>Changes in 3.0<br/>
+            <ul>
+            <li>Complete revision of time series graph tool
+            <li>Time series tool can now deal with correlative data, such as in-situ data
+            <li>Input products are reprojected to a common grid, so the time series tool can create time series from
+                products on originally different grids
+            <li>Many fixes regarding stability and usability
+            <li>New icons
+            </ul>
         <p>Changes in 2.1<br/>
           [GLOB-007] When adding geometries to time series, an ArrayIndexOutOfBoundsException is thrown<br/>
                 ]]>
@@ -24,7 +33,7 @@
 
     <vendor>Brockmann Consult GmbH</vendor>
     <contactAddress>Max Planck Str.2, 21502 Geesthacht (Germany)</contactAddress>
-    <copyright>(C) 2010 by Brockmann Consult GmbH</copyright>
+    <copyright>(C) 2012 by Brockmann Consult GmbH</copyright>
     <url>http://envisat.esa.int/beam</url>
     <licenseUrl>http://www.gnu.org/licenses/gpl.html</licenseUrl>
 
