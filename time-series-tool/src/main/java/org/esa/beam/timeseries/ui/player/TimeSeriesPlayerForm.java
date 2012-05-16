@@ -56,11 +56,11 @@ import java.util.TimeZone;
  */
 class TimeSeriesPlayerForm extends JPanel {
 
-    private final ImageIcon playIcon = UIUtils.loadImageIcon("/org/esa/beam/timeseries/ui/icons/timeseries-play24.png");
-    private final ImageIcon stopIcon = UIUtils.loadImageIcon("/org/esa/beam/timeseries/ui/icons/timeseries-stop24.png");
-    private final ImageIcon pauseIcon = UIUtils.loadImageIcon("/org/esa/beam/timeseries/ui/icons/Pause24.png");
-    private final ImageIcon blendIcon = UIUtils.loadImageIcon("/org/esa/beam/timeseries/ui/icons/timeseries-blend24.png");
-    private final ImageIcon repeatIcon = UIUtils.loadImageIcon("/org/esa/beam/timeseries/ui/icons/timeseries-repeat24.png");
+    private final ImageIcon playIcon = UIUtils.loadImageIcon("icons/timeseries-play24.png");
+    private final ImageIcon stopIcon = UIUtils.loadImageIcon("icons/timeseries-stop24.png");
+    private final ImageIcon pauseIcon = UIUtils.loadImageIcon("icons/Pause24.png");
+    private final ImageIcon blendIcon = UIUtils.loadImageIcon("icons/timeseries-blend24.png");
+    private final ImageIcon repeatIcon = UIUtils.loadImageIcon("icons/timeseries-repeat24.png");
     private final ImageIcon minusIcon = UIUtils.loadImageIcon("icons/Remove16.png");
     private final ImageIcon plusIcon = UIUtils.loadImageIcon("icons/Add16.png");
     private final ImageIcon exportIcon = UIUtils.loadImageIcon("icons/Export24.gif");
