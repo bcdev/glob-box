@@ -46,7 +46,7 @@ public class InsituSourceTest {
         final StringReader csvReader = new StringReader("# Test CSV\n"
                                                         + "LAT\tLON\tTIME\tStation\tCHL\tys\n"
                                                         + "10\t30\t08.04.2003\tName 1\t0.9\t20\n"
-                                                        + "20\t40\t03.04.2003\tName 2\t0.5\t30\n"
+                                                        + "20\t40\t02.04.2003\tName 2\t0.5\t30\n"
                                                         + "20\t40\t05.04.2003\tName 2\t0.6\t40\n"
                                                         + "20\t50\t11.04.2003\tName 3\t0.4\t50\n");
         final CsvRecordSource csvRecordSource = new CsvRecordSource(csvReader, dateFormat);
@@ -62,7 +62,7 @@ public class InsituSourceTest {
         assertEquals(4, chlRecords.length);
 
         InsituRecord expectedRecord;
-        expectedRecord = new InsituRecord(new GeoPos(20, 40), getDate("03.04.2003"), "Name 2", 0.5);
+        expectedRecord = new InsituRecord(new GeoPos(20, 40), getDate("02.04.2003"), "Name 2", 0.5);
         assertEquals(expectedRecord, chlRecords[0]);
 
         expectedRecord = new InsituRecord(new GeoPos(20, 40), getDate("05.04.2003"), "Name 2", 0.6);
@@ -84,7 +84,7 @@ public class InsituSourceTest {
         assertEquals(4, ysRecords.length);
 
         InsituRecord expectedRecord;
-        expectedRecord = new InsituRecord(new GeoPos(20, 40), getDate("03.04.2003"), "Name 2", 30);
+        expectedRecord = new InsituRecord(new GeoPos(20, 40), getDate("02.04.2003"), "Name 2", 30);
         assertEquals(expectedRecord, ysRecords[0]);
 
         expectedRecord = new InsituRecord(new GeoPos(20, 40), getDate("05.04.2003"), "Name 2", 40);
@@ -108,7 +108,7 @@ public class InsituSourceTest {
         assertEquals(1, chlRecordsPos2.length);
 
         InsituRecord expectedRecord;
-        expectedRecord = new InsituRecord(new GeoPos(20, 40), getDate("03.04.2003"), "Name 2", 30);
+        expectedRecord = new InsituRecord(new GeoPos(20, 40), getDate("02.04.2003"), "Name 2", 30);
         assertEquals(expectedRecord, chlRecordsPos1[0]);
 
         expectedRecord = new InsituRecord(new GeoPos(20, 40), getDate("05.04.2003"), "Name 2", 40);
