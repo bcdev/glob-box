@@ -14,7 +14,7 @@
     <groupId>org.esa.beam</groupId>
     <artifactId>beam-envi-reader</artifactId>
     <name>ENVI Product Reader</name>
-    <version>${parent.version}</version>
+    <version>3.1-SNAPSHOT</version>
     <url>http://envisat.esa.int/beam/</url>
 
     <dependencies>
