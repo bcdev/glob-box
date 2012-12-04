@@ -5,7 +5,7 @@
     <parent>
         <artifactId>glob-box</artifactId>
         <groupId>org.esa.beam.glob</groupId>
-        <version>3.0</version>
+        <version>3.0.1-SNAPSHOT</version>
     </parent>
     <artifactId>beam-globcover-reader</artifactId>
     <groupId>org.esa.beam</groupId>

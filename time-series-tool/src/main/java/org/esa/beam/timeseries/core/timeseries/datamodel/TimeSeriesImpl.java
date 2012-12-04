@@ -36,6 +36,7 @@ import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.StringUtils;
 import org.esa.beam.util.logging.BeamLogManager;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -144,7 +145,7 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
             final Logger logger = BeamLogManager.getSystemLogger();
             final ProductLocationType type = productLocation.getProductLocationType();
             final String path = productLocation.getPath();
-            logger.log(Level.INFO, "Try to load product location type: '" + type + "' at path: '" + path +"'");
+            logger.log(Level.INFO, "Try to load product location type: '" + type + "' at path: '" + path + "'");
             addProductLocationMetadata(productLocation);
             productLocationList.add(productLocation);
             List<String> variables = getEoVariables();
@@ -228,7 +229,7 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
     private Band getSourceBand(String destBandName) {
         final int lastUnderscore = destBandName.lastIndexOf(SEPARATOR);
         String normalizedBandName = destBandName.substring(0, lastUnderscore);
-        String timePart = destBandName.substring(lastUnderscore + TimeSeriesChangeEvent.BAND_TO_BE_REMOVED);
+        String timePart = destBandName.substring(lastUnderscore + 1);
         Product srcProduct = productTimeMap.get(timePart);
         if (srcProduct == null) {
             return null;
@@ -252,8 +253,25 @@ final class TimeSeriesImpl extends AbstractTimeSeries {
 
     private void fixBandTimeCodings() {
         for (Band destBand : tsProduct.getBands()) {
-            final Band raster = getSourceBand(destBand.getName());
-            rasterTimeMap.put(destBand, GridTimeCoding.create(raster.getProduct()));
+            final String destBandName = destBand.getName();
+            final Band raster = getSourceBand(destBandName);
+            final TimeCoding timeCoding;
+            if (raster != null) {
+                timeCoding = GridTimeCoding.create(raster.getProduct());
+            } else {
+                ProductData.UTC time = extractUtcTime(destBandName);
+                timeCoding = new GridTimeCoding(time, time);
+            }
+            rasterTimeMap.put(destBand, timeCoding);
+        }
+    }
+
+    private ProductData.UTC extractUtcTime(String name) {
+        final String timePart = name.substring(name.length() - DATE_FORMAT.length());
+        try {
+            return ProductData.UTC.parse(timePart, DATE_FORMAT.substring(0, DATE_FORMAT.lastIndexOf(".")));
+        } catch (ParseException e) {
+            throw new IllegalStateException("The raster name '" + name + "' does not contain the time sequence. " + DATE_FORMAT);
         }
     }
 
