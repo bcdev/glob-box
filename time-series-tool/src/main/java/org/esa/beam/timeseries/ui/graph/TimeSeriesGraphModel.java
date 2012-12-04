@@ -431,6 +431,12 @@ class TimeSeriesGraphModel implements TimeSeriesGraphUpdater.TimeSeriesDataHandl
 
     private AxisMapping createDisplayAxisMapping(AbstractTimeSeries timeSeries) {
         final List<String> eoVariables = displayController.getEoVariablesToDisplay();
+        if (eoVariables.size() == 0) {
+            final Product.AutoGrouping autoGrouping = this.getCurrentView().getProduct().getAutoGrouping();
+            for (String[] strings : autoGrouping) {
+                eoVariables.add(strings[0]);
+            }
+        }
         final List<String> insituVariables = displayController.getInsituVariablesToDisplay();
         final AxisMapping axisMapping = timeSeries.getAxisMapping();
         return createDisplayAxisMapping(eoVariables, insituVariables, axisMapping);
