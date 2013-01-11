@@ -48,8 +48,8 @@ import java.util.zip.ZipFile;
 
 class EnviProductReader extends AbstractProductReader {
 
-    private ImageInputStream imageInputStream = null;
-    private ZipFile productZip = null;
+    private ImageInputStream imageInputStream;
+    private ZipFile productZip;
     private Header header;
 
     EnviProductReader(ProductReaderPlugIn readerPlugIn) {
@@ -150,15 +150,15 @@ class EnviProductReader extends AbstractProductReader {
         final int sourceMaxY = sourceOffsetY + sourceHeight - 1;
         Product product = destBand.getProduct();
         final int sourceRasterWidth = product.getSceneRasterWidth();
-        final int elemSize = destBuffer.getElemSize();
+        final long elemSize = destBuffer.getElemSize();
 
         final int headerOffset = header.getHeaderOffset();
         final int bandIndex = product.getBandIndex(destBand.getName());
 
         String interleave = header.getInterleave();
-        if (interleave.equalsIgnoreCase("bil")) {
+        if ("bil".equalsIgnoreCase(interleave)) {
             // band interleaved by line
-            final int lineSizeInBytes = header.getNumSamples() * elemSize;
+            final long lineSizeInBytes = header.getNumSamples() * elemSize;
             int numBands = product.getNumBands();
 
             pm.beginTask("Reading band '" + destBand.getName() + "'...", sourceMaxY - sourceMinY);
@@ -180,12 +180,12 @@ class EnviProductReader extends AbstractProductReader {
             } finally {
                 pm.done();
             }
-        } else if (interleave.equalsIgnoreCase("bip")) {
+        } else if ("bip".equalsIgnoreCase(interleave)) {
             // band interleaved by pixel
             throw new UnsupportedOperationException("BIP not supported");
         } else {
             // band sequential (bsq), the default
-            final int bandSizeInBytes = header.getNumSamples() * header.getNumLines() * elemSize;
+            final long bandSizeInBytes = header.getNumSamples() * header.getNumLines() * elemSize;
 
             long bandStartPosition = headerOffset + bandSizeInBytes * bandIndex;
             pm.beginTask("Reading band '" + destBand.getName() + "'...", sourceMaxY - sourceMinY);
@@ -196,9 +196,15 @@ class EnviProductReader extends AbstractProductReader {
                     if (pm.isCanceled()) {
                         break;
                     }
-                    final int sourcePosY = sourceY * sourceRasterWidth;
+                    final long sourcePosY = (long)sourceY * (long)sourceRasterWidth;
                     synchronized (imageInputStream) {
-                        imageInputStream.seek(bandStartPosition + elemSize * (sourcePosY + sourceMinX));
+                        long pos = bandStartPosition + elemSize * (sourcePosY + sourceMinX);
+                        try {
+                            imageInputStream.seek(pos);
+                        } catch (IndexOutOfBoundsException e) {
+                            System.out.printf("pos=%d%n", pos);
+                            throw e;
+                        }
                         destBuffer.readFrom(destPos, destWidth, imageInputStream);
                         destPos += destWidth;
                     }
