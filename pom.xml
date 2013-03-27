@@ -45,7 +45,6 @@
         <module>beam-worldfire-reader</module>
         <module>glob-help</module>
         <module>glob-bootstrap</module>
-        <module>time-series-tool</module>
     </modules>
 
     <dependencyManagement>

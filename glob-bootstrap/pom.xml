@@ -69,11 +69,6 @@
             <artifactId>glob-help</artifactId>
             <version>${pom.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.esa.beam.glob</groupId>
-            <artifactId>time-series-tool</artifactId>
-            <version>${pom.version}</version>
-        </dependency>
     </dependencies>
 
 </project>
