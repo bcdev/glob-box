@@ -23,14 +23,10 @@
     </licenses>
 
     <properties>
-        <!--
-           In version 3.0 of Maven the sourceEncoding property will be embedded in the
-           build tag. For now the convention is to that it as property.
-           TODO: Move the sourceEncoding property to the build tag if version 3.0 is released
-           -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <beam.version>4.10.4-SNAPSHOT</beam.version>
         <ceres.version>0.13.2-SNAPSHOT</ceres.version>
+        <jxlapi.version>2.6.10</jxlapi.version>
     </properties>
 
     <modules>
@@ -77,29 +73,29 @@
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-netcdf</artifactId>
-                <version>1.1.1</version>
+                <version>1.1.2-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-geotiff</artifactId>
-                <version>1.2</version>
+                <version>1.2.2-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>net.sourceforge.jexcelapi</groupId>
                 <artifactId>jxl</artifactId>
-                <version>2.6.10</version>
+                <version>${jxlapi.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
 
     <scm>
-        <connection>scm:svn:https://www.brockmann-consult.de/svn/os/globtoolbox/trunk</connection>
-        <url>https://www.brockmann-consult.de/svn/os/globtoolbox/trunk</url>
+        <connection>scm:git:git://github.com/bcdev/glob-box.git</connection>
+        <url>https://github.com/bcdev/glob-box</url>
     </scm>
 
     <issueManagement>
         <system>JIRA</system>
-        <url>http://www.brockmann-consult.de/beam-issues</url>
+        <url>https://www.brockmann-consult.de/beam-jira/browse/GBOX</url>
     </issueManagement>
 
     <repositories>

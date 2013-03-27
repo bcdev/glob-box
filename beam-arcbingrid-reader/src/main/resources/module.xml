@@ -25,6 +25,8 @@
                 ]]>
     </changelog>
 
+    <packaging>dir</packaging>
+
     <dependency>
         <module>ceres-binio</module>
     </dependency>
@@ -35,6 +37,10 @@
         <module>beam-visat</module>
         <optional>true</optional>
     </dependency>
+    <dependency>
+        <lib>lib/jxl.jar</lib>
+    </dependency>
+
 
     <categories>Reader</categories>
 
