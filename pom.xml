@@ -24,7 +24,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <beam.version>4.10.4-SNAPSHOT</beam.version>
+        <beam.version>4.11-SNAPSHOT</beam.version>
         <ceres.version>0.13.2-SNAPSHOT</ceres.version>
         <jxlapi.version>2.6.10</jxlapi.version>
     </properties>
