@@ -1,7 +1,7 @@
 <module>
     <manifestVersion>1.0.0</manifestVersion>
     <symbolicName>beam-globcover-reader</symbolicName>
-    <version>3.0</version>
+    <version>3.1</version>
     <name>GlobCover Reader</name>
     <funding>ESA</funding>
 

@@ -15,6 +15,14 @@
     <url>http://www.brockmann-consult.de/</url>
     <licenseUrl>http://www.gnu.org/licenses/gpl.html</licenseUrl>
 
+    <changelog>
+        <![CDATA[
+          <p>Changes in 3.1:<br/>
+          [GBOX-026] Add support for HICO<br/>
+          </p>
+        ]]>
+    </changelog>
+
     <dependency>
         <module>beam-core</module>
     </dependency>

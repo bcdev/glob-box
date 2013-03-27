@@ -2,7 +2,7 @@
 
 This file contains all significant changes for each GlobToolbox release.
 
-    o 02.04.2013: Version 3.0.1
+    o 02.04.2013: Version 3.1
     o 16.05.2012: Version 3.0
     o 08.09.2010: Version 2.1
     o 29.07.2010: Version 2.0
@@ -10,7 +10,7 @@ This file contains all significant changes for each GlobToolbox release.
 
 _____________________________________________________________________________
 
- Changes from 3.0 to 3.0.1
+ Changes from 3.0 to 3.1
 _____________________________________________________________________________
 
 The time series tool is, since BEAM 4.11, part of the BEAM installation.
@@ -20,6 +20,9 @@ Glob DUE data products.
 The GlobToolbox is not any longer provided as an add-on installer for BEAM,
 but the reader modules can be obtained from the BEAM module repository via
 the Module Manager in VISAT.
+
+1) New Features
+GBOX-026 - Add support for HICO
 
 
 _____________________________________________________________________________

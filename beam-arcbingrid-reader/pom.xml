@@ -5,12 +5,11 @@
     <parent>
         <artifactId>glob-box</artifactId>
         <groupId>org.esa.beam.glob</groupId>
-        <version>3.0.1-SNAPSHOT</version>
+        <version>3.1-SNAPSHOT</version>
     </parent>
     <artifactId>beam-arcbingrid-reader</artifactId>
     <groupId>org.esa.beam</groupId>
     <name>Arc/Info Binary Grid Reader</name>
-    <version>${parent.version}</version>
 
     <dependencies>
         <dependency>
