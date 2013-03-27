@@ -12,7 +12,6 @@
     <groupId>org.esa.beam</groupId>
     <artifactId>beam-igbp-glcc-reader</artifactId>
     <name>IGBP GLCC Reader</name>
-    <version>${parent.version}</version>
 
     <dependencies>
         <dependency>

@@ -12,7 +12,6 @@
     <artifactId>beam-globcarbon-reader</artifactId>
     <groupId>org.esa.beam</groupId>
     <name>GlobCarbon Product Reader</name>
-    <version>${parent.version}</version>
 
     <packaging>jar</packaging>
 

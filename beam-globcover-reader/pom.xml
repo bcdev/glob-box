@@ -10,7 +10,6 @@
     <artifactId>beam-globcover-reader</artifactId>
     <groupId>org.esa.beam</groupId>
     <name>GlobCover Reader</name>
-    <version>${parent.version}</version>
 
     <dependencies>
         <dependency>

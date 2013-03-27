@@ -12,7 +12,6 @@
     <artifactId>beam-globcolour-reader</artifactId>
     <groupId>org.esa.beam</groupId>
     <name>GlobColour Reader</name>
-    <version>${parent.version}</version>
 
     <packaging>jar</packaging>
 

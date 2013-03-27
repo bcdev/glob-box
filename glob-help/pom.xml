@@ -9,7 +9,6 @@
     </parent>
     <artifactId>glob-help</artifactId>
     <name>GlobToolbox Help</name>
-    <version>${parent.version}</version>
 
     <build>
         <plugins>
