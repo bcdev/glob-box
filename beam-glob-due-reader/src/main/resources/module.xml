@@ -15,6 +15,7 @@
         - GlobColour (binned and mapped) <a href="http://www.globcolour.info/products_description.html">GlobCOLOUR Level-3 data products</a>
         - <a href="http://ionia1.esrin.esa.int/">GlobCover data products</a>
         - IGBP Global Land Cover Classification
+        - Medspiration
         ]]>
     </description>
 
@@ -161,6 +162,17 @@
             <description>Import a IGBP Global Land Cover Classification product or product subset.</description>
         </action>
 
+<!-- Medspiration -->
+        <action>
+            <class>org.esa.beam.visat.actions.ProductImportAction</class>
+            <parent>globReader</parent>
+            <id>importMedspirationProduct</id>
+            <formatName>Medspiration</formatName>
+            <useAllFileFilter>false</useAllFileFilter>
+            <mnemonic/>
+            <shortDescr>Import a Medspiration data product or product subset.</shortDescr>
+            <description>Import a Medspiration data product or product subset.</description>
+        </action>
 
     </extension>
 

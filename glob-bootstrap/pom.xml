@@ -30,11 +30,6 @@
         </dependency>
         <dependency>
             <groupId>org.esa.beam</groupId>
-            <artifactId>beam-medspiration-reader</artifactId>
-            <version>${pom.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.esa.beam</groupId>
             <artifactId>beam-worldfire-reader</artifactId>
             <version>${pom.version}</version>
         </dependency>

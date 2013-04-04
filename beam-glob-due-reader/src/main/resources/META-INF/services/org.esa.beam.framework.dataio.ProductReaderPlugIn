@@ -6,3 +6,4 @@ org.esa.beam.dataio.globcover.GlobCoverTileReaderPlugIn
 org.esa.beam.dataio.globcover.GlobCoverMosaicReaderPlugIn
 org.esa.beam.dataio.globcover.geotiff.GlobCoverGeoTiffProductReaderPlugIn
 org.esa.beam.dataio.igbp.glcc.IgbpGlccProductReaderPlugIn
+org.esa.beam.dataio.medspiration.profile.MedspirationReaderPlugIn
