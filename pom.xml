@@ -34,7 +34,6 @@
         <module>beam-envi-reader</module>
         <module>beam-arcbingrid-reader</module>
         <module>beam-igbp-glcc-reader</module>
-        <module>beam-globcover-reader</module>
         <module>beam-medspiration-reader</module>
         <module>beam-worldfire-reader</module>
         <module>glob-help</module>
