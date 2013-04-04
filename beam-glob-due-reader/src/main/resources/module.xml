@@ -1,13 +1,14 @@
 <module>
     <manifestVersion>1.0.0</manifestVersion>
-    <symbolicName>beam-globaerosol-reader</symbolicName>
+    <symbolicName>beam-glob-due-reader</symbolicName>
     <version>3.1</version>
-    <name>GlobAerosol Reader</name>
+    <name>Glob DUE Readers</name>
     <funding>ESA</funding>
 
     <description>
         <![CDATA[
-        This module provides a product reader for importing GlobAerosol data products into BEAM/VISAT.
+        This module provides product readers for several Glob DUE products including:
+        - GlobAerosol
         ]]>
     </description>
 
@@ -37,8 +38,20 @@
     <categories>Reader</categories>
 
     <extension point="beam-ui:actions">
+
+        <action>
+            <parent>importRasterData</parent>
+            <id>globReader</id>
+            <class>org.esa.beam.visat.actions.ActionGroup</class>
+            <text>Import Glob DUE Data</text>
+            <shortDescr>Import Glob DUE data</shortDescr>
+            <description>Import Glob DUE data</description>
+            <sortChildren>true</sortChildren>
+        </action>
+
         <action>
             <class>org.esa.beam.visat.actions.ProductImportAction</class>
+            <parent>globReader</parent>
             <id>importGlobAerosolProduct</id>
             <helpId>importGlobAerosolProduct</helpId>
             <formatName>GLOBAEROSOL-L3</formatName>
