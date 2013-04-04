@@ -1,2 +1,4 @@
 org.esa.beam.dataio.globaerosol.GlobAerosolReaderPlugIn
 org.esa.beam.dataio.globcarbon.GlobCarbonEnviProductReaderPlugIn
+org.esa.beam.dataio.globcolour.BinnedProductReaderPlugIn
+org.esa.beam.dataio.globcolour.MappedProductReaderPlugIn

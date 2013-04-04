@@ -10,6 +10,7 @@
         This module provides product readers for several Glob DUE products including:
         - GlobAerosol
         - GlobCarbon
+        - GlobColour (binned and mapped) <a href="http://www.globcolour.info/products_description.html">GlobCOLOUR Level-3 data products</a>
         ]]>
     </description>
 
@@ -88,6 +89,35 @@
         <!--<description>Import a GlobCarbon Ascii data product or product subset.</description>-->
         <!--</action>-->
 
+<!-- GLOBCOLOUR -->
+        <action>
+            <class>org.esa.beam.visat.actions.ProductImportAction</class>
+            <parent>globReader</parent>
+            <id>importGlobColourBinnedProduct</id>
+            <formatName>GlobColour-Binned</formatName>
+            <useAllFileFilter>true</useAllFileFilter>
+            <shortDescr>Import a Binned GlobColour data product or product subset.</shortDescr>
+            <description>Import a Mapped GlobColour data product or product subset.</description>
+        </action>
+        <action>
+            <class>org.esa.beam.visat.actions.ProductImportAction</class>
+            <parent>globReader</parent>
+            <id>importGlobColourMappedProduct</id>
+            <formatName>GlobColour-Mapped</formatName>
+            <useAllFileFilter>true</useAllFileFilter>
+            <shortDescr>Import a Mapped GlobColour data product or product subset.</shortDescr>
+            <description>Import a Mapped GlobColour data product or product subset.</description>
+        </action>
+
+
     </extension>
+
+    <extension point="beam-ui:helpSets">
+        <helpSet>
+            <parent>beam-help</parent>
+            <path>doc/help/globcolour.hs</path>
+        </helpSet>
+    </extension>
+
 
 </module>

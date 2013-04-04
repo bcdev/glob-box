@@ -35,11 +35,6 @@
         </dependency>
         <dependency>
             <groupId>org.esa.beam</groupId>
-            <artifactId>beam-globcolour-reader</artifactId>
-            <version>${pom.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.esa.beam</groupId>
             <artifactId>beam-medspiration-reader</artifactId>
             <version>${pom.version}</version>
         </dependency>
