@@ -26,7 +26,7 @@
     <tr class="header">
         <td class="header">GlobToolbox
         </td>
-        <td class="header" align="right"><img src="../images/GlobToolboxHeader.png" border=0>
+        <td class="header" align="right"><img src="../images/BeamHeader.jpg" border=0>
         </td>
     </tr>
 </table>
@@ -36,29 +36,99 @@
 
 <h3>Introduction</h3>
 
-<p>About the BEAM GlobToolbox, Version 3.0</p>
+<h3>Supported Products</h3>
 
 <p>
-    The BEAM GlobToolbox project has been brought into life in order to support users of data
-    acquired by ESA's Glob* projects.
+    The BEAM Glob DUE reader modules provides the capability of reading data products provided by
+    multiple Glob* projects. The following table comprises the supported products and also the
+    products which are not or not fully supported:
 </p>
 
-<p>
-    The GlobToolbox is developed by Brockmann Consult under contract to ESA.
-</p>
+<table border="1" cellspacing="1" cellpadding="2">
+    <tr>
+        <th>Project</th>
+        <th>Product Type</th>
+        <th>Support</th>
+    </tr>
 
-<h3>Capabilities</h3>
+    <tr>
+        <td><a href="http://ionia1.esrin.esa.int/">GlobCover</a></td>
+        <td>Bimonthly/Annual MERIS FR mosaics</td>
+        <td>Supported</td>
+    </tr>
+    <tr>
+        <td></td>
+        <td>Global/Regional Land Cover</td>
+        <td>Supported</td>
+    </tr>
 
-The GlobToolbox 3.0 comprises the following features:
+    <tr>
+        <td><a href="http://www.globcolour.info/">GlobColour</a></td>
+        <td>Global/DDS binned product</td>
+        <td>Supported</td>
+    </tr>
+    <tr>
+        <td></td>
+        <td>Global/DDS mapped product</td>
+        <td>Supported</td>
+    </tr>
+    <tr>
+        <td></td>
+        <td>MERIS L3 product</td>
+        <td>Supported</td>
+    </tr>
 
-<ul>
-    <li><a href="Readers.html">Read</a> a large number of data products provided by multiple Glob* projects.</li>
-    <li>Create, edit, and view Time Series of these products (see VISAT -> Tools -> Time Series Tool -> Time Series Manager)</li>
-    <li>Analyse a Time Series using a dedicated graph tool (see VISAT -> Tools -> Time Series Tool -> Time Series Graph)</li>
-    <li>Playback of a Time Series using a dedicated Time Series player tool (see VISAT -> Tools -> Time Series Tool -> Time Series Player)</li>
-    <li>Export a Time Series as NetCDF/CF, as Google Earth KMZ-file (see VISAT -> Tools -> Time Series Tool ->
-        Export Time Series as Google Earth KMZ file) or as animated gif</li>
-</ul>
+    <tr>
+        <td><a href="http://dup.esrin.esa.int/ionia/wfa">ATSR World Fire</a></td>
+        <td>ATSR2 and AATSR</td>
+        <td>Supported</td>
+    </tr>
+
+    <tr>
+        <td><a href="http://www.medspiration.org/">Medspiration</a></td>
+        <td>L2 Pre-Processed (L2P), Analysed SST (L4) HR-DDS Data</td>
+        <td>Supported</td>
+    </tr>
+
+    <tr>
+        <td><a href="http://bioval.jrc.ec.europa.eu/products/glc2000/glc2000.php">Global Land Cover 2000</a></td>
+        <td>GLC2000</td>
+        <td>Supported as GeoTIFF</td>
+    </tr>
+
+    <tr>
+        <td><a href="http://www.globaerosol.info/">GlobAerosol</a></td>
+        <td>Individual-Sensor Orbit Aerosol</td>
+        <td>All sensors supported except AATSR</td>
+    </tr>
+    <tr>
+        <td></td>
+        <td>Individual Global Aerosol</td>
+        <td>Supported</td>
+    </tr>
+    <tr>
+        <td></td>
+        <td>Merged Global Aerosol</td>
+        <td>Supported</td>
+    </tr>
+    <tr>
+        <td></td>
+        <td>Statistical Products</td>
+        <td>Supported</td>
+    </tr>
+    <tr>
+        <td><a href="http://www.igbp.net/">IGBP</a></td>
+        <td>Global LLC</td>
+        <td>Supported</td>
+    </tr>
+
+</table>
+
+<p>&nbsp;</p>
+
+The products are opened by selecting the product type within <code>File-> Import</code>.
+
+<p>&nbsp;</p>
 
 <a name="license"></a>
 

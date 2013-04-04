@@ -202,7 +202,7 @@
     <extension point="beam-ui:helpSets">
         <helpSet>
             <parent>beam-help</parent>
-            <path>doc/help/globcolour.hs</path>
+            <path>doc/help/globreader.hs</path>
         </helpSet>
     </extension>
 

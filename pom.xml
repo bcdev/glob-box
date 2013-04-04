@@ -31,10 +31,9 @@
     </properties>
 
     <modules>
-        <module>beam-envi-reader</module>
-        <module>glob-help</module>
         <module>glob-bootstrap</module>
         <module>beam-glob-due-reader</module>
+        <module>beam-envi-reader</module>
     </modules>
 
     <dependencyManagement>

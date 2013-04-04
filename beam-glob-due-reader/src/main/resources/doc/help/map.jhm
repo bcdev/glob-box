@@ -5,7 +5,9 @@
 
 <map version="2.0">
 
-    <mapID target="importGlobColourBinnedProduct" url="globcolour/BinnedProductReader.html"/>
-    <mapID target="importGlobColourMappedProduct" url="globcolour/MappedProductReader.html"/>
+    <mapID target="globreaderIntroduction" url="globreader/Introduction.html"/>
+
+    <mapID target="GlobColourBinnedProduct" url="globreader/GlobColourBinnedProduct.html"/>
+    <mapID target="GlobColourMappedProduct" url="globreader/GlobColourMappedProduct.html"/>
 
 </map>

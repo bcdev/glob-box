@@ -6,8 +6,13 @@
     <tocitem text="VISAT">
         <tocitem text="Tools">
             <tocitem text="Import and Export Tools">
-                <tocitem text="Import GlobColour-Binned Data Product" target="importGlobColourBinnedProduct"/>
-                <tocitem text="Import GlobColour-Mapped Data Product" target="importGlobColourMappedProduct"/>
+                <tocitem text="Import Raster Data">
+                    <tocitem text="Glob Reader">
+                        <tocitem text="Introduction" target="globreaderIntroduction"/>
+                        <tocitem text="GlobColour-Binned" target="GlobColourBinnedProduct"/>
+                        <tocitem text="GlobColour-Mapped" target="GlobColourMappedProduct"/>
+                    </tocitem>
+                </tocitem>
             </tocitem>
         </tocitem>
     </tocitem>
