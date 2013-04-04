@@ -18,7 +18,6 @@ package org.esa.beam.dataio.worldfire;
 
 import org.esa.beam.framework.dataio.DecodeQualification;
 import org.esa.beam.util.io.BeamFileFilter;
-import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -26,6 +25,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Locale;
+
+import static org.junit.Assert.*;
 
 
 public class WorldFireReaderPlugInTest {

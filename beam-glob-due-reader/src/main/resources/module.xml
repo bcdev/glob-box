@@ -9,7 +9,7 @@
 
     <description>
         <![CDATA[
-        This module provides product readers for several Glob DUE products including:
+        This module provides product readers for several Glob DUE products and other global data formats:
         - GlobAerosol
         - GlobCarbon
         - GlobColour (binned and mapped) <a href="http://www.globcolour.info/products_description.html">GlobCOLOUR Level-3 data products</a>
@@ -17,6 +17,7 @@
         - IGBP Global Land Cover Classification
         - Medspiration
         - Arc/Info Binary Grid
+        - AATSR World Fire
         ]]>
     </description>
 
@@ -186,6 +187,16 @@
             <description>Import a Arc/Info Binary Grids product or product subset.</description>
         </action>
 
+        <action>
+            <class>org.esa.beam.visat.actions.ProductImportAction</class>
+            <parent>globReader</parent>
+            <id>importWorldFireAATSRProduct</id>
+            <formatName>ATSR World Fire</formatName>
+            <useAllFileFilter>false</useAllFileFilter>
+            <mnemonic/>
+            <shortDescr>Import a AATSR World Fire product or product subset.</shortDescr>
+            <description>Import a AATSR World Fire product or product subset.</description>
+        </action>
     </extension>
 
     <extension point="beam-ui:helpSets">

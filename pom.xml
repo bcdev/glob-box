@@ -32,7 +32,6 @@
 
     <modules>
         <module>beam-envi-reader</module>
-        <module>beam-worldfire-reader</module>
         <module>glob-help</module>
         <module>glob-bootstrap</module>
         <module>beam-glob-due-reader</module>
