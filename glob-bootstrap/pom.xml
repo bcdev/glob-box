@@ -34,11 +34,6 @@
             <version>${pom.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.esa.beam</groupId>
-            <artifactId>beam-arcbingrid-reader</artifactId>
-            <version>${pom.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.esa.beam.glob</groupId>
             <artifactId>glob-help</artifactId>
             <version>${pom.version}</version>

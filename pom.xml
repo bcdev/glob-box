@@ -32,7 +32,6 @@
 
     <modules>
         <module>beam-envi-reader</module>
-        <module>beam-arcbingrid-reader</module>
         <module>beam-worldfire-reader</module>
         <module>glob-help</module>
         <module>glob-bootstrap</module>
@@ -41,6 +40,11 @@
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>com.bc.ceres</groupId>
+                <artifactId>ceres-binio</artifactId>
+                <version>${ceres.version}</version>
+            </dependency>
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-core</artifactId>

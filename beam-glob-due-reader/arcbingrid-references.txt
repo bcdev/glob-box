@@ -1,3 +1,5 @@
+Arc/Info Binary Grid Reader
+===========================
 Supported raster dataset file formats
 http://webhelp.esri.com/arcgisdesktop/9.3/index.cfm?TopicName=Supported_raster_dataset_file_formats
 

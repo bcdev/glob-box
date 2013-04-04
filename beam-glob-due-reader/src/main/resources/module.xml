@@ -16,6 +16,7 @@
         - <a href="http://ionia1.esrin.esa.int/">GlobCover data products</a>
         - IGBP Global Land Cover Classification
         - Medspiration
+        - Arc/Info Binary Grid
         ]]>
     </description>
 
@@ -169,9 +170,20 @@
             <id>importMedspirationProduct</id>
             <formatName>Medspiration</formatName>
             <useAllFileFilter>false</useAllFileFilter>
-            <mnemonic/>
             <shortDescr>Import a Medspiration data product or product subset.</shortDescr>
             <description>Import a Medspiration data product or product subset.</description>
+        </action>
+
+<!-- Arc/Info Binary Grid -->
+        <action>
+            <class>org.esa.beam.visat.actions.ProductImportAction</class>
+            <parent>globReader</parent>
+            <id>importArcBinGrid</id>
+            <formatName>ARC_INFO_BIN_GRID</formatName>
+            <useAllFileFilter>false</useAllFileFilter>
+            <text>Arc/Info Binary Grid</text>
+            <shortDescr>Import a Arc/Info Binary Grids product or product subset.</shortDescr>
+            <description>Import a Arc/Info Binary Grids product or product subset.</description>
         </action>
 
     </extension>
