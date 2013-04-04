@@ -1,1 +1,2 @@
 org.esa.beam.dataio.globaerosol.GlobAerosolReaderPlugIn
+org.esa.beam.dataio.globcarbon.GlobCarbonEnviProductReaderPlugIn

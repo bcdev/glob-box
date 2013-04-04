@@ -9,6 +9,7 @@
         <![CDATA[
         This module provides product readers for several Glob DUE products including:
         - GlobAerosol
+        - GlobCarbon
         ]]>
     </description>
 
@@ -26,14 +27,18 @@
     <dependency>
         <module>beam-core</module>
     </dependency>
+    <dependency>
+        <module>beam-ui</module>
+        <optional>true</optional>
+    </dependency>
 
     <dependency>
         <module>beam-merisl3-reader</module>
     </dependency>
     <dependency>
-        <module>beam-visat</module>
-        <optional>true</optional>
+        <module>beam-envi-reader</module>
     </dependency>
+
 
     <categories>Reader</categories>
 
@@ -49,11 +54,11 @@
             <sortChildren>true</sortChildren>
         </action>
 
+<!-- GLOBAEROSOL -->
         <action>
             <class>org.esa.beam.visat.actions.ProductImportAction</class>
             <parent>globReader</parent>
             <id>importGlobAerosolProduct</id>
-            <helpId>importGlobAerosolProduct</helpId>
             <formatName>GLOBAEROSOL-L3</formatName>
             <useAllFileFilter>false</useAllFileFilter>
             <text>GlobAerosol</text>
@@ -61,6 +66,28 @@
             <shortDescr>Import a GlobAerosol data product or product subset.</shortDescr>
             <description>Import a GlobAerosol data product or product subset.</description>
         </action>
+
+<!-- GLOBCARBON -->
+        <action>
+            <class>org.esa.beam.visat.actions.ProductImportAction</class>
+            <parent>globReader</parent>
+            <id>importGlobCarbonProduct</id>
+            <formatName>GLOBCARBON</formatName>
+            <useAllFileFilter>true</useAllFileFilter>
+            <shortDescr>Import a GlobCarbon data product.</shortDescr>
+            <description>Import a GlobCarbon data product or product subset.</description>
+            <text>GlobCarbon</text>
+        </action>
+        <!-- Implementation was stopped, because we had no go to do this. -->
+        <!--<action>-->
+        <!--<class>org.esa.beam.visat.actions.ProductImportAction</class>-->
+        <!--<id>importGlobCarbonAsciiProduct</id>-->
+        <!--<formatName>GLOBCARBON-ASCII</formatName>-->
+        <!--<useAllFileFilter>true</useAllFileFilter>-->
+        <!--<shortDescr>Import a GlobCarbon Ascii data product.</shortDescr>-->
+        <!--<description>Import a GlobCarbon Ascii data product or product subset.</description>-->
+        <!--</action>-->
+
     </extension>
 
 </module>

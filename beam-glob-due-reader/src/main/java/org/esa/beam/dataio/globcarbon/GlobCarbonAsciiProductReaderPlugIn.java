@@ -31,6 +31,8 @@ import java.util.Locale;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+//  Implementation was stopped, because we had no go to do this.
+
 /**
  * @author Thomas Storm
  */

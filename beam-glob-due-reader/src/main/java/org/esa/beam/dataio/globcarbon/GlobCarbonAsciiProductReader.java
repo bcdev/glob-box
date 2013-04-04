@@ -8,6 +8,8 @@ import org.esa.beam.framework.datamodel.ProductData;
 
 import java.io.IOException;
 
+//  Implementation was stopped, because we had no go to do this.
+
 public class GlobCarbonAsciiProductReader extends AbstractProductReader {
 
     /**
