@@ -17,8 +17,9 @@
 package org.esa.beam.dataio.globcover;
 
 import org.esa.beam.framework.datamodel.GeoPos;
-import static org.junit.Assert.*;
 import org.junit.Test;
+
+import static org.junit.Assert.*;
 
 /**
  * @author Marco Peters

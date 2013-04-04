@@ -5,12 +5,15 @@
     <name>Glob DUE Readers</name>
     <funding>ESA</funding>
 
+    <packaging>dir</packaging>
+
     <description>
         <![CDATA[
         This module provides product readers for several Glob DUE products including:
         - GlobAerosol
         - GlobCarbon
         - GlobColour (binned and mapped) <a href="http://www.globcolour.info/products_description.html">GlobCOLOUR Level-3 data products</a>
+        - <a href="http://ionia1.esrin.esa.int/">GlobCover data products</a>
         ]]>
     </description>
 
@@ -39,6 +42,11 @@
     <dependency>
         <module>beam-envi-reader</module>
     </dependency>
+
+    <dependency>
+        <lib>lib/jxl.jar</lib>
+    </dependency>
+
 
 
     <categories>Reader</categories>
@@ -107,6 +115,38 @@
             <useAllFileFilter>true</useAllFileFilter>
             <shortDescr>Import a Mapped GlobColour data product or product subset.</shortDescr>
             <description>Import a Mapped GlobColour data product or product subset.</description>
+        </action>
+
+<!-- GLOBCOVER -->
+        <action>
+            <class>org.esa.beam.visat.actions.ProductImportAction</class>
+            <parent>globReader</parent>
+            <id>importGlobCoverTileProduct</id>
+            <formatName>GLOBCOVER-L3-MOSAIC-TILE</formatName>
+            <useAllFileFilter>false</useAllFileFilter>
+            <text>GlobCover Bimonthly or Annual MERIS FR Mosaic Tile</text>
+            <shortDescr>Import a GlobCover Bimonthly or Annual MERIS FR Mosaic Tile data product or product subset.</shortDescr>
+            <description>Import a GlobCover Bimonthly or Annual MERIS FR Mosaic Tile data product or product subset.</description>
+        </action>
+        <action>
+            <class>org.esa.beam.visat.actions.ProductImportAction</class>
+            <parent>globReader</parent>
+            <id>importGlobCoverMosaicProduct</id>
+            <formatName>GLOBCOVER-L3-MOSAIC</formatName>
+            <useAllFileFilter>false</useAllFileFilter>
+            <text>GlobCover Bimonthly or Annual MERIS FR Mosaic</text>
+            <shortDescr>Import a GlobCover Bimonthly or Annual MERIS FR Mosaic data product or product subset.</shortDescr>
+            <description>Import a GlobCover Bimonthly or Annual MERIS FR Mosaic data product or product subset.</description>
+        </action>
+        <action>
+            <class>org.esa.beam.visat.actions.ProductImportAction</class>
+            <parent>globReader</parent>
+            <id>importGlobCoverGeoTiffProduct</id>
+            <formatName>GeoTIFF-GC</formatName>
+            <useAllFileFilter>false</useAllFileFilter>
+            <text>GlobCover Global/Regional Land Cover</text>
+            <shortDescr>Import a GlobCover Global/Regional Land Cover data product or product subset.</shortDescr>
+            <description>Import a GlobCover Global/Regional Land Cover data product or product subset.</description>
         </action>
 
 

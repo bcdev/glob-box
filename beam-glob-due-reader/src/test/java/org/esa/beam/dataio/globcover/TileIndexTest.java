@@ -16,10 +16,11 @@
 
 package org.esa.beam.dataio.globcover;
 
-import static org.junit.Assert.*;
 import org.junit.Test;
 
 import java.util.TreeMap;
+
+import static org.junit.Assert.*;
 
 /**
  * @author Marco Peters

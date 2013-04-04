@@ -30,7 +30,45 @@
             <groupId>org.esa.beam</groupId>
             <artifactId>beam-envi-reader</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.esa.beam</groupId>
+            <artifactId>beam-geotiff</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>net.sourceforge.jexcelapi</groupId>
+            <artifactId>jxl</artifactId>
+        </dependency>
 
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-jars</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                            <stripVersion>true</stripVersion>
+                            <artifactItems>
+
+                                <artifactItem>
+                                    <groupId>net.sourceforge.jexcelapi</groupId>
+                                    <artifactId>jxl</artifactId>
+                                    <version>${jxlapi.version}</version>
+                                    <outputDirectory>src/main/resources/lib</outputDirectory>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
 
 </project>

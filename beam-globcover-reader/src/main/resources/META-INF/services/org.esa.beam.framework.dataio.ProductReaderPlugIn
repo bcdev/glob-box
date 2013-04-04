@@ -1,3 +1,0 @@
-org.esa.beam.dataio.globcover.GlobCoverTileReaderPlugIn
-org.esa.beam.dataio.globcover.GlobCoverMosaicReaderPlugIn
-org.esa.beam.dataio.globcover.geotiff.GlobCoverGeoTiffProductReaderPlugIn
