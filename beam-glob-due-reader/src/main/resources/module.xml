@@ -14,6 +14,7 @@
         - GlobCarbon
         - GlobColour (binned and mapped) <a href="http://www.globcolour.info/products_description.html">GlobCOLOUR Level-3 data products</a>
         - <a href="http://ionia1.esrin.esa.int/">GlobCover data products</a>
+        - IGBP Global Land Cover Classification
         ]]>
     </description>
 
@@ -147,6 +148,17 @@
             <text>GlobCover Global/Regional Land Cover</text>
             <shortDescr>Import a GlobCover Global/Regional Land Cover data product or product subset.</shortDescr>
             <description>Import a GlobCover Global/Regional Land Cover data product or product subset.</description>
+        </action>
+
+<!-- IGBP Land Classification -->
+        <action>
+            <class>org.esa.beam.visat.actions.ProductImportAction</class>
+            <parent>globReader</parent>
+            <id>importIgbpGlcc</id>
+            <formatName>IGBP_GLCC</formatName>
+            <useAllFileFilter>false</useAllFileFilter>
+            <shortDescr>Import a IGBP GLCC product or product subset.</shortDescr>
+            <description>Import a IGBP Global Land Cover Classification product or product subset.</description>
         </action>
 
 
