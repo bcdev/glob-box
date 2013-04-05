@@ -1,0 +1,147 @@
+<!--
+  ~ Copyright (C) 2012 Brockmann Consult GmbH (info@brockmann-consult.de)
+  ~
+  ~ This program is free software; you can redistribute it and/or modify it
+  ~ under the terms of the GNU General Public License as published by the Free
+  ~ Software Foundation; either version 3 of the License, or (at your option)
+  ~ any later version.
+  ~ This program is distributed in the hope that it will be useful, but WITHOUT
+  ~ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+  ~ FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+  ~ more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License along
+  ~ with this program; if not, see http://www.gnu.org/licenses/
+  -->
+
+<html>
+<head>
+    <title>Glob DUE Reader</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+
+<body>
+
+<table class="header">
+    <tr class="header">
+        <td class="header">Glob DUE Reader</td>
+        <td class="header" align="right"><img src="../images/BeamHeader.jpg" border=0>
+        </td>
+    </tr>
+</table>
+<hr>
+
+<h3>Supported Products</h3>
+
+<p>
+    The Glob DUE Reader module provides the capability of reading data products provided by
+    multiple Glob DUE projects. This module is the inheritor of the former GlobToolbox. Since
+    most functionality of the Toolbox has been moved into BEAM itself this set of reader has left over.
+    The following table comprises the supported products:
+</p>
+
+<table border="1" cellspacing="1" cellpadding="2">
+    <tr>
+        <th>Project</th>
+        <th>Description</th>
+    </tr>
+
+    <tr>
+        <td><a href="http://due.esrin.esa.int/globcover/">GlobCover</a></td>
+        <td>The Bimonthly/Annual MERIS FR mosaics and the Global/Regional Land Cover are supported.
+            For more information regarding the GlobCover data please visit
+            <a href="http://due.esrin.esa.int/globcover/">GlobCover web site</a> (http://due.esrin.esa.int/globcover/).
+        </td>
+    </tr>
+
+    <tr>
+        <td><a href="http://www.globcolour.info/">GlobColour</a></td>
+        <td>GlobColour Level-3 data products are provided in NetCDF-3 file format. They can be obtained in two
+            variations.
+            There are the binned (ISIN grid) and mapped (Plate Caree) data products. For additional information on
+            GlobColour data products please visit the
+            <a href="http://www.globcolour.info/">GlobColour web site</a> (www.globcolour.info).
+        </td>
+    </tr>
+
+    <tr>
+        <td><a href="http://due.esrin.esa.int/wfa">ATSR World Fire</a></td>
+        <td>The ATSR World Fire Atlas provides global fire maps from june 1995 to now. Both sensors (ATSR2 and AATSR)
+            are supported. For additional information about the project please visit the
+            <a href="http://due.esrin.esa.int/wfa">ATSR World Fire Atlas web site</a> (http://due.esrin.esa.int/wfa).
+        </td>
+    </tr>
+
+    <tr>
+        <td><a href="http://www.medspiration.org/">Medspiration</a></td>
+        <td>The Medspiration project combines sea surface temperature (SST) data measured independently by several
+            different sensors. The resutling L2 Pre-Processed (L2P) and the Analysed SST (L4) HR-DDS data products are
+            supported. For additional information about the project please visit the
+            <a href="http://www.medspiration.org/">Medspiration web site</a> (www.medspiration.org).
+        </td>
+    </tr>
+
+    <tr>
+        <td><a href="http://bioval.jrc.ec.europa.eu/products/glc2000/glc2000.php">GLC 2000</a></td>
+        <td>The Global Land Cover 2000 project provides a harmonized land cover database over the whole globe. The
+            output of this project is supported is supported in the GeoTIFF format. For additional information about
+            the project please visit the
+            <a href="http://bioval.jrc.ec.europa.eu/products/glc2000/glc2000.php">GLC 2000 web site</a> (http://bioval.jrc.ec.europa.eu/products/glc2000/glc2000.php).</td>
+    </tr>
+
+    <tr>
+        <td><a href="http://www.globaerosol.info/">GlobAerosol</a></td>
+        <td>The project provides a global aerosol data set from merging ATSR-2, AATSR, MERIS and SEVIRI satellite data.
+            The data set spans a period from 1995 to 2007. The following product types are supported: <br>
+            o Individual-Sensor Orbit Aerosol - All sensors, except AATSR <br>
+            o Individual Global Aerosol<br>
+            o Merged Global Aerosol<br>
+            o Statistical Products <br>
+            For additional information about the project please visit the
+            <a href="http://www.globaerosol.info/">GlobAerosol web site</a> (www.globaerosol.info/).
+        </td>
+    </tr>
+
+    <tr>
+        <td><a href="http://edc2.usgs.gov/glcc/glcc.php/">IGBP Global LCC</a></td>
+        <td>The Global Land Cover Characteristics provides a classification of the land. For more information about the
+            project please visit the
+            <a href="http://edc2.usgs.gov/glcc/glcc.php">GLCC web site</a> (http://edc2.usgs.gov/glcc/glcc.php) or the
+            <a href="http://www.igbp.net">IGBP web site</a> (www.igbp.net).
+        </td>
+    </tr>
+
+</table>
+
+<p>&nbsp;</p>
+
+<p>The products can simply be opened by using <code>File -> Open Product...</code>. The correct product type will be
+    detected automatically. The products can also be opened by selecting the product type explicitly
+    within <code>File -> Import Raster Data -> Glob DUE Data</code>.
+</p>
+
+<p>&nbsp;</p>
+
+<a name="license"></a>
+
+<h3>License</h3>
+
+<p>This program is free software; you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by the
+    Free Software Foundation. This program is distributed in the hope it will
+    be useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+    of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+    See the <a href="http://www.gnu.org/licenses/gpl.html">GNU General Public License</a>
+    for more details.</p>
+
+<p>You have received a <a href="license.html">copy</a> of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.</p>
+
+<hr/>
+
+<p><i>Copyright &copy; 2012 by Brockmann Consult (beam-issues@brockmann-consult.de). All rights reserved.</i></p>
+
+</body>
+</html>
+

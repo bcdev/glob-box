@@ -7,11 +7,7 @@
         <tocitem text="Tools">
             <tocitem text="Import and Export Tools">
                 <tocitem text="Import Raster Data">
-                    <tocitem text="Glob Reader">
-                        <tocitem text="Introduction" target="globreaderIntroduction"/>
-                        <tocitem text="GlobColour-Binned" target="GlobColourBinnedProduct"/>
-                        <tocitem text="GlobColour-Mapped" target="GlobColourMappedProduct"/>
-                    </tocitem>
+                    <tocitem text="Glob Reader" target="globReader"/>
                 </tocitem>
             </tocitem>
         </tocitem>

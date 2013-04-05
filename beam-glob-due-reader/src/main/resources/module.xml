@@ -61,7 +61,7 @@
             <parent>importRasterData</parent>
             <id>globReader</id>
             <class>org.esa.beam.visat.actions.ActionGroup</class>
-            <text>Import Glob DUE Data</text>
+            <text>Glob DUE Data</text>
             <shortDescr>Import Glob DUE data</shortDescr>
             <description>Import Glob DUE data</description>
             <sortChildren>true</sortChildren>

@@ -4,10 +4,5 @@
         "http://java.sun.com/products/javahelp/map_2_0.dtd">
 
 <map version="2.0">
-
-    <mapID target="globreaderIntroduction" url="globreader/Introduction.html"/>
-
-    <mapID target="GlobColourBinnedProduct" url="globreader/GlobColourBinnedProduct.html"/>
-    <mapID target="GlobColourMappedProduct" url="globreader/GlobColourMappedProduct.html"/>
-
+    <mapID target="globReader" url="globreader/GlobReader.html"/>
 </map>
