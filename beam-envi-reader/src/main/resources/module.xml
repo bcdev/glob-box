@@ -6,7 +6,7 @@
     <funding>ESA</funding>
 
     <description>
-        Enables BEAM to read data products in ESRI-ENVI format.
+        Enables BEAM to read data products in ESRI-ENVI format including products of HICO.
     </description>
 
     <vendor>Brockmann Consult GmbH</vendor>
@@ -45,6 +45,7 @@
             <id>importHicoProduct</id>
             <class>org.esa.beam.visat.actions.ProductImportAction</class>
             <formatName>HICO</formatName>
+            <text>HICO (ENVI format)</text>
             <useAllFileFilter>false</useAllFileFilter>
             <shortDescr>Import a HICO data product.</shortDescr>
         </action>
