@@ -25,8 +25,8 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <globbox.version>3.1-SNAPSHOT</globbox.version>
-        <beam.version>4.11-SNAPSHOT</beam.version>
-        <ceres.version>0.13.2-SNAPSHOT</ceres.version>
+        <beam.version>4.11</beam.version>
+        <ceres.version>0.13.2</ceres.version>
         <jxlapi.version>2.6.10</jxlapi.version>
     </properties>
 
@@ -81,12 +81,12 @@
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-netcdf</artifactId>
-                <version>1.1.2-SNAPSHOT</version>
+                <version>1.1.2</version>
             </dependency>
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-geotiff</artifactId>
-                <version>1.2.2-SNAPSHOT</version>
+                <version>1.2.2</version>
             </dependency>
             <dependency>
                 <groupId>net.sourceforge.jexcelapi</groupId>
