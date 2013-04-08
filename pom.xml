@@ -5,7 +5,7 @@
     <groupId>org.esa.beam.glob</groupId>
     <artifactId>glob-box</artifactId>
     <packaging>pom</packaging>
-    <version>3.1-SNAPSHOT</version>
+    <version>3.1</version>
     <name>GlobToolbox</name>
 
     <organization>
@@ -24,7 +24,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <globbox.version>3.1-SNAPSHOT</globbox.version>
+        <globbox.version>${pom.version}</globbox.version>
         <beam.version>4.11</beam.version>
         <ceres.version>0.13.2</ceres.version>
         <jxlapi.version>2.6.10</jxlapi.version>
