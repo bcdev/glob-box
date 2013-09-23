@@ -37,6 +37,7 @@ import java.io.InputStreamReader;
 import java.nio.ByteOrder;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.zip.ZipEntry;
@@ -440,6 +441,8 @@ class EnviProductReader extends AbstractProductReader {
 
         final String[] bandNames = getBandNames(header);
         float[] wavelength = getWavelength(header, bandNames);
+        double[] offsets = getOffsetValues(bandNames.length);
+        final double[] gains = getGainValues(bandNames.length);
         for (int i = 0; i < bandNames.length; i++) {
             final String originalBandName = bandNames[i];
             final String validBandName;
@@ -457,7 +460,32 @@ class EnviProductReader extends AbstractProductReader {
                                        product.getSceneRasterHeight());
             band.setDescription(description);
             band.setSpectralWavelength(wavelength[i]);
+            band.setScalingOffset(offsets[i]);
+            band.setScalingFactor(gains[i]);
             product.addBand(band);
+        }
+    }
+
+    private double[] getOffsetValues(int numBands) {
+        double[] dataOffsetValues = header.getDataOffsetValues();
+        if (dataOffsetValues == null) {
+            dataOffsetValues = new double[numBands];
+            Arrays.fill(dataOffsetValues, 0.0);
+            return dataOffsetValues;
+
+        } else {
+            return dataOffsetValues;
+        }
+    }
+
+    private double[] getGainValues(int numBands) {
+        double[] dataGainValues = header.getDataGainValues();
+        if (dataGainValues == null) {
+            dataGainValues = new double[numBands];
+            Arrays.fill(dataGainValues, 1.0);
+            return dataGainValues;
+        } else {
+            return dataGainValues;
         }
     }
 

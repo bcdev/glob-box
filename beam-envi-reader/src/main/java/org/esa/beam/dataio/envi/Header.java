@@ -58,9 +58,23 @@ class Header {
                 line = assembleMultilineString(reader, line);
                 description = line.substring(line.indexOf('{') + 1, line.lastIndexOf('}')).trim();
                 parseBeamProperties(description);
+            } else if (line.startsWith(EnviConstants.HEADER_KEY_DATA_OFFSET_VALUES)) {
+                dataOffsetValues = getDoubleValues(reader, line);
+            } else if (line.startsWith(EnviConstants.HEADER_KEY_DATA_GAIN_VALUES)) {
+                dataGainValues = getDoubleValues(reader, line);
             }
         }
         // @todo 2 se/** after reading the headerFile validate the HeaderConstraints
+    }
+
+    private double[] getDoubleValues(BufferedReader reader, String line) throws IOException {
+        line = assembleMultilineString(reader, line);
+        final String[] valueStrings = parseCommaSeparated(line);
+        double[] values = new double[valueStrings.length];
+        for (int i = 0; i < valueStrings.length; i++) {
+            values[i] = Double.valueOf(valueStrings[i]);
+        }
+        return values;
     }
 
     public ByteOrder getJavaByteOrder() {
@@ -138,26 +152,40 @@ class Header {
         return wavelengthsUnits;
     }
 
+    public double[] getDataOffsetValues() {
+        return dataOffsetValues;
+    }
+
+    public double[] getDataGainValues() {
+        return dataGainValues;
+    }
+
+
+
     ///////////////////////////////////////////////////////////////////////////
     /////// END OF PUBLIC
     ///////////////////////////////////////////////////////////////////////////
 
-    private int numSamples = 0;
-    private int numLines = 0;
-    private int numBands = 0;
-    private String fileType = null;
-    private int headerOffset = 0;
-    private int dataType = 0;
-    private String interleave = null;
-    private String sensorType = null;
-    private int byteOrder = 0;
-    private EnviMapInfo mapInfo = null;
-    private EnviProjectionInfo projectionInfo = null;
-    private String[] bandNames = null;
-    private String[] wavelengths = null;
-    private String wavelengthsUnits = null;
-    private String description = null;
-    private BeamProperties beamProperties = null;
+    private int numSamples;
+    private int numLines;
+    private int numBands;
+    private String fileType;
+    private int headerOffset;
+    private int dataType;
+    private String interleave;
+    private String sensorType;
+    private int byteOrder;
+    private EnviMapInfo mapInfo;
+    private EnviProjectionInfo projectionInfo;
+    private String[] bandNames;
+    private String[] wavelengths;
+    private String wavelengthsUnits;
+    private String description;
+    private double[] dataOffsetValues;
+    private double[] dataGainValues;
+
+
+    private BeamProperties beamProperties;
 
     private void parseMapInfo(String line) {
         try {
@@ -279,8 +307,8 @@ class Header {
 
     public static class BeamProperties {
 
-        private String sensingStart = null;
-        private String sensingStop = null;
+        private String sensingStart;
+        private String sensingStop;
 
         public String getSensingStart() {
             return sensingStart;

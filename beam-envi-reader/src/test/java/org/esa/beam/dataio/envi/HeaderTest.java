@@ -7,8 +7,15 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.ByteOrder;
+import java.util.Locale;
 
 public class HeaderTest extends TestCase {
+
+
+    @Override
+    public void setUp() throws Exception {
+        Locale.setDefault(Locale.ENGLISH);
+    }
 
     public void testParseNumSamples() throws IOException {
         final int samples = 56;
@@ -224,6 +231,32 @@ public class HeaderTest extends TestCase {
         assertEquals(-2.5, parameter[7], 1e-8);
         assertEquals("WGS-84", projectionInfo.getDatum());
         assertEquals("SamerAlbers", projectionInfo.getName());
+    }
+
+    public void testParseOffsetValues() throws IOException {
+        double[] expectedOffsetValues = {0.01000000, 1.45, 0.0367654321};
+        final String line = String.format("data offset values = {%f,%f,\n%.10f}", expectedOffsetValues[0], expectedOffsetValues[1], expectedOffsetValues[2]);
+        final BufferedReader in = createReader(line);
+
+        final Header header = new Header(in);
+        double[] actualOffsetValues = header.getDataOffsetValues();
+
+        for (int i = 0; i < expectedOffsetValues.length; i++) {
+            assertEquals(expectedOffsetValues[i], actualOffsetValues[i]);
+        }
+    }
+
+    public void testParseGainValues() throws IOException {
+        double[] expectedOffsetValues = {10, 0.0045, 1.987654321};
+        final String line = String.format("data gain values = {%f\n,%f,%.10f}", expectedOffsetValues[0], expectedOffsetValues[1], expectedOffsetValues[2]);
+        final BufferedReader in = createReader(line);
+
+        final Header header = new Header(in);
+        double[] actualOffsetValues = header.getDataGainValues();
+
+        for (int i = 0; i < expectedOffsetValues.length; i++) {
+            assertEquals(expectedOffsetValues[i], actualOffsetValues[i]);
+        }
     }
 
     public void testParseBandNames_empty() throws IOException {
