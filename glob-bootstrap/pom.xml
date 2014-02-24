@@ -21,7 +21,6 @@
         <dependency>
             <groupId>org.esa.beam</groupId>
             <artifactId>beam-envi-reader</artifactId>
-            <version>${globbox.version}</version>
         </dependency>
         <dependency>
             <groupId>org.esa.beam</groupId>
